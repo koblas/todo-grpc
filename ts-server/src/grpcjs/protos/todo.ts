@@ -1,8 +1,18 @@
 /* eslint-disable */
 import Long from "long";
-import { grpc } from "@improbable-eng/grpc-web";
+import {
+  makeGenericClientConstructor,
+  ChannelCredentials,
+  ChannelOptions,
+  UntypedServiceImplementation,
+  handleUnaryCall,
+  Client,
+  ClientUnaryCall,
+  Metadata,
+  CallOptions,
+  ServiceError,
+} from "@grpc/grpc-js";
 import _m0 from "protobufjs/minimal";
-import { BrowserHeaders } from "browser-headers";
 
 export const protobufPackage = "todo";
 
@@ -386,207 +396,106 @@ export const deleteResponse = {
   },
 };
 
-export interface todoService {
+export const todoServiceService = {
+  addTodo: {
+    path: "/todo.todoService/addTodo",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: addTodoParams) =>
+      Buffer.from(addTodoParams.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => addTodoParams.decode(value),
+    responseSerialize: (value: todoObject) =>
+      Buffer.from(todoObject.encode(value).finish()),
+    responseDeserialize: (value: Buffer) => todoObject.decode(value),
+  },
+  deleteTodo: {
+    path: "/todo.todoService/deleteTodo",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: deleteTodoParams) =>
+      Buffer.from(deleteTodoParams.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => deleteTodoParams.decode(value),
+    responseSerialize: (value: deleteResponse) =>
+      Buffer.from(deleteResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer) => deleteResponse.decode(value),
+  },
+  getTodos: {
+    path: "/todo.todoService/getTodos",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: getTodoParams) =>
+      Buffer.from(getTodoParams.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => getTodoParams.decode(value),
+    responseSerialize: (value: todoResponse) =>
+      Buffer.from(todoResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer) => todoResponse.decode(value),
+  },
+} as const;
+
+export interface todoServiceServer extends UntypedServiceImplementation {
+  addTodo: handleUnaryCall<addTodoParams, todoObject>;
+  deleteTodo: handleUnaryCall<deleteTodoParams, deleteResponse>;
+  getTodos: handleUnaryCall<getTodoParams, todoResponse>;
+}
+
+export interface todoServiceClient extends Client {
   addTodo(
-    request: DeepPartial<addTodoParams>,
-    metadata?: grpc.Metadata
-  ): Promise<todoObject>;
-  deleteTodo(
-    request: DeepPartial<deleteTodoParams>,
-    metadata?: grpc.Metadata
-  ): Promise<deleteResponse>;
-  getTodos(
-    request: DeepPartial<getTodoParams>,
-    metadata?: grpc.Metadata
-  ): Promise<todoResponse>;
-}
-
-export class todoServiceClientImpl implements todoService {
-  private readonly rpc: Rpc;
-
-  constructor(rpc: Rpc) {
-    this.rpc = rpc;
-    this.addTodo = this.addTodo.bind(this);
-    this.deleteTodo = this.deleteTodo.bind(this);
-    this.getTodos = this.getTodos.bind(this);
-  }
-
+    request: addTodoParams,
+    callback: (error: ServiceError | null, response: todoObject) => void
+  ): ClientUnaryCall;
   addTodo(
-    request: DeepPartial<addTodoParams>,
-    metadata?: grpc.Metadata
-  ): Promise<todoObject> {
-    return this.rpc.unary(
-      todoServiceaddTodoDesc,
-      addTodoParams.fromPartial(request),
-      metadata
-    );
-  }
-
+    request: addTodoParams,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: todoObject) => void
+  ): ClientUnaryCall;
+  addTodo(
+    request: addTodoParams,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: todoObject) => void
+  ): ClientUnaryCall;
   deleteTodo(
-    request: DeepPartial<deleteTodoParams>,
-    metadata?: grpc.Metadata
-  ): Promise<deleteResponse> {
-    return this.rpc.unary(
-      todoServicedeleteTodoDesc,
-      deleteTodoParams.fromPartial(request),
-      metadata
-    );
-  }
-
+    request: deleteTodoParams,
+    callback: (error: ServiceError | null, response: deleteResponse) => void
+  ): ClientUnaryCall;
+  deleteTodo(
+    request: deleteTodoParams,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: deleteResponse) => void
+  ): ClientUnaryCall;
+  deleteTodo(
+    request: deleteTodoParams,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: deleteResponse) => void
+  ): ClientUnaryCall;
   getTodos(
-    request: DeepPartial<getTodoParams>,
-    metadata?: grpc.Metadata
-  ): Promise<todoResponse> {
-    return this.rpc.unary(
-      todoServicegetTodosDesc,
-      getTodoParams.fromPartial(request),
-      metadata
-    );
-  }
+    request: getTodoParams,
+    callback: (error: ServiceError | null, response: todoResponse) => void
+  ): ClientUnaryCall;
+  getTodos(
+    request: getTodoParams,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: todoResponse) => void
+  ): ClientUnaryCall;
+  getTodos(
+    request: getTodoParams,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: todoResponse) => void
+  ): ClientUnaryCall;
 }
 
-export const todoServiceDesc = {
-  serviceName: "todo.todoService",
+export const todoServiceClient = makeGenericClientConstructor(
+  todoServiceService,
+  "todo.todoService"
+) as unknown as {
+  new (
+    address: string,
+    credentials: ChannelCredentials,
+    options?: Partial<ChannelOptions>
+  ): todoServiceClient;
 };
-
-export const todoServiceaddTodoDesc: UnaryMethodDefinitionish = {
-  methodName: "addTodo",
-  service: todoServiceDesc,
-  requestStream: false,
-  responseStream: false,
-  requestType: {
-    serializeBinary() {
-      return addTodoParams.encode(this).finish();
-    },
-  } as any,
-  responseType: {
-    deserializeBinary(data: Uint8Array) {
-      return {
-        ...todoObject.decode(data),
-        toObject() {
-          return this;
-        },
-      };
-    },
-  } as any,
-};
-
-export const todoServicedeleteTodoDesc: UnaryMethodDefinitionish = {
-  methodName: "deleteTodo",
-  service: todoServiceDesc,
-  requestStream: false,
-  responseStream: false,
-  requestType: {
-    serializeBinary() {
-      return deleteTodoParams.encode(this).finish();
-    },
-  } as any,
-  responseType: {
-    deserializeBinary(data: Uint8Array) {
-      return {
-        ...deleteResponse.decode(data),
-        toObject() {
-          return this;
-        },
-      };
-    },
-  } as any,
-};
-
-export const todoServicegetTodosDesc: UnaryMethodDefinitionish = {
-  methodName: "getTodos",
-  service: todoServiceDesc,
-  requestStream: false,
-  responseStream: false,
-  requestType: {
-    serializeBinary() {
-      return getTodoParams.encode(this).finish();
-    },
-  } as any,
-  responseType: {
-    deserializeBinary(data: Uint8Array) {
-      return {
-        ...todoResponse.decode(data),
-        toObject() {
-          return this;
-        },
-      };
-    },
-  } as any,
-};
-
-interface UnaryMethodDefinitionishR
-  extends grpc.UnaryMethodDefinition<any, any> {
-  requestStream: any;
-  responseStream: any;
-}
-
-type UnaryMethodDefinitionish = UnaryMethodDefinitionishR;
-
-interface Rpc {
-  unary<T extends UnaryMethodDefinitionish>(
-    methodDesc: T,
-    request: any,
-    metadata: grpc.Metadata | undefined
-  ): Promise<any>;
-}
-
-export class GrpcWebImpl {
-  private host: string;
-  private options: {
-    transport?: grpc.TransportFactory;
-
-    debug?: boolean;
-    metadata?: grpc.Metadata;
-  };
-
-  constructor(
-    host: string,
-    options: {
-      transport?: grpc.TransportFactory;
-
-      debug?: boolean;
-      metadata?: grpc.Metadata;
-    }
-  ) {
-    this.host = host;
-    this.options = options;
-  }
-
-  unary<T extends UnaryMethodDefinitionish>(
-    methodDesc: T,
-    _request: any,
-    metadata: grpc.Metadata | undefined
-  ): Promise<any> {
-    const request = { ..._request, ...methodDesc.requestType };
-    const maybeCombinedMetadata =
-      metadata && this.options.metadata
-        ? new BrowserHeaders({
-            ...this.options?.metadata.headersMap,
-            ...metadata?.headersMap,
-          })
-        : metadata || this.options.metadata;
-    return new Promise((resolve, reject) => {
-      grpc.unary(methodDesc, {
-        request,
-        host: this.host,
-        metadata: maybeCombinedMetadata,
-        transport: this.options.transport,
-        debug: this.options.debug,
-        onEnd: function (response) {
-          if (response.status === grpc.Code.OK) {
-            resolve(response.message);
-          } else {
-            const err = new Error(response.statusMessage) as any;
-            err.code = response.status;
-            err.metadata = response.trailers;
-            reject(err);
-          }
-        },
-      });
-    });
-  }
-}
 
 type Builtin =
   | Date

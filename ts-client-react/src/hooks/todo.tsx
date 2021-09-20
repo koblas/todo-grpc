@@ -1,34 +1,15 @@
-import { AssertionError } from "assert";
 import { Reducer, useEffect, createContext, useContext, PropsWithChildren, useReducer } from "react";
-import { todoServiceClientImpl, GrpcWebImpl, todoObject } from "../models/todo";
+import { must, assert } from "../util/assert";
+import { newTodoClient } from "../rpc/todo/factory";
+import { TodoItem, TodoService } from "../rpc/todo";
 
-export { todoObject as Todo };
-
-export function must<T>(input: T, message: string = "Cannot be null or undefined"): NonNullable<T> {
-  assert(input !== null && input !== undefined, message);
-
-  return input as NonNullable<T>;
-}
-
-export function assert(condition: any, message: string = "assertion failed"): asserts condition {
-  if (!condition) {
-    throw new AssertionError({ message, actual: condition, expected: true });
-  }
-}
-
-const rpc = new GrpcWebImpl("http://localhost:8080", {
-  // transport: ...
-  debug: false,
-});
-
-const todoClient = new todoServiceClientImpl(rpc);
-const baseValue = 1;
+const todoClient = newTodoClient("grpc");
 
 const TodoContext = createContext<{
-  client: todoServiceClientImpl;
-  todos: todoObject[];
+  client: TodoService;
+  todos: TodoItem[];
   refresh: React.Dispatch<React.SetStateAction<void>>;
-  dispatch: React.Dispatch<DispatchAction<todoObject>>;
+  dispatch: React.Dispatch<DispatchAction<TodoItem>>;
 }>({
   client: todoClient,
   todos: [],
@@ -79,10 +60,10 @@ export function TodoContextProvider({ children }: PropsWithChildren<unknown>) {
   // on the "current" set of items in your list.  You might have done 2..3 actions
   // but your local closure will only have the state at the time you dispatched
   // your asyncronist event.  Thus you need to bump the world into a reducer...
-  const [state, dispatch] = useListReducer<todoObject>();
+  const [state, dispatch] = useListReducer<TodoItem>();
 
   function refresh() {
-    todoClient.getTodos({}).then(({ todos }) => {
+    todoClient.getTodos().then((todos) => {
       dispatch({ type: "set", list: todos });
     });
   }
@@ -103,7 +84,7 @@ export function useTodos() {
 
   return {
     todos,
-    addTodo(task: todoObject["task"]) {
+    addTodo(task: TodoItem["task"]) {
       if (task === "") {
         return;
       }
@@ -117,7 +98,7 @@ export function useTodos() {
         },
       });
       client
-        .addTodo({ task })
+        .addTodo(task)
         .then((obj) => {
           dispatch({ type: "update", id, value: obj });
           refresh();
@@ -128,11 +109,11 @@ export function useTodos() {
           dispatch({ type: "delete", id });
         });
     },
-    deleteTodo(id: todoObject["id"]) {
+    deleteTodo(id: TodoItem["id"]) {
       const obj = todos.find((todo) => todo.id === id);
       dispatch({ type: "delete", id });
       client
-        .deleteTodo({ id })
+        .deleteTodo(id)
         .then(() => {
           refresh();
         })

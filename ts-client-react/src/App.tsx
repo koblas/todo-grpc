@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { useTodos, Todo, TodoContextProvider } from "./hooks/todo";
+import { useTodos, TodoContextProvider } from "./hooks/todo";
+import { TodoItem } from "./rpc/todo";
 
 import "tailwindcss/dist/tailwind.css";
 
-function Item({ todo }: { todo: Todo }) {
+function Item({ todo }: { todo: TodoItem }) {
   const { deleteTodo } = useTodos();
   const { task, id } = todo;
 
@@ -22,7 +23,7 @@ function Item({ todo }: { todo: Todo }) {
   );
 }
 
-function List({ todos }: { todos: Todo[] }) {
+function List({ todos }: { todos: TodoItem[] }) {
   return (
     <ul className="grid justify-items-center">
       {todos.map((todo) => (
