@@ -1,3 +1,4 @@
-FROM envoyproxy/envoy:v1.9.0
-COPY envoy.yaml /etc/envoy.yaml
-CMD /usr/local/bin/envoy -c /etc/envoy.yaml
+FROM envoyproxy/envoy:v1.19.1
+WORKDIR /app
+COPY . .
+CMD /usr/local/bin/envoy -c ./envoy.yaml 

@@ -1,0 +1,31 @@
+version: '3.9'
+services:
+  envoy:
+    build: 
+      context: envoy
+    ports:
+      - 8080:8080
+      - 9901:9901
+    depends_on: 
+      - server
+    networks:
+      - envoymesh
+  server:
+    build: 
+      context: go-server
+    expose:
+      - "14586"
+    networks:
+      envoymesh:
+        aliases:
+          - service1
+  client:
+    build:
+      context: ts-client-react
+    ports:
+      - 8081:80
+    depends_on: 
+      - server
+
+networks:
+  envoymesh: {}

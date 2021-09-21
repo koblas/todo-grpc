@@ -9,7 +9,7 @@ function Item({ todo }: { todo: TodoItem }) {
   const { task, id } = todo;
 
   return (
-    <div className="bg-white text-center p-2 m-1 w-2/6 border border-color-gray-500">
+    <li className="bg-white text-center p-2 m-1 w-2/6 border border-color-gray-500">
       <div className="flex justify-between">
         <h5 className="font-light">{task}</h5>
         <button
@@ -19,7 +19,7 @@ function Item({ todo }: { todo: TodoItem }) {
           X
         </button>
       </div>
-    </div>
+    </li>
   );
 }
 
@@ -55,7 +55,7 @@ function Page() {
             handleAdd();
           }}
         >
-          <div className="space-x-5">
+          <div className="space-x-5" role="add">
             <input
               placeholder="Walk my dog"
               className="pl-2 p-2 border-b border-gray-300 rounded-md w-64"

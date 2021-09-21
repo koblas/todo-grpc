@@ -2,10 +2,10 @@
   "name": "ts-client-todo",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
   "scripts": {
     "start": "parcel serve public/index.html",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "parcel build public/index.html",
+    "test": "jest"
   },
   "keywords": [],
   "author": "",
@@ -24,9 +24,9 @@
     "eslint": "^7.32.0",
     "global-jsdom": "^8.2.0",
     "jest": "^27.2.1",
-    "jest-transform-css": "^2.1.0",
     "jsdom": "^17.0.0",
     "parcel": "^2.0.0-rc.0",
+    "postcss": "^8.3.6",
     "prettier": "^2.4.1",
     "protoc-gen-ts": "^0.5.0",
     "react-test-renderer": "^17.0.2",
@@ -36,8 +36,11 @@
   },
   "dependencies": {
     "@improbable-eng/grpc-web": "^0.14.1",
+    "assert": "^2.0.0",
     "bootstrap": "^5.1.1",
     "browser-headers": "^0.4.1",
+    "long": "^4.0.0",
+    "protobufjs": "^6.11.2",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "tailwindcss": "^2.2.15"

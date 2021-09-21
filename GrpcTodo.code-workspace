@@ -1,0 +1,26 @@
+{
+  "folders": [
+    {
+      "path": "ts-server",
+      "name": "TypeScript Server"
+    },
+    {
+      "path": "go-server",
+      "name": "Go Server"
+    },
+    {
+      "path": "ts-client-react",
+      "name": "React Client"
+    },
+    {
+      "path": "js-client-vue",
+      "name": "Vue Client"
+    },
+    {
+      "path": "envoy"
+    },
+    {
+      "path": "protos"
+    }
+  ]
+}

@@ -23,8 +23,9 @@ func main() {
 }
 
 func runServer() {
+	port := fmt.Sprintf(":%d", 14586)
 	ctx := context.Background()
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", 14586))
+	lis, err := net.Listen("tcp", port)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
@@ -55,7 +56,7 @@ func runServer() {
 		}
 	}()
 
-	logger.Log.Info("staring gRPC server...")
+	logger.Log.Info("staring gRPC server... port:" + port)
 
 	if err := server.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %s", err)
