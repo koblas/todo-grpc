@@ -54,73 +54,81 @@ static_resources:
   #
   #  JSON to gRPC listener
   # 
-  - name: listener_grpc_json
-    address:
-      socket_address: {address: 0.0.0.0, port_value: 51051}
-    filter_chains:
-    - filters:
-      - name: envoy.filters.network.http_connection_manager
-        typed_config:
-          "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
-          stat_prefix: grpc_json
-          access_log:
-            - name: envoy.access_loggers.stdout
-              typed_config:
-                "@type": type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog
-          route_config:
-            name: local_route
-            virtual_hosts:
-            - name: local_service
-              domains: ["*"]
-              # NOTE: by default, matching happens based on the gRPC route, and not on the incoming request path.
-              # Reference: https://www.envoyproxy.io/docs/envoy/latest/configuration/http_filters/grpc_json_transcoder_filter#route-configs-for-transcoded-requests
-              routes:
-              # - match: {prefix: "/" }
-              - match: {prefix: "/" }
-                route: 
-                  # prefix_rewrite: "/"
-                  cluster: todo_service
-                  timeout: 60s
-                  # max_stream_duration:
-                  #   grpc_timeout_header_max: 0s
-              cors:
-                allow_origin_string_match:
-                - prefix: "*"
-                allow_methods: GET, PUT, DELETE, POST, OPTIONS
-                allow_headers: keep-alive,user-agent,cache-control,content-type,content-transfer-encoding,custom-header-1,x-accept-content-transfer-encoding,x-accept-response-streaming,x-user-agent,x-grpc-web,grpc-timeout
-                max_age: "1728000"
-                expose_headers: custom-header-1,grpc-status,grpc-message
-          http_filters:
-          - name: envoy.filters.http.grpc_json_transcoder
-            typed_config:
-              "@type": type.googleapis.com/envoy.extensions.filters.http.grpc_json_transcoder.v3.GrpcJsonTranscoder
-              proto_descriptor: "./todo.pb"
-              services: ["todo.todoService"]
-              print_options:
-                add_whitespace: true
-                always_print_primitive_fields: true
-                always_print_enums_as_ints: false
-                preserve_proto_field_names: false
-          - name: envoy.filters.http.cors
-          - name: envoy.filters.http.router
+  # - name: listener_grpc_json
+  #   address:
+  #     socket_address: {address: 0.0.0.0, port_value: 51051}
+  #   filter_chains:
+  #   - filters:
+  #     - name: envoy.filters.network.http_connection_manager
+  #       typed_config:
+  #         "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+  #         stat_prefix: grpc_json
+  #         access_log:
+  #           - name: envoy.access_loggers.stdout
+  #             typed_config:
+  #               "@type": type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog
+  #         route_config:
+  #           name: local_route
+  #           virtual_hosts:
+  #           - name: local_service
+  #             domains: ["*"]
+  #             # NOTE: by default, matching happens based on the gRPC route, and not on the incoming request path.
+  #             # Reference: https://www.envoyproxy.io/docs/envoy/latest/configuration/http_filters/grpc_json_transcoder_filter#route-configs-for-transcoded-requests
+  #             routes:
+  #             # - match: {prefix: "/" }
+  #             - match: {prefix: "/" }
+  #               route: 
+  #                 # prefix_rewrite: "/"
+  #                 cluster: todo_service
+  #                 timeout: 60s
+  #                 # max_stream_duration:
+  #                 #   grpc_timeout_header_max: 0s
+  #             cors:
+  #               allow_origin_string_match:
+  #               - prefix: "*"
+  #               allow_methods: GET, PUT, DELETE, POST, OPTIONS
+  #               allow_headers: keep-alive,user-agent,cache-control,content-type,content-transfer-encoding,custom-header-1,x-accept-content-transfer-encoding,x-accept-response-streaming,x-user-agent,x-grpc-web,grpc-timeout
+  #               max_age: "1728000"
+  #               expose_headers: custom-header-1,grpc-status,grpc-message
+  #         http_filters:
+  #         - name: envoy.filters.http.grpc_json_transcoder
+  #           typed_config:
+  #             "@type": type.googleapis.com/envoy.extensions.filters.http.grpc_json_transcoder.v3.GrpcJsonTranscoder
+  #             proto_descriptor: "./todo.pb"
+  #             services: ["todo.todoService"]
+  #             print_options:
+  #               add_whitespace: true
+  #               always_print_primitive_fields: true
+  #               always_print_enums_as_ints: false
+  #               preserve_proto_field_names: false
+  #         - name: envoy.filters.http.cors
+  #         - name: envoy.filters.http.router
 
   clusters:
   - name: todo_service
     connect_timeout: 0.25s
-    type: logical_dns
+    type: strict_dns
     http2_protocol_options: {}
     lb_policy: round_robin
+    health_checks:
+      timeout: 1s
+      interval: 10s
+      unhealthy_threshold: 2
+      healthy_threshold: 2
+      grpc_health_check: {}
     load_assignment:
       cluster_name: cluster_0
       endpoints:
         - lb_endpoints:
-          #- endpoint:
-          #      address:
-          #        socket_address:
-          #          address: 0.0.0.0
-          #          port_value: 14586
-            - endpoint:
-                address:
-                  socket_address:
-                    address: service1
-                    port_value: 14586
+          # Configuration for running localhost
+          - endpoint:
+              address:
+                socket_address:
+                  address: 0.0.0.0
+                  port_value: 14586
+          # Configuration for when running in docker
+          - endpoint:
+              address:
+                socket_address:
+                  address: service1
+                  port_value: 14586

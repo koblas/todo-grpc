@@ -1,96 +1,59 @@
 # grpc-todo
 
 This is designed to show how to do basic gRPC between a web browser and
-a server. It uses envoy as the proxy to convert from HTTP to
-
-https://medium.com/@aravindhanjay/a-todo-app-using-grpc-web-and-vue-js-4e0c18461a3e
-
-https://medium.com/@amsokol.com/tutorial-part-3-how-to-develop-go-grpc-microservice-with-http-rest-endpoint-middleware-739aac8f1d7e
+a server. It uses envoy as the proxy to convert from GRPC-WEB or JSON to GRPC.
 
 ## Running
 
-- `envoy -c envoy/envoy_v3.yaml`
-- `cd ts-client-react; npm start`
-- `cd go-server ; go run server.go` or `cd ts-server ; npm start`
+The fastest way to get all of the components up and running is via the included `docker-compose` setup.  
+
+- `docker-compose build`
+- `docker-compose up`
+
+### Build and run locally
+
+If you're more for playing around without having to go through the world of docker.  You need three windows open and can run each of these commands.  *Note: Skipping over the npm install in the directories*
+
+- `cd go-server ; go run server.go`  or `cd ts-server ; npm start`
+- `cd ts-client-react ; npm start`
+- `cd envoy ; envoy -c envoy.yaml`
 - Open browser on port specificed (localhost:1234)
 
-# grpc-todo
+### Building the protobuf / gRPC definitions
 
-A simple todo app using gRPC on both the server and client side
+Base requirements:
+* OSX: `brew install protobuf`
+* Linux: install protobuf (via your favorite package manager)
 
-Code for the article [A TODO app using grpc-web and Vue.js](https://medium.com/@aravindhanjay/a-todo-app-using-grpc-web-and-vue-js-4e0c18461a3e)
+Protobuf files (which are checked into the repo, but if you're changing things)
 
-```console
-git clone git@github.com:thearavind/grpc-todo.git
-```
+`cd protos ; make`
 
-## Requirements
+The directory `google/api` was created by:
 
-### On OSX
+    mkdir -p google/api
+    cd protos/google/api
+    wget https://raw.githubusercontent.com/googleapis/googleapis/master/google/api/annotations.proto
+    wget https://raw.githubusercontent.com/googleapis/googleapis/master/google/api/http.proto
 
-```console
-brew install protobuf
-```
+## References
 
-### On Linux
+- [A TODO app using grpc-web and Vue.js](https://medium.com/@aravindhanjay/a-todo-app-using-grpc-web-and-vue-js-4e0c18461a3e)
+- https://medium.com/@amsokol.com/tutorial-part-3-how-to-develop-go-grpc-microservice-with-http-rest-endpoint-middleware-739aac8f1d7e
 
-```console
-# Make sure you grab the latest version
-curl -OL https://github.com/google/protobuf/releases/download/v3.6.1/protoc-3.6.1-linux-x86_64.zip
+### Graveyard of notes
 
-# Unzip
-unzip protoc-3.6.1-linux-x86_64.zip -d protoc3
-
-# Move protoc to /usr/local/bin/
-sudo mv protoc3/bin/* /usr/local/bin/
-
-# Move protoc3/include to /usr/local/include/
-sudo mv protoc3/include/* /usr/local/include/
-```
-
-## Install Protobuf Generator for Go
+#### Install Protobuf Generator for Go
 
 ```console
 go get -u github.com/golang/protobuf/protoc-gen-go
 ```
 
-## Install Protobuf Generator for Web
+#### Install Protobuf Generator for Web
 
 ```console
 git clone https://github.com/grpc/grpc-web /tmp/grpc-web
 cd /tmp/grpc-web && sudo make install-plugin
 rm -rf /tmp/grpc-web
 cd -
-```
-
-## Build process on your local machine
-
-### To start the gRPC server
-
-```console
-go run server.go
-```
-
-### To start the Envoy proxy
-
-```bash
-sudo -E docker build -t envoy:v1 .
-```
-
-```bash
-sudo docker run  -p 8080:8080 --net=host  envoy:v1
-```
-
-### To start the client side frontend app
-
-```bash
-cd todo-client/
-yarn serve
-```
-
-## Build process with docker-compose
-
-```console
-docker-compose build
-docker-compose up
 ```
