@@ -21,6 +21,9 @@
     },
     {
       "path": "protos"
+    },
+    {
+      "path": "ts-client"
     }
   ]
 }
