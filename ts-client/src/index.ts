@@ -1,6 +1,5 @@
 import * as grpc from "@grpc/grpc-js";
-import { addTodoParams, todoObject } from "./grpcjs/protos/todo_pb";
-import { todoServiceClient } from "./grpcjs/protos/todo_grpc_pb";
+import { todo } from "./grpcjs/protos/todo";
 
 // Based on
 //   https://github.com/badsyntax/grpc-js-typescript/tree/master/examples/grpc_tools_node_protoc_ts
@@ -28,15 +27,12 @@ type UnaryCall<Params, Response> = (
 
 async function main(argv: string[]) {
   const task = argv.join(" ");
-  const client = new todoServiceClient(host, grpc.credentials.createInsecure());
-
-  const request = new addTodoParams();
-  request.setTask(task);
+  const client = new todo.todoServiceClient(host, grpc.credentials.createInsecure());
 
   try {
-    const response = await new Promise<todoObject>((resolve, reject) => {
-      client.addTodo(request, (error, response) => {
-        if (error) {
+    const response = await new Promise<todo.todoObject>((resolve, reject) => {
+      client.addTodo(new todo.addTodoParams({ task }), (error, response) => {
+        if (error || response === undefined) {
           return reject(error);
         }
         return resolve(response);
@@ -44,7 +40,7 @@ async function main(argv: string[]) {
     });
     // const response = await wrapper<todoObject>(client.addTodo, request);
 
-    console.log("Success ", response.getId());
+    console.log("Success ", response.id);
   } catch (error) {
     console.log(error);
   }

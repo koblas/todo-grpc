@@ -84,13 +84,10 @@ ts-client-react:
 #protoc 
 
 ts-client:
-	$(TS_CLIENT)/node_modules/.bin/grpc_tools_node_protoc \
+	protoc \
 		-I . -I ./protos \
 		--proto_path=$(PROTO_DIR) \
-		--plugin=protoc-gen-ts=$(TS_CLIENT)/node_modules/.bin/protoc-gen-ts \
-		--plugin=protoc-gen-grpc=${TS_CLIENT}/node_modules/.bin/grpc_tools_node_protoc_plugin \
-		--js_out=import_style=commonjs:$(TS_CLIENT)/src/grpcjs \
-		--grpc_out=grpc_js:$(TS_CLIENT)/src/grpcjs \
+		--plugin=protoc-gen-ts=$(TS_CLIENT)/node_modules/protoc-gen-ts/bin/protoc-gen-ts \
 		--ts_out=grpc_js:$(TS_CLIENT)/src/grpcjs \
 		protos/todo.proto google/api/*.proto
 
