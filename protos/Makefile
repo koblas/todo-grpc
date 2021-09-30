@@ -56,7 +56,7 @@ ts-server:
 #
 # JS Client
 #
-js-client:
+js-client-vue:
 	protoc \
 		-I . -I ./protos \
 		--proto_path=$(PROTO_DIR) \
@@ -94,7 +94,7 @@ ts-client:
 		--ts_out=grpc_js:$(TS_CLIENT)/src/grpcjs \
 		protos/todo.proto google/api/*.proto
 
-ts-client-ld:
+ts-client-old:
 	$(TS_CLIENT)/node_modules/.bin/grpc_tools_node_protoc \
 		-I . -I ./protos \
 		--proto_path=$(PROTO_DIR) \
