@@ -1,29 +1,36 @@
 {
   "folders": [
     {
-      "path": "ts-server",
-      "name": "TypeScript Server"
+      "path": "protos",
+      "name": "Proto Decls"
     },
     {
       "path": "go-server",
       "name": "Go Server"
     },
     {
+      "path": "go-client",
+      "name": "Go Client"
+    },
+    {
+      "path": "ts-server",
+      "name": "TypeScript Server"
+    },
+    {
       "path": "ts-client-react",
-      "name": "React Client"
+      "name": "TypeScript React Client"
+    },
+    {
+      "path": "ts-client",
+      "name": "TypeScript Client"
     },
     {
       "path": "js-client-vue",
-      "name": "Vue Client"
+      "name": "JavaScript Vue Client"
     },
     {
       "path": "envoy"
-    },
-    {
-      "path": "protos"
-    },
-    {
-      "path": "ts-client"
+      "name": "Envoy Server"
     }
   ]
 }

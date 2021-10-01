@@ -1,4 +1,5 @@
 GO_SERVER=../go-server
+GO_CLIENT=../go-client
 TS_SERVER=../ts-server
 JS_CLIENT=../js-client-vue
 TS_REACT=../ts-client-react
@@ -28,6 +29,17 @@ go-server:
 		--proto_path=$(PROTO_DIR) \
 		--go_out=$(GO_SERVER)/todo --go_opt=paths=source_relative \
 		--go-grpc_out=$(GO_SERVER)/todo --go-grpc_opt=paths=source_relative \
+		protos/todo.proto
+
+go-client:
+	#
+	# Go Server
+	#
+	protoc \
+		-I . -I protos \
+		--proto_path=$(PROTO_DIR) \
+		--go_out=$(GO_CLIENT)/todo --go_opt=paths=source_relative \
+		--go-grpc_out=$(GO_CLIENT)/todo --go-grpc_opt=paths=source_relative \
 		protos/todo.proto
 
 #
