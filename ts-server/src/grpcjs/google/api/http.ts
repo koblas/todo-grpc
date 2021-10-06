@@ -1,784 +1,511 @@
-/* eslint-disable */
-import Long from "long";
-import _m0 from "protobufjs/minimal";
-
-export const protobufPackage = "google.api";
-
 /**
- * Defines the HTTP configuration for an API service. It contains a list of
- * [HttpRule][google.api.HttpRule], each specifying the mapping of an RPC method
- * to one or more HTTP REST API methods.
- */
-export interface Http {
-  /**
-   * A list of HTTP configuration rules that apply to individual API methods.
-   *
-   * **NOTE:** All service configuration rules follow "last one wins" order.
-   */
-  rules: HttpRule[];
-  /**
-   * When set to true, URL path parameters will be fully URI-decoded except in
-   * cases of single segment matches in reserved expansion, where "%2F" will be
-   * left encoded.
-   *
-   * The default behavior is to not decode RFC 6570 reserved characters in multi
-   * segment matches.
-   */
-  fullyDecodeReservedExpansion: boolean;
-}
-
-/**
- * # gRPC Transcoding
- *
- * gRPC Transcoding is a feature for mapping between a gRPC method and one or
- * more HTTP REST endpoints. It allows developers to build a single API service
- * that supports both gRPC APIs and REST APIs. Many systems, including [Google
- * APIs](https://github.com/googleapis/googleapis),
- * [Cloud Endpoints](https://cloud.google.com/endpoints), [gRPC
- * Gateway](https://github.com/grpc-ecosystem/grpc-gateway),
- * and [Envoy](https://github.com/envoyproxy/envoy) proxy support this feature
- * and use it for large scale production services.
- *
- * `HttpRule` defines the schema of the gRPC/REST mapping. The mapping specifies
- * how different portions of the gRPC request message are mapped to the URL
- * path, URL query parameters, and HTTP request body. It also controls how the
- * gRPC response message is mapped to the HTTP response body. `HttpRule` is
- * typically specified as an `google.api.http` annotation on the gRPC method.
- *
- * Each mapping specifies a URL path template and an HTTP method. The path
- * template may refer to one or more fields in the gRPC request message, as long
- * as each field is a non-repeated field with a primitive (non-message) type.
- * The path template controls how fields of the request message are mapped to
- * the URL path.
- *
- * Example:
- *
- *     service Messaging {
- *       rpc GetMessage(GetMessageRequest) returns (Message) {
- *         option (google.api.http) = {
- *             get: "/v1/{name=messages/*}"
- *         };
- *       }
- *     }
- *     message GetMessageRequest {
- *       string name = 1; // Mapped to URL path.
- *     }
- *     message Message {
- *       string text = 1; // The resource content.
- *     }
- *
- * This enables an HTTP REST to gRPC mapping as below:
- *
- * HTTP | gRPC
- * -----|-----
- * `GET /v1/messages/123456`  | `GetMessage(name: "messages/123456")`
- *
- * Any fields in the request message which are not bound by the path template
- * automatically become HTTP query parameters if there is no HTTP request body.
- * For example:
- *
- *     service Messaging {
- *       rpc GetMessage(GetMessageRequest) returns (Message) {
- *         option (google.api.http) = {
- *             get:"/v1/messages/{message_id}"
- *         };
- *       }
- *     }
- *     message GetMessageRequest {
- *       message SubMessage {
- *         string subfield = 1;
- *       }
- *       string message_id = 1; // Mapped to URL path.
- *       int64 revision = 2;    // Mapped to URL query parameter `revision`.
- *       SubMessage sub = 3;    // Mapped to URL query parameter `sub.subfield`.
- *     }
- *
- * This enables a HTTP JSON to RPC mapping as below:
- *
- * HTTP | gRPC
- * -----|-----
- * `GET /v1/messages/123456?revision=2&sub.subfield=foo` |
- * `GetMessage(message_id: "123456" revision: 2 sub: SubMessage(subfield:
- * "foo"))`
- *
- * Note that fields which are mapped to URL query parameters must have a
- * primitive type or a repeated primitive type or a non-repeated message type.
- * In the case of a repeated type, the parameter can be repeated in the URL
- * as `...?param=A&param=B`. In the case of a message type, each field of the
- * message is mapped to a separate parameter, such as
- * `...?foo.a=A&foo.b=B&foo.c=C`.
- *
- * For HTTP methods that allow a request body, the `body` field
- * specifies the mapping. Consider a REST update method on the
- * message resource collection:
- *
- *     service Messaging {
- *       rpc UpdateMessage(UpdateMessageRequest) returns (Message) {
- *         option (google.api.http) = {
- *           patch: "/v1/messages/{message_id}"
- *           body: "message"
- *         };
- *       }
- *     }
- *     message UpdateMessageRequest {
- *       string message_id = 1; // mapped to the URL
- *       Message message = 2;   // mapped to the body
- *     }
- *
- * The following HTTP JSON to RPC mapping is enabled, where the
- * representation of the JSON in the request body is determined by
- * protos JSON encoding:
- *
- * HTTP | gRPC
- * -----|-----
- * `PATCH /v1/messages/123456 { "text": "Hi!" }` | `UpdateMessage(message_id:
- * "123456" message { text: "Hi!" })`
- *
- * The special name `*` can be used in the body mapping to define that
- * every field not bound by the path template should be mapped to the
- * request body.  This enables the following alternative definition of
- * the update method:
- *
- *     service Messaging {
- *       rpc UpdateMessage(Message) returns (Message) {
- *         option (google.api.http) = {
- *           patch: "/v1/messages/{message_id}"
- *           body: "*"
- *         };
- *       }
- *     }
- *     message Message {
- *       string message_id = 1;
- *       string text = 2;
- *     }
- *
- *
- * The following HTTP JSON to RPC mapping is enabled:
- *
- * HTTP | gRPC
- * -----|-----
- * `PATCH /v1/messages/123456 { "text": "Hi!" }` | `UpdateMessage(message_id:
- * "123456" text: "Hi!")`
- *
- * Note that when using `*` in the body mapping, it is not possible to
- * have HTTP parameters, as all fields not bound by the path end in
- * the body. This makes this option more rarely used in practice when
- * defining REST APIs. The common usage of `*` is in custom methods
- * which don't use the URL at all for transferring data.
- *
- * It is possible to define multiple HTTP methods for one RPC by using
- * the `additional_bindings` option. Example:
- *
- *     service Messaging {
- *       rpc GetMessage(GetMessageRequest) returns (Message) {
- *         option (google.api.http) = {
- *           get: "/v1/messages/{message_id}"
- *           additional_bindings {
- *             get: "/v1/users/{user_id}/messages/{message_id}"
- *           }
- *         };
- *       }
- *     }
- *     message GetMessageRequest {
- *       string message_id = 1;
- *       string user_id = 2;
- *     }
- *
- * This enables the following two alternative HTTP JSON to RPC mappings:
- *
- * HTTP | gRPC
- * -----|-----
- * `GET /v1/messages/123456` | `GetMessage(message_id: "123456")`
- * `GET /v1/users/me/messages/123456` | `GetMessage(user_id: "me" message_id:
- * "123456")`
- *
- * ## Rules for HTTP mapping
- *
- * 1. Leaf request fields (recursive expansion nested messages in the request
- *    message) are classified into three categories:
- *    - Fields referred by the path template. They are passed via the URL path.
- *    - Fields referred by the [HttpRule.body][google.api.HttpRule.body]. They are passed via the HTTP
- *      request body.
- *    - All other fields are passed via the URL query parameters, and the
- *      parameter name is the field path in the request message. A repeated
- *      field can be represented as multiple query parameters under the same
- *      name.
- *  2. If [HttpRule.body][google.api.HttpRule.body] is "*", there is no URL query parameter, all fields
- *     are passed via URL path and HTTP request body.
- *  3. If [HttpRule.body][google.api.HttpRule.body] is omitted, there is no HTTP request body, all
- *     fields are passed via URL path and URL query parameters.
- *
- * ### Path template syntax
- *
- *     Template = "/" Segments [ Verb ] ;
- *     Segments = Segment { "/" Segment } ;
- *     Segment  = "*" | "**" | LITERAL | Variable ;
- *     Variable = "{" FieldPath [ "=" Segments ] "}" ;
- *     FieldPath = IDENT { "." IDENT } ;
- *     Verb     = ":" LITERAL ;
- *
- * The syntax `*` matches a single URL path segment. The syntax `**` matches
- * zero or more URL path segments, which must be the last part of the URL path
- * except the `Verb`.
- *
- * The syntax `Variable` matches part of the URL path as specified by its
- * template. A variable template must not contain other variables. If a variable
- * matches a single path segment, its template may be omitted, e.g. `{var}`
- * is equivalent to `{var=*}`.
- *
- * The syntax `LITERAL` matches literal text in the URL path. If the `LITERAL`
- * contains any reserved character, such characters should be percent-encoded
- * before the matching.
- *
- * If a variable contains exactly one path segment, such as `"{var}"` or
- * `"{var=*}"`, when such a variable is expanded into a URL path on the client
- * side, all characters except `[-_.~0-9a-zA-Z]` are percent-encoded. The
- * server side does the reverse decoding. Such variables show up in the
- * [Discovery
- * Document](https://developers.google.com/discovery/v1/reference/apis) as
- * `{var}`.
- *
- * If a variable contains multiple path segments, such as `"{var=foo/*}"`
- * or `"{var=**}"`, when such a variable is expanded into a URL path on the
- * client side, all characters except `[-_.~/0-9a-zA-Z]` are percent-encoded.
- * The server side does the reverse decoding, except "%2F" and "%2f" are left
- * unchanged. Such variables show up in the
- * [Discovery
- * Document](https://developers.google.com/discovery/v1/reference/apis) as
- * `{+var}`.
- *
- * ## Using gRPC API Service Configuration
- *
- * gRPC API Service Configuration (service config) is a configuration language
- * for configuring a gRPC service to become a user-facing product. The
- * service config is simply the YAML representation of the `google.api.Service`
- * proto message.
- *
- * As an alternative to annotating your proto file, you can configure gRPC
- * transcoding in your service config YAML files. You do this by specifying a
- * `HttpRule` that maps the gRPC method to a REST endpoint, achieving the same
- * effect as the proto annotation. This can be particularly useful if you
- * have a proto that is reused in multiple services. Note that any transcoding
- * specified in the service config will override any matching transcoding
- * configuration in the proto.
- *
- * Example:
- *
- *     http:
- *       rules:
- *         # Selects a gRPC method and applies HttpRule to it.
- *         - selector: example.v1.Messaging.GetMessage
- *           get: /v1/messages/{message_id}/{sub.subfield}
- *
- * ## Special notes
- *
- * When gRPC Transcoding is used to map a gRPC to JSON REST endpoints, the
- * proto to JSON conversion must follow the [proto3
- * specification](https://developers.google.com/protocol-buffers/docs/proto3#json).
- *
- * While the single segment variable follows the semantics of
- * [RFC 6570](https://tools.ietf.org/html/rfc6570) Section 3.2.2 Simple String
- * Expansion, the multi segment variable **does not** follow RFC 6570 Section
- * 3.2.3 Reserved Expansion. The reason is that the Reserved Expansion
- * does not expand special characters like `?` and `#`, which would lead
- * to invalid URLs. As the result, gRPC Transcoding uses a custom encoding
- * for multi segment variables.
- *
- * The path variables **must not** refer to any repeated or mapped field,
- * because client libraries are not capable of handling such variable expansion.
- *
- * The path variables **must not** capture the leading "/" character. The reason
- * is that the most common use case "{var}" does not capture the leading "/"
- * character. For consistency, all path variables must share the same behavior.
- *
- * Repeated message fields must not be mapped to URL query parameters, because
- * no client library can support such complicated mapping.
- *
- * If an API needs to use a JSON array for request or response body, it can map
- * the request or response body to a repeated field. However, some gRPC
- * Transcoding implementations may not support this feature.
- */
-export interface HttpRule {
-  /**
-   * Selects a method to which this rule applies.
-   *
-   * Refer to [selector][google.api.DocumentationRule.selector] for syntax details.
-   */
-  selector: string;
-  /**
-   * Maps to HTTP GET. Used for listing and getting information about
-   * resources.
-   */
-  get: string | undefined;
-  /** Maps to HTTP PUT. Used for replacing a resource. */
-  put: string | undefined;
-  /** Maps to HTTP POST. Used for creating a resource or performing an action. */
-  post: string | undefined;
-  /** Maps to HTTP DELETE. Used for deleting a resource. */
-  delete: string | undefined;
-  /** Maps to HTTP PATCH. Used for updating a resource. */
-  patch: string | undefined;
-  /**
-   * The custom pattern is used for specifying an HTTP method that is not
-   * included in the `pattern` field, such as HEAD, or "*" to leave the
-   * HTTP method unspecified for this rule. The wild-card rule is useful
-   * for services that provide content to Web (HTML) clients.
-   */
-  custom: CustomHttpPattern | undefined;
-  /**
-   * The name of the request field whose value is mapped to the HTTP request
-   * body, or `*` for mapping all request fields not captured by the path
-   * pattern to the HTTP body, or omitted for not having any HTTP request body.
-   *
-   * NOTE: the referred field must be present at the top-level of the request
-   * message type.
-   */
-  body: string;
-  /**
-   * Optional. The name of the response field whose value is mapped to the HTTP
-   * response body. When omitted, the entire response message will be used
-   * as the HTTP response body.
-   *
-   * NOTE: The referred field must be present at the top-level of the response
-   * message type.
-   */
-  responseBody: string;
-  /**
-   * Additional HTTP bindings for the selector. Nested bindings must
-   * not contain an `additional_bindings` field themselves (that is,
-   * the nesting may only be one level deep).
-   */
-  additionalBindings: HttpRule[];
-}
-
-/** A custom pattern is used for defining custom HTTP verb. */
-export interface CustomHttpPattern {
-  /** The name of this custom HTTP verb. */
-  kind: string;
-  /** The path matched by this custom verb. */
-  path: string;
-}
-
-const baseHttp: object = { fullyDecodeReservedExpansion: false };
-
-export const Http = {
-  encode(message: Http, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    for (const v of message.rules) {
-      HttpRule.encode(v!, writer.uint32(10).fork()).ldelim();
+ * Generated by the protoc-gen-ts.  DO NOT EDIT!
+ * compiler version: 3.17.3
+ * source: google/api/http.proto
+ * git: https://github.com/thesayyn/protoc-gen-ts
+ * buymeacoffee: https://www.buymeacoffee.com/thesayyn
+ *  */
+import * as pb_1 from "google-protobuf";
+export namespace google.api {
+    export class Http extends pb_1.Message {
+        constructor(data?: any[] | {
+            rules?: HttpRule[];
+            fully_decode_reserved_expansion?: boolean;
+        }) {
+            super();
+            pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [1], []);
+            if (!Array.isArray(data) && typeof data == "object") {
+                if ("rules" in data && data.rules != undefined) {
+                    this.rules = data.rules;
+                }
+                if ("fully_decode_reserved_expansion" in data && data.fully_decode_reserved_expansion != undefined) {
+                    this.fully_decode_reserved_expansion = data.fully_decode_reserved_expansion;
+                }
+            }
+        }
+        get rules() {
+            return pb_1.Message.getRepeatedWrapperField(this, HttpRule, 1) as HttpRule[];
+        }
+        set rules(value: HttpRule[]) {
+            pb_1.Message.setRepeatedWrapperField(this, 1, value);
+        }
+        get fully_decode_reserved_expansion() {
+            return pb_1.Message.getField(this, 2) as boolean;
+        }
+        set fully_decode_reserved_expansion(value: boolean) {
+            pb_1.Message.setField(this, 2, value);
+        }
+        static fromObject(data: {
+            rules?: ReturnType<typeof HttpRule.prototype.toObject>[];
+            fully_decode_reserved_expansion?: boolean;
+        }) {
+            const message = new Http({});
+            if (data.rules != null) {
+                message.rules = data.rules.map(item => HttpRule.fromObject(item));
+            }
+            if (data.fully_decode_reserved_expansion != null) {
+                message.fully_decode_reserved_expansion = data.fully_decode_reserved_expansion;
+            }
+            return message;
+        }
+        toObject() {
+            const data: {
+                rules?: ReturnType<typeof HttpRule.prototype.toObject>[];
+                fully_decode_reserved_expansion?: boolean;
+            } = {};
+            if (this.rules != null) {
+                data.rules = this.rules.map((item: HttpRule) => item.toObject());
+            }
+            if (this.fully_decode_reserved_expansion != null) {
+                data.fully_decode_reserved_expansion = this.fully_decode_reserved_expansion;
+            }
+            return data;
+        }
+        serialize(): Uint8Array;
+        serialize(w: pb_1.BinaryWriter): void;
+        serialize(w?: pb_1.BinaryWriter): Uint8Array | void {
+            const writer = w || new pb_1.BinaryWriter();
+            if (this.rules !== undefined)
+                writer.writeRepeatedMessage(1, this.rules, (item: HttpRule) => item.serialize(writer));
+            if (this.fully_decode_reserved_expansion !== undefined)
+                writer.writeBool(2, this.fully_decode_reserved_expansion);
+            if (!w)
+                return writer.getResultBuffer();
+        }
+        static deserialize(bytes: Uint8Array | pb_1.BinaryReader): Http {
+            const reader = bytes instanceof pb_1.BinaryReader ? bytes : new pb_1.BinaryReader(bytes), message = new Http();
+            while (reader.nextField()) {
+                if (reader.isEndGroup())
+                    break;
+                switch (reader.getFieldNumber()) {
+                    case 1:
+                        reader.readMessage(message.rules, () => pb_1.Message.addToRepeatedWrapperField(message, 1, HttpRule.deserialize(reader), HttpRule));
+                        break;
+                    case 2:
+                        message.fully_decode_reserved_expansion = reader.readBool();
+                        break;
+                    default: reader.skipField();
+                }
+            }
+            return message;
+        }
+        serializeBinary(): Uint8Array {
+            return this.serialize();
+        }
+        static deserializeBinary(bytes: Uint8Array): Http {
+            return Http.deserialize(bytes);
+        }
     }
-    if (message.fullyDecodeReservedExpansion === true) {
-      writer.uint32(16).bool(message.fullyDecodeReservedExpansion);
+    export class HttpRule extends pb_1.Message {
+        constructor(data?: any[] | ({
+            selector?: string;
+            body?: string;
+            response_body?: string;
+            additional_bindings?: HttpRule[];
+        } & (({
+            get?: string;
+            put?: never;
+            post?: never;
+            delete?: never;
+            patch?: never;
+            custom?: never;
+        } | {
+            get?: never;
+            put?: string;
+            post?: never;
+            delete?: never;
+            patch?: never;
+            custom?: never;
+        } | {
+            get?: never;
+            put?: never;
+            post?: string;
+            delete?: never;
+            patch?: never;
+            custom?: never;
+        } | {
+            get?: never;
+            put?: never;
+            post?: never;
+            delete?: string;
+            patch?: never;
+            custom?: never;
+        } | {
+            get?: never;
+            put?: never;
+            post?: never;
+            delete?: never;
+            patch?: string;
+            custom?: never;
+        } | {
+            get?: never;
+            put?: never;
+            post?: never;
+            delete?: never;
+            patch?: never;
+            custom?: CustomHttpPattern;
+        })))) {
+            super();
+            pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [11], [[2, 3, 4, 5, 6, 8]]);
+            if (!Array.isArray(data) && typeof data == "object") {
+                if ("selector" in data && data.selector != undefined) {
+                    this.selector = data.selector;
+                }
+                if ("get" in data && data.get != undefined) {
+                    this.get = data.get;
+                }
+                if ("put" in data && data.put != undefined) {
+                    this.put = data.put;
+                }
+                if ("post" in data && data.post != undefined) {
+                    this.post = data.post;
+                }
+                if ("delete" in data && data.delete != undefined) {
+                    this.delete = data.delete;
+                }
+                if ("patch" in data && data.patch != undefined) {
+                    this.patch = data.patch;
+                }
+                if ("custom" in data && data.custom != undefined) {
+                    this.custom = data.custom;
+                }
+                if ("body" in data && data.body != undefined) {
+                    this.body = data.body;
+                }
+                if ("response_body" in data && data.response_body != undefined) {
+                    this.response_body = data.response_body;
+                }
+                if ("additional_bindings" in data && data.additional_bindings != undefined) {
+                    this.additional_bindings = data.additional_bindings;
+                }
+            }
+        }
+        get selector() {
+            return pb_1.Message.getField(this, 1) as string;
+        }
+        set selector(value: string) {
+            pb_1.Message.setField(this, 1, value);
+        }
+        get get() {
+            return pb_1.Message.getField(this, 2) as string;
+        }
+        set get(value: string) {
+            pb_1.Message.setOneofField(this, 2, [2, 3, 4, 5, 6, 8], value);
+        }
+        get put() {
+            return pb_1.Message.getField(this, 3) as string;
+        }
+        set put(value: string) {
+            pb_1.Message.setOneofField(this, 3, [2, 3, 4, 5, 6, 8], value);
+        }
+        get post() {
+            return pb_1.Message.getField(this, 4) as string;
+        }
+        set post(value: string) {
+            pb_1.Message.setOneofField(this, 4, [2, 3, 4, 5, 6, 8], value);
+        }
+        get delete() {
+            return pb_1.Message.getField(this, 5) as string;
+        }
+        set delete(value: string) {
+            pb_1.Message.setOneofField(this, 5, [2, 3, 4, 5, 6, 8], value);
+        }
+        get patch() {
+            return pb_1.Message.getField(this, 6) as string;
+        }
+        set patch(value: string) {
+            pb_1.Message.setOneofField(this, 6, [2, 3, 4, 5, 6, 8], value);
+        }
+        get custom() {
+            return pb_1.Message.getWrapperField(this, CustomHttpPattern, 8) as CustomHttpPattern;
+        }
+        set custom(value: CustomHttpPattern) {
+            pb_1.Message.setOneofWrapperField(this, 8, [2, 3, 4, 5, 6, 8], value);
+        }
+        get body() {
+            return pb_1.Message.getField(this, 7) as string;
+        }
+        set body(value: string) {
+            pb_1.Message.setField(this, 7, value);
+        }
+        get response_body() {
+            return pb_1.Message.getField(this, 12) as string;
+        }
+        set response_body(value: string) {
+            pb_1.Message.setField(this, 12, value);
+        }
+        get additional_bindings() {
+            return pb_1.Message.getRepeatedWrapperField(this, HttpRule, 11) as HttpRule[];
+        }
+        set additional_bindings(value: HttpRule[]) {
+            pb_1.Message.setRepeatedWrapperField(this, 11, value);
+        }
+        get pattern() {
+            const cases: {
+                [index: number]: "none" | "get" | "put" | "post" | "delete" | "patch" | "custom";
+            } = {
+                0: "none",
+                2: "get",
+                3: "put",
+                4: "post",
+                5: "delete",
+                6: "patch",
+                8: "custom"
+            };
+            return cases[pb_1.Message.computeOneofCase(this, [2, 3, 4, 5, 6, 8])];
+        }
+        static fromObject(data: {
+            selector?: string;
+            get?: string;
+            put?: string;
+            post?: string;
+            delete?: string;
+            patch?: string;
+            custom?: ReturnType<typeof CustomHttpPattern.prototype.toObject>;
+            body?: string;
+            response_body?: string;
+            additional_bindings?: ReturnType<typeof HttpRule.prototype.toObject>[];
+        }) {
+            const message = new HttpRule({});
+            if (data.selector != null) {
+                message.selector = data.selector;
+            }
+            if (data.get != null) {
+                message.get = data.get;
+            }
+            if (data.put != null) {
+                message.put = data.put;
+            }
+            if (data.post != null) {
+                message.post = data.post;
+            }
+            if (data.delete != null) {
+                message.delete = data.delete;
+            }
+            if (data.patch != null) {
+                message.patch = data.patch;
+            }
+            if (data.custom != null) {
+                message.custom = CustomHttpPattern.fromObject(data.custom);
+            }
+            if (data.body != null) {
+                message.body = data.body;
+            }
+            if (data.response_body != null) {
+                message.response_body = data.response_body;
+            }
+            if (data.additional_bindings != null) {
+                message.additional_bindings = data.additional_bindings.map(item => HttpRule.fromObject(item));
+            }
+            return message;
+        }
+        toObject() {
+            const data: {
+                selector?: string;
+                get?: string;
+                put?: string;
+                post?: string;
+                delete?: string;
+                patch?: string;
+                custom?: ReturnType<typeof CustomHttpPattern.prototype.toObject>;
+                body?: string;
+                response_body?: string;
+                additional_bindings?: ReturnType<typeof HttpRule.prototype.toObject>[];
+            } = {};
+            if (this.selector != null) {
+                data.selector = this.selector;
+            }
+            if (this.get != null) {
+                data.get = this.get;
+            }
+            if (this.put != null) {
+                data.put = this.put;
+            }
+            if (this.post != null) {
+                data.post = this.post;
+            }
+            if (this.delete != null) {
+                data.delete = this.delete;
+            }
+            if (this.patch != null) {
+                data.patch = this.patch;
+            }
+            if (this.custom != null) {
+                data.custom = this.custom.toObject();
+            }
+            if (this.body != null) {
+                data.body = this.body;
+            }
+            if (this.response_body != null) {
+                data.response_body = this.response_body;
+            }
+            if (this.additional_bindings != null) {
+                data.additional_bindings = this.additional_bindings.map((item: HttpRule) => item.toObject());
+            }
+            return data;
+        }
+        serialize(): Uint8Array;
+        serialize(w: pb_1.BinaryWriter): void;
+        serialize(w?: pb_1.BinaryWriter): Uint8Array | void {
+            const writer = w || new pb_1.BinaryWriter();
+            if (typeof this.selector === "string" && this.selector.length)
+                writer.writeString(1, this.selector);
+            if (typeof this.get === "string" && this.get.length)
+                writer.writeString(2, this.get);
+            if (typeof this.put === "string" && this.put.length)
+                writer.writeString(3, this.put);
+            if (typeof this.post === "string" && this.post.length)
+                writer.writeString(4, this.post);
+            if (typeof this.delete === "string" && this.delete.length)
+                writer.writeString(5, this.delete);
+            if (typeof this.patch === "string" && this.patch.length)
+                writer.writeString(6, this.patch);
+            if (this.custom !== undefined)
+                writer.writeMessage(8, this.custom, () => this.custom.serialize(writer));
+            if (typeof this.body === "string" && this.body.length)
+                writer.writeString(7, this.body);
+            if (typeof this.response_body === "string" && this.response_body.length)
+                writer.writeString(12, this.response_body);
+            if (this.additional_bindings !== undefined)
+                writer.writeRepeatedMessage(11, this.additional_bindings, (item: HttpRule) => item.serialize(writer));
+            if (!w)
+                return writer.getResultBuffer();
+        }
+        static deserialize(bytes: Uint8Array | pb_1.BinaryReader): HttpRule {
+            const reader = bytes instanceof pb_1.BinaryReader ? bytes : new pb_1.BinaryReader(bytes), message = new HttpRule();
+            while (reader.nextField()) {
+                if (reader.isEndGroup())
+                    break;
+                switch (reader.getFieldNumber()) {
+                    case 1:
+                        message.selector = reader.readString();
+                        break;
+                    case 2:
+                        message.get = reader.readString();
+                        break;
+                    case 3:
+                        message.put = reader.readString();
+                        break;
+                    case 4:
+                        message.post = reader.readString();
+                        break;
+                    case 5:
+                        message.delete = reader.readString();
+                        break;
+                    case 6:
+                        message.patch = reader.readString();
+                        break;
+                    case 8:
+                        reader.readMessage(message.custom, () => message.custom = CustomHttpPattern.deserialize(reader));
+                        break;
+                    case 7:
+                        message.body = reader.readString();
+                        break;
+                    case 12:
+                        message.response_body = reader.readString();
+                        break;
+                    case 11:
+                        reader.readMessage(message.additional_bindings, () => pb_1.Message.addToRepeatedWrapperField(message, 11, HttpRule.deserialize(reader), HttpRule));
+                        break;
+                    default: reader.skipField();
+                }
+            }
+            return message;
+        }
+        serializeBinary(): Uint8Array {
+            return this.serialize();
+        }
+        static deserializeBinary(bytes: Uint8Array): HttpRule {
+            return HttpRule.deserialize(bytes);
+        }
     }
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): Http {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...baseHttp } as Http;
-    message.rules = [];
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1:
-          message.rules.push(HttpRule.decode(reader, reader.uint32()));
-          break;
-        case 2:
-          message.fullyDecodeReservedExpansion = reader.bool();
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
+    export class CustomHttpPattern extends pb_1.Message {
+        constructor(data?: any[] | {
+            kind?: string;
+            path?: string;
+        }) {
+            super();
+            pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], []);
+            if (!Array.isArray(data) && typeof data == "object") {
+                if ("kind" in data && data.kind != undefined) {
+                    this.kind = data.kind;
+                }
+                if ("path" in data && data.path != undefined) {
+                    this.path = data.path;
+                }
+            }
+        }
+        get kind() {
+            return pb_1.Message.getField(this, 1) as string;
+        }
+        set kind(value: string) {
+            pb_1.Message.setField(this, 1, value);
+        }
+        get path() {
+            return pb_1.Message.getField(this, 2) as string;
+        }
+        set path(value: string) {
+            pb_1.Message.setField(this, 2, value);
+        }
+        static fromObject(data: {
+            kind?: string;
+            path?: string;
+        }) {
+            const message = new CustomHttpPattern({});
+            if (data.kind != null) {
+                message.kind = data.kind;
+            }
+            if (data.path != null) {
+                message.path = data.path;
+            }
+            return message;
+        }
+        toObject() {
+            const data: {
+                kind?: string;
+                path?: string;
+            } = {};
+            if (this.kind != null) {
+                data.kind = this.kind;
+            }
+            if (this.path != null) {
+                data.path = this.path;
+            }
+            return data;
+        }
+        serialize(): Uint8Array;
+        serialize(w: pb_1.BinaryWriter): void;
+        serialize(w?: pb_1.BinaryWriter): Uint8Array | void {
+            const writer = w || new pb_1.BinaryWriter();
+            if (typeof this.kind === "string" && this.kind.length)
+                writer.writeString(1, this.kind);
+            if (typeof this.path === "string" && this.path.length)
+                writer.writeString(2, this.path);
+            if (!w)
+                return writer.getResultBuffer();
+        }
+        static deserialize(bytes: Uint8Array | pb_1.BinaryReader): CustomHttpPattern {
+            const reader = bytes instanceof pb_1.BinaryReader ? bytes : new pb_1.BinaryReader(bytes), message = new CustomHttpPattern();
+            while (reader.nextField()) {
+                if (reader.isEndGroup())
+                    break;
+                switch (reader.getFieldNumber()) {
+                    case 1:
+                        message.kind = reader.readString();
+                        break;
+                    case 2:
+                        message.path = reader.readString();
+                        break;
+                    default: reader.skipField();
+                }
+            }
+            return message;
+        }
+        serializeBinary(): Uint8Array {
+            return this.serialize();
+        }
+        static deserializeBinary(bytes: Uint8Array): CustomHttpPattern {
+            return CustomHttpPattern.deserialize(bytes);
+        }
     }
-    return message;
-  },
-
-  fromJSON(object: any): Http {
-    const message = { ...baseHttp } as Http;
-    message.rules = [];
-    if (object.rules !== undefined && object.rules !== null) {
-      for (const e of object.rules) {
-        message.rules.push(HttpRule.fromJSON(e));
-      }
-    }
-    if (
-      object.fullyDecodeReservedExpansion !== undefined &&
-      object.fullyDecodeReservedExpansion !== null
-    ) {
-      message.fullyDecodeReservedExpansion = Boolean(
-        object.fullyDecodeReservedExpansion
-      );
-    } else {
-      message.fullyDecodeReservedExpansion = false;
-    }
-    return message;
-  },
-
-  toJSON(message: Http): unknown {
-    const obj: any = {};
-    if (message.rules) {
-      obj.rules = message.rules.map((e) =>
-        e ? HttpRule.toJSON(e) : undefined
-      );
-    } else {
-      obj.rules = [];
-    }
-    message.fullyDecodeReservedExpansion !== undefined &&
-      (obj.fullyDecodeReservedExpansion = message.fullyDecodeReservedExpansion);
-    return obj;
-  },
-
-  fromPartial(object: DeepPartial<Http>): Http {
-    const message = { ...baseHttp } as Http;
-    message.rules = [];
-    if (object.rules !== undefined && object.rules !== null) {
-      for (const e of object.rules) {
-        message.rules.push(HttpRule.fromPartial(e));
-      }
-    }
-    if (
-      object.fullyDecodeReservedExpansion !== undefined &&
-      object.fullyDecodeReservedExpansion !== null
-    ) {
-      message.fullyDecodeReservedExpansion =
-        object.fullyDecodeReservedExpansion;
-    } else {
-      message.fullyDecodeReservedExpansion = false;
-    }
-    return message;
-  },
-};
-
-const baseHttpRule: object = { selector: "", body: "", responseBody: "" };
-
-export const HttpRule = {
-  encode(
-    message: HttpRule,
-    writer: _m0.Writer = _m0.Writer.create()
-  ): _m0.Writer {
-    if (message.selector !== "") {
-      writer.uint32(10).string(message.selector);
-    }
-    if (message.get !== undefined) {
-      writer.uint32(18).string(message.get);
-    }
-    if (message.put !== undefined) {
-      writer.uint32(26).string(message.put);
-    }
-    if (message.post !== undefined) {
-      writer.uint32(34).string(message.post);
-    }
-    if (message.delete !== undefined) {
-      writer.uint32(42).string(message.delete);
-    }
-    if (message.patch !== undefined) {
-      writer.uint32(50).string(message.patch);
-    }
-    if (message.custom !== undefined) {
-      CustomHttpPattern.encode(
-        message.custom,
-        writer.uint32(66).fork()
-      ).ldelim();
-    }
-    if (message.body !== "") {
-      writer.uint32(58).string(message.body);
-    }
-    if (message.responseBody !== "") {
-      writer.uint32(98).string(message.responseBody);
-    }
-    for (const v of message.additionalBindings) {
-      HttpRule.encode(v!, writer.uint32(90).fork()).ldelim();
-    }
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): HttpRule {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...baseHttpRule } as HttpRule;
-    message.additionalBindings = [];
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1:
-          message.selector = reader.string();
-          break;
-        case 2:
-          message.get = reader.string();
-          break;
-        case 3:
-          message.put = reader.string();
-          break;
-        case 4:
-          message.post = reader.string();
-          break;
-        case 5:
-          message.delete = reader.string();
-          break;
-        case 6:
-          message.patch = reader.string();
-          break;
-        case 8:
-          message.custom = CustomHttpPattern.decode(reader, reader.uint32());
-          break;
-        case 7:
-          message.body = reader.string();
-          break;
-        case 12:
-          message.responseBody = reader.string();
-          break;
-        case 11:
-          message.additionalBindings.push(
-            HttpRule.decode(reader, reader.uint32())
-          );
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-    return message;
-  },
-
-  fromJSON(object: any): HttpRule {
-    const message = { ...baseHttpRule } as HttpRule;
-    message.additionalBindings = [];
-    if (object.selector !== undefined && object.selector !== null) {
-      message.selector = String(object.selector);
-    } else {
-      message.selector = "";
-    }
-    if (object.get !== undefined && object.get !== null) {
-      message.get = String(object.get);
-    } else {
-      message.get = undefined;
-    }
-    if (object.put !== undefined && object.put !== null) {
-      message.put = String(object.put);
-    } else {
-      message.put = undefined;
-    }
-    if (object.post !== undefined && object.post !== null) {
-      message.post = String(object.post);
-    } else {
-      message.post = undefined;
-    }
-    if (object.delete !== undefined && object.delete !== null) {
-      message.delete = String(object.delete);
-    } else {
-      message.delete = undefined;
-    }
-    if (object.patch !== undefined && object.patch !== null) {
-      message.patch = String(object.patch);
-    } else {
-      message.patch = undefined;
-    }
-    if (object.custom !== undefined && object.custom !== null) {
-      message.custom = CustomHttpPattern.fromJSON(object.custom);
-    } else {
-      message.custom = undefined;
-    }
-    if (object.body !== undefined && object.body !== null) {
-      message.body = String(object.body);
-    } else {
-      message.body = "";
-    }
-    if (object.responseBody !== undefined && object.responseBody !== null) {
-      message.responseBody = String(object.responseBody);
-    } else {
-      message.responseBody = "";
-    }
-    if (
-      object.additionalBindings !== undefined &&
-      object.additionalBindings !== null
-    ) {
-      for (const e of object.additionalBindings) {
-        message.additionalBindings.push(HttpRule.fromJSON(e));
-      }
-    }
-    return message;
-  },
-
-  toJSON(message: HttpRule): unknown {
-    const obj: any = {};
-    message.selector !== undefined && (obj.selector = message.selector);
-    message.get !== undefined && (obj.get = message.get);
-    message.put !== undefined && (obj.put = message.put);
-    message.post !== undefined && (obj.post = message.post);
-    message.delete !== undefined && (obj.delete = message.delete);
-    message.patch !== undefined && (obj.patch = message.patch);
-    message.custom !== undefined &&
-      (obj.custom = message.custom
-        ? CustomHttpPattern.toJSON(message.custom)
-        : undefined);
-    message.body !== undefined && (obj.body = message.body);
-    message.responseBody !== undefined &&
-      (obj.responseBody = message.responseBody);
-    if (message.additionalBindings) {
-      obj.additionalBindings = message.additionalBindings.map((e) =>
-        e ? HttpRule.toJSON(e) : undefined
-      );
-    } else {
-      obj.additionalBindings = [];
-    }
-    return obj;
-  },
-
-  fromPartial(object: DeepPartial<HttpRule>): HttpRule {
-    const message = { ...baseHttpRule } as HttpRule;
-    message.additionalBindings = [];
-    if (object.selector !== undefined && object.selector !== null) {
-      message.selector = object.selector;
-    } else {
-      message.selector = "";
-    }
-    if (object.get !== undefined && object.get !== null) {
-      message.get = object.get;
-    } else {
-      message.get = undefined;
-    }
-    if (object.put !== undefined && object.put !== null) {
-      message.put = object.put;
-    } else {
-      message.put = undefined;
-    }
-    if (object.post !== undefined && object.post !== null) {
-      message.post = object.post;
-    } else {
-      message.post = undefined;
-    }
-    if (object.delete !== undefined && object.delete !== null) {
-      message.delete = object.delete;
-    } else {
-      message.delete = undefined;
-    }
-    if (object.patch !== undefined && object.patch !== null) {
-      message.patch = object.patch;
-    } else {
-      message.patch = undefined;
-    }
-    if (object.custom !== undefined && object.custom !== null) {
-      message.custom = CustomHttpPattern.fromPartial(object.custom);
-    } else {
-      message.custom = undefined;
-    }
-    if (object.body !== undefined && object.body !== null) {
-      message.body = object.body;
-    } else {
-      message.body = "";
-    }
-    if (object.responseBody !== undefined && object.responseBody !== null) {
-      message.responseBody = object.responseBody;
-    } else {
-      message.responseBody = "";
-    }
-    if (
-      object.additionalBindings !== undefined &&
-      object.additionalBindings !== null
-    ) {
-      for (const e of object.additionalBindings) {
-        message.additionalBindings.push(HttpRule.fromPartial(e));
-      }
-    }
-    return message;
-  },
-};
-
-const baseCustomHttpPattern: object = { kind: "", path: "" };
-
-export const CustomHttpPattern = {
-  encode(
-    message: CustomHttpPattern,
-    writer: _m0.Writer = _m0.Writer.create()
-  ): _m0.Writer {
-    if (message.kind !== "") {
-      writer.uint32(10).string(message.kind);
-    }
-    if (message.path !== "") {
-      writer.uint32(18).string(message.path);
-    }
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): CustomHttpPattern {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...baseCustomHttpPattern } as CustomHttpPattern;
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1:
-          message.kind = reader.string();
-          break;
-        case 2:
-          message.path = reader.string();
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-    return message;
-  },
-
-  fromJSON(object: any): CustomHttpPattern {
-    const message = { ...baseCustomHttpPattern } as CustomHttpPattern;
-    if (object.kind !== undefined && object.kind !== null) {
-      message.kind = String(object.kind);
-    } else {
-      message.kind = "";
-    }
-    if (object.path !== undefined && object.path !== null) {
-      message.path = String(object.path);
-    } else {
-      message.path = "";
-    }
-    return message;
-  },
-
-  toJSON(message: CustomHttpPattern): unknown {
-    const obj: any = {};
-    message.kind !== undefined && (obj.kind = message.kind);
-    message.path !== undefined && (obj.path = message.path);
-    return obj;
-  },
-
-  fromPartial(object: DeepPartial<CustomHttpPattern>): CustomHttpPattern {
-    const message = { ...baseCustomHttpPattern } as CustomHttpPattern;
-    if (object.kind !== undefined && object.kind !== null) {
-      message.kind = object.kind;
-    } else {
-      message.kind = "";
-    }
-    if (object.path !== undefined && object.path !== null) {
-      message.path = object.path;
-    } else {
-      message.path = "";
-    }
-    return message;
-  },
-};
-
-type Builtin =
-  | Date
-  | Function
-  | Uint8Array
-  | string
-  | number
-  | boolean
-  | undefined;
-export type DeepPartial<T> = T extends Builtin
-  ? T
-  : T extends Array<infer U>
-  ? Array<DeepPartial<U>>
-  : T extends ReadonlyArray<infer U>
-  ? ReadonlyArray<DeepPartial<U>>
-  : T extends {}
-  ? { [K in keyof T]?: DeepPartial<T[K]> }
-  : Partial<T>;
-
-if (_m0.util.Long !== Long) {
-  _m0.util.Long = Long as any;
-  _m0.configure();
 }

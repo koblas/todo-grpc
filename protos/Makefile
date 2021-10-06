@@ -45,7 +45,7 @@ go-client:
 #
 # TS Server
 #     https://github.com/agreatfool/grpc_tools_node_protoc_ts/blob/master/examples/bash/build.sh
-ts-server:
+ts-server-old:
 	$(TS_SERVER)/node_modules/.bin/grpc_tools_node_protoc \
 		-I . -I protos \
 		--js_out=import_style=commonjs,binary:$(TS_SERVER)/src/grpcjs \
@@ -65,6 +65,13 @@ ts-server:
 		--ts_proto_out=import_style=commonjs,binary:$(TS_SERVER)/src/grpcjs/ \
 		protos/todo.proto
 	
+ts-server:
+	protoc \
+		-I . -I ./protos \
+		--proto_path=$(PROTO_DIR) \
+		--plugin=protoc-gen-ts=$(TS_SERVER)/node_modules/.bin/protoc-gen-ts \
+		--ts_out=grpc_js:$(TS_SERVER)/src/grpcjs \
+		protos/todo.proto google/api/*.proto
 #
 # JS Client
 #
@@ -96,10 +103,12 @@ ts-client-react:
 #protoc 
 
 ts-client:
+	# --plugin=protoc-gen-ts=$(TS_CLIENT)/node_modules/protoc-gen-ts/bin/protoc-gen-ts \
+
 	protoc \
 		-I . -I ./protos \
 		--proto_path=$(PROTO_DIR) \
-		--plugin=protoc-gen-ts=$(TS_CLIENT)/node_modules/protoc-gen-ts/bin/protoc-gen-ts \
+		--plugin=protoc-gen-ts=/Users/koblas/repos/github.com/koblas/protoc-gen-ts/bin/protoc-gen-ts \
 		--ts_out=grpc_js:$(TS_CLIENT)/src/grpcjs \
 		protos/todo.proto google/api/*.proto
 

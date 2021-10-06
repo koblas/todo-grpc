@@ -15,6 +15,10 @@ export namespace todo {
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], []);
             if (!Array.isArray(data) && typeof data == "object") { }
         }
+        static fromObject(data: {}) {
+            const message = new getTodoParams({});
+            return message;
+        }
         toObject() {
             const data: {} = {};
             return data;
@@ -61,6 +65,15 @@ export namespace todo {
         }
         set task(value: string) {
             pb_1.Message.setField(this, 1, value);
+        }
+        static fromObject(data: {
+            task?: string;
+        }) {
+            const message = new addTodoParams({});
+            if (data.task != null) {
+                message.task = data.task;
+            }
+            return message;
         }
         toObject() {
             const data: {
@@ -118,6 +131,15 @@ export namespace todo {
         }
         set id(value: string) {
             pb_1.Message.setField(this, 1, value);
+        }
+        static fromObject(data: {
+            id?: string;
+        }) {
+            const message = new deleteTodoParams({});
+            if (data.id != null) {
+                message.id = data.id;
+            }
+            return message;
         }
         toObject() {
             const data: {
@@ -186,6 +208,19 @@ export namespace todo {
         set task(value: string) {
             pb_1.Message.setField(this, 2, value);
         }
+        static fromObject(data: {
+            id?: string;
+            task?: string;
+        }) {
+            const message = new todoObject({});
+            if (data.id != null) {
+                message.id = data.id;
+            }
+            if (data.task != null) {
+                message.task = data.task;
+            }
+            return message;
+        }
         toObject() {
             const data: {
                 id?: string;
@@ -252,6 +287,15 @@ export namespace todo {
         set todos(value: todoObject[]) {
             pb_1.Message.setRepeatedWrapperField(this, 1, value);
         }
+        static fromObject(data: {
+            todos?: ReturnType<typeof todoObject.prototype.toObject>[];
+        }) {
+            const message = new todoResponse({});
+            if (data.todos != null) {
+                message.todos = data.todos.map(item => todoObject.fromObject(item));
+            }
+            return message;
+        }
         toObject() {
             const data: {
                 todos?: ReturnType<typeof todoObject.prototype.toObject>[];
@@ -309,6 +353,15 @@ export namespace todo {
         set message(value: string) {
             pb_1.Message.setField(this, 1, value);
         }
+        static fromObject(data: {
+            message?: string;
+        }) {
+            const message = new deleteResponse({});
+            if (data.message != null) {
+                message.message = data.message;
+            }
+            return message;
+        }
         toObject() {
             const data: {
                 message?: string;
@@ -347,6 +400,30 @@ export namespace todo {
         static deserializeBinary(bytes: Uint8Array): deleteResponse {
             return deleteResponse.deserialize(bytes);
         }
+    }
+    interface GrpcUnaryServiceInterface<P, R> {
+        (message: P, metadata: grpc_1.Metadata, options: grpc_1.CallOptions, callback: grpc_1.requestCallback<R>): grpc_1.ClientUnaryCall;
+        (message: P, metadata: grpc_1.Metadata, callback: grpc_1.requestCallback<R>): grpc_1.ClientUnaryCall;
+        (message: P, options: grpc_1.CallOptions, callback: grpc_1.requestCallback<R>): grpc_1.ClientUnaryCall;
+        (message: P, callback: grpc_1.requestCallback<R>): grpc_1.ClientUnaryCall;
+    }
+    interface GrpcStreamServiceInterface<P, R> {
+        (message: P, metadata: grpc_1.Metadata, options?: grpc_1.CallOptions): grpc_1.ClientReadableStream<R>;
+        (message: P, options?: grpc_1.CallOptions): grpc_1.ClientReadableStream<R>;
+    }
+    interface GrpWritableServiceInterface<P, R> {
+        (metadata: grpc_1.Metadata, options: grpc_1.CallOptions, callback: grpc_1.requestCallback<R>): grpc_1.ClientWritableStream<P>;
+        (metadata: grpc_1.Metadata, callback: grpc_1.requestCallback<R>): grpc_1.ClientWritableStream<P>;
+        (options: grpc_1.CallOptions, callback: grpc_1.requestCallback<R>): grpc_1.ClientWritableStream<P>;
+        (callback: grpc_1.requestCallback<R>): grpc_1.ClientWritableStream<P>;
+    }
+    interface GrpcChunkServiceInterface<P, R> {
+        (metadata: grpc_1.Metadata, options?: grpc_1.CallOptions): grpc_1.ClientDuplexStream<P, R>;
+        (options?: grpc_1.CallOptions): grpc_1.ClientDuplexStream<P, R>;
+    }
+    interface GrpcPromiseServiceInterface<P, R> {
+        (message: P, metadata: grpc_1.Metadata, options?: grpc_1.CallOptions): Promise<R>;
+        (message: P, options?: grpc_1.CallOptions): Promise<R>;
     }
     export abstract class UnimplementedtodoServiceService {
         static definition = {
@@ -387,26 +464,14 @@ export namespace todo {
         constructor(address: string, credentials: grpc_1.ChannelCredentials, options?: Partial<grpc_1.ChannelOptions>) {
             super(address, credentials, options)
         }
-        addTodo(message: addTodoParams, metadata: grpc_1.Metadata, options: grpc_1.CallOptions, callback: grpc_1.requestCallback<todoObject>): grpc_1.ClientUnaryCall;
-        addTodo(message: addTodoParams, metadata: grpc_1.Metadata, callback: grpc_1.requestCallback<todoObject>): grpc_1.ClientUnaryCall;
-        addTodo(message: addTodoParams, options: grpc_1.CallOptions, callback: grpc_1.requestCallback<todoObject>): grpc_1.ClientUnaryCall;
-        addTodo(message: addTodoParams, callback: grpc_1.requestCallback<todoObject>): grpc_1.ClientUnaryCall;
-        addTodo(message: addTodoParams, metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<todoObject>, options?: grpc_1.CallOptions | grpc_1.requestCallback<todoObject>, callback?: grpc_1.requestCallback<todoObject>): grpc_1.ClientUnaryCall {
+        addTodo: GrpcUnaryServiceInterface<addTodoParams, todoObject> = (message: addTodoParams, metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<todoObject>, options?: grpc_1.CallOptions | grpc_1.requestCallback<todoObject>, callback?: grpc_1.requestCallback<todoObject>): grpc_1.ClientUnaryCall => {
             return super.addTodo(message, metadata, options, callback);
-        }
-        deleteTodo(message: deleteTodoParams, metadata: grpc_1.Metadata, options: grpc_1.CallOptions, callback: grpc_1.requestCallback<deleteResponse>): grpc_1.ClientUnaryCall;
-        deleteTodo(message: deleteTodoParams, metadata: grpc_1.Metadata, callback: grpc_1.requestCallback<deleteResponse>): grpc_1.ClientUnaryCall;
-        deleteTodo(message: deleteTodoParams, options: grpc_1.CallOptions, callback: grpc_1.requestCallback<deleteResponse>): grpc_1.ClientUnaryCall;
-        deleteTodo(message: deleteTodoParams, callback: grpc_1.requestCallback<deleteResponse>): grpc_1.ClientUnaryCall;
-        deleteTodo(message: deleteTodoParams, metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<deleteResponse>, options?: grpc_1.CallOptions | grpc_1.requestCallback<deleteResponse>, callback?: grpc_1.requestCallback<deleteResponse>): grpc_1.ClientUnaryCall {
+        };
+        deleteTodo: GrpcUnaryServiceInterface<deleteTodoParams, deleteResponse> = (message: deleteTodoParams, metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<deleteResponse>, options?: grpc_1.CallOptions | grpc_1.requestCallback<deleteResponse>, callback?: grpc_1.requestCallback<deleteResponse>): grpc_1.ClientUnaryCall => {
             return super.deleteTodo(message, metadata, options, callback);
-        }
-        getTodos(message: getTodoParams, metadata: grpc_1.Metadata, options: grpc_1.CallOptions, callback: grpc_1.requestCallback<todoResponse>): grpc_1.ClientUnaryCall;
-        getTodos(message: getTodoParams, metadata: grpc_1.Metadata, callback: grpc_1.requestCallback<todoResponse>): grpc_1.ClientUnaryCall;
-        getTodos(message: getTodoParams, options: grpc_1.CallOptions, callback: grpc_1.requestCallback<todoResponse>): grpc_1.ClientUnaryCall;
-        getTodos(message: getTodoParams, callback: grpc_1.requestCallback<todoResponse>): grpc_1.ClientUnaryCall;
-        getTodos(message: getTodoParams, metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<todoResponse>, options?: grpc_1.CallOptions | grpc_1.requestCallback<todoResponse>, callback?: grpc_1.requestCallback<todoResponse>): grpc_1.ClientUnaryCall {
+        };
+        getTodos: GrpcUnaryServiceInterface<getTodoParams, todoResponse> = (message: getTodoParams, metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<todoResponse>, options?: grpc_1.CallOptions | grpc_1.requestCallback<todoResponse>, callback?: grpc_1.requestCallback<todoResponse>): grpc_1.ClientUnaryCall => {
             return super.getTodos(message, metadata, options, callback);
-        }
+        };
     }
 }

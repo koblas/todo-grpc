@@ -1,12 +1,5 @@
 import * as grpc from "@grpc/grpc-js";
-import {
-  addTodoParams,
-  deleteTodoParams,
-  getTodoParams,
-  todoObject,
-  todoServiceServer,
-  todoServiceService,
-} from "./grpcjs/todo";
+import { todo } from "./grpcjs/protos/todo";
 import { v4 as uuidv4 } from "uuid";
 
 // To build gRPC definitions
@@ -20,7 +13,7 @@ import { v4 as uuidv4 } from "uuid";
 //
 
 // Our internal Todo fufills the interface of the gRPC data
-interface Todo extends todoObject {}
+interface Todo extends todo.todoObject {}
 
 let todos: Todo[] = [];
 
@@ -28,9 +21,12 @@ let todos: Todo[] = [];
  * Really handy function to convert callback style unary gRPC functions
  * into Promise based functions.
  */
-function unaryWrap<I, O, CALL extends grpc.ServerUnaryCall<I, O>, CB extends grpc.sendUnaryData<O>>(
-  handler: (params: CALL["request"], metadata: CALL["metadata"]) => Promise<O>,
+function unaryWrap<I, O, CALL extends grpc.ServerUnaryCall<I, O>, CB extends grpc.requestCallback<O>>(
+  handler: (params: I, metadata: grpc.Metadata) => Promise<O>,
 ) {
+  type EType = Parameters<grpc.requestCallback<O>>[0];
+  //  export declare type sendUnaryData<ResponseType> = (error: ServerErrorResponse | ServerStatusResponse | null, value?: ResponseType | null, trailer?: Metadata, flags?: number) => void;
+
   return (call: CALL, callback: CB): void => {
     handler(call.request, call.metadata)
       .then((r) => {
@@ -38,38 +34,40 @@ function unaryWrap<I, O, CALL extends grpc.ServerUnaryCall<I, O>, CB extends grp
       })
       .catch((error) => {
         if (error instanceof Error) {
-          callback(error, null);
+          callback(error as EType);
         } else {
-          callback(new Error(JSON.stringify(error)), null);
+          callback(new Error(error) as EType);
         }
       });
   };
 }
 
-const TodoServer: todoServiceServer = {
-  addTodo: unaryWrap(async ({ task }: addTodoParams) => {
-    const item = {
+const TodoServer = {
+  addTodo: unaryWrap(async ({ task }: todo.addTodoParams) => {
+    const item = new todo.todoObject({
       id: uuidv4(),
       task: task,
-    };
+    });
 
     todos.push(item);
 
     return item;
   }),
-  deleteTodo: unaryWrap(async ({ id }: deleteTodoParams) => {
+
+  deleteTodo: unaryWrap(async ({ id }: todo.deleteTodoParams) => {
     todos = todos.filter((todo) => todo.id !== id);
 
-    return { message: "Success" };
+    return new todo.deleteResponse({ message: "Success" });
   }),
-  getTodos: unaryWrap(async (input: getTodoParams) => {
-    return { todos };
+
+  getTodos: unaryWrap(async (input: todo.getTodoParams) => {
+    return new todo.todoResponse({ todos });
   }),
 };
 
 function main(): void {
   const server = new grpc.Server();
-  server.addService(todoServiceService, TodoServer);
+  server.addService(todo.UnimplementedtodoServiceService.definition, TodoServer);
   server.bindAsync(`localhost:${process.env.PORT ?? 14586}`, grpc.ServerCredentials.createInsecure(), (err, port) => {
     if (err) {
       throw err;

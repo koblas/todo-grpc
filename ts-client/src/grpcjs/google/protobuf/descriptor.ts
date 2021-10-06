@@ -23,6 +23,14 @@ export namespace google.protobuf {
         set file(value: FileDescriptorProto[]) {
             pb_1.Message.setRepeatedWrapperField(this, 1, value);
         }
+        static fromObject(data: {
+            file: ReturnType<typeof FileDescriptorProto.prototype.toObject>[];
+        }) {
+            const message = new FileDescriptorSet({
+                file: data.file.map(item => FileDescriptorProto.fromObject(item))
+            });
+            return message;
+        }
         toObject() {
             const data: {
                 file: ReturnType<typeof FileDescriptorProto.prototype.toObject>[];
@@ -174,6 +182,46 @@ export namespace google.protobuf {
         }
         set syntax(value: string) {
             pb_1.Message.setField(this, 12, value);
+        }
+        static fromObject(data: {
+            name?: string;
+            package?: string;
+            dependency: string[];
+            public_dependency: number[];
+            weak_dependency: number[];
+            message_type: ReturnType<typeof DescriptorProto.prototype.toObject>[];
+            enum_type: ReturnType<typeof EnumDescriptorProto.prototype.toObject>[];
+            service: ReturnType<typeof ServiceDescriptorProto.prototype.toObject>[];
+            extension: ReturnType<typeof FieldDescriptorProto.prototype.toObject>[];
+            options?: ReturnType<typeof FileOptions.prototype.toObject>;
+            source_code_info?: ReturnType<typeof SourceCodeInfo.prototype.toObject>;
+            syntax?: string;
+        }) {
+            const message = new FileDescriptorProto({
+                dependency: data.dependency,
+                public_dependency: data.public_dependency,
+                weak_dependency: data.weak_dependency,
+                message_type: data.message_type.map(item => DescriptorProto.fromObject(item)),
+                enum_type: data.enum_type.map(item => EnumDescriptorProto.fromObject(item)),
+                service: data.service.map(item => ServiceDescriptorProto.fromObject(item)),
+                extension: data.extension.map(item => FieldDescriptorProto.fromObject(item))
+            });
+            if (data.name != null) {
+                message.name = data.name;
+            }
+            if (data.package != null) {
+                message.package = data.package;
+            }
+            if (data.options != null) {
+                message.options = FileOptions.fromObject(data.options);
+            }
+            if (data.source_code_info != null) {
+                message.source_code_info = SourceCodeInfo.fromObject(data.source_code_info);
+            }
+            if (data.syntax != null) {
+                message.syntax = data.syntax;
+            }
+            return message;
         }
         toObject() {
             const data: {
@@ -392,6 +440,36 @@ export namespace google.protobuf {
         set reserved_name(value: string[]) {
             pb_1.Message.setField(this, 10, value);
         }
+        static fromObject(data: {
+            name?: string;
+            field: ReturnType<typeof FieldDescriptorProto.prototype.toObject>[];
+            extension: ReturnType<typeof FieldDescriptorProto.prototype.toObject>[];
+            nested_type: ReturnType<typeof DescriptorProto.prototype.toObject>[];
+            enum_type: ReturnType<typeof EnumDescriptorProto.prototype.toObject>[];
+            extension_range: ReturnType<typeof DescriptorProto.ExtensionRange.prototype.toObject>[];
+            oneof_decl: ReturnType<typeof OneofDescriptorProto.prototype.toObject>[];
+            options?: ReturnType<typeof MessageOptions.prototype.toObject>;
+            reserved_range: ReturnType<typeof DescriptorProto.ReservedRange.prototype.toObject>[];
+            reserved_name: string[];
+        }) {
+            const message = new DescriptorProto({
+                field: data.field.map(item => FieldDescriptorProto.fromObject(item)),
+                extension: data.extension.map(item => FieldDescriptorProto.fromObject(item)),
+                nested_type: data.nested_type.map(item => DescriptorProto.fromObject(item)),
+                enum_type: data.enum_type.map(item => EnumDescriptorProto.fromObject(item)),
+                extension_range: data.extension_range.map(item => DescriptorProto.ExtensionRange.fromObject(item)),
+                oneof_decl: data.oneof_decl.map(item => OneofDescriptorProto.fromObject(item)),
+                reserved_range: data.reserved_range.map(item => DescriptorProto.ReservedRange.fromObject(item)),
+                reserved_name: data.reserved_name
+            });
+            if (data.name != null) {
+                message.name = data.name;
+            }
+            if (data.options != null) {
+                message.options = MessageOptions.fromObject(data.options);
+            }
+            return message;
+        }
         toObject() {
             const data: {
                 name?: string;
@@ -536,6 +614,23 @@ export namespace google.protobuf {
             set options(value: ExtensionRangeOptions) {
                 pb_1.Message.setWrapperField(this, 3, value);
             }
+            static fromObject(data: {
+                start?: number;
+                end?: number;
+                options?: ReturnType<typeof ExtensionRangeOptions.prototype.toObject>;
+            }) {
+                const message = new ExtensionRange({});
+                if (data.start != null) {
+                    message.start = data.start;
+                }
+                if (data.end != null) {
+                    message.end = data.end;
+                }
+                if (data.options != null) {
+                    message.options = ExtensionRangeOptions.fromObject(data.options);
+                }
+                return message;
+            }
             toObject() {
                 const data: {
                     start?: number;
@@ -621,6 +716,19 @@ export namespace google.protobuf {
             set end(value: number) {
                 pb_1.Message.setField(this, 2, value);
             }
+            static fromObject(data: {
+                start?: number;
+                end?: number;
+            }) {
+                const message = new ReservedRange({});
+                if (data.start != null) {
+                    message.start = data.start;
+                }
+                if (data.end != null) {
+                    message.end = data.end;
+                }
+                return message;
+            }
             toObject() {
                 const data: {
                     start?: number;
@@ -685,6 +793,14 @@ export namespace google.protobuf {
         }
         set uninterpreted_option(value: UninterpretedOption[]) {
             pb_1.Message.setRepeatedWrapperField(this, 999, value);
+        }
+        static fromObject(data: {
+            uninterpreted_option: ReturnType<typeof UninterpretedOption.prototype.toObject>[];
+        }) {
+            const message = new ExtensionRangeOptions({
+                uninterpreted_option: data.uninterpreted_option.map(item => UninterpretedOption.fromObject(item))
+            });
+            return message;
         }
         toObject() {
             const data: {
@@ -841,6 +957,55 @@ export namespace google.protobuf {
         }
         set proto3_optional(value: boolean) {
             pb_1.Message.setField(this, 17, value);
+        }
+        static fromObject(data: {
+            name?: string;
+            number?: number;
+            label?: FieldDescriptorProto.Label;
+            type?: FieldDescriptorProto.Type;
+            type_name?: string;
+            extendee?: string;
+            default_value?: string;
+            oneof_index?: number;
+            json_name?: string;
+            options?: ReturnType<typeof FieldOptions.prototype.toObject>;
+            proto3_optional?: boolean;
+        }) {
+            const message = new FieldDescriptorProto({});
+            if (data.name != null) {
+                message.name = data.name;
+            }
+            if (data.number != null) {
+                message.number = data.number;
+            }
+            if (data.label != null) {
+                message.label = data.label;
+            }
+            if (data.type != null) {
+                message.type = data.type;
+            }
+            if (data.type_name != null) {
+                message.type_name = data.type_name;
+            }
+            if (data.extendee != null) {
+                message.extendee = data.extendee;
+            }
+            if (data.default_value != null) {
+                message.default_value = data.default_value;
+            }
+            if (data.oneof_index != null) {
+                message.oneof_index = data.oneof_index;
+            }
+            if (data.json_name != null) {
+                message.json_name = data.json_name;
+            }
+            if (data.options != null) {
+                message.options = FieldOptions.fromObject(data.options);
+            }
+            if (data.proto3_optional != null) {
+                message.proto3_optional = data.proto3_optional;
+            }
+            return message;
         }
         toObject() {
             const data: {
@@ -1026,6 +1191,19 @@ export namespace google.protobuf {
         set options(value: OneofOptions) {
             pb_1.Message.setWrapperField(this, 2, value);
         }
+        static fromObject(data: {
+            name?: string;
+            options?: ReturnType<typeof OneofOptions.prototype.toObject>;
+        }) {
+            const message = new OneofDescriptorProto({});
+            if (data.name != null) {
+                message.name = data.name;
+            }
+            if (data.options != null) {
+                message.options = OneofOptions.fromObject(data.options);
+            }
+            return message;
+        }
         toObject() {
             const data: {
                 name?: string;
@@ -1126,6 +1304,26 @@ export namespace google.protobuf {
         set reserved_name(value: string[]) {
             pb_1.Message.setField(this, 5, value);
         }
+        static fromObject(data: {
+            name?: string;
+            value: ReturnType<typeof EnumValueDescriptorProto.prototype.toObject>[];
+            options?: ReturnType<typeof EnumOptions.prototype.toObject>;
+            reserved_range: ReturnType<typeof EnumDescriptorProto.EnumReservedRange.prototype.toObject>[];
+            reserved_name: string[];
+        }) {
+            const message = new EnumDescriptorProto({
+                value: data.value.map(item => EnumValueDescriptorProto.fromObject(item)),
+                reserved_range: data.reserved_range.map(item => EnumDescriptorProto.EnumReservedRange.fromObject(item)),
+                reserved_name: data.reserved_name
+            });
+            if (data.name != null) {
+                message.name = data.name;
+            }
+            if (data.options != null) {
+                message.options = EnumOptions.fromObject(data.options);
+            }
+            return message;
+        }
         toObject() {
             const data: {
                 name?: string;
@@ -1225,6 +1423,19 @@ export namespace google.protobuf {
             set end(value: number) {
                 pb_1.Message.setField(this, 2, value);
             }
+            static fromObject(data: {
+                start?: number;
+                end?: number;
+            }) {
+                const message = new EnumReservedRange({});
+                if (data.start != null) {
+                    message.start = data.start;
+                }
+                if (data.end != null) {
+                    message.end = data.end;
+                }
+                return message;
+            }
             toObject() {
                 const data: {
                     start?: number;
@@ -1311,6 +1522,23 @@ export namespace google.protobuf {
         }
         set options(value: EnumValueOptions) {
             pb_1.Message.setWrapperField(this, 3, value);
+        }
+        static fromObject(data: {
+            name?: string;
+            number?: number;
+            options?: ReturnType<typeof EnumValueOptions.prototype.toObject>;
+        }) {
+            const message = new EnumValueDescriptorProto({});
+            if (data.name != null) {
+                message.name = data.name;
+            }
+            if (data.number != null) {
+                message.number = data.number;
+            }
+            if (data.options != null) {
+                message.options = EnumValueOptions.fromObject(data.options);
+            }
+            return message;
         }
         toObject() {
             const data: {
@@ -1404,6 +1632,22 @@ export namespace google.protobuf {
         }
         set options(value: ServiceOptions) {
             pb_1.Message.setWrapperField(this, 3, value);
+        }
+        static fromObject(data: {
+            name?: string;
+            method: ReturnType<typeof MethodDescriptorProto.prototype.toObject>[];
+            options?: ReturnType<typeof ServiceOptions.prototype.toObject>;
+        }) {
+            const message = new ServiceDescriptorProto({
+                method: data.method.map(item => MethodDescriptorProto.fromObject(item))
+            });
+            if (data.name != null) {
+                message.name = data.name;
+            }
+            if (data.options != null) {
+                message.options = ServiceOptions.fromObject(data.options);
+            }
+            return message;
         }
         toObject() {
             const data: {
@@ -1528,6 +1772,35 @@ export namespace google.protobuf {
         }
         set server_streaming(value: boolean) {
             pb_1.Message.setField(this, 6, value);
+        }
+        static fromObject(data: {
+            name?: string;
+            input_type?: string;
+            output_type?: string;
+            options?: ReturnType<typeof MethodOptions.prototype.toObject>;
+            client_streaming?: boolean;
+            server_streaming?: boolean;
+        }) {
+            const message = new MethodDescriptorProto({});
+            if (data.name != null) {
+                message.name = data.name;
+            }
+            if (data.input_type != null) {
+                message.input_type = data.input_type;
+            }
+            if (data.output_type != null) {
+                message.output_type = data.output_type;
+            }
+            if (data.options != null) {
+                message.options = MethodOptions.fromObject(data.options);
+            }
+            if (data.client_streaming != null) {
+                message.client_streaming = data.client_streaming;
+            }
+            if (data.server_streaming != null) {
+                message.server_streaming = data.server_streaming;
+            }
+            return message;
         }
         toObject() {
             const data: {
@@ -1829,6 +2102,94 @@ export namespace google.protobuf {
         set uninterpreted_option(value: UninterpretedOption[]) {
             pb_1.Message.setRepeatedWrapperField(this, 999, value);
         }
+        static fromObject(data: {
+            java_package?: string;
+            java_outer_classname?: string;
+            java_multiple_files?: boolean;
+            java_generate_equals_and_hash?: boolean;
+            java_string_check_utf8?: boolean;
+            optimize_for?: FileOptions.OptimizeMode;
+            go_package?: string;
+            cc_generic_services?: boolean;
+            java_generic_services?: boolean;
+            py_generic_services?: boolean;
+            php_generic_services?: boolean;
+            deprecated?: boolean;
+            cc_enable_arenas?: boolean;
+            objc_class_prefix?: string;
+            csharp_namespace?: string;
+            swift_prefix?: string;
+            php_class_prefix?: string;
+            php_namespace?: string;
+            php_metadata_namespace?: string;
+            ruby_package?: string;
+            uninterpreted_option: ReturnType<typeof UninterpretedOption.prototype.toObject>[];
+        }) {
+            const message = new FileOptions({
+                uninterpreted_option: data.uninterpreted_option.map(item => UninterpretedOption.fromObject(item))
+            });
+            if (data.java_package != null) {
+                message.java_package = data.java_package;
+            }
+            if (data.java_outer_classname != null) {
+                message.java_outer_classname = data.java_outer_classname;
+            }
+            if (data.java_multiple_files != null) {
+                message.java_multiple_files = data.java_multiple_files;
+            }
+            if (data.java_generate_equals_and_hash != null) {
+                message.java_generate_equals_and_hash = data.java_generate_equals_and_hash;
+            }
+            if (data.java_string_check_utf8 != null) {
+                message.java_string_check_utf8 = data.java_string_check_utf8;
+            }
+            if (data.optimize_for != null) {
+                message.optimize_for = data.optimize_for;
+            }
+            if (data.go_package != null) {
+                message.go_package = data.go_package;
+            }
+            if (data.cc_generic_services != null) {
+                message.cc_generic_services = data.cc_generic_services;
+            }
+            if (data.java_generic_services != null) {
+                message.java_generic_services = data.java_generic_services;
+            }
+            if (data.py_generic_services != null) {
+                message.py_generic_services = data.py_generic_services;
+            }
+            if (data.php_generic_services != null) {
+                message.php_generic_services = data.php_generic_services;
+            }
+            if (data.deprecated != null) {
+                message.deprecated = data.deprecated;
+            }
+            if (data.cc_enable_arenas != null) {
+                message.cc_enable_arenas = data.cc_enable_arenas;
+            }
+            if (data.objc_class_prefix != null) {
+                message.objc_class_prefix = data.objc_class_prefix;
+            }
+            if (data.csharp_namespace != null) {
+                message.csharp_namespace = data.csharp_namespace;
+            }
+            if (data.swift_prefix != null) {
+                message.swift_prefix = data.swift_prefix;
+            }
+            if (data.php_class_prefix != null) {
+                message.php_class_prefix = data.php_class_prefix;
+            }
+            if (data.php_namespace != null) {
+                message.php_namespace = data.php_namespace;
+            }
+            if (data.php_metadata_namespace != null) {
+                message.php_metadata_namespace = data.php_metadata_namespace;
+            }
+            if (data.ruby_package != null) {
+                message.ruby_package = data.ruby_package;
+            }
+            return message;
+        }
         toObject() {
             const data: {
                 java_package?: string;
@@ -2110,6 +2471,30 @@ export namespace google.protobuf {
         set uninterpreted_option(value: UninterpretedOption[]) {
             pb_1.Message.setRepeatedWrapperField(this, 999, value);
         }
+        static fromObject(data: {
+            message_set_wire_format?: boolean;
+            no_standard_descriptor_accessor?: boolean;
+            deprecated?: boolean;
+            map_entry?: boolean;
+            uninterpreted_option: ReturnType<typeof UninterpretedOption.prototype.toObject>[];
+        }) {
+            const message = new MessageOptions({
+                uninterpreted_option: data.uninterpreted_option.map(item => UninterpretedOption.fromObject(item))
+            });
+            if (data.message_set_wire_format != null) {
+                message.message_set_wire_format = data.message_set_wire_format;
+            }
+            if (data.no_standard_descriptor_accessor != null) {
+                message.no_standard_descriptor_accessor = data.no_standard_descriptor_accessor;
+            }
+            if (data.deprecated != null) {
+                message.deprecated = data.deprecated;
+            }
+            if (data.map_entry != null) {
+                message.map_entry = data.map_entry;
+            }
+            return message;
+        }
         toObject() {
             const data: {
                 message_set_wire_format?: boolean;
@@ -2260,6 +2645,38 @@ export namespace google.protobuf {
         set uninterpreted_option(value: UninterpretedOption[]) {
             pb_1.Message.setRepeatedWrapperField(this, 999, value);
         }
+        static fromObject(data: {
+            ctype?: FieldOptions.CType;
+            packed?: boolean;
+            jstype?: FieldOptions.JSType;
+            lazy?: boolean;
+            deprecated?: boolean;
+            weak?: boolean;
+            uninterpreted_option: ReturnType<typeof UninterpretedOption.prototype.toObject>[];
+        }) {
+            const message = new FieldOptions({
+                uninterpreted_option: data.uninterpreted_option.map(item => UninterpretedOption.fromObject(item))
+            });
+            if (data.ctype != null) {
+                message.ctype = data.ctype;
+            }
+            if (data.packed != null) {
+                message.packed = data.packed;
+            }
+            if (data.jstype != null) {
+                message.jstype = data.jstype;
+            }
+            if (data.lazy != null) {
+                message.lazy = data.lazy;
+            }
+            if (data.deprecated != null) {
+                message.deprecated = data.deprecated;
+            }
+            if (data.weak != null) {
+                message.weak = data.weak;
+            }
+            return message;
+        }
         toObject() {
             const data: {
                 ctype?: FieldOptions.CType;
@@ -2380,6 +2797,14 @@ export namespace google.protobuf {
         set uninterpreted_option(value: UninterpretedOption[]) {
             pb_1.Message.setRepeatedWrapperField(this, 999, value);
         }
+        static fromObject(data: {
+            uninterpreted_option: ReturnType<typeof UninterpretedOption.prototype.toObject>[];
+        }) {
+            const message = new OneofOptions({
+                uninterpreted_option: data.uninterpreted_option.map(item => UninterpretedOption.fromObject(item))
+            });
+            return message;
+        }
         toObject() {
             const data: {
                 uninterpreted_option: ReturnType<typeof UninterpretedOption.prototype.toObject>[];
@@ -2453,6 +2878,22 @@ export namespace google.protobuf {
         }
         set uninterpreted_option(value: UninterpretedOption[]) {
             pb_1.Message.setRepeatedWrapperField(this, 999, value);
+        }
+        static fromObject(data: {
+            allow_alias?: boolean;
+            deprecated?: boolean;
+            uninterpreted_option: ReturnType<typeof UninterpretedOption.prototype.toObject>[];
+        }) {
+            const message = new EnumOptions({
+                uninterpreted_option: data.uninterpreted_option.map(item => UninterpretedOption.fromObject(item))
+            });
+            if (data.allow_alias != null) {
+                message.allow_alias = data.allow_alias;
+            }
+            if (data.deprecated != null) {
+                message.deprecated = data.deprecated;
+            }
+            return message;
         }
         toObject() {
             const data: {
@@ -2536,6 +2977,18 @@ export namespace google.protobuf {
         set uninterpreted_option(value: UninterpretedOption[]) {
             pb_1.Message.setRepeatedWrapperField(this, 999, value);
         }
+        static fromObject(data: {
+            deprecated?: boolean;
+            uninterpreted_option: ReturnType<typeof UninterpretedOption.prototype.toObject>[];
+        }) {
+            const message = new EnumValueOptions({
+                uninterpreted_option: data.uninterpreted_option.map(item => UninterpretedOption.fromObject(item))
+            });
+            if (data.deprecated != null) {
+                message.deprecated = data.deprecated;
+            }
+            return message;
+        }
         toObject() {
             const data: {
                 deprecated?: boolean;
@@ -2608,6 +3061,18 @@ export namespace google.protobuf {
         }
         set uninterpreted_option(value: UninterpretedOption[]) {
             pb_1.Message.setRepeatedWrapperField(this, 999, value);
+        }
+        static fromObject(data: {
+            deprecated?: boolean;
+            uninterpreted_option: ReturnType<typeof UninterpretedOption.prototype.toObject>[];
+        }) {
+            const message = new ServiceOptions({
+                uninterpreted_option: data.uninterpreted_option.map(item => UninterpretedOption.fromObject(item))
+            });
+            if (data.deprecated != null) {
+                message.deprecated = data.deprecated;
+            }
+            return message;
         }
         toObject() {
             const data: {
@@ -2691,6 +3156,22 @@ export namespace google.protobuf {
         }
         set uninterpreted_option(value: UninterpretedOption[]) {
             pb_1.Message.setRepeatedWrapperField(this, 999, value);
+        }
+        static fromObject(data: {
+            deprecated?: boolean;
+            idempotency_level?: MethodOptions.IdempotencyLevel;
+            uninterpreted_option: ReturnType<typeof UninterpretedOption.prototype.toObject>[];
+        }) {
+            const message = new MethodOptions({
+                uninterpreted_option: data.uninterpreted_option.map(item => UninterpretedOption.fromObject(item))
+            });
+            if (data.deprecated != null) {
+                message.deprecated = data.deprecated;
+            }
+            if (data.idempotency_level != null) {
+                message.idempotency_level = data.idempotency_level;
+            }
+            return message;
         }
         toObject() {
             const data: {
@@ -2831,6 +3312,38 @@ export namespace google.protobuf {
         set aggregate_value(value: string) {
             pb_1.Message.setField(this, 8, value);
         }
+        static fromObject(data: {
+            name: ReturnType<typeof UninterpretedOption.NamePart.prototype.toObject>[];
+            identifier_value?: string;
+            positive_int_value?: number;
+            negative_int_value?: number;
+            double_value?: number;
+            string_value?: Uint8Array;
+            aggregate_value?: string;
+        }) {
+            const message = new UninterpretedOption({
+                name: data.name.map(item => UninterpretedOption.NamePart.fromObject(item))
+            });
+            if (data.identifier_value != null) {
+                message.identifier_value = data.identifier_value;
+            }
+            if (data.positive_int_value != null) {
+                message.positive_int_value = data.positive_int_value;
+            }
+            if (data.negative_int_value != null) {
+                message.negative_int_value = data.negative_int_value;
+            }
+            if (data.double_value != null) {
+                message.double_value = data.double_value;
+            }
+            if (data.string_value != null) {
+                message.string_value = data.string_value;
+            }
+            if (data.aggregate_value != null) {
+                message.aggregate_value = data.aggregate_value;
+            }
+            return message;
+        }
         toObject() {
             const data: {
                 name: ReturnType<typeof UninterpretedOption.NamePart.prototype.toObject>[];
@@ -2948,6 +3461,16 @@ export namespace google.protobuf {
             set is_extension(value: boolean) {
                 pb_1.Message.setField(this, 2, value);
             }
+            static fromObject(data: {
+                name_part: string;
+                is_extension: boolean;
+            }) {
+                const message = new NamePart({
+                    name_part: data.name_part,
+                    is_extension: data.is_extension
+                });
+                return message;
+            }
             toObject() {
                 const data: {
                     name_part: string;
@@ -3009,6 +3532,14 @@ export namespace google.protobuf {
         }
         set location(value: SourceCodeInfo.Location[]) {
             pb_1.Message.setRepeatedWrapperField(this, 1, value);
+        }
+        static fromObject(data: {
+            location: ReturnType<typeof SourceCodeInfo.Location.prototype.toObject>[];
+        }) {
+            const message = new SourceCodeInfo({
+                location: data.location.map(item => SourceCodeInfo.Location.fromObject(item))
+            });
+            return message;
         }
         toObject() {
             const data: {
@@ -3101,6 +3632,26 @@ export namespace google.protobuf {
             set leading_detached_comments(value: string[]) {
                 pb_1.Message.setField(this, 6, value);
             }
+            static fromObject(data: {
+                path: number[];
+                span: number[];
+                leading_comments?: string;
+                trailing_comments?: string;
+                leading_detached_comments: string[];
+            }) {
+                const message = new Location({
+                    path: data.path,
+                    span: data.span,
+                    leading_detached_comments: data.leading_detached_comments
+                });
+                if (data.leading_comments != null) {
+                    message.leading_comments = data.leading_comments;
+                }
+                if (data.trailing_comments != null) {
+                    message.trailing_comments = data.trailing_comments;
+                }
+                return message;
+            }
             toObject() {
                 const data: {
                     path: number[];
@@ -3188,6 +3739,14 @@ export namespace google.protobuf {
         set annotation(value: GeneratedCodeInfo.Annotation[]) {
             pb_1.Message.setRepeatedWrapperField(this, 1, value);
         }
+        static fromObject(data: {
+            annotation: ReturnType<typeof GeneratedCodeInfo.Annotation.prototype.toObject>[];
+        }) {
+            const message = new GeneratedCodeInfo({
+                annotation: data.annotation.map(item => GeneratedCodeInfo.Annotation.fromObject(item))
+            });
+            return message;
+        }
         toObject() {
             const data: {
                 annotation: ReturnType<typeof GeneratedCodeInfo.Annotation.prototype.toObject>[];
@@ -3272,6 +3831,26 @@ export namespace google.protobuf {
             }
             set end(value: number) {
                 pb_1.Message.setField(this, 4, value);
+            }
+            static fromObject(data: {
+                path: number[];
+                source_file?: string;
+                begin?: number;
+                end?: number;
+            }) {
+                const message = new Annotation({
+                    path: data.path
+                });
+                if (data.source_file != null) {
+                    message.source_file = data.source_file;
+                }
+                if (data.begin != null) {
+                    message.begin = data.begin;
+                }
+                if (data.end != null) {
+                    message.end = data.end;
+                }
+                return message;
             }
             toObject() {
                 const data: {

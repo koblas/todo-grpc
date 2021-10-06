@@ -35,6 +35,19 @@ export namespace google.api {
         set fully_decode_reserved_expansion(value: boolean) {
             pb_1.Message.setField(this, 2, value);
         }
+        static fromObject(data: {
+            rules?: ReturnType<typeof HttpRule.prototype.toObject>[];
+            fully_decode_reserved_expansion?: boolean;
+        }) {
+            const message = new Http({});
+            if (data.rules != null) {
+                message.rules = data.rules.map(item => HttpRule.fromObject(item));
+            }
+            if (data.fully_decode_reserved_expansion != null) {
+                message.fully_decode_reserved_expansion = data.fully_decode_reserved_expansion;
+            }
+            return message;
+        }
         toObject() {
             const data: {
                 rules?: ReturnType<typeof HttpRule.prototype.toObject>[];
@@ -241,6 +254,51 @@ export namespace google.api {
             };
             return cases[pb_1.Message.computeOneofCase(this, [2, 3, 4, 5, 6, 8])];
         }
+        static fromObject(data: {
+            selector?: string;
+            get?: string;
+            put?: string;
+            post?: string;
+            delete?: string;
+            patch?: string;
+            custom?: ReturnType<typeof CustomHttpPattern.prototype.toObject>;
+            body?: string;
+            response_body?: string;
+            additional_bindings?: ReturnType<typeof HttpRule.prototype.toObject>[];
+        }) {
+            const message = new HttpRule({});
+            if (data.selector != null) {
+                message.selector = data.selector;
+            }
+            if (data.get != null) {
+                message.get = data.get;
+            }
+            if (data.put != null) {
+                message.put = data.put;
+            }
+            if (data.post != null) {
+                message.post = data.post;
+            }
+            if (data.delete != null) {
+                message.delete = data.delete;
+            }
+            if (data.patch != null) {
+                message.patch = data.patch;
+            }
+            if (data.custom != null) {
+                message.custom = CustomHttpPattern.fromObject(data.custom);
+            }
+            if (data.body != null) {
+                message.body = data.body;
+            }
+            if (data.response_body != null) {
+                message.response_body = data.response_body;
+            }
+            if (data.additional_bindings != null) {
+                message.additional_bindings = data.additional_bindings.map(item => HttpRule.fromObject(item));
+            }
+            return message;
+        }
         toObject() {
             const data: {
                 selector?: string;
@@ -388,6 +446,19 @@ export namespace google.api {
         }
         set path(value: string) {
             pb_1.Message.setField(this, 2, value);
+        }
+        static fromObject(data: {
+            kind?: string;
+            path?: string;
+        }) {
+            const message = new CustomHttpPattern({});
+            if (data.kind != null) {
+                message.kind = data.kind;
+            }
+            if (data.path != null) {
+                message.path = data.path;
+            }
+            return message;
         }
         toObject() {
             const data: {
