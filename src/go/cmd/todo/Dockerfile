@@ -4,7 +4,7 @@ COPY go.mod .
 COPY go.sum .
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix nocgo -o /app .
+RUN CGO_ENABLED=0 GOOS=linux go build -o /app cmd/todo/*.go
 
 FROM alpine:3.14
 COPY --from=builder /app ./

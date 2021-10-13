@@ -1,31 +1,37 @@
-package main
+package todo
 
 // https://medium.com/@amsokol.com/tutorial-part-3-how-to-develop-go-grpc-microservice-with-http-rest-endpoint-middleware-739aac8f1d7e
 
 import (
-	"fmt"
 	"log"
 	"net"
 	"os"
 	"os/signal"
 	"time"
 
+	"github.com/koblas/grpc-todo/genpb"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/middleware"
-	"github.com/koblas/grpc-todo/todo"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
 
-func main() {
+func Server() {
 	logger.Init(-1, time.RFC3339Nano)
 	runServer()
 }
 
+func getenv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return fallback
+}
+
 func runServer() {
-	port := fmt.Sprintf(":%d", 14586)
 	ctx := context.Background()
-	lis, err := net.Listen("tcp", port)
+	port := getenv("PORT", "14586")
+	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
@@ -39,8 +45,8 @@ func runServer() {
 	server := grpc.NewServer(opts...)
 
 	// attach the Todo service
-	s := todo.Server{}
-	todo.RegisterTodoServiceServer(server, &s)
+	s := TodoServer{}
+	genpb.RegisterTodoServiceServer(server, &s)
 
 	// graceful shutdown
 	c := make(chan os.Signal, 1)

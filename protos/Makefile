@@ -1,5 +1,4 @@
-GO_SERVER=../go-server
-GO_CLIENT=../go-client
+GO_GRPC=../src/go
 TS_SERVER=../ts-server
 JS_CLIENT=../js-client-vue
 TS_REACT=../ts-client-react
@@ -13,65 +12,31 @@ GOOGLEAPIS_DIR=../../googleapis/googleapis
 all: clean gen
 
 clean:
-	rm -f $(GO_SERVER)/todo.pb.go $(GO_SERVER)/todo_grpc.pb.go
+	rm -f $(GO_GRPC)/*.pb.go 
 	rm -f $(JS_CLIENT)/src/models/todo_grpc_web_pb.js $(JS_CLIENT)/src/models/todo_pb.js
 	rm -f $(TS_REACT)/src/models/todo_grpc_web_pb.js $(TS_REACT)/src/models/todo_pb.js
 	rm -f $(TS_SERVER)/src/grpcjs/todo_grpc_web_pb.js $(TS_SERVER)/src/grpcjs/todo_pb.js
 
-gen: envoy go-server ts-server js-client-vue ts-client-react ts-client
+gen: envoy go-grpc-todo go-grpc-auth ts-server js-client-vue ts-client-react ts-client
 
-go-server:
+go-grpc:
 	#
 	# Go Server
 	#
 	protoc \
 		-I . -I protos \
 		--proto_path=$(PROTO_DIR) \
-		--go_out=$(GO_SERVER)/todo --go_opt=paths=source_relative \
-		--go-grpc_out=$(GO_SERVER)/todo --go-grpc_opt=paths=source_relative \
-		protos/todo.proto
+		--go_out=$(GO_GRPC)/genpb --go_opt=paths=source_relative \
+		--go-grpc_out=$(GO_GRPC)/genpb --go-grpc_opt=paths=source_relative \
+		./todo.proto ./auth.proto
 
-go-client:
-	#
-	# Go Server
-	#
-	protoc \
-		-I . -I protos \
-		--proto_path=$(PROTO_DIR) \
-		--go_out=$(GO_CLIENT)/todo --go_opt=paths=source_relative \
-		--go-grpc_out=$(GO_CLIENT)/todo --go-grpc_opt=paths=source_relative \
-		protos/todo.proto
-
-#
-# TS Server
-#     https://github.com/agreatfool/grpc_tools_node_protoc_ts/blob/master/examples/bash/build.sh
-ts-server-old:
-	$(TS_SERVER)/node_modules/.bin/grpc_tools_node_protoc \
-		-I . -I protos \
-		--js_out=import_style=commonjs,binary:$(TS_SERVER)/src/grpcjs \
-		--grpc_out=grpc_js:$(TS_SERVER)/src/grpcjs \
-		protos/todo.proto
-	$(TS_SERVER)/node_modules/.bin/grpc_tools_node_protoc \
-		-I . -I protos \
-		--plugin=protoc-gen-ts=$(TS_SERVER)/node_modules/.bin/protoc-gen-ts \
-		--ts_out=grpc_js:$(TS_SERVER)/src/grpcjs \
-		protos/todo.proto
-	protoc \
-		-I . -I protos \
-		--proto_path=$(PROTO_DIR) \
-		--ts_proto_opt=outputServices=grpc-js \
-		--ts_proto_opt=esModuleInterop=true \
-		--plugin=$(TS_SERVER)/node_modules/.bin/protoc-gen-ts_proto \
-		--ts_proto_out=import_style=commonjs,binary:$(TS_SERVER)/src/grpcjs/ \
-		protos/todo.proto
-	
 ts-server:
 	protoc \
 		-I . -I ./protos \
 		--proto_path=$(PROTO_DIR) \
 		--plugin=protoc-gen-ts=$(TS_SERVER)/node_modules/.bin/protoc-gen-ts \
 		--ts_out=grpc_js:$(TS_SERVER)/src/grpcjs \
-		protos/todo.proto google/api/*.proto
+		./todo.proto google/api/*.proto
 #
 # JS Client
 #
@@ -81,7 +46,7 @@ js-client-vue:
 		--proto_path=$(PROTO_DIR) \
 		--js_out=import_style=commonjs,binary:$(JS_CLIENT)/models/ \
 		--grpc-web_out=import_style=commonjs,mode=grpcwebtext:$(JS_CLIENT)/models/ \
-		protos/todo.proto
+		./todo.proto
 
 #
 # TS React Client
@@ -110,45 +75,15 @@ ts-client:
 		--proto_path=$(PROTO_DIR) \
 		--plugin=protoc-gen-ts=/Users/koblas/repos/github.com/koblas/protoc-gen-ts/bin/protoc-gen-ts \
 		--ts_out=grpc_js:$(TS_CLIENT)/src/grpcjs \
-		protos/todo.proto google/api/*.proto
-
-ts-client-old:
-	$(TS_CLIENT)/node_modules/.bin/grpc_tools_node_protoc \
-		-I . -I ./protos \
-		--proto_path=$(PROTO_DIR) \
-		--js_out=import_style=commonjs,binary:$(TS_CLIENT)/src/grpcjs \
-		--grpc_out=grpc_js:$(TS_CLIENT)/src/grpcjs \
-		protos/todo.proto
-	$(TS_CLIENT)/node_modules/.bin/grpc_tools_node_protoc \
-		-I . -I ./protos \
-		--proto_path=$(PROTO_DIR) \
-		--plugin=protoc-gen-ts=$(TS_CLIENT)/node_modules/.bin/protoc-gen-ts \
-		--ts_out=grpc_js:$(TS_CLIENT)/src/grpcjs \
-		protos/todo.proto
-	protoc \
-        -I . -I ./protos \
-        --proto_path=$(PROTO_DIR) \
-        --ts_proto_opt=esModuleInterop=true \
-        --plugin=$(TS_CLIENT)/node_modules/.bin/protoc-gen-ts_proto \
-        --ts_proto_opt=outputClientImpl=grpc-web \
-        --ts_proto_out=import_style=commonjs,binary:$(TS_CLIENT)/src/grpcjs/ \
-        --plugin="protoc-gen-ts=${TS_CLIENT}/node_modules/.bin/protoc-gen-ts" \
-        todo.proto
-
-
-		#--grpc_out=grpc_js:$(TS_CLIENT)/src/grpcjs/ \
-		#--ts_proto_opt=esModuleInterop=true \
-		#--plugin=$(TS_CLIENT)/node_modules/.bin/protoc-gen-ts_proto \
-		#--ts_proto_out=import_style=commonjs,binary:$(TS_CLIENT)/src/grpcjs/ \
-		#--js_out=import_style=commonjs,binary:$(TS_CLIENT)/src/grpcjs/ \
-		#--plugin="protoc-gen-ts=${TS_CLIENT}/node_modules/.bin/protoc-gen-ts" \
+		todo.proto google/api/*.proto
 
 #
 # Envoy
 #
 envoy:
 	protoc \
-		-I . -I ./proto \
+		-I . -I ./protos \
+		--proto_path=$(PROTO_DIR) \
 		--include_imports --include_source_info \
 		--descriptor_set_out=$(ENVOY_DIR)/todo.pb \
-		protos/todo.proto
+		todo.proto auth.proto

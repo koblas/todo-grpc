@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package auth;
+
+import "google/api/annotations.proto";
+
+option go_package = "./;genpb";
+
+message LoginParams {
+    string username = 1;
+    string password = 2;
+}
+
+message LoginResponse {
+    string  bearer_token = 1;
+}
+
+service AuthenticationService {
+  rpc login(LoginParams) returns (LoginResponse) {
+    option (google.api.http) = {
+      post: "/v1/auth/login"
+      body: "*"
+    };
+  }
+}

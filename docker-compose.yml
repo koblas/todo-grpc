@@ -1,31 +1,46 @@
-version: '3.9'
+version: "3.9"
 services:
   envoy:
-    build: 
+    build:
       context: envoy
     ports:
       - 8080:8080
       - 9901:9901
-    depends_on: 
-      - server
+    depends_on:
+      - grpc-todo
+      - grpc-auth
     networks:
       - envoymesh
-  server:
-    build: 
-      context: go-server
-    expose:
-      - "14586"
+
+  grpc-todo:
+    build:
+      context: src/go
+      dockerfile: cmd/todo/Dockerfile
+    ports:
+      - 14001:14586
     networks:
       envoymesh:
         aliases:
-          - service1
+          - todo
+  grpc-auth:
+    build:
+      context: src/go
+      dockerfile: cmd/auth/Dockerfile
+    ports:
+      - 14002:14586
+    networks:
+      envoymesh:
+        aliases:
+          - auth
+
   client:
     build:
       context: ts-client-react
     ports:
       - 8081:80
-    depends_on: 
-      - server
+    depends_on:
+      - grpc-auth
+      - grpc-todo
 
 networks:
   envoymesh: {}

@@ -7,7 +7,7 @@ import (
 
 	"google.golang.org/grpc"
 
-	todo "github.com/koblas/grpc-todo/todo/protos"
+	todo "github.com/koblas/grpc-todo/genpb"
 )
 
 func main() {
@@ -28,6 +28,7 @@ func main() {
 	response, err := client.AddTodo(ctx, &params)
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
 	fmt.Println(response.Id)
 }
