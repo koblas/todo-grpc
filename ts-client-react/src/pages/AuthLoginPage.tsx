@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { useAuth } from "../hooks/auth";
 import { useHistory } from "react-router-dom";
+import { useAuth } from "../hooks/auth";
 
 export function DoorImage() {
   return (
@@ -148,7 +148,7 @@ export function DoorImage() {
   );
 }
 
-export function LoginPage() {
+export function AuthLoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const auth = useAuth();
@@ -158,7 +158,6 @@ export function LoginPage() {
     auth
       .login(username, password)
       .then(() => {
-        console.log("SUCCESS");
         history.replace("/todo");
         setUsername("");
         setPassword("");
@@ -215,6 +214,7 @@ export function LoginPage() {
                   <div className="text-sm font-bold text-gray-700 tracking-wide">Password</div>
                   <div>
                     <a
+                      href="#TODO"
                       className="text-xs font-display font-semibold text-indigo-600 hover:text-indigo-800
                                         cursor-pointer"
                     >
@@ -247,7 +247,10 @@ export function LoginPage() {
               </div>
             </form>
             <div className="mt-12 text-sm font-display font-semibold text-gray-700 text-center">
-              Don't have an account ? <a className="cursor-pointer text-indigo-600 hover:text-indigo-800">Sign up</a>
+              Don't have an account ?{" "}
+              <a href="#TODO" className="cursor-pointer text-indigo-600 hover:text-indigo-800">
+                Sign up
+              </a>
             </div>
           </div>
         </div>

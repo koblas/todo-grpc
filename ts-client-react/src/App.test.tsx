@@ -1,8 +1,8 @@
 import React from "react";
+import { act } from "react-dom/test-utils";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import App from "./App";
-import { act } from "react-dom/test-utils";
 
 jest.mock("./rpc/todo/factory.ts");
 

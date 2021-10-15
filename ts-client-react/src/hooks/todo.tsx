@@ -1,7 +1,7 @@
-import { useEffect, createContext, useContext, PropsWithChildren, useReducer } from "react";
+import React, { useEffect, createContext, useContext, PropsWithChildren } from "react";
 import { Draft } from "immer";
 import { useImmerReducer } from "use-immer";
-import { must, assert } from "../util/assert";
+import { assert } from "../util/assert";
 import { newTodoClient } from "../rpc/todo/factory";
 import { TodoItem, TodoService } from "../rpc/todo";
 import { useAuth } from "./auth";
@@ -61,10 +61,12 @@ function listReducer(draft: Draft<TodoState>, action: DispatchAction) {
       draft.todos = action.list;
       break;
     case "update":
-      assert(action.id, "ID missing");
-      assert(action.value, "Value missing");
-      const itemIdx = draft.todos.findIndex((todo) => todo.id === action.id);
-      draft.todos[itemIdx] = action.value;
+      {
+        assert(action.id, "ID missing");
+        assert(action.value, "Value missing");
+        const itemIdx = draft.todos.findIndex((todo) => todo.id === action.id);
+        draft.todos[itemIdx] = action.value;
+      }
       break;
     case "delete":
       assert(action.id, "ID missing");
@@ -95,7 +97,7 @@ export function TodoContextProvider({ children }: PropsWithChildren<unknown>) {
     const todoClient = newTodoClient(token, "json");
 
     dispatch({ type: "setClient", client: todoClient });
-  }, [token]);
+  }, [token, dispatch]);
 
   function refresh() {
     if (state.client && isAuthenticated) {
@@ -107,9 +109,13 @@ export function TodoContextProvider({ children }: PropsWithChildren<unknown>) {
     }
   }
 
+  /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
-    refresh();
-  }, [state.client]);
+    if (isAuthenticated) {
+      refresh();
+    }
+  }, [state.client, isAuthenticated]);
+  /* eslint-enable react-hooks/exhaustive-deps */
 
   return (
     <TodoContext.Provider value={{ todos: state.todos, refresh, dispatch, client: state.client }}>
@@ -142,8 +148,7 @@ export function useTodos() {
           dispatch({ type: "update", id, value: obj });
           refresh();
         })
-        .catch((err) => {
-          console.log(err);
+        .catch(() => {
           // TODO -- Display error
           dispatch({ type: "delete", id });
         });
@@ -157,8 +162,7 @@ export function useTodos() {
           .then(() => {
             refresh();
           })
-          .catch((err) => {
-            console.log(err);
+          .catch(() => {
             dispatch({ type: "append", value: obj });
           });
       }

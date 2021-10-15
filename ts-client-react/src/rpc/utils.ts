@@ -18,7 +18,7 @@ const fetchHandlers: FetchHandlers = {
   "5xx": async (response) => {
     throw new Error(`Unexpected response.status=${response.status}`);
   },
-  "401": async (response) => {
+  "401": async () => {
     throw new Error("Need authentication");
   },
 };

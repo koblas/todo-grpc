@@ -1,8 +1,8 @@
-import { createContext, useContext, PropsWithChildren, useReducer } from "react";
-import { newAuthClient } from "../rpc/auth/factory";
-import { storageFactory } from "../util/storageFactory";
+import React, { createContext, useContext, PropsWithChildren } from "react";
 import { useImmerReducer } from "use-immer";
 import { Draft } from "immer";
+import { newAuthClient } from "../rpc/auth/factory";
+import { storageFactory } from "../util/storageFactory";
 
 /**
  * Construct an accessor for a persistent token store
@@ -83,12 +83,8 @@ export function useAuth() {
     token: state.token,
     isAuthenticated: !!state.token,
     async login(username: string, password: string) {
-      try {
-        const { token } = await authClient.login(username, password);
-        dispatch({ type: "set", token });
-      } catch (err) {
-        throw err;
-      }
+      const { token } = await authClient.login(username, password);
+      dispatch({ type: "set", token });
     },
   };
 }
