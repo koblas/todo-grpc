@@ -11,14 +11,17 @@ message LoginParams {
     string password = 2;
 }
 
-message LoginResponse {
-    string  bearer_token = 1;
+message TokenResponse {
+  string access_token = 1;
+  string token_type = 2;
+  int32 expires_in = 3;
+  string refresh_token = 4;
 }
 
 service AuthenticationService {
-  rpc login(LoginParams) returns (LoginResponse) {
+  rpc login(LoginParams) returns (TokenResponse) {
     option (google.api.http) = {
-      post: "/v1/auth/login"
+      post: "/auth/login"
       body: "*"
     };
   }

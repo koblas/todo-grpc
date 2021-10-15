@@ -56,7 +56,7 @@ func runServer() {
 		}
 	}()
 
-	logger.Log.Info("staring gRPC server... port:" + port)
+	logger.Log.Info("staring gRPC server... port=" + port)
 
 	if err := server.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %s", err)

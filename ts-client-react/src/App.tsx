@@ -1,8 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { BrowserRouter as Router, Switch, Route, useHistory } from "react-router-dom";
 import { useTodos, TodoContextProvider } from "./hooks/todo";
 import { TodoItem } from "./rpc/todo";
+import { LoginPage } from "./auth/Login";
 
 import "tailwindcss/dist/tailwind.css";
+import { AuthContextProvider } from "./hooks/auth";
 
 function Item({ todo }: { todo: TodoItem }) {
   const { deleteTodo } = useTodos();
@@ -33,7 +36,7 @@ function List({ todos }: { todos: TodoItem[] }) {
   );
 }
 
-function Page() {
+function TodoPage() {
   const { addTodo, todos } = useTodos();
   const [addText, setAddText] = useState("");
 
@@ -84,10 +87,34 @@ function Page() {
   );
 }
 
+function NotFoundPage() {
+  const history = useHistory();
+
+  useEffect(() => {
+    history.push("/todo");
+  });
+
+  return null;
+}
+
 export default function App() {
   return (
-    <TodoContextProvider>
-      <Page />
-    </TodoContextProvider>
+    <AuthContextProvider>
+      <TodoContextProvider>
+        <Router>
+          <Switch>
+            <Route path="/auth/login">
+              <LoginPage />
+            </Route>
+            <Route path="/todo">
+              <TodoPage />
+            </Route>
+            <Route path="*">
+              <NotFoundPage />
+            </Route>
+          </Switch>
+        </Router>
+      </TodoContextProvider>
+    </AuthContextProvider>
   );
 }

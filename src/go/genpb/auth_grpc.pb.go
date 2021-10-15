@@ -18,7 +18,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AuthenticationServiceClient interface {
-	Login(ctx context.Context, in *LoginParams, opts ...grpc.CallOption) (*LoginResponse, error)
+	Login(ctx context.Context, in *LoginParams, opts ...grpc.CallOption) (*TokenResponse, error)
 }
 
 type authenticationServiceClient struct {
@@ -29,8 +29,8 @@ func NewAuthenticationServiceClient(cc grpc.ClientConnInterface) AuthenticationS
 	return &authenticationServiceClient{cc}
 }
 
-func (c *authenticationServiceClient) Login(ctx context.Context, in *LoginParams, opts ...grpc.CallOption) (*LoginResponse, error) {
-	out := new(LoginResponse)
+func (c *authenticationServiceClient) Login(ctx context.Context, in *LoginParams, opts ...grpc.CallOption) (*TokenResponse, error) {
+	out := new(TokenResponse)
 	err := c.cc.Invoke(ctx, "/auth.AuthenticationService/login", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -42,7 +42,7 @@ func (c *authenticationServiceClient) Login(ctx context.Context, in *LoginParams
 // All implementations must embed UnimplementedAuthenticationServiceServer
 // for forward compatibility
 type AuthenticationServiceServer interface {
-	Login(context.Context, *LoginParams) (*LoginResponse, error)
+	Login(context.Context, *LoginParams) (*TokenResponse, error)
 	mustEmbedUnimplementedAuthenticationServiceServer()
 }
 
@@ -50,7 +50,7 @@ type AuthenticationServiceServer interface {
 type UnimplementedAuthenticationServiceServer struct {
 }
 
-func (UnimplementedAuthenticationServiceServer) Login(context.Context, *LoginParams) (*LoginResponse, error) {
+func (UnimplementedAuthenticationServiceServer) Login(context.Context, *LoginParams) (*TokenResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Login not implemented")
 }
 func (UnimplementedAuthenticationServiceServer) mustEmbedUnimplementedAuthenticationServiceServer() {}

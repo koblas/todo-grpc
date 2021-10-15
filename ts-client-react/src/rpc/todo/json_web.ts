@@ -1,26 +1,18 @@
 import { TodoService, TodoItem } from "./index";
+import { newFetchClient } from "../utils";
 
-const BASE = "http://localhost:8080";
+export function newTodoClient(token: string | null): TodoService {
+  const client = newFetchClient({ token });
 
-export function newTodoClient(): TodoService {
   return {
     async getTodos(): Promise<TodoItem[]> {
-      const response = await fetch(`${BASE}/v1/todo/list`, {});
-
-      return (await response.json()).todos;
+      return (await client.GET<{ todos: TodoItem[] }>("/v1/todo/list")).todos;
     },
     async addTodo(task: string): Promise<TodoItem> {
-      const response = await fetch(`${BASE}/v1/todo/add`, {
-        method: "POST",
-        body: JSON.stringify({ task }),
-      });
-
-      return response.json();
+      return await client.POST<TodoItem>(`/v1/todo/add`, { task });
     },
     async deleteTodo(id: string): Promise<void> {
-      await fetch(`${BASE}/v1/todo/delete/${id}`, {
-        method: "DELETE",
-      });
+      await client.DELETE(`/v1/todo/delete/${id}`);
     },
   };
 }

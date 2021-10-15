@@ -60,7 +60,7 @@ ts-client-react:
 		--ts_proto_opt=outputClientImpl=grpc-web \
 		--ts_proto_out=import_style=commonjs,binary:$(TS_REACT)/src/models/ \
 		--plugin="protoc-gen-ts=${TS_REACT}/node_modules/.bin/protoc-gen-ts" \
-		todo.proto
+		todo.proto auth.proto
 
 #
 # TS Command Line Client

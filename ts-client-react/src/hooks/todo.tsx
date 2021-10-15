@@ -1,17 +1,18 @@
-import { Reducer, useEffect, createContext, useContext, PropsWithChildren, useReducer } from "react";
+import { useEffect, createContext, useContext, PropsWithChildren, useReducer } from "react";
+import { Draft } from "immer";
+import { useImmerReducer } from "use-immer";
 import { must, assert } from "../util/assert";
 import { newTodoClient } from "../rpc/todo/factory";
 import { TodoItem, TodoService } from "../rpc/todo";
-
-const todoClient = newTodoClient("grpc");
+import { useAuth } from "./auth";
 
 const TodoContext = createContext<{
-  client: TodoService;
+  client: TodoService | null;
   todos: TodoItem[];
   refresh: React.Dispatch<React.SetStateAction<void>>;
-  dispatch: React.Dispatch<DispatchAction<TodoItem>>;
+  dispatch: React.Dispatch<DispatchAction>;
 }>({
-  client: todoClient,
+  client: null,
   todos: [],
   dispatch() {
     throw new Error("not initialized");
@@ -21,38 +22,65 @@ const TodoContext = createContext<{
   },
 });
 
-interface ListBase {
-  id: string;
+interface TodoState {
+  readonly client: TodoService | null;
+  readonly todos: TodoItem[];
 }
 
-type DispatchAction<T> = {
-  type: "set" | "update" | "delete" | "append";
-  id?: string;
-  value?: T;
-  list?: T[];
-};
+type DispatchAction =
+  | {
+      type: "set";
+      list: TodoItem[];
+    }
+  | {
+      type: "setClient";
+      client: TodoService;
+    }
+  | {
+      type: "delete";
+      id: string;
+    }
+  | {
+      type: "append";
+      value: TodoItem;
+    }
+  | {
+      type: "update";
+      id: string;
+      value: TodoItem;
+    };
 
-function listReducer<T extends ListBase>(state: T[], action: DispatchAction<T>): T[] {
+function listReducer(draft: Draft<TodoState>, action: DispatchAction) {
   switch (action.type) {
+    case "setClient":
+      assert(action.client);
+      draft.client = action.client;
+      break;
     case "set":
       assert(action.list);
-      return action.list;
+      draft.todos = action.list;
+      break;
     case "update":
       assert(action.id, "ID missing");
       assert(action.value, "Value missing");
-      return state.map((todo) => (todo.id === action.id ? must(action.value) : todo));
+      const itemIdx = draft.todos.findIndex((todo) => todo.id === action.id);
+      draft.todos[itemIdx] = action.value;
+      break;
     case "delete":
       assert(action.id, "ID missing");
-      return state.filter((todo) => todo.id !== action.id);
+      draft.todos = draft.todos.filter((todo) => todo.id !== action.id);
+      break;
     case "append":
       assert(action.value, "Value missing");
-      return [...state, action.value];
+      draft.todos.push(action.value);
+      break;
   }
 }
 
-function useListReducer<T extends ListBase>(initial: T[] = []) {
-  return useReducer<Reducer<T[], DispatchAction<T>>>(listReducer, initial);
-}
+const initialState: TodoState = {
+  client: null,
+  todos: [],
+};
 
 export function TodoContextProvider({ children }: PropsWithChildren<unknown>) {
   // The reason we need to use a reducer here rather that a setState is
@@ -60,20 +88,31 @@ export function TodoContextProvider({ children }: PropsWithChildren<unknown>) {
   // on the "current" set of items in your list.  You might have done 2..3 actions
   // but your local closure will only have the state at the time you dispatched
   // your asyncronist event.  Thus you need to bump the world into a reducer...
-  const [state, dispatch] = useListReducer<TodoItem>();
+  const [state, dispatch] = useImmerReducer(listReducer, initialState);
+  const { token, isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    const todoClient = newTodoClient(token, "json");
+
+    dispatch({ type: "setClient", client: todoClient });
+  }, [token]);
 
   function refresh() {
-    todoClient.getTodos().then((todos) => {
-      dispatch({ type: "set", list: todos });
-    });
+    if (state.client && isAuthenticated) {
+      state.client.getTodos().then((todos) => {
+        dispatch({ type: "set", list: todos });
+      });
+    } else {
+      dispatch({ type: "set", list: [] });
+    }
   }
 
   useEffect(() => {
     refresh();
-  }, [todoClient]);
+  }, [state.client]);
 
   return (
-    <TodoContext.Provider value={{ todos: state, refresh, dispatch, client: todoClient }}>
+    <TodoContext.Provider value={{ todos: state.todos, refresh, dispatch, client: state.client }}>
       {children}
     </TodoContext.Provider>
   );
@@ -98,7 +137,7 @@ export function useTodos() {
         },
       });
       client
-        .addTodo(task)
+        ?.addTodo(task)
         .then((obj) => {
           dispatch({ type: "update", id, value: obj });
           refresh();
@@ -111,16 +150,18 @@ export function useTodos() {
     },
     deleteTodo(id: TodoItem["id"]) {
       const obj = todos.find((todo) => todo.id === id);
-      dispatch({ type: "delete", id });
-      client
-        .deleteTodo(id)
-        .then(() => {
-          refresh();
-        })
-        .catch((err) => {
-          console.log(err);
-          dispatch({ type: "append", value: obj });
-        });
+      if (obj) {
+        dispatch({ type: "delete", id });
+        client
+          ?.deleteTodo(id)
+          .then(() => {
+            refresh();
+          })
+          .catch((err) => {
+            console.log(err);
+            dispatch({ type: "append", value: obj });
+          });
+      }
     },
   };
 }

@@ -12,10 +12,13 @@ type AuthenticationServer struct {
 	genpb.UnimplementedAuthenticationServiceServer
 }
 
-// SayHello generates response to a Ping request
-func (s *AuthenticationServer) Login(ctx context.Context, params *genpb.LoginParams) (*genpb.LoginResponse, error) {
+func (s *AuthenticationServer) Login(ctx context.Context, params *genpb.LoginParams) (*genpb.TokenResponse, error) {
 	log.Printf("Received login %s", params.Username)
 
-	response := genpb.LoginResponse{}
+	response := genpb.TokenResponse{
+		AccessToken: "abc",
+		TokenType:   "Bearer",
+		ExpiresIn:   24 * 3600,
+	}
 	return &response, nil
 }
