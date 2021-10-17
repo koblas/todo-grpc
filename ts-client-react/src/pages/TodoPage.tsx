@@ -1,35 +1,40 @@
 import React, { useState } from "react";
-// import { Heading, Grid, Box, Flex, Text, CloseButton, Button, Input } from "@chakra-ui/react";
-import { Input, Button, Heading } from "../material-tailwind";
+import DeleteIcon from "@mui/icons-material/Delete";
+import { useHistory } from "react-router-dom";
+import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
+import TextField from "@mui/material/TextField";
+import Button from "@mui/material/Button";
+import Typography from "@mui/material/Typography";
 import { useTodos } from "../hooks/todo";
 import { TodoItem } from "../rpc/todo";
+import { useAuth } from "../hooks/auth";
+import { AppContainer } from "../components/AppContainer";
 
 function Item({ todo }: { todo: TodoItem }) {
   const { deleteTodo } = useTodos();
   const { task, id } = todo;
 
   return (
-    <li className="bg-white text-center p-2 m-1 w-2/6 border border-color-gray-500">
-      <div className="flex justify-between">
-        <h5 className="font-light">{task}</h5>
-        <button
-          onClick={() => deleteTodo(id)}
-          className="text-red-500 pl-2 pr-2 font-medium rounded-xl hover:bg-red-600 hover:text-white"
-        >
-          X
-        </button>
-      </div>
-    </li>
+    <Box sx={{ border: 1, borderColor: "grey.300", textAlign: "center" }} width={2 / 6} p="0.5rem" m="0.25rem">
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Typography variant="body1">{task}</Typography>
+        <IconButton aria-label="delete" onClick={() => deleteTodo(id)}>
+          <DeleteIcon fontSize="small" />
+        </IconButton>
+      </Box>
+    </Box>
   );
 }
 
 function List({ todos }: { todos: TodoItem[] }) {
   return (
-    <ul className="grid justify-items-center">
+    // <Box component="ul" sx={{ display: "grid" }} className="grid justify-items-center">
+    <Box sx={{ display: "grid", justifyItems: "center" }}>
       {todos.map((todo) => (
         <Item key={todo.id} todo={todo} />
       ))}
-    </ul>
+    </Box>
   );
 }
 
@@ -59,7 +64,14 @@ function List({ todos }: { todos: TodoItem[] }) {
 
 export function TodoPage() {
   const { addTodo, todos } = useTodos();
+  const history = useHistory();
+  const { isAuthenticated } = useAuth();
   const [addText, setAddText] = useState("");
+
+  if (!isAuthenticated) {
+    history.push("/auth/login");
+    return null;
+  }
 
   function handleAdd() {
     addTodo(addText);
@@ -67,40 +79,30 @@ export function TodoPage() {
   }
 
   return (
-    <div id="app" className="font-sans">
+    <AppContainer>
       <section>
-        <Heading
-          as="h3"
-          color="gray"
-          size="2xl"
-          className="text-gray-800 text-center max-w-2xl m-auto font-light mt-5 mb-5 p-5"
-        >
+        <Typography variant="h3" sx={{ textAlign: "center" }} my="1.25rem" p="1.25rem">
           TODO gRPC Client
-        </Heading>
-        {/* <h3 className="text-gray-800 text-center max-w-2xl text-2xl font-light m-auto mt-5 mb-5 p-5">
-        </h3> */}
-        <form
-          className="flex justify-center"
-          onSubmit={(e) => {
+        </Typography>
+        <Box
+          component="form"
+          sx={{ display: "flex", justifyContent: "center" }}
+          onSubmit={(e: React.FormEvent) => {
             e.preventDefault();
             handleAdd();
           }}
         >
-          <div className="flex space-x-5" role="add">
-            <Input
+          <Box sx={{ display: "flex" }}>
+            <TextField
               placeholder="Walk my dog"
-              // className="pl-2 p-2 border-b border-gray-300 rounded-md w-64"
-              // className="pl-2 p-2 border-b border-gray-300 rounded-md w-64"
+              sx={{ width: "32rem", marginRight: "1.25rem" }}
               type="text"
               value={addText}
               onChange={(e) => setAddText(e.target.value)}
             />
             <Button
-              className="text-base whitespace-nowrap"
-              // className="hover:bg-blue-800 bg-blue-600 rounded-md text-white px-5 text-base py-1"
-              size="sm"
+              variant="contained"
               type="submit"
-              name="action"
               onClick={(e) => {
                 e.preventDefault();
                 handleAdd();
@@ -108,13 +110,13 @@ export function TodoPage() {
             >
               Add Todo
             </Button>
-          </div>
-        </form>
+          </Box>
+        </Box>
       </section>
-      <div className="mt-6">
+      <Box pt="1.5rem">
         <List todos={todos} />
-      </div>
-    </div>
+      </Box>
+    </AppContainer>
   );
 
   // return (
