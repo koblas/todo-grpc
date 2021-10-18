@@ -1,28 +1,30 @@
 import React from "react";
 
-import CssBaseline from "@mui/material/CssBaseline";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { ChakraProvider, CSSReset } from "@chakra-ui/react";
 
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 import { TodoContextProvider } from "./hooks/todo";
 import { AuthLoginPage } from "./pages/AuthLoginPage";
+import { AuthLogoutPage } from "./pages/AuthLogoutPage";
 import { TodoPage } from "./pages/TodoPage";
 import { HomePage } from "./pages/HomePage";
 import { AuthContextProvider } from "./hooks/auth";
 
-const theme = createTheme();
+// const theme = createTheme();
 
 export default function App() {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-
+    <ChakraProvider>
+      <CSSReset />
       <AuthContextProvider>
         <TodoContextProvider>
           <Router>
             <Switch>
               <Route path="/auth/login">
                 <AuthLoginPage />
+              </Route>
+              <Route path="/auth/logout">
+                <AuthLogoutPage />
               </Route>
               <Route path="/todo">
                 <TodoPage />
@@ -34,6 +36,6 @@ export default function App() {
           </Router>
         </TodoContextProvider>
       </AuthContextProvider>
-    </ThemeProvider>
+    </ChakraProvider>
   );
 }

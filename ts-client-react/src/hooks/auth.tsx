@@ -86,5 +86,8 @@ export function useAuth() {
       const { token } = await authClient.login(username, password);
       dispatch({ type: "set", token });
     },
+    async logout() {
+      dispatch({ type: "set", token: null });
+    },
   };
 }
