@@ -1,7 +1,8 @@
 import { AuthService, LoginSuccess } from "./index";
 import { AuthenticationServiceClientImpl, GrpcWebImpl } from "../../models/auth";
+import { BASE_URL } from "../utils";
 
-const rpc = new GrpcWebImpl("http://localhost:8080", {
+const rpc = new GrpcWebImpl(BASE_URL, {
   debug: false,
 });
 

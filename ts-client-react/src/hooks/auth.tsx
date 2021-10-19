@@ -1,4 +1,4 @@
-import React, { createContext, useContext, PropsWithChildren } from "react";
+import React, { createContext, useContext, PropsWithChildren, useCallback } from "react";
 import { useImmerReducer } from "use-immer";
 import { Draft } from "immer";
 import { newAuthClient } from "../rpc/auth/factory";
@@ -59,6 +59,7 @@ function authReducer(draft: Draft<AuthState>, action: DispatchAction) {
   switch (action.type) {
     case "set":
       draft.token = action.token;
+      tokenStore.set(action.token);
       break;
   }
 }
@@ -74,7 +75,7 @@ export function AuthContextProvider({ children }: PropsWithChildren<unknown>) {
   return <AuthContext.Provider value={{ state, dispatch }}>{children}</AuthContext.Provider>;
 }
 
-const authClient = newAuthClient("json");
+const authClient = newAuthClient("grpc");
 
 export function useAuth() {
   const { state, dispatch } = useContext(AuthContext);
@@ -82,11 +83,11 @@ export function useAuth() {
   return {
     token: state.token,
     isAuthenticated: !!state.token,
-    async login(username: string, password: string) {
+    login: async (username: string, password: string) => {
       const { token } = await authClient.login(username, password);
       dispatch({ type: "set", token });
     },
-    async logout() {
+    logout: async () => {
       dispatch({ type: "set", token: null });
     },
   };

@@ -3,7 +3,7 @@ import { newTodoClient as newClientJson } from "./json_web";
 
 export function newTodoClient(token: string | null, type: "grpc" | "json") {
   if (type === "grpc") {
-    return newClientGrpc();
+    return newClientGrpc(token);
   }
 
   return newClientJson(token);

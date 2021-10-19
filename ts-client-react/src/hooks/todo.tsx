@@ -94,7 +94,7 @@ export function TodoContextProvider({ children }: PropsWithChildren<unknown>) {
   const { token, isAuthenticated } = useAuth();
 
   useEffect(() => {
-    const todoClient = newTodoClient(token, "json");
+    const todoClient = newTodoClient(token, "grpc");
 
     dispatch({ type: "setClient", client: todoClient });
   }, [token, dispatch]);

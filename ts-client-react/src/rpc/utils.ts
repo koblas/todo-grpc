@@ -1,6 +1,6 @@
 import { Json } from "../types/json";
 
-const BASE = "http://localhost:8080";
+export const BASE_URL = "http://localhost:8080";
 
 export type FetchHandlers = Record<
   string,
@@ -37,7 +37,7 @@ export function newFetchClient(config?: { token?: string | null; base?: string |
   async function fetchCommon(input: RequestInfo, init?: RequestInit): Promise<Response> {
     let response: Response;
     if (typeof input === "string") {
-      response = await fetch(`${config?.base ?? BASE}${input}`, init);
+      response = await fetch(`${config?.base ?? BASE_URL}${input}`, init);
     } else {
       response = await fetch(input, init);
     }
