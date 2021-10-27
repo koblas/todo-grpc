@@ -9,7 +9,11 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/koblas/grpc-todo/genpb"
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
+	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
+	grpc_tracing "github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing"
+	"github.com/koblas/grpc-todo/genpb/publicapi"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/middleware"
 	"golang.org/x/net/context"
@@ -36,17 +40,35 @@ func runServer() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	// gRPC server statup options
-	opts := []grpc.ServerOption{}
+	zapMiddleware := middleware.NewZapLogger(logger.Log)
+	authMiddleware := middleware.NewAuthenticator(os.Getenv("JWT_SECRET"))
 
 	// add middleware
-	opts = middleware.AddLogging(logger.Log, opts)
+	opts := []grpc.ServerOption{
+		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
+			grpc_ctxtags.StreamServerInterceptor(),
+			grpc_tracing.StreamServerInterceptor(),
+			zapMiddleware.StreamServerInterceptor(),
+			authMiddleware.StreamServerInterceptor(),
+			grpc_recovery.StreamServerInterceptor(),
+		)),
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+			grpc_ctxtags.UnaryServerInterceptor(),
+			grpc_tracing.UnaryServerInterceptor(),
+			zapMiddleware.UnaryServerInterceptor(),
+			authMiddleware.UnaryServerInterceptor(),
+			grpc_recovery.UnaryServerInterceptor(),
+		)),
+	}
+
+	// opts = middleware.AddLogging(logger.Log, opts)
+	// opts = middleware.AddAuthentication(os.Getenv("JWT_SECRET"), opts)
 
 	server := grpc.NewServer(opts...)
 
 	// attach the Todo service
-	s := TodoServer{}
-	genpb.RegisterTodoServiceServer(server, &s)
+	s := NewTodoServer()
+	publicapi.RegisterTodoServiceServer(server, s)
 
 	// graceful shutdown
 	c := make(chan os.Signal, 1)

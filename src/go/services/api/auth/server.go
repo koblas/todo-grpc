@@ -3,13 +3,15 @@ package auth
 // https://medium.com/@amsokol.com/tutorial-part-3-how-to-develop-go-grpc-microservice-with-http-rest-endpoint-middleware-739aac8f1d7e
 
 import (
+	"fmt"
 	"log"
 	"net"
 	"os"
 	"os/signal"
 	"time"
 
-	"github.com/koblas/grpc-todo/genpb"
+	"github.com/koblas/grpc-todo/genpb/core"
+	"github.com/koblas/grpc-todo/genpb/publicapi"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/middleware"
 	"github.com/koblas/grpc-todo/pkg/util"
@@ -22,6 +24,22 @@ func Server() {
 	runServer()
 }
 
+func connectUserService() (core.UserServiceClient, *grpc.ClientConn) {
+	opts := []grpc.DialOption{
+		grpc.WithInsecure(),
+	}
+
+	host := util.Getenv("USER_SERVICE_ADDR", ":13001")
+	conn, err := grpc.Dial(host, opts...)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	svc := core.NewUserServiceClient(conn)
+
+	return svc, conn
+}
+
 func runServer() {
 	ctx := context.Background()
 	port := util.Getenv("PORT", "14586")
@@ -29,6 +47,11 @@ func runServer() {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
+
+	// Connect to the user service
+	userService, userConn := connectUserService()
+	defer userConn.Close()
+	s := NewAuthenticationServer(userService)
 
 	// gRPC server statup options
 	opts := []grpc.ServerOption{}
@@ -39,8 +62,7 @@ func runServer() {
 	server := grpc.NewServer(opts...)
 
 	// attach the Todo service
-	s := AuthenticationServer{}
-	genpb.RegisterAuthenticationServiceServer(server, &s)
+	publicapi.RegisterAuthenticationServiceServer(server, &s)
 
 	// graceful shutdown
 	c := make(chan os.Signal, 1)

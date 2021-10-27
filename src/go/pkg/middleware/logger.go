@@ -44,3 +44,30 @@ func AddLogging(logger *zap.Logger, opts []grpc.ServerOption) []grpc.ServerOptio
 
 	return opts
 }
+
+type zapMiddleware struct {
+	logger  *zap.Logger
+	options []grpc_zap.Option
+}
+
+type MiddlewareProvider interface {
+	UnaryServerInterceptor() grpc.UnaryServerInterceptor
+	StreamServerInterceptor() grpc.StreamServerInterceptor
+}
+
+func NewZapLogger(logger *zap.Logger) MiddlewareProvider {
+	return zapMiddleware{
+		logger: logger,
+		options: []grpc_zap.Option{
+			grpc_zap.WithLevels(codeToLevel),
+		},
+	}
+}
+
+func (m zapMiddleware) UnaryServerInterceptor() grpc.UnaryServerInterceptor {
+	return grpc_zap.UnaryServerInterceptor(m.logger, m.options...)
+}
+
+func (m zapMiddleware) StreamServerInterceptor() grpc.StreamServerInterceptor {
+	return grpc_zap.StreamServerInterceptor(m.logger, m.options...)
+}
