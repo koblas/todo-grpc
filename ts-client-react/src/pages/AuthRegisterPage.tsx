@@ -3,15 +3,16 @@ import { useHistory } from "react-router-dom";
 import { Button, Checkbox, Flex, FormControl, FormLabel, Heading, Input, Link, Stack, Box } from "@chakra-ui/react";
 import { useAuth } from "../hooks/auth";
 
-export function AuthLoginPage() {
+export function AuthRegisterPage() {
   const [username, setUsername] = useState("");
+  const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const auth = useAuth();
   const history = useHistory();
 
   function handleSubmit() {
     auth
-      .login(username, password)
+      .register(username, password, name)
       .then(() => {
         history.replace("/todo");
         setUsername("");
@@ -33,7 +34,11 @@ export function AuthLoginPage() {
               handleSubmit();
             }}
           >
-            <Heading fontSize="2xl">Sign in to your account</Heading>
+            <Heading fontSize="2xl">Create an account</Heading>
+            <FormControl id="name">
+              <FormLabel>Your Full Name</FormLabel>
+              <Input type="text" value={name} onChange={(e) => setName(e.target.value)} />
+            </FormControl>
             <FormControl id="email">
               <FormLabel>Email address</FormLabel>
               <Input type="email" value={username} onChange={(e) => setUsername(e.target.value)} />

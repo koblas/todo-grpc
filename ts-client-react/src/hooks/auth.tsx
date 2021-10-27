@@ -75,7 +75,7 @@ export function AuthContextProvider({ children }: PropsWithChildren<unknown>) {
   return <AuthContext.Provider value={{ state, dispatch }}>{children}</AuthContext.Provider>;
 }
 
-const authClient = newAuthClient("grpc");
+const authClient = newAuthClient("json");
 
 export function useAuth() {
   const { state, dispatch } = useContext(AuthContext);
@@ -83,8 +83,12 @@ export function useAuth() {
   return {
     token: state.token,
     isAuthenticated: !!state.token,
-    login: async (username: string, password: string) => {
-      const { token } = await authClient.login(username, password);
+    login: async (email: string, password: string) => {
+      const { token } = await authClient.authenticate(email, password);
+      dispatch({ type: "set", token });
+    },
+    register: async (email: string, password: string, name: string) => {
+      const { token } = await authClient.register({ email, password, name });
       dispatch({ type: "set", token });
     },
     logout: async () => {

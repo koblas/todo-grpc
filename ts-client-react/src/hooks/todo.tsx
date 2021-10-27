@@ -5,6 +5,7 @@ import { assert } from "../util/assert";
 import { newTodoClient } from "../rpc/todo/factory";
 import { TodoItem, TodoService } from "../rpc/todo";
 import { useAuth } from "./auth";
+import { ErrorUnauthenticated } from "../rpc/errors";
 
 const TodoContext = createContext<{
   client: TodoService | null;
@@ -91,7 +92,7 @@ export function TodoContextProvider({ children }: PropsWithChildren<unknown>) {
   // but your local closure will only have the state at the time you dispatched
   // your asyncronist event.  Thus you need to bump the world into a reducer...
   const [state, dispatch] = useImmerReducer(listReducer, initialState);
-  const { token, isAuthenticated } = useAuth();
+  const { token, isAuthenticated, logout } = useAuth();
 
   useEffect(() => {
     const todoClient = newTodoClient(token, "grpc");
@@ -101,9 +102,18 @@ export function TodoContextProvider({ children }: PropsWithChildren<unknown>) {
 
   function refresh() {
     if (state.client && isAuthenticated) {
-      state.client.getTodos().then((todos) => {
-        dispatch({ type: "set", list: todos });
-      });
+      state.client
+        .getTodos()
+        .then((todos) => {
+          dispatch({ type: "set", list: todos });
+        })
+        .catch((err) => {
+          if (err instanceof ErrorUnauthenticated) {
+            return logout();
+          }
+
+          return null;
+        });
     } else {
       dispatch({ type: "set", list: [] });
     }
@@ -111,10 +121,8 @@ export function TodoContextProvider({ children }: PropsWithChildren<unknown>) {
 
   /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
-    if (isAuthenticated) {
-      refresh();
-    }
-  }, [state.client, isAuthenticated]);
+    refresh();
+  }, [state.client]);
   /* eslint-enable react-hooks/exhaustive-deps */
 
   return (

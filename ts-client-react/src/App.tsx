@@ -6,6 +6,7 @@ import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 import { TodoContextProvider } from "./hooks/todo";
 import { AuthLoginPage } from "./pages/AuthLoginPage";
 import { AuthLogoutPage } from "./pages/AuthLogoutPage";
+import { AuthRegisterPage } from "./pages/AuthRegisterPage";
 import { TodoPage } from "./pages/TodoPage";
 import { HomePage } from "./pages/HomePage";
 import { AuthContextProvider } from "./hooks/auth";
@@ -20,6 +21,9 @@ export default function App() {
         <TodoContextProvider>
           <Router>
             <Switch>
+              <Route path="/auth/register">
+                <AuthRegisterPage />
+              </Route>
               <Route path="/auth/login">
                 <AuthLoginPage />
               </Route>

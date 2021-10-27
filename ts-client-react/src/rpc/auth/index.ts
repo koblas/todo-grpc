@@ -3,5 +3,6 @@ export interface LoginSuccess {
 }
 
 export interface AuthService {
-  login(username: string, password: string): Promise<LoginSuccess>;
+  register(params: { email: string; password: string; name: string; urlbase?: string }): Promise<LoginSuccess>;
+  authenticate(email: string, password: string): Promise<LoginSuccess>;
 }

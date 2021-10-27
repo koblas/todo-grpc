@@ -24,7 +24,17 @@ import {
   MenuItem,
   MenuList,
 } from "@chakra-ui/react";
-import { FiHome, FiTrendingUp, FiCompass, FiStar, FiSettings, FiMenu, FiBell, FiChevronDown } from "react-icons/fi";
+import {
+  FiHome,
+  FiTrendingUp,
+  FiCompass,
+  FiStar,
+  FiSettings,
+  FiMenu,
+  FiBell,
+  FiChevronDown,
+  FiLogOut,
+} from "react-icons/fi";
 import { IconType } from "react-icons";
 
 interface LinkItemProps {
@@ -177,11 +187,13 @@ function SidebarContent({ onClose, ...rest }: SidebarProps) {
         </Text>
         <CloseButton display={{ base: "flex", md: "none" }} onClick={onClose} />
       </Flex>
-      {LinkItems.map((link) => (
-        <NavItem key={link.name} icon={link.icon}>
-          {link.name}
-        </NavItem>
-      ))}
+      <Flex h="100vh" mx="8" flexDirection="column">
+        {LinkItems.map((link) => (
+          <NavItem key={link.name} icon={link.icon}>
+            {link.name}
+          </NavItem>
+        ))}
+      </Flex>
     </Box>
   );
 }
