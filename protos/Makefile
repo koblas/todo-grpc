@@ -67,7 +67,7 @@ ts-client-react:
 		--ts_proto_opt=outputClientImpl=grpc-web \
 		--ts_proto_out=import_style=commonjs,binary:$(TS_REACT)/src/models/ \
 		--plugin="protoc-gen-ts=${TS_REACT}/node_modules/.bin/protoc-gen-ts" \
-		todo.proto auth.proto
+		publicapi/*
 
 #
 # TS Command Line Client
@@ -89,8 +89,8 @@ ts-client:
 #
 envoy:
 	protoc \
-		-I . -I ./protos \
+		-I . \
 		--proto_path=$(PROTO_DIR) \
 		--include_imports --include_source_info \
-		--descriptor_set_out=$(ENVOY_DIR)/todo.pb \
-		todo.proto auth.proto
+		--descriptor_set_out=$(ENVOY_DIR)/common.pb \
+		publicapi/*

@@ -3,6 +3,7 @@ package user
 import (
 	"log"
 
+	"github.com/google/uuid"
 	genpb "github.com/koblas/grpc-todo/genpb/core"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/net/context"
@@ -40,6 +41,7 @@ func (s *UserServer) getById(id string) *User {
 
 func (s *UserServer) getByEmail(email string) *User {
 	for _, u := range s.users {
+		log.Printf("CHECKING ", email, u.Email)
 		if u.Email == email {
 			return &u
 		}
@@ -56,6 +58,8 @@ func (s *UserServer) FindBy(ctx context.Context, params *genpb.FindParam) (*genp
 	if user == nil {
 		return &genpb.UserEither{Error: &genpb.Error{Message: "Not Found"}}, nil
 	}
+
+	log.Printf("found id=%s", user.ID)
 
 	return &genpb.UserEither{
 		User: &genpb.User{
@@ -79,6 +83,7 @@ func (s *UserServer) Create(ctx context.Context, params *genpb.CreateParam) (*ge
 	}
 
 	user := User{
+		ID:       uuid.New().String(),
 		Name:     params.Name,
 		Email:    params.Email,
 		Password: pass,

@@ -1,5 +1,5 @@
 import { AuthService, LoginSuccess } from "./index";
-import { AuthenticationServiceClientImpl, GrpcWebImpl } from "../../models/auth";
+import { AuthenticationServiceClientImpl, GrpcWebImpl } from "../../models/publicapi/auth";
 import { BASE_URL } from "../utils";
 import { must } from "../../util/assert";
 

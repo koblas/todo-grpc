@@ -1,6 +1,6 @@
 import { BrowserHeaders } from "browser-headers";
 import { TodoService } from "./index";
-import { todoServiceClientImpl, GrpcWebImpl } from "../../models/todo";
+import { todoServiceClientImpl, GrpcWebImpl } from "../../models/publicapi/todo";
 import { BASE_URL } from "../utils";
 import { ErrorUnauthenticated } from "../errors";
 

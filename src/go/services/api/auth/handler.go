@@ -31,7 +31,7 @@ func NewAuthenticationServer(userClient core.UserServiceClient) AuthenticationSe
 	}
 }
 
-func (s AuthenticationServer) Login(ctx context.Context, params *publicapi.LoginParams) (*publicapi.TokenEither, error) {
+func (s AuthenticationServer) Authenticate(ctx context.Context, params *publicapi.LoginParams) (*publicapi.TokenEither, error) {
 	log.Printf("Received login %s", params.Email)
 
 	either, err := s.userClient.FindBy(ctx, &core.FindParam{
@@ -40,7 +40,8 @@ func (s AuthenticationServer) Login(ctx context.Context, params *publicapi.Login
 	if err != nil {
 		return nil, err
 	}
-	if either.User != nil {
+	if either.User == nil {
+		log.Printf("User not found")
 		return &publicapi.TokenEither{
 			Errors: []*publicapi.ValidationError{
 				{
@@ -56,9 +57,10 @@ func (s AuthenticationServer) Login(ctx context.Context, params *publicapi.Login
 		Password: params.Password,
 	})
 	if err != nil {
+		log.Printf("Password mismatch")
 		return nil, err
 	}
-	if either.User != nil {
+	if either.User == nil {
 		return &publicapi.TokenEither{
 			Errors: []*publicapi.ValidationError{
 				{
