@@ -3,7 +3,7 @@ package todo;
 
 import "google/api/annotations.proto";
 
-option go_package = "./;genpb";
+option go_package = "./;publicapi";
 
 message getTodoParams{}
 

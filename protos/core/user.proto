@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package core;
+
+option go_package = "./;core";
+
+message User {
+  string id = 1;
+  string name = 2;
+  string email = 3;
+}
+
+message FindParam {
+  // Find by email address
+  string email = 1;
+}
+
+message AuthenticateParam {
+  // User Identifier
+  string user_id = 1;
+  // Password
+  string password = 2;
+}
+
+message CreateParam {
+  // ID is required
+  string email = 1;
+  string password = 2;
+  string name = 3;
+}
+
+message UpdateParam {
+  // ID is required
+  string user_id = 1;
+  string email = 2;
+  string password = 3;
+}
+
+message Error {
+  string message = 1;
+}
+
+message UserEither {
+  Error error = 1;
+
+  User  user = 2;
+}
+
+
+service userService {
+  rpc find_by(FindParam) returns(UserEither) {}
+
+  rpc create(CreateParam) returns(UserEither) {}
+  rpc update(UpdateParam) returns(UserEither) {}
+
+  rpc compare_password(AuthenticateParam) returns(UserEither) {}
+}

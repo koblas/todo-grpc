@@ -28,7 +28,14 @@ go-grpc:
 		--proto_path=$(PROTO_DIR) \
 		--go_out=$(GO_GRPC)/genpb --go_opt=paths=source_relative \
 		--go-grpc_out=$(GO_GRPC)/genpb --go-grpc_opt=paths=source_relative \
-		./todo.proto ./auth.proto
+		./publicapi/*
+	protoc \
+		-I . -I protos \
+		--proto_path=$(PROTO_DIR) \
+		--go_out=$(GO_GRPC)/genpb --go_opt=paths=source_relative \
+		--go-grpc_out=$(GO_GRPC)/genpb --go-grpc_opt=paths=source_relative \
+		./core/*
+
 
 ts-server:
 	protoc \

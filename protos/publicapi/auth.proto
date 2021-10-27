@@ -1,0 +1,127 @@
+syntax = "proto3";
+
+package auth;
+
+import "google/api/annotations.proto";
+
+option go_package = "./;publicapi";
+
+message RegisterParams {
+  // Required
+  string email = 1;
+  // Required
+  string password = 2;
+  // Username
+  string name = 4;
+  // invite code
+  string invite = 5;
+  // URL base for the UI
+  string urlbase = 6;
+}
+
+message LoginParams {
+  // Required
+  string email = 1;
+  // Required
+  string password = 2;
+  // TFA One Time Token
+  string tfa_otp = 4;
+  // TFA Type
+  string tfa_type = 5;
+}
+
+message ConfirmParams {
+  // Email confirmation token
+  string token = 1;
+}
+
+message RecoveryParams {
+  // URL base for the UI
+  string urlbase = 1;
+  // Required: Send
+  string email = 2;
+  // Required: Verify and Update
+  string token = 3;
+  // Required: Update
+  string password = 4;
+}
+
+// Response structures 
+
+message ValidationError {
+  // Field name
+  string field = 1;
+  // Human readable message
+  string message = 2;
+}
+
+message Success {
+  bool success = 1;
+}
+
+message Token {
+  string access_token = 1;
+  string token_type = 2;
+  int32 expires_in = 3;
+  string refresh_token = 4;
+}
+
+message TokenEither {
+  // If there are errors
+  repeated ValidationError errors = 1;
+
+  // Present if errors is empty
+  Token token = 2; 
+}
+
+message SuccessEither {
+  // If there are errors
+  repeated ValidationError errors = 1;
+
+  // Present if errors is empty
+  bool success = 2; 
+}
+
+service AuthenticationService {
+  rpc register(RegisterParams) returns (TokenEither) {
+    option (google.api.http) = {
+      post: "/auth/register"
+      body: "*"
+    };
+  }
+
+  rpc authenticate(LoginParams) returns (TokenEither) {
+    option (google.api.http) = {
+      post: "/auth/authenticate"
+      body: "*"
+    };
+  }
+
+  rpc verify_email(ConfirmParams) returns (TokenEither) {
+    option (google.api.http) = {
+      post: "/auth/verify/email"
+      body: "*"
+    };
+  }
+
+  rpc recover_send(RecoveryParams) returns (SuccessEither) {
+    option (google.api.http) = {
+      post: "/auth/recover/send"
+      body: "*"
+    };
+  }
+
+  rpc recover_verify(RecoveryParams) returns (SuccessEither) {
+    option (google.api.http) = {
+      post: "/auth/recover/verify"
+      body: "*"
+    };
+  }
+
+  rpc recover_update(RecoveryParams) returns (TokenEither) {
+    option (google.api.http) = {
+      post: "/auth/recover/update"
+      body: "*"
+    };
+  }
+}
