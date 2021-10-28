@@ -7,40 +7,79 @@ services:
       - 8080:8080
       - 9901:9901
     depends_on:
-      - grpc-todo
-      - grpc-auth
+      - public-todo
+      - public-auth
+      - api-extauth
     networks:
       - envoymesh
 
-  grpc-todo:
+  #
+  #  Endpoints that are proxied through Envoy
+  #
+  public-todo:
     build:
       context: src/go
       dockerfile: cmd/todo/Dockerfile
     ports:
       - 14001:14586
     networks:
-      envoymesh:
-        aliases:
-          - todo
-  grpc-auth:
+      - envoymesh
+    env_file:
+      dev-variables.env
+  public-auth:
     build:
       context: src/go
       dockerfile: cmd/auth/Dockerfile
     ports:
       - 14002:14586
     networks:
-      envoymesh:
-        aliases:
-          - auth
+      - envoymesh
+      - backend
+    env_file:
+      dev-variables.env
+  #
+  # The JWT Cookie validator for Envoy
+  #
+  api-extauth:
+    build:
+      context: src/go
+      dockerfile: cmd/extauth/Dockerfile
+    ports:
+      - 14010:14586
+    networks:
+      - envoymesh
+    env_file:
+      dev-variables.env
 
+  #
+  #  Backend services
+  #
+  core-user:
+    build:
+      context: src/go
+      dockerfile: cmd/user/Dockerfile
+    ports:
+      - 13001:14586
+    networks:
+      - backend
+
+  #
+  #  React GUI
+  #
   client:
     build:
       context: ts-client-react
     ports:
       - 8081:80
     depends_on:
-      - grpc-auth
-      - grpc-todo
+      - envoy
 
 networks:
+  #
+  #  Services that Envoy talks to
+  #
   envoymesh: {}
+  #
+  #  Backend services
+  #
+  backend: {}
