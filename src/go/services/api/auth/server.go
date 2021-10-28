@@ -12,11 +12,13 @@ import (
 
 	"github.com/koblas/grpc-todo/genpb/core"
 	"github.com/koblas/grpc-todo/genpb/publicapi"
+	"github.com/koblas/grpc-todo/pkg/grpcutil"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/middleware"
 	"github.com/koblas/grpc-todo/pkg/util"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/health/grpc_health_v1"
 )
 
 func Server() {
@@ -63,6 +65,7 @@ func runServer() {
 
 	// attach the Todo service
 	publicapi.RegisterAuthenticationServiceServer(server, &s)
+	grpc_health_v1.RegisterHealthServer(server, grpcutil.NewServer())
 
 	// graceful shutdown
 	c := make(chan os.Signal, 1)

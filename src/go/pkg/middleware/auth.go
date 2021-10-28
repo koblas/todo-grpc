@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/koblas/grpc-todo/pkg/tokenmanager"
+	"google.golang.org/grpc/metadata"
 )
 
 type authMiddleware struct {
@@ -35,6 +36,14 @@ func (m authMiddleware) StreamServerInterceptor() grpc.StreamServerInterceptor {
 
 // exampleAuthFunc is used by a middleware to authenticate requests
 func (s authMiddleware) authenticator(ctx context.Context) (context.Context, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+
+	log.Printf("Metadata = %+v", md)
+
+	// if val == "grpc.health.v1.Health" {
+	// 	return ctx, nil
+	// }
+
 	token, err := grpc_auth.AuthFromMD(ctx, "bearer")
 	if err != nil {
 		return nil, err

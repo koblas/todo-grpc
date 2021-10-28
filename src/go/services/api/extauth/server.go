@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/koblas/grpc-todo/pkg/grpcutil"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/middleware"
 	authToken "github.com/koblas/grpc-todo/pkg/tokenmanager"
@@ -15,6 +16,7 @@ import (
 
 	v3 "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	status "google.golang.org/genproto/googleapis/rpc/status"
+	"google.golang.org/grpc/health/grpc_health_v1"
 
 	// core "github.com/envoyproxy/go-control-plane/envoy/api/v3/core"
 	auth "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
@@ -106,7 +108,7 @@ func (a *AuthorizationServer) Check(ctx context.Context, req *auth.CheckRequest)
 
 func runServer() {
 	ctx := context.Background()
-	port := util.Getenv("PORT", "4000")
+	port := util.Getenv("PORT", "14586")
 	// create a TCP listener on port 4000
 	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
@@ -124,6 +126,7 @@ func runServer() {
 		log.Fatalf("Failed to create AuthServer: %v", err)
 	}
 	auth.RegisterAuthorizationServer(grpcServer, authServer)
+	grpc_health_v1.RegisterHealthServer(grpcServer, grpcutil.NewServer())
 
 	// graceful shutdown
 	c := make(chan os.Signal, 1)
