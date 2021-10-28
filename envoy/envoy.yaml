@@ -111,7 +111,7 @@ static_resources:
           - endpoint:
               address:
                 socket_address:
-                  address: todo
+                  address: public-todo
                   port_value: 14586
   - name: auth_service
     connect_timeout: 0.25s
@@ -138,11 +138,20 @@ static_resources:
           - endpoint:
               address:
                 socket_address:
-                  address: auth
+                  address: public-auth
                   port_value: 14586
 
   - name: ext-authz
-    type: static
+    connect_timeout: 0.25s
+    type: strict_dns
+    http2_protocol_options: {}
+    lb_policy: round_robin
+    health_checks:
+      timeout: 1s
+      interval: 10s
+      unhealthy_threshold: 2
+      healthy_threshold: 2
+      grpc_health_check: {}
     typed_extension_protocol_options:
       envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
         "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
@@ -152,6 +161,11 @@ static_resources:
       cluster_name: ext-authz
       endpoints:
       - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: api-extauth
+                port_value: 14586
         - endpoint:
             address:
               socket_address:
