@@ -17,6 +17,7 @@ services:
   #  Endpoints that are proxied through Envoy
   #
   public-todo:
+    image: public-todo
     build:
       context: src/go
       dockerfile: cmd/todo/Dockerfile
@@ -27,6 +28,7 @@ services:
     env_file:
       dev-variables.env
   public-auth:
+    image: public-auth
     build:
       context: src/go
       dockerfile: cmd/auth/Dockerfile
@@ -41,6 +43,7 @@ services:
   # The JWT Cookie validator for Envoy
   #
   api-extauth:
+    image: api-extauth
     build:
       context: src/go
       dockerfile: cmd/extauth/Dockerfile
@@ -55,6 +58,7 @@ services:
   #  Backend services
   #
   core-user:
+    image: core-user
     build:
       context: src/go
       dockerfile: cmd/user/Dockerfile
@@ -67,6 +71,7 @@ services:
   #  React GUI
   #
   client:
+    image: ts-client-react
     build:
       context: ts-client-react
     ports:

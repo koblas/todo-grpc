@@ -36,11 +36,11 @@ func runServer() {
 	// add middleware
 	opts = middleware.AddLogging(logger.Log, opts)
 
-	server := grpc.NewServer(opts...)
+	grpcServer := grpc.NewServer(opts...)
 
 	// attach the Todo service
 	s := NewUserServer()
-	genpb.RegisterUserServiceServer(server, s)
+	genpb.RegisterUserServiceServer(grpcServer, s)
 
 	// graceful shutdown
 	c := make(chan os.Signal, 1)
@@ -50,7 +50,7 @@ func runServer() {
 			// sig is a ^C, handle it
 			logger.Log.Info("shutting down gRPC server...")
 
-			server.GracefulStop()
+			grpcServer.GracefulStop()
 
 			<-ctx.Done()
 		}
@@ -58,7 +58,7 @@ func runServer() {
 
 	logger.Log.Info("staring gRPC server... port=" + port)
 
-	if err := server.Serve(lis); err != nil {
+	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %s", err)
 	} else {
 		log.Printf("Server started successfully")

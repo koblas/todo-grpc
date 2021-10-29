@@ -46,6 +46,7 @@ The directory `google/api` was created by:
 
 #### Go Example 
   - production ready gRPC server - https://github.com/apssouza22/grpc-production-go
+  - This is good https://www.youtube.com/watch?v=bJEEGJa_C4o
 
 #### Install Protobuf Generator for Go
 
