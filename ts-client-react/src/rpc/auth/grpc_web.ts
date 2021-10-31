@@ -1,39 +1,47 @@
+import * as grpcWeb from "grpc-web";
 import { AuthService, LoginSuccess } from "./index";
-import { AuthenticationServiceClientImpl, GrpcWebImpl } from "../../models/publicapi/auth";
 import { BASE_URL } from "../utils";
-import { must } from "../../util/assert";
-
-const rpc = new GrpcWebImpl(BASE_URL, {
-  debug: false,
-});
+import { AuthenticationServiceClient } from "../../genpb/publicapi/auth_grpc_web_pb";
+import { RegisterParams, LoginParams, Token } from "../../genpb/publicapi/auth_pb";
+import { handleGrpcError } from "../utils/grpc_helpers";
+import { RpcOptions } from "../errors";
 
 export function newAuthClient(): AuthService {
-  const client = new AuthenticationServiceClientImpl(rpc);
+  const client = new AuthenticationServiceClient(BASE_URL);
 
   return {
-    async register(params): Promise<LoginSuccess> {
-      const response = await client.register({
-        email: params.email,
-        name: params.name,
-        password: params.password,
-        urlbase: params.urlbase,
-      });
-
-      if (response.errors) {
-        throw new Error("Unable to authenticate");
+    register(params, options: RpcOptions<LoginSuccess>): void {
+      const req = new RegisterParams();
+      req.setEmail(params.email);
+      req.setName(params.name);
+      req.setPassword(params.password);
+      if (params.urlbase) {
+        req.setUrlbase(params.urlbase);
       }
 
-      return { token: must(response.token).accessToken };
+      client.register(req, undefined, (err: grpcWeb.RpcError, data: Token) => {
+        if (err) {
+          handleGrpcError(err, options);
+          return;
+        }
+        const token = data.getAccessToken();
+        options.onCompleted?.({ token });
+      });
     },
 
-    async authenticate(email: string, password: string): Promise<LoginSuccess> {
-      const response = await client.authenticate({ email, password });
+    authenticate(params: { email: string; password: string }, options: RpcOptions<LoginSuccess>): void {
+      const req = new LoginParams();
+      req.setEmail(params.email);
+      req.setPassword(params.password);
 
-      if (response.errors) {
-        throw new Error("Unable to authenticate");
-      }
-
-      return { token: must(response.token).accessToken };
+      client.authenticate(req, undefined, (err: grpcWeb.RpcError, data: Token) => {
+        if (err) {
+          handleGrpcError(err, options);
+          return;
+        }
+        const token = data.getAccessToken();
+        options.onCompleted?.({ token });
+      });
     },
   };
 }

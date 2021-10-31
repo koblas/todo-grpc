@@ -4,11 +4,14 @@ import { useAuth } from "../hooks/auth";
 
 export function AuthLogoutPage() {
   const history = useHistory();
-  const auth = useAuth();
+  const { mutations } = useAuth();
+  const logout = mutations.useLogout();
 
   useEffect(() => {
-    auth.logout().then(() => {
-      history.push("/auth/login");
+    logout({
+      onCompleted() {
+        history.push("/auth/login");
+      },
     });
   });
 

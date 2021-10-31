@@ -915,11 +915,11 @@ export interface AuthenticationService {
   register(
     request: DeepPartial<RegisterParams>,
     metadata?: grpc.Metadata
-  ): Promise<TokenEither>;
+  ): Promise<Token>;
   authenticate(
     request: DeepPartial<LoginParams>,
     metadata?: grpc.Metadata
-  ): Promise<TokenEither>;
+  ): Promise<Token>;
   verify_email(
     request: DeepPartial<ConfirmParams>,
     metadata?: grpc.Metadata
@@ -954,7 +954,7 @@ export class AuthenticationServiceClientImpl implements AuthenticationService {
   register(
     request: DeepPartial<RegisterParams>,
     metadata?: grpc.Metadata
-  ): Promise<TokenEither> {
+  ): Promise<Token> {
     return this.rpc.unary(
       AuthenticationServiceregisterDesc,
       RegisterParams.fromPartial(request),
@@ -965,7 +965,7 @@ export class AuthenticationServiceClientImpl implements AuthenticationService {
   authenticate(
     request: DeepPartial<LoginParams>,
     metadata?: grpc.Metadata
-  ): Promise<TokenEither> {
+  ): Promise<Token> {
     return this.rpc.unary(
       AuthenticationServiceauthenticateDesc,
       LoginParams.fromPartial(request),
@@ -1035,7 +1035,7 @@ export const AuthenticationServiceregisterDesc: UnaryMethodDefinitionish = {
   responseType: {
     deserializeBinary(data: Uint8Array) {
       return {
-        ...TokenEither.decode(data),
+        ...Token.decode(data),
         toObject() {
           return this;
         },
@@ -1057,7 +1057,7 @@ export const AuthenticationServiceauthenticateDesc: UnaryMethodDefinitionish = {
   responseType: {
     deserializeBinary(data: Uint8Array) {
       return {
-        ...TokenEither.decode(data),
+        ...Token.decode(data),
         toObject() {
           return this;
         },

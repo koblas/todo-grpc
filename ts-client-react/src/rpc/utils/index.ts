@@ -1,6 +1,21 @@
-import { Json } from "../types/json";
+import { Json } from "../../types/json";
 
 export const BASE_URL = "http://localhost:8080";
+
+export class FetchError extends Error {
+  public body: Json;
+  public code: number;
+
+  constructor(code: number, body: Json) {
+    super(`HTTP Error code=${code}`);
+    this.code = code;
+    this.body = body;
+  }
+
+  toString(): string {
+    return `super().toString() ${JSON.stringify(this.body)}`;
+  }
+}
 
 export type FetchHandlers = Record<
   string,
@@ -10,17 +25,22 @@ export type FetchHandlers = Record<
 const fetchHandlers: FetchHandlers = {
   "2xx": async (response) => response,
   "3xx": async (response) => {
-    throw new Error(`Unexpected response.status=${response.status}`);
+    throw new FetchError(response.status, await response.json());
   },
   "4xx": async (response) => {
-    throw new Error(`Unexpected response.status=${response.status}`);
+    throw new FetchError(response.status, await response.json());
   },
   "5xx": async (response) => {
-    throw new Error(`Unexpected response.status=${response.status}`);
+    throw new FetchError(response.status, await response.json());
   },
   "401": async () => {
     throw new Error("Need authentication");
   },
+};
+
+const baseHeaders = {
+  Accept: "application/json",
+  "Content-Type": "application/json",
 };
 
 export function newFetchClient(config?: { token?: string | null; base?: string | null; handlers?: FetchHandlers }): {
@@ -62,7 +82,7 @@ export function newFetchClient(config?: { token?: string | null; base?: string |
         method: "POST",
         body: JSON.stringify(body),
         headers: {
-          "Content-Type": "application/json",
+          ...baseHeaders,
           ...(config?.token ? { Authorization: `Bearer ${config?.token}` } : {}),
         },
       });
@@ -73,6 +93,7 @@ export function newFetchClient(config?: { token?: string | null; base?: string |
       const response = await fetchCommon(url, {
         method: "GET",
         headers: {
+          ...baseHeaders,
           ...(config?.token ? { Authorization: `Bearer ${config?.token}` } : {}),
         },
       });
@@ -83,7 +104,7 @@ export function newFetchClient(config?: { token?: string | null; base?: string |
       const response = await fetchCommon(url, {
         method: "DELETE",
         headers: {
-          "Content-Type": "application/json",
+          ...baseHeaders,
           ...(config?.token ? { Authorization: `Bearer ${config?.token}` } : {}),
         },
       });

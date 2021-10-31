@@ -6,43 +6,43 @@ import { BrowserHeaders } from "browser-headers";
 
 export const protobufPackage = "todo";
 
-export interface getTodoParams {}
+export interface GetTodoParams {}
 
-export interface addTodoParams {
+export interface AddTodoParams {
   task: string;
 }
 
-export interface deleteTodoParams {
+export interface DeleteTodoParams {
   id: string;
 }
 
-export interface todoObject {
+export interface TodoObject {
   id: string;
   task: string;
 }
 
-export interface todoResponse {
-  todos: todoObject[];
+export interface TodoResponse {
+  todos: TodoObject[];
 }
 
-export interface deleteResponse {
+export interface DeleteResponse {
   message: string;
 }
 
-const basegetTodoParams: object = {};
+const baseGetTodoParams: object = {};
 
-export const getTodoParams = {
+export const GetTodoParams = {
   encode(
-    _: getTodoParams,
+    _: GetTodoParams,
     writer: _m0.Writer = _m0.Writer.create()
   ): _m0.Writer {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): getTodoParams {
+  decode(input: _m0.Reader | Uint8Array, length?: number): GetTodoParams {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...basegetTodoParams } as getTodoParams;
+    const message = { ...baseGetTodoParams } as GetTodoParams;
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -54,27 +54,27 @@ export const getTodoParams = {
     return message;
   },
 
-  fromJSON(_: any): getTodoParams {
-    const message = { ...basegetTodoParams } as getTodoParams;
+  fromJSON(_: any): GetTodoParams {
+    const message = { ...baseGetTodoParams } as GetTodoParams;
     return message;
   },
 
-  toJSON(_: getTodoParams): unknown {
+  toJSON(_: GetTodoParams): unknown {
     const obj: any = {};
     return obj;
   },
 
-  fromPartial(_: DeepPartial<getTodoParams>): getTodoParams {
-    const message = { ...basegetTodoParams } as getTodoParams;
+  fromPartial(_: DeepPartial<GetTodoParams>): GetTodoParams {
+    const message = { ...baseGetTodoParams } as GetTodoParams;
     return message;
   },
 };
 
-const baseaddTodoParams: object = { task: "" };
+const baseAddTodoParams: object = { task: "" };
 
-export const addTodoParams = {
+export const AddTodoParams = {
   encode(
-    message: addTodoParams,
+    message: AddTodoParams,
     writer: _m0.Writer = _m0.Writer.create()
   ): _m0.Writer {
     if (message.task !== "") {
@@ -83,10 +83,10 @@ export const addTodoParams = {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): addTodoParams {
+  decode(input: _m0.Reader | Uint8Array, length?: number): AddTodoParams {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...baseaddTodoParams } as addTodoParams;
+    const message = { ...baseAddTodoParams } as AddTodoParams;
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -101,8 +101,8 @@ export const addTodoParams = {
     return message;
   },
 
-  fromJSON(object: any): addTodoParams {
-    const message = { ...baseaddTodoParams } as addTodoParams;
+  fromJSON(object: any): AddTodoParams {
+    const message = { ...baseAddTodoParams } as AddTodoParams;
     if (object.task !== undefined && object.task !== null) {
       message.task = String(object.task);
     } else {
@@ -111,14 +111,14 @@ export const addTodoParams = {
     return message;
   },
 
-  toJSON(message: addTodoParams): unknown {
+  toJSON(message: AddTodoParams): unknown {
     const obj: any = {};
     message.task !== undefined && (obj.task = message.task);
     return obj;
   },
 
-  fromPartial(object: DeepPartial<addTodoParams>): addTodoParams {
-    const message = { ...baseaddTodoParams } as addTodoParams;
+  fromPartial(object: DeepPartial<AddTodoParams>): AddTodoParams {
+    const message = { ...baseAddTodoParams } as AddTodoParams;
     if (object.task !== undefined && object.task !== null) {
       message.task = object.task;
     } else {
@@ -128,11 +128,11 @@ export const addTodoParams = {
   },
 };
 
-const basedeleteTodoParams: object = { id: "" };
+const baseDeleteTodoParams: object = { id: "" };
 
-export const deleteTodoParams = {
+export const DeleteTodoParams = {
   encode(
-    message: deleteTodoParams,
+    message: DeleteTodoParams,
     writer: _m0.Writer = _m0.Writer.create()
   ): _m0.Writer {
     if (message.id !== "") {
@@ -141,10 +141,10 @@ export const deleteTodoParams = {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): deleteTodoParams {
+  decode(input: _m0.Reader | Uint8Array, length?: number): DeleteTodoParams {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...basedeleteTodoParams } as deleteTodoParams;
+    const message = { ...baseDeleteTodoParams } as DeleteTodoParams;
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -159,8 +159,8 @@ export const deleteTodoParams = {
     return message;
   },
 
-  fromJSON(object: any): deleteTodoParams {
-    const message = { ...basedeleteTodoParams } as deleteTodoParams;
+  fromJSON(object: any): DeleteTodoParams {
+    const message = { ...baseDeleteTodoParams } as DeleteTodoParams;
     if (object.id !== undefined && object.id !== null) {
       message.id = String(object.id);
     } else {
@@ -169,14 +169,14 @@ export const deleteTodoParams = {
     return message;
   },
 
-  toJSON(message: deleteTodoParams): unknown {
+  toJSON(message: DeleteTodoParams): unknown {
     const obj: any = {};
     message.id !== undefined && (obj.id = message.id);
     return obj;
   },
 
-  fromPartial(object: DeepPartial<deleteTodoParams>): deleteTodoParams {
-    const message = { ...basedeleteTodoParams } as deleteTodoParams;
+  fromPartial(object: DeepPartial<DeleteTodoParams>): DeleteTodoParams {
+    const message = { ...baseDeleteTodoParams } as DeleteTodoParams;
     if (object.id !== undefined && object.id !== null) {
       message.id = object.id;
     } else {
@@ -186,11 +186,11 @@ export const deleteTodoParams = {
   },
 };
 
-const basetodoObject: object = { id: "", task: "" };
+const baseTodoObject: object = { id: "", task: "" };
 
-export const todoObject = {
+export const TodoObject = {
   encode(
-    message: todoObject,
+    message: TodoObject,
     writer: _m0.Writer = _m0.Writer.create()
   ): _m0.Writer {
     if (message.id !== "") {
@@ -202,10 +202,10 @@ export const todoObject = {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): todoObject {
+  decode(input: _m0.Reader | Uint8Array, length?: number): TodoObject {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...basetodoObject } as todoObject;
+    const message = { ...baseTodoObject } as TodoObject;
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -223,8 +223,8 @@ export const todoObject = {
     return message;
   },
 
-  fromJSON(object: any): todoObject {
-    const message = { ...basetodoObject } as todoObject;
+  fromJSON(object: any): TodoObject {
+    const message = { ...baseTodoObject } as TodoObject;
     if (object.id !== undefined && object.id !== null) {
       message.id = String(object.id);
     } else {
@@ -238,15 +238,15 @@ export const todoObject = {
     return message;
   },
 
-  toJSON(message: todoObject): unknown {
+  toJSON(message: TodoObject): unknown {
     const obj: any = {};
     message.id !== undefined && (obj.id = message.id);
     message.task !== undefined && (obj.task = message.task);
     return obj;
   },
 
-  fromPartial(object: DeepPartial<todoObject>): todoObject {
-    const message = { ...basetodoObject } as todoObject;
+  fromPartial(object: DeepPartial<TodoObject>): TodoObject {
+    const message = { ...baseTodoObject } as TodoObject;
     if (object.id !== undefined && object.id !== null) {
       message.id = object.id;
     } else {
@@ -261,29 +261,29 @@ export const todoObject = {
   },
 };
 
-const basetodoResponse: object = {};
+const baseTodoResponse: object = {};
 
-export const todoResponse = {
+export const TodoResponse = {
   encode(
-    message: todoResponse,
+    message: TodoResponse,
     writer: _m0.Writer = _m0.Writer.create()
   ): _m0.Writer {
     for (const v of message.todos) {
-      todoObject.encode(v!, writer.uint32(10).fork()).ldelim();
+      TodoObject.encode(v!, writer.uint32(10).fork()).ldelim();
     }
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): todoResponse {
+  decode(input: _m0.Reader | Uint8Array, length?: number): TodoResponse {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...basetodoResponse } as todoResponse;
+    const message = { ...baseTodoResponse } as TodoResponse;
     message.todos = [];
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.todos.push(todoObject.decode(reader, reader.uint32()));
+          message.todos.push(TodoObject.decode(reader, reader.uint32()));
           break;
         default:
           reader.skipType(tag & 7);
@@ -293,22 +293,22 @@ export const todoResponse = {
     return message;
   },
 
-  fromJSON(object: any): todoResponse {
-    const message = { ...basetodoResponse } as todoResponse;
+  fromJSON(object: any): TodoResponse {
+    const message = { ...baseTodoResponse } as TodoResponse;
     message.todos = [];
     if (object.todos !== undefined && object.todos !== null) {
       for (const e of object.todos) {
-        message.todos.push(todoObject.fromJSON(e));
+        message.todos.push(TodoObject.fromJSON(e));
       }
     }
     return message;
   },
 
-  toJSON(message: todoResponse): unknown {
+  toJSON(message: TodoResponse): unknown {
     const obj: any = {};
     if (message.todos) {
       obj.todos = message.todos.map((e) =>
-        e ? todoObject.toJSON(e) : undefined
+        e ? TodoObject.toJSON(e) : undefined
       );
     } else {
       obj.todos = [];
@@ -316,23 +316,23 @@ export const todoResponse = {
     return obj;
   },
 
-  fromPartial(object: DeepPartial<todoResponse>): todoResponse {
-    const message = { ...basetodoResponse } as todoResponse;
+  fromPartial(object: DeepPartial<TodoResponse>): TodoResponse {
+    const message = { ...baseTodoResponse } as TodoResponse;
     message.todos = [];
     if (object.todos !== undefined && object.todos !== null) {
       for (const e of object.todos) {
-        message.todos.push(todoObject.fromPartial(e));
+        message.todos.push(TodoObject.fromPartial(e));
       }
     }
     return message;
   },
 };
 
-const basedeleteResponse: object = { message: "" };
+const baseDeleteResponse: object = { message: "" };
 
-export const deleteResponse = {
+export const DeleteResponse = {
   encode(
-    message: deleteResponse,
+    message: DeleteResponse,
     writer: _m0.Writer = _m0.Writer.create()
   ): _m0.Writer {
     if (message.message !== "") {
@@ -341,10 +341,10 @@ export const deleteResponse = {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): deleteResponse {
+  decode(input: _m0.Reader | Uint8Array, length?: number): DeleteResponse {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...basedeleteResponse } as deleteResponse;
+    const message = { ...baseDeleteResponse } as DeleteResponse;
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -359,8 +359,8 @@ export const deleteResponse = {
     return message;
   },
 
-  fromJSON(object: any): deleteResponse {
-    const message = { ...basedeleteResponse } as deleteResponse;
+  fromJSON(object: any): DeleteResponse {
+    const message = { ...baseDeleteResponse } as DeleteResponse;
     if (object.message !== undefined && object.message !== null) {
       message.message = String(object.message);
     } else {
@@ -369,14 +369,14 @@ export const deleteResponse = {
     return message;
   },
 
-  toJSON(message: deleteResponse): unknown {
+  toJSON(message: DeleteResponse): unknown {
     const obj: any = {};
     message.message !== undefined && (obj.message = message.message);
     return obj;
   },
 
-  fromPartial(object: DeepPartial<deleteResponse>): deleteResponse {
-    const message = { ...basedeleteResponse } as deleteResponse;
+  fromPartial(object: DeepPartial<DeleteResponse>): DeleteResponse {
+    const message = { ...baseDeleteResponse } as DeleteResponse;
     if (object.message !== undefined && object.message !== null) {
       message.message = object.message;
     } else {
@@ -386,22 +386,22 @@ export const deleteResponse = {
   },
 };
 
-export interface todoService {
+export interface TodoService {
   addTodo(
-    request: DeepPartial<addTodoParams>,
+    request: DeepPartial<AddTodoParams>,
     metadata?: grpc.Metadata
-  ): Promise<todoObject>;
+  ): Promise<TodoObject>;
   deleteTodo(
-    request: DeepPartial<deleteTodoParams>,
+    request: DeepPartial<DeleteTodoParams>,
     metadata?: grpc.Metadata
-  ): Promise<deleteResponse>;
+  ): Promise<DeleteResponse>;
   getTodos(
-    request: DeepPartial<getTodoParams>,
+    request: DeepPartial<GetTodoParams>,
     metadata?: grpc.Metadata
-  ): Promise<todoResponse>;
+  ): Promise<TodoResponse>;
 }
 
-export class todoServiceClientImpl implements todoService {
+export class TodoServiceClientImpl implements TodoService {
   private readonly rpc: Rpc;
 
   constructor(rpc: Rpc) {
@@ -412,57 +412,57 @@ export class todoServiceClientImpl implements todoService {
   }
 
   addTodo(
-    request: DeepPartial<addTodoParams>,
+    request: DeepPartial<AddTodoParams>,
     metadata?: grpc.Metadata
-  ): Promise<todoObject> {
+  ): Promise<TodoObject> {
     return this.rpc.unary(
-      todoServiceaddTodoDesc,
-      addTodoParams.fromPartial(request),
+      TodoServiceaddTodoDesc,
+      AddTodoParams.fromPartial(request),
       metadata
     );
   }
 
   deleteTodo(
-    request: DeepPartial<deleteTodoParams>,
+    request: DeepPartial<DeleteTodoParams>,
     metadata?: grpc.Metadata
-  ): Promise<deleteResponse> {
+  ): Promise<DeleteResponse> {
     return this.rpc.unary(
-      todoServicedeleteTodoDesc,
-      deleteTodoParams.fromPartial(request),
+      TodoServicedeleteTodoDesc,
+      DeleteTodoParams.fromPartial(request),
       metadata
     );
   }
 
   getTodos(
-    request: DeepPartial<getTodoParams>,
+    request: DeepPartial<GetTodoParams>,
     metadata?: grpc.Metadata
-  ): Promise<todoResponse> {
+  ): Promise<TodoResponse> {
     return this.rpc.unary(
-      todoServicegetTodosDesc,
-      getTodoParams.fromPartial(request),
+      TodoServicegetTodosDesc,
+      GetTodoParams.fromPartial(request),
       metadata
     );
   }
 }
 
-export const todoServiceDesc = {
-  serviceName: "todo.todoService",
+export const TodoServiceDesc = {
+  serviceName: "todo.TodoService",
 };
 
-export const todoServiceaddTodoDesc: UnaryMethodDefinitionish = {
+export const TodoServiceaddTodoDesc: UnaryMethodDefinitionish = {
   methodName: "addTodo",
-  service: todoServiceDesc,
+  service: TodoServiceDesc,
   requestStream: false,
   responseStream: false,
   requestType: {
     serializeBinary() {
-      return addTodoParams.encode(this).finish();
+      return AddTodoParams.encode(this).finish();
     },
   } as any,
   responseType: {
     deserializeBinary(data: Uint8Array) {
       return {
-        ...todoObject.decode(data),
+        ...TodoObject.decode(data),
         toObject() {
           return this;
         },
@@ -471,20 +471,20 @@ export const todoServiceaddTodoDesc: UnaryMethodDefinitionish = {
   } as any,
 };
 
-export const todoServicedeleteTodoDesc: UnaryMethodDefinitionish = {
+export const TodoServicedeleteTodoDesc: UnaryMethodDefinitionish = {
   methodName: "deleteTodo",
-  service: todoServiceDesc,
+  service: TodoServiceDesc,
   requestStream: false,
   responseStream: false,
   requestType: {
     serializeBinary() {
-      return deleteTodoParams.encode(this).finish();
+      return DeleteTodoParams.encode(this).finish();
     },
   } as any,
   responseType: {
     deserializeBinary(data: Uint8Array) {
       return {
-        ...deleteResponse.decode(data),
+        ...DeleteResponse.decode(data),
         toObject() {
           return this;
         },
@@ -493,20 +493,20 @@ export const todoServicedeleteTodoDesc: UnaryMethodDefinitionish = {
   } as any,
 };
 
-export const todoServicegetTodosDesc: UnaryMethodDefinitionish = {
+export const TodoServicegetTodosDesc: UnaryMethodDefinitionish = {
   methodName: "getTodos",
-  service: todoServiceDesc,
+  service: TodoServiceDesc,
   requestStream: false,
   responseStream: false,
   requestType: {
     serializeBinary() {
-      return getTodoParams.encode(this).finish();
+      return GetTodoParams.encode(this).finish();
     },
   } as any,
   responseType: {
     deserializeBinary(data: Uint8Array) {
       return {
-        ...todoResponse.decode(data),
+        ...TodoResponse.decode(data),
         toObject() {
           return this;
         },

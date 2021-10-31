@@ -10,6 +10,7 @@ import { AuthRegisterPage } from "./pages/AuthRegisterPage";
 import { TodoPage } from "./pages/TodoPage";
 import { HomePage } from "./pages/HomePage";
 import { AuthContextProvider } from "./hooks/auth";
+import { NetworkContextProvider } from "./hooks/network";
 
 // const theme = createTheme();
 
@@ -17,29 +18,31 @@ export default function App() {
   return (
     <ChakraProvider>
       <CSSReset />
-      <AuthContextProvider>
-        <TodoContextProvider>
-          <Router>
-            <Switch>
-              <Route path="/auth/register">
-                <AuthRegisterPage />
-              </Route>
-              <Route path="/auth/login">
-                <AuthLoginPage />
-              </Route>
-              <Route path="/auth/logout">
-                <AuthLogoutPage />
-              </Route>
-              <Route path="/todo">
-                <TodoPage />
-              </Route>
-              <Route path="*">
-                <HomePage />
-              </Route>
-            </Switch>
-          </Router>
-        </TodoContextProvider>
-      </AuthContextProvider>
+      <NetworkContextProvider>
+        <AuthContextProvider>
+          <TodoContextProvider>
+            <Router>
+              <Switch>
+                <Route path="/auth/register">
+                  <AuthRegisterPage />
+                </Route>
+                <Route path="/auth/login">
+                  <AuthLoginPage />
+                </Route>
+                <Route path="/auth/logout">
+                  <AuthLogoutPage />
+                </Route>
+                <Route path="/todo">
+                  <TodoPage />
+                </Route>
+                <Route path="*">
+                  <HomePage />
+                </Route>
+              </Switch>
+            </Router>
+          </TodoContextProvider>
+        </AuthContextProvider>
+      </NetworkContextProvider>
     </ChakraProvider>
   );
 }

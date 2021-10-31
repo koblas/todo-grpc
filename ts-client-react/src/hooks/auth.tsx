@@ -1,8 +1,10 @@
-import React, { createContext, useContext, PropsWithChildren, useCallback } from "react";
+import React, { createContext, useContext, PropsWithChildren, useCallback, useState } from "react";
 import { useImmerReducer } from "use-immer";
 import { Draft } from "immer";
 import { newAuthClient } from "../rpc/auth/factory";
 import { storageFactory } from "../util/storageFactory";
+import { useNetworkContext, useNetworkContextErrors } from "./network";
+import { RpcMutation, RpcOptions, RpcResult } from "../rpc/errors";
 
 /**
  * Construct an accessor for a persistent token store
@@ -77,22 +79,89 @@ export function AuthContextProvider({ children }: PropsWithChildren<unknown>) {
 
 const authClient = newAuthClient("json");
 
+export type LoginParams = {
+  email: string;
+  password: string;
+};
+export type RegisterParams = {
+  name: string;
+  email: string;
+  password: string;
+};
+
 export function useAuth() {
   const { state, dispatch } = useContext(AuthContext);
+  const addHandler = useNetworkContextErrors();
 
   return {
     token: state.token,
     isAuthenticated: !!state.token,
-    login: async (email: string, password: string) => {
-      const { token } = await authClient.authenticate(email, password);
-      dispatch({ type: "set", token });
-    },
-    register: async (email: string, password: string, name: string) => {
-      const { token } = await authClient.register({ email, password, name });
-      dispatch({ type: "set", token });
-    },
-    logout: async () => {
-      dispatch({ type: "set", token: null });
+    mutations: {
+      useRegister(): RpcMutation<RegisterParams, string> {
+        const [data, setData] = useState<string | undefined>("");
+        const [loading, setLoading] = useState(true);
+        const [error, setError] = useState<any>(undefined);
+
+        const func = (params: RegisterParams, options?: RpcOptions<string>) => {
+          authClient.register(
+            params,
+            addHandler(
+              {
+                onCompleted: ({ token }) => {
+                  setLoading(false);
+                  setData(token);
+                  dispatch({ type: "set", token });
+
+                  options?.onCompleted?.(token);
+                },
+                onError(error: unknown) {
+                  setError(error);
+                  options?.onError?.(error);
+                },
+              },
+              options,
+            ),
+          );
+        };
+
+        return [func, { data, loading, error }];
+      },
+      useLogin(): RpcMutation<LoginParams, string> {
+        const [data, setData] = useState<string>("");
+        const [loading, setLoading] = useState(true);
+        const [error, setError] = useState<any>(null);
+
+        const func = (params: LoginParams, options?: RpcOptions<string>) => {
+          authClient.authenticate(
+            params,
+            addHandler(
+              {
+                onCompleted: ({ token }) => {
+                  setLoading(false);
+                  setData(token);
+                  dispatch({ type: "set", token });
+
+                  options?.onCompleted?.(token);
+                },
+                onError(error: unknown) {
+                  setError(error);
+                  options?.onError?.(error);
+                },
+              },
+              options,
+            ),
+          );
+        };
+
+        return [func, { data, loading, error }];
+      },
+      useLogout() {
+        return (options?: RpcOptions<void>) => {
+          dispatch({ type: "set", token: null });
+
+          options?.onCompleted?.();
+        };
+      },
     },
   };
 }

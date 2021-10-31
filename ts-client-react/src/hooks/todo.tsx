@@ -5,7 +5,7 @@ import { assert } from "../util/assert";
 import { newTodoClient } from "../rpc/todo/factory";
 import { TodoItem, TodoService } from "../rpc/todo";
 import { useAuth } from "./auth";
-import { ErrorUnauthenticated } from "../rpc/errors";
+import { useNetworkContextErrors } from "./network";
 
 const TodoContext = createContext<{
   client: TodoService | null;
@@ -92,7 +92,9 @@ export function TodoContextProvider({ children }: PropsWithChildren<unknown>) {
   // but your local closure will only have the state at the time you dispatched
   // your asyncronist event.  Thus you need to bump the world into a reducer...
   const [state, dispatch] = useImmerReducer(listReducer, initialState);
-  const { token, isAuthenticated, logout } = useAuth();
+  const { token, isAuthenticated, mutations } = useAuth();
+  const addHandlers = useNetworkContextErrors();
+  const logout = mutations.useLogout();
 
   useEffect(() => {
     const todoClient = newTodoClient(token, "grpc");
@@ -102,18 +104,16 @@ export function TodoContextProvider({ children }: PropsWithChildren<unknown>) {
 
   function refresh() {
     if (state.client && isAuthenticated) {
-      state.client
-        .getTodos()
-        .then((todos) => {
-          dispatch({ type: "set", list: todos });
-        })
-        .catch((err) => {
-          if (err instanceof ErrorUnauthenticated) {
-            return logout();
-          }
-
-          return null;
-        });
+      state.client.getTodos(
+        addHandlers({
+          onCompleted(todos) {
+            dispatch({ type: "set", list: todos });
+          },
+          onErrorAuthentication() {
+            logout();
+          },
+        }),
+      );
     } else {
       dispatch({ type: "set", list: [] });
     }
@@ -134,6 +134,7 @@ export function TodoContextProvider({ children }: PropsWithChildren<unknown>) {
 
 export function useTodos() {
   const { client, refresh, todos, dispatch } = useContext(TodoContext);
+  const addHandlers = useNetworkContextErrors();
 
   return {
     todos,
@@ -150,29 +151,34 @@ export function useTodos() {
           id,
         },
       });
-      client
-        ?.addTodo(task)
-        .then((obj) => {
-          dispatch({ type: "update", id, value: obj });
-          refresh();
-        })
-        .catch(() => {
-          // TODO -- Display error
-          dispatch({ type: "delete", id });
-        });
+      client?.addTodo(
+        task,
+        addHandlers({
+          onCompleted(data) {
+            dispatch({ type: "update", id, value: data });
+            refresh();
+          },
+          onError() {
+            dispatch({ type: "delete", id });
+          },
+        }),
+      );
     },
     deleteTodo(id: TodoItem["id"]) {
       const obj = todos.find((todo) => todo.id === id);
       if (obj) {
         dispatch({ type: "delete", id });
-        client
-          ?.deleteTodo(id)
-          .then(() => {
-            refresh();
-          })
-          .catch(() => {
-            dispatch({ type: "append", value: obj });
-          });
+        client?.deleteTodo(
+          id,
+          addHandlers({
+            onCompleted() {
+              refresh();
+            },
+            onError() {
+              dispatch({ type: "append", value: obj });
+            },
+          }),
+        );
       }
     },
   };
