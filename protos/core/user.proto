@@ -36,22 +36,11 @@ message UpdateParam {
   string password = 3;
 }
 
-message Error {
-  string message = 1;
-}
-
-message UserEither {
-  Error error = 1;
-
-  User  user = 2;
-}
-
-
 service userService {
-  rpc find_by(FindParam) returns(UserEither) {}
+  rpc find_by(FindParam) returns(User) {}
 
-  rpc create(CreateParam) returns(UserEither) {}
-  rpc update(UpdateParam) returns(UserEither) {}
+  rpc create(CreateParam) returns(User) {}
+  rpc update(UpdateParam) returns(User) {}
 
-  rpc compare_password(AuthenticateParam) returns(UserEither) {}
+  rpc compare_password(AuthenticateParam) returns(User) {}
 }

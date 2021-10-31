@@ -18,10 +18,10 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UserServiceClient interface {
-	FindBy(ctx context.Context, in *FindParam, opts ...grpc.CallOption) (*UserEither, error)
-	Create(ctx context.Context, in *CreateParam, opts ...grpc.CallOption) (*UserEither, error)
-	Update(ctx context.Context, in *UpdateParam, opts ...grpc.CallOption) (*UserEither, error)
-	ComparePassword(ctx context.Context, in *AuthenticateParam, opts ...grpc.CallOption) (*UserEither, error)
+	FindBy(ctx context.Context, in *FindParam, opts ...grpc.CallOption) (*User, error)
+	Create(ctx context.Context, in *CreateParam, opts ...grpc.CallOption) (*User, error)
+	Update(ctx context.Context, in *UpdateParam, opts ...grpc.CallOption) (*User, error)
+	ComparePassword(ctx context.Context, in *AuthenticateParam, opts ...grpc.CallOption) (*User, error)
 }
 
 type userServiceClient struct {
@@ -32,8 +32,8 @@ func NewUserServiceClient(cc grpc.ClientConnInterface) UserServiceClient {
 	return &userServiceClient{cc}
 }
 
-func (c *userServiceClient) FindBy(ctx context.Context, in *FindParam, opts ...grpc.CallOption) (*UserEither, error) {
-	out := new(UserEither)
+func (c *userServiceClient) FindBy(ctx context.Context, in *FindParam, opts ...grpc.CallOption) (*User, error) {
+	out := new(User)
 	err := c.cc.Invoke(ctx, "/core.userService/find_by", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -41,8 +41,8 @@ func (c *userServiceClient) FindBy(ctx context.Context, in *FindParam, opts ...g
 	return out, nil
 }
 
-func (c *userServiceClient) Create(ctx context.Context, in *CreateParam, opts ...grpc.CallOption) (*UserEither, error) {
-	out := new(UserEither)
+func (c *userServiceClient) Create(ctx context.Context, in *CreateParam, opts ...grpc.CallOption) (*User, error) {
+	out := new(User)
 	err := c.cc.Invoke(ctx, "/core.userService/create", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -50,8 +50,8 @@ func (c *userServiceClient) Create(ctx context.Context, in *CreateParam, opts ..
 	return out, nil
 }
 
-func (c *userServiceClient) Update(ctx context.Context, in *UpdateParam, opts ...grpc.CallOption) (*UserEither, error) {
-	out := new(UserEither)
+func (c *userServiceClient) Update(ctx context.Context, in *UpdateParam, opts ...grpc.CallOption) (*User, error) {
+	out := new(User)
 	err := c.cc.Invoke(ctx, "/core.userService/update", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -59,8 +59,8 @@ func (c *userServiceClient) Update(ctx context.Context, in *UpdateParam, opts ..
 	return out, nil
 }
 
-func (c *userServiceClient) ComparePassword(ctx context.Context, in *AuthenticateParam, opts ...grpc.CallOption) (*UserEither, error) {
-	out := new(UserEither)
+func (c *userServiceClient) ComparePassword(ctx context.Context, in *AuthenticateParam, opts ...grpc.CallOption) (*User, error) {
+	out := new(User)
 	err := c.cc.Invoke(ctx, "/core.userService/compare_password", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -72,10 +72,10 @@ func (c *userServiceClient) ComparePassword(ctx context.Context, in *Authenticat
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility
 type UserServiceServer interface {
-	FindBy(context.Context, *FindParam) (*UserEither, error)
-	Create(context.Context, *CreateParam) (*UserEither, error)
-	Update(context.Context, *UpdateParam) (*UserEither, error)
-	ComparePassword(context.Context, *AuthenticateParam) (*UserEither, error)
+	FindBy(context.Context, *FindParam) (*User, error)
+	Create(context.Context, *CreateParam) (*User, error)
+	Update(context.Context, *UpdateParam) (*User, error)
+	ComparePassword(context.Context, *AuthenticateParam) (*User, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -83,16 +83,16 @@ type UserServiceServer interface {
 type UnimplementedUserServiceServer struct {
 }
 
-func (UnimplementedUserServiceServer) FindBy(context.Context, *FindParam) (*UserEither, error) {
+func (UnimplementedUserServiceServer) FindBy(context.Context, *FindParam) (*User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FindBy not implemented")
 }
-func (UnimplementedUserServiceServer) Create(context.Context, *CreateParam) (*UserEither, error) {
+func (UnimplementedUserServiceServer) Create(context.Context, *CreateParam) (*User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
 }
-func (UnimplementedUserServiceServer) Update(context.Context, *UpdateParam) (*UserEither, error) {
+func (UnimplementedUserServiceServer) Update(context.Context, *UpdateParam) (*User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
 }
-func (UnimplementedUserServiceServer) ComparePassword(context.Context, *AuthenticateParam) (*UserEither, error) {
+func (UnimplementedUserServiceServer) ComparePassword(context.Context, *AuthenticateParam) (*User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ComparePassword not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}

@@ -5,42 +5,42 @@ import "google/api/annotations.proto";
 
 option go_package = "./;publicapi";
 
-message getTodoParams{}
+message GetTodoParams{}
 
-message addTodoParams {
+message AddTodoParams {
   string task = 1;
 }
 
-message deleteTodoParams {
+message DeleteTodoParams {
   string id = 1;
 }
 
-message todoObject {
+message TodoObject {
   string id = 1;
   string task = 2;
 }
 
-message todoResponse {
-  repeated todoObject todos = 1;
+message TodoResponse {
+  repeated TodoObject todos = 1;
 }
 
-message deleteResponse {
+message DeleteResponse {
   string message = 1;
 }  
 
-service todoService {
-  rpc addTodo(addTodoParams) returns (todoObject) {
+service TodoService {
+  rpc addTodo(AddTodoParams) returns (TodoObject) {
     option (google.api.http) = {
       post: "/v1/todo/add"
       body: "*"
     };
   }
-  rpc deleteTodo(deleteTodoParams) returns (deleteResponse) {   
+  rpc deleteTodo(DeleteTodoParams) returns (DeleteResponse) {   
     option (google.api.http) = {
       delete: "/v1/todo/delete/{id}"
     };
   }
-  rpc getTodos(getTodoParams) returns (todoResponse) {    
+  rpc getTodos(GetTodoParams) returns (TodoResponse) {    
     option (google.api.http) = {
       get: "/v1/todo/list"
     };

@@ -18,8 +18,8 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AuthenticationServiceClient interface {
-	Register(ctx context.Context, in *RegisterParams, opts ...grpc.CallOption) (*TokenEither, error)
-	Authenticate(ctx context.Context, in *LoginParams, opts ...grpc.CallOption) (*TokenEither, error)
+	Register(ctx context.Context, in *RegisterParams, opts ...grpc.CallOption) (*Token, error)
+	Authenticate(ctx context.Context, in *LoginParams, opts ...grpc.CallOption) (*Token, error)
 	VerifyEmail(ctx context.Context, in *ConfirmParams, opts ...grpc.CallOption) (*TokenEither, error)
 	RecoverSend(ctx context.Context, in *RecoveryParams, opts ...grpc.CallOption) (*SuccessEither, error)
 	RecoverVerify(ctx context.Context, in *RecoveryParams, opts ...grpc.CallOption) (*SuccessEither, error)
@@ -34,8 +34,8 @@ func NewAuthenticationServiceClient(cc grpc.ClientConnInterface) AuthenticationS
 	return &authenticationServiceClient{cc}
 }
 
-func (c *authenticationServiceClient) Register(ctx context.Context, in *RegisterParams, opts ...grpc.CallOption) (*TokenEither, error) {
-	out := new(TokenEither)
+func (c *authenticationServiceClient) Register(ctx context.Context, in *RegisterParams, opts ...grpc.CallOption) (*Token, error) {
+	out := new(Token)
 	err := c.cc.Invoke(ctx, "/auth.AuthenticationService/register", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -43,8 +43,8 @@ func (c *authenticationServiceClient) Register(ctx context.Context, in *Register
 	return out, nil
 }
 
-func (c *authenticationServiceClient) Authenticate(ctx context.Context, in *LoginParams, opts ...grpc.CallOption) (*TokenEither, error) {
-	out := new(TokenEither)
+func (c *authenticationServiceClient) Authenticate(ctx context.Context, in *LoginParams, opts ...grpc.CallOption) (*Token, error) {
+	out := new(Token)
 	err := c.cc.Invoke(ctx, "/auth.AuthenticationService/authenticate", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -92,8 +92,8 @@ func (c *authenticationServiceClient) RecoverUpdate(ctx context.Context, in *Rec
 // All implementations must embed UnimplementedAuthenticationServiceServer
 // for forward compatibility
 type AuthenticationServiceServer interface {
-	Register(context.Context, *RegisterParams) (*TokenEither, error)
-	Authenticate(context.Context, *LoginParams) (*TokenEither, error)
+	Register(context.Context, *RegisterParams) (*Token, error)
+	Authenticate(context.Context, *LoginParams) (*Token, error)
 	VerifyEmail(context.Context, *ConfirmParams) (*TokenEither, error)
 	RecoverSend(context.Context, *RecoveryParams) (*SuccessEither, error)
 	RecoverVerify(context.Context, *RecoveryParams) (*SuccessEither, error)
@@ -105,10 +105,10 @@ type AuthenticationServiceServer interface {
 type UnimplementedAuthenticationServiceServer struct {
 }
 
-func (UnimplementedAuthenticationServiceServer) Register(context.Context, *RegisterParams) (*TokenEither, error) {
+func (UnimplementedAuthenticationServiceServer) Register(context.Context, *RegisterParams) (*Token, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Register not implemented")
 }
-func (UnimplementedAuthenticationServiceServer) Authenticate(context.Context, *LoginParams) (*TokenEither, error) {
+func (UnimplementedAuthenticationServiceServer) Authenticate(context.Context, *LoginParams) (*Token, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Authenticate not implemented")
 }
 func (UnimplementedAuthenticationServiceServer) VerifyEmail(context.Context, *ConfirmParams) (*TokenEither, error) {

@@ -53,7 +53,7 @@ static_resources:
                 allow_headers: authorization,keep-alive,cache-control,content-type,content-transfer-encoding,custom-header-1,x-accept-content-transfer-encoding,x-accept-response-streaming,x-user-agent,x-grpc-web,grpc-timeout
                 max_age: "86400"
                 allow_credentials: true
-                expose_headers: grpc-status,grpc-message
+                expose_headers: grpc-status,grpc-message,grpc-status-details-bin
 
           http_filters:
           - name: envoy.filters.http.cors
@@ -73,7 +73,8 @@ static_resources:
             typed_config:
               "@type": type.googleapis.com/envoy.extensions.filters.http.grpc_json_transcoder.v3.GrpcJsonTranscoder
               proto_descriptor: "./common.pb"
-              services: ["todo.todoService", "auth.AuthenticationService"]
+              services: ["todo.TodoService", "auth.AuthenticationService"]
+              convert_grpc_status: true
               print_options:
                 add_whitespace: true
                 always_print_primitive_fields: true

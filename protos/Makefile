@@ -24,13 +24,13 @@ go-grpc:
 	# Go Server
 	#
 	protoc \
-		-I . -I protos \
+		-I . \
 		--proto_path=$(PROTO_DIR) \
 		--go_out=$(GO_GRPC)/genpb --go_opt=paths=source_relative \
 		--go-grpc_out=$(GO_GRPC)/genpb --go-grpc_opt=paths=source_relative \
 		./publicapi/*
 	protoc \
-		-I . -I protos \
+		-I . \
 		--proto_path=$(PROTO_DIR) \
 		--go_out=$(GO_GRPC)/genpb --go_opt=paths=source_relative \
 		--go-grpc_out=$(GO_GRPC)/genpb --go-grpc_opt=paths=source_relative \
@@ -59,15 +59,21 @@ js-client-vue:
 # TS React Client
 #
 ts-client-react:
+	#protoc \
+	#	-I . \
+	#	--proto_path=$(PROTO_DIR) \
+	#	--plugin=$(TS_REACT)/node_modules/.bin/protoc-gen-ts_proto \
+	#	--ts_proto_opt=esModuleInterop=true \
+	#	--ts_proto_opt=outputClientImpl=grpc-web \
+	#	--ts_proto_out=import_style=commonjs,binary:$(TS_REACT)/src/models/ \
+	#	--plugin="protoc-gen-ts=${TS_REACT}/node_modules/.bin/protoc-gen-ts" \
+	#	publicapi/*
 	protoc \
-		-I . -I ./protos \
+		-I . \
 		--proto_path=$(PROTO_DIR) \
-		--ts_proto_opt=esModuleInterop=true \
-		--plugin=$(TS_REACT)/node_modules/.bin/protoc-gen-ts_proto \
-		--ts_proto_opt=outputClientImpl=grpc-web \
-		--ts_proto_out=import_style=commonjs,binary:$(TS_REACT)/src/models/ \
-		--plugin="protoc-gen-ts=${TS_REACT}/node_modules/.bin/protoc-gen-ts" \
-		publicapi/*
+		--grpc-web_out=import_style=commonjs+dts,mode=grpcweb:$(TS_REACT)/src/genpb \
+	    --js_out=import_style=commonjs,binary:$(TS_REACT)/src/genpb \
+		publicapi/* google/rpc/* google/api/*
 
 #
 # TS Command Line Client
@@ -93,4 +99,4 @@ envoy:
 		--proto_path=$(PROTO_DIR) \
 		--include_imports --include_source_info \
 		--descriptor_set_out=$(ENVOY_DIR)/common.pb \
-		publicapi/*
+		publicapi/* google/rpc/error_details.proto

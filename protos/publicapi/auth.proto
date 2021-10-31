@@ -83,14 +83,14 @@ message SuccessEither {
 }
 
 service AuthenticationService {
-  rpc register(RegisterParams) returns (TokenEither) {
+  rpc register(RegisterParams) returns (Token) {
     option (google.api.http) = {
       post: "/auth/register"
       body: "*"
     };
   }
 
-  rpc authenticate(LoginParams) returns (TokenEither) {
+  rpc authenticate(LoginParams) returns (Token) {
     option (google.api.http) = {
       post: "/auth/authenticate"
       body: "*"

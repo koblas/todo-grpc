@@ -7,6 +7,8 @@ import (
 	genpb "github.com/koblas/grpc-todo/genpb/core"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/net/context"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type User struct {
@@ -41,7 +43,7 @@ func (s *UserServer) getById(id string) *User {
 
 func (s *UserServer) getByEmail(email string) *User {
 	for _, u := range s.users {
-		log.Printf("CHECKING ", email, u.Email)
+		log.Print("CHECKING ", email, u.Email)
 		if u.Email == email {
 			return &u
 		}
@@ -50,31 +52,29 @@ func (s *UserServer) getByEmail(email string) *User {
 	return nil
 }
 
-func (s *UserServer) FindBy(ctx context.Context, params *genpb.FindParam) (*genpb.UserEither, error) {
+func (s *UserServer) FindBy(ctx context.Context, params *genpb.FindParam) (*genpb.User, error) {
 	log.Printf("Received find %s", params.Email)
 
 	user := s.getByEmail(params.Email)
 
 	if user == nil {
-		return &genpb.UserEither{Error: &genpb.Error{Message: "Not Found"}}, nil
+		return nil, status.Errorf(codes.InvalidArgument, "Email address not found")
 	}
 
 	log.Printf("found id=%s", user.ID)
 
-	return &genpb.UserEither{
-		User: &genpb.User{
-			Id:    user.ID,
-			Name:  user.Name,
-			Email: user.Email,
-		},
+	return &genpb.User{
+		Id:    user.ID,
+		Name:  user.Name,
+		Email: user.Email,
 	}, nil
 }
 
-func (s *UserServer) Create(ctx context.Context, params *genpb.CreateParam) (*genpb.UserEither, error) {
+func (s *UserServer) Create(ctx context.Context, params *genpb.CreateParam) (*genpb.User, error) {
 	log.Printf("Received create %s", params.Email)
 
 	if s.getByEmail(params.Email) != nil {
-		return &genpb.UserEither{Error: &genpb.Error{Message: "Already exists"}}, nil
+		return nil, status.Errorf(codes.AlreadyExists, "Email address not found")
 	}
 
 	pass, err := bcrypt.GenerateFromPassword([]byte(params.Password), bcrypt.DefaultCost)
@@ -91,51 +91,45 @@ func (s *UserServer) Create(ctx context.Context, params *genpb.CreateParam) (*ge
 
 	s.users = append(s.users, user)
 
-	return &genpb.UserEither{
-		User: &genpb.User{
-			Id:    user.ID,
-			Name:  user.Name,
-			Email: user.Email,
-		},
+	return &genpb.User{
+		Id:    user.ID,
+		Name:  user.Name,
+		Email: user.Email,
 	}, nil
 }
 
-func (s *UserServer) Update(ctx context.Context, params *genpb.UpdateParam) (*genpb.UserEither, error) {
+func (s *UserServer) Update(ctx context.Context, params *genpb.UpdateParam) (*genpb.User, error) {
 	log.Printf("Received find %s", params.UserId)
 
 	user := s.getById(params.UserId)
 
 	if user == nil {
-		return &genpb.UserEither{Error: &genpb.Error{Message: "Not Found"}}, nil
+		return nil, status.Errorf(codes.InvalidArgument, "ID address not found")
 	}
 
-	return &genpb.UserEither{
-		User: &genpb.User{
-			Id:    user.ID,
-			Name:  user.Name,
-			Email: user.Email,
-		},
+	return &genpb.User{
+		Id:    user.ID,
+		Name:  user.Name,
+		Email: user.Email,
 	}, nil
 }
 
-func (s *UserServer) ComparePassword(ctx context.Context, params *genpb.AuthenticateParam) (*genpb.UserEither, error) {
+func (s *UserServer) ComparePassword(ctx context.Context, params *genpb.AuthenticateParam) (*genpb.User, error) {
 	log.Printf("Received comparePassowrd %s", params.UserId)
 
 	user := s.getById(params.UserId)
 
 	if user == nil {
-		return &genpb.UserEither{Error: &genpb.Error{Message: "Not Found"}}, nil
+		return nil, status.Errorf(codes.InvalidArgument, "ID address not found")
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(params.Password)); err != nil {
-		return &genpb.UserEither{Error: &genpb.Error{Message: "No match"}}, nil
+		return nil, status.Errorf(codes.InvalidArgument, "Password mismatch")
 	}
 
-	return &genpb.UserEither{
-		User: &genpb.User{
-			Id:    user.ID,
-			Name:  user.Name,
-			Email: user.Email,
-		},
+	return &genpb.User{
+		Id:    user.ID,
+		Name:  user.Name,
+		Email: user.Email,
 	}, nil
 }

@@ -9,6 +9,9 @@ import (
 	"github.com/koblas/grpc-todo/genpb/publicapi"
 	"github.com/koblas/grpc-todo/pkg/tokenmanager"
 	"golang.org/x/net/context"
+	"google.golang.org/genproto/googleapis/rpc/errdetails"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // Server represents the gRPC server
@@ -31,95 +34,91 @@ func NewAuthenticationServer(userClient core.UserServiceClient) AuthenticationSe
 	}
 }
 
-func (s AuthenticationServer) Authenticate(ctx context.Context, params *publicapi.LoginParams) (*publicapi.TokenEither, error) {
+func (s AuthenticationServer) Authenticate(ctx context.Context, params *publicapi.LoginParams) (*publicapi.Token, error) {
 	log.Printf("Received login %s", params.Email)
 
-	either, err := s.userClient.FindBy(ctx, &core.FindParam{
+	user, err := s.userClient.FindBy(ctx, &core.FindParam{
 		Email: params.Email,
 	})
 	if err != nil {
 		return nil, err
 	}
-	if either.User == nil {
-		log.Printf("User not found")
-		return &publicapi.TokenEither{
-			Errors: []*publicapi.ValidationError{
-				{
-					Field:   "email",
-					Message: "Bad email or password",
-				},
+	if user == nil {
+		log.Print("User not found")
+		s, err := status.New(codes.InvalidArgument, "Bad email or password").WithDetails(
+			&errdetails.BadRequest_FieldViolation{
+				Field:       "Email",
+				Description: "Bad email or password",
 			},
-		}, nil
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		return nil, s.Err()
 	}
-	user := either.User
-	either, err = s.userClient.ComparePassword(ctx, &core.AuthenticateParam{
+	user, err = s.userClient.ComparePassword(ctx, &core.AuthenticateParam{
 		UserId:   user.Id,
 		Password: params.Password,
 	})
 	if err != nil {
-		log.Printf("Password mismatch")
-		return nil, err
-	}
-	if either.User == nil {
-		return &publicapi.TokenEither{
-			Errors: []*publicapi.ValidationError{
-				{
-					Field:   "email",
-					Message: "Bad email or password",
-				},
+		log.Print("Password mismatch", err)
+		s, err := status.New(codes.InvalidArgument, "Bad email or password").WithDetails(
+			&errdetails.BadRequest_FieldViolation{
+				Field:       "Email",
+				Description: "Bad email or password",
 			},
-		}, nil
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		return nil, s.Err()
 	}
-	user = either.User
 
 	bearer, err := s.jwtMaker.CreateToken(user.Id, time.Hour*24*365)
 	if err != nil {
 		return nil, err
 	}
 
-	return &publicapi.TokenEither{
-		Token: &publicapi.Token{
-			AccessToken: bearer,
-			TokenType:   "Bearer",
-			ExpiresIn:   24 * 3600,
-		},
+	return &publicapi.Token{
+		AccessToken: bearer,
+		TokenType:   "Bearer",
+		ExpiresIn:   24 * 3600,
 	}, nil
 }
 
-func (s AuthenticationServer) Register(ctx context.Context, params *publicapi.RegisterParams) (*publicapi.TokenEither, error) {
+func (s AuthenticationServer) Register(ctx context.Context, params *publicapi.RegisterParams) (*publicapi.Token, error) {
 	log.Printf("Received register %s", params.Email)
 
-	either, err := s.userClient.Create(ctx, &core.CreateParam{
+	user, err := s.userClient.Create(ctx, &core.CreateParam{
 		Email:    params.Email,
 		Password: params.Password,
 		Name:     params.Name,
 	})
 	if err != nil {
-		return nil, err
-	}
-	if either.Error != nil {
-		return &publicapi.TokenEither{
-			Errors: []*publicapi.ValidationError{
-				{
-					Field:   "Email",
-					Message: either.Error.Message,
-				},
+		s, err := status.New(codes.InvalidArgument, "Unable to create user").WithDetails(
+			&errdetails.BadRequest_FieldViolation{
+				Field:       "Email",
+				Description: "Duplicate email",
 			},
-		}, nil
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		return nil, s.Err()
 	}
-	user := either.User
 
 	bearer, err := s.jwtMaker.CreateToken(user.Id, time.Hour*24*365)
 	if err != nil {
 		return nil, err
 	}
 
-	return &publicapi.TokenEither{
-		Token: &publicapi.Token{
-			AccessToken: bearer,
-			TokenType:   "Bearer",
-			ExpiresIn:   24 * 3600,
-		},
+	return &publicapi.Token{
+		AccessToken: bearer,
+		TokenType:   "Bearer",
+		ExpiresIn:   24 * 3600,
 	}, nil
 }
 

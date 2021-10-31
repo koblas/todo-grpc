@@ -57,3 +57,13 @@ docker_build('core-user', 'src/go',
   ],
 )
 
+#
+#
+#
+docker_build('ts-client-react', 'ts-client-react', 
+  dockerfile='./ts-client-react/Dockerfile.tilt',
+  live_update=[
+    sync('./ts-client-react', '/app'),
+  ],
+)
+
