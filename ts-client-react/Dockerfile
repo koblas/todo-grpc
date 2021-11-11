@@ -4,8 +4,8 @@
 #
 FROM node:16-alpine3.14 as build
 WORKDIR /app
-RUN adduser -D static
 RUN apk add --no-cache python3-dev g++ gcc make musl-dev
+RUN adduser -D static
 
 # Better caching of package.json
 ADD package.json /tmp/package.json

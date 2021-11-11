@@ -22,7 +22,7 @@ import (
 )
 
 func Server() {
-	logger.Init(-1, time.RFC3339Nano)
+	logger.InitZapGlobal(logger.LevelDebug, time.RFC3339Nano)
 	runServer()
 }
 
@@ -59,7 +59,7 @@ func runServer() {
 	opts := []grpc.ServerOption{}
 
 	// add middleware
-	opts = middleware.AddLogging(logger.Log, opts)
+	opts = middleware.AddLogging(logger.ZapLogger, opts)
 
 	grpcServer := grpc.NewServer(opts...)
 
@@ -73,7 +73,7 @@ func runServer() {
 	go func() {
 		for range c {
 			// sig is a ^C, handle it
-			logger.Log.Info("shutting down gRPC server...")
+			logger.ZapLogger.Info("shutting down gRPC server...")
 
 			grpcServer.GracefulStop()
 
@@ -81,7 +81,7 @@ func runServer() {
 		}
 	}()
 
-	logger.Log.Info("staring gRPC server... port=" + port)
+	logger.ZapLogger.Info("staring gRPC server... port=" + port)
 
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %s", err)

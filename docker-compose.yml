@@ -67,6 +67,37 @@ services:
     networks:
       - backend
 
+  core-workers:
+    image: core-workers
+    build:
+      context: src/go
+      dockerfile: cmd/workers/Dockerfile
+    env_file:
+      dev-variables.env
+    networks:
+      - backend
+
+  core-send-email:
+    image: core-send-email
+    build:
+      context: src/go
+      dockerfile: cmd/send_email/Dockerfile
+    environment:
+      - SMTP_HOST
+      - SMTP_USERNAME
+      - SMTP_PASSWORD
+    env_file:
+      dev-variables.env
+    networks:
+      - backend
+
+  redis:
+    image: redis
+    ports:
+      - 36379:6379
+    networks:
+      - backend
+
   #
   #  React GUI
   #

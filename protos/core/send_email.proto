@@ -1,0 +1,80 @@
+syntax = "proto3";
+
+package core;
+
+option go_package = "./;core";
+
+// Basic user email info
+message EmailUser {
+  string email = 1;
+  string name = 2;
+}
+
+// Basic Application information for the message
+message EmailAppInfo {
+  string url_base = 1;
+  string app_name = 2;
+}
+
+//
+//  Specific messages
+//
+message EmailRegisterParam {
+  EmailAppInfo app_info = 1;
+  EmailUser sender = 2;
+  EmailUser recipient = 3;
+  string reference_id = 4;
+  string token = 5;
+}
+
+message EmailPasswordChangeParam {
+  EmailAppInfo app_info = 1;
+  EmailUser sender = 2;
+  EmailUser recipient = 3;
+  string reference_id = 4;
+}
+
+message EmailPasswordRecoveryParam {
+  EmailAppInfo app_info = 1;
+  EmailUser sender = 2;
+  EmailUser recipient = 3;
+  string reference_id = 4;
+  string token = 5;
+}
+
+message EmailInviteUserParam {
+  EmailAppInfo app_info = 1;
+  EmailUser sender = 2;
+  EmailUser recipient = 3;
+  string reference_id = 4;
+  string invite_url = 5;
+}
+
+message EmailOkResponse { bool ok = 1; }
+
+// For pubsub listeners
+enum EmailTemplate {
+  UNDEFINED = 0;
+  USER_REGISTERED = 1;
+  USER_INVITED = 2;
+  PASSWORD_RECOVERY = 3;
+  PASSWORD_CHANGE = 4;
+}
+
+message EmailSentEvent {
+  string recipient_email = 1;
+  string message_id = 2;
+  EmailTemplate template = 3;
+  string reference_id = 4;
+}
+
+//
+
+service SendEmailService {
+  rpc RegisterMessage(EmailRegisterParam) returns (EmailOkResponse) {}
+  rpc PasswordChangeMessage(EmailPasswordChangeParam)
+      returns (EmailOkResponse) {}
+  rpc PasswordRecoveryMessage(EmailPasswordRecoveryParam)
+      returns (EmailOkResponse) {}
+  rpc InviteUserMessage(EmailInviteUserParam) returns (EmailOkResponse) {}
+}

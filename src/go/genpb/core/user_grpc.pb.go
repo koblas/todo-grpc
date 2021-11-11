@@ -22,6 +22,8 @@ type UserServiceClient interface {
 	Create(ctx context.Context, in *CreateParam, opts ...grpc.CallOption) (*User, error)
 	Update(ctx context.Context, in *UpdateParam, opts ...grpc.CallOption) (*User, error)
 	ComparePassword(ctx context.Context, in *AuthenticateParam, opts ...grpc.CallOption) (*User, error)
+	GetSettings(ctx context.Context, in *UserIdParam, opts ...grpc.CallOption) (*UserSettings, error)
+	SetSettings(ctx context.Context, in *UserSettingsUpdate, opts ...grpc.CallOption) (*UserSettings, error)
 }
 
 type userServiceClient struct {
@@ -34,7 +36,7 @@ func NewUserServiceClient(cc grpc.ClientConnInterface) UserServiceClient {
 
 func (c *userServiceClient) FindBy(ctx context.Context, in *FindParam, opts ...grpc.CallOption) (*User, error) {
 	out := new(User)
-	err := c.cc.Invoke(ctx, "/core.userService/find_by", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/core.UserService/FindBy", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +45,7 @@ func (c *userServiceClient) FindBy(ctx context.Context, in *FindParam, opts ...g
 
 func (c *userServiceClient) Create(ctx context.Context, in *CreateParam, opts ...grpc.CallOption) (*User, error) {
 	out := new(User)
-	err := c.cc.Invoke(ctx, "/core.userService/create", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/core.UserService/Create", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +54,7 @@ func (c *userServiceClient) Create(ctx context.Context, in *CreateParam, opts ..
 
 func (c *userServiceClient) Update(ctx context.Context, in *UpdateParam, opts ...grpc.CallOption) (*User, error) {
 	out := new(User)
-	err := c.cc.Invoke(ctx, "/core.userService/update", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/core.UserService/Update", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +63,25 @@ func (c *userServiceClient) Update(ctx context.Context, in *UpdateParam, opts ..
 
 func (c *userServiceClient) ComparePassword(ctx context.Context, in *AuthenticateParam, opts ...grpc.CallOption) (*User, error) {
 	out := new(User)
-	err := c.cc.Invoke(ctx, "/core.userService/compare_password", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/core.UserService/ComparePassword", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) GetSettings(ctx context.Context, in *UserIdParam, opts ...grpc.CallOption) (*UserSettings, error) {
+	out := new(UserSettings)
+	err := c.cc.Invoke(ctx, "/core.UserService/GetSettings", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) SetSettings(ctx context.Context, in *UserSettingsUpdate, opts ...grpc.CallOption) (*UserSettings, error) {
+	out := new(UserSettings)
+	err := c.cc.Invoke(ctx, "/core.UserService/SetSettings", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -76,6 +96,8 @@ type UserServiceServer interface {
 	Create(context.Context, *CreateParam) (*User, error)
 	Update(context.Context, *UpdateParam) (*User, error)
 	ComparePassword(context.Context, *AuthenticateParam) (*User, error)
+	GetSettings(context.Context, *UserIdParam) (*UserSettings, error)
+	SetSettings(context.Context, *UserSettingsUpdate) (*UserSettings, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -94,6 +116,12 @@ func (UnimplementedUserServiceServer) Update(context.Context, *UpdateParam) (*Us
 }
 func (UnimplementedUserServiceServer) ComparePassword(context.Context, *AuthenticateParam) (*User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ComparePassword not implemented")
+}
+func (UnimplementedUserServiceServer) GetSettings(context.Context, *UserIdParam) (*UserSettings, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSettings not implemented")
+}
+func (UnimplementedUserServiceServer) SetSettings(context.Context, *UserSettingsUpdate) (*UserSettings, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetSettings not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 
@@ -118,7 +146,7 @@ func _UserService_FindBy_Handler(srv interface{}, ctx context.Context, dec func(
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/core.userService/find_by",
+		FullMethod: "/core.UserService/FindBy",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(UserServiceServer).FindBy(ctx, req.(*FindParam))
@@ -136,7 +164,7 @@ func _UserService_Create_Handler(srv interface{}, ctx context.Context, dec func(
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/core.userService/create",
+		FullMethod: "/core.UserService/Create",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(UserServiceServer).Create(ctx, req.(*CreateParam))
@@ -154,7 +182,7 @@ func _UserService_Update_Handler(srv interface{}, ctx context.Context, dec func(
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/core.userService/update",
+		FullMethod: "/core.UserService/Update",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(UserServiceServer).Update(ctx, req.(*UpdateParam))
@@ -172,10 +200,46 @@ func _UserService_ComparePassword_Handler(srv interface{}, ctx context.Context, 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/core.userService/compare_password",
+		FullMethod: "/core.UserService/ComparePassword",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(UserServiceServer).ComparePassword(ctx, req.(*AuthenticateParam))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_GetSettings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UserIdParam)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).GetSettings(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/core.UserService/GetSettings",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).GetSettings(ctx, req.(*UserIdParam))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_SetSettings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UserSettingsUpdate)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).SetSettings(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/core.UserService/SetSettings",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).SetSettings(ctx, req.(*UserSettingsUpdate))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -184,24 +248,32 @@ func _UserService_ComparePassword_Handler(srv interface{}, ctx context.Context, 
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var UserService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "core.userService",
+	ServiceName: "core.UserService",
 	HandlerType: (*UserServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "find_by",
+			MethodName: "FindBy",
 			Handler:    _UserService_FindBy_Handler,
 		},
 		{
-			MethodName: "create",
+			MethodName: "Create",
 			Handler:    _UserService_Create_Handler,
 		},
 		{
-			MethodName: "update",
+			MethodName: "Update",
 			Handler:    _UserService_Update_Handler,
 		},
 		{
-			MethodName: "compare_password",
+			MethodName: "ComparePassword",
 			Handler:    _UserService_ComparePassword_Handler,
+		},
+		{
+			MethodName: "GetSettings",
+			Handler:    _UserService_GetSettings_Handler,
+		},
+		{
+			MethodName: "SetSettings",
+			Handler:    _UserService_SetSettings_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

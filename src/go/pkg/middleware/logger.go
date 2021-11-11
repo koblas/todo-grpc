@@ -28,7 +28,7 @@ func AddLogging(logger *zap.Logger, opts []grpc.ServerOption) []grpc.ServerOptio
 		grpc_zap.WithLevels(codeToLevel),
 	}
 	// Make sure that log statements internal to gRPC library are logged using the zapLogger as well.
-	grpc_zap.ReplaceGrpcLogger(logger)
+	grpc_zap.ReplaceGrpcLoggerV2(logger)
 
 	// Add unary interceptor
 	opts = append(opts, grpc_middleware.WithUnaryServerChain(

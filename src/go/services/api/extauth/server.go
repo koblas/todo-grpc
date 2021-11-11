@@ -45,7 +45,7 @@ func NewAuthorizationServer(secret string) (*AuthorizationServer, error) {
 
 // inject a header that can be used for future rate limiting
 func (a *AuthorizationServer) Check(ctx context.Context, req *auth.CheckRequest) (*auth.CheckResponse, error) {
-	logger.Log.Info("Doing check")
+	logger.ZapLogger.Info("Doing check")
 	authHeader, ok := req.Attributes.Request.Http.Headers["authorization"]
 	var splitToken []string
 	if ok {
@@ -118,7 +118,7 @@ func runServer() {
 
 	opts := []grpc.ServerOption{}
 	// add middleware
-	opts = middleware.AddLogging(logger.Log, opts)
+	opts = middleware.AddLogging(logger.ZapLogger, opts)
 
 	grpcServer := grpc.NewServer(opts...)
 	authServer, err := NewAuthorizationServer(util.Getenv("JWT_SECRET", ""))
@@ -134,7 +134,7 @@ func runServer() {
 	go func() {
 		for range c {
 			// sig is a ^C, handle it
-			logger.Log.Info("shutting down gRPC server...")
+			logger.ZapLogger.Info("shutting down gRPC server...")
 
 			grpcServer.GracefulStop()
 
@@ -142,7 +142,7 @@ func runServer() {
 		}
 	}()
 
-	logger.Log.Info("staring gRPC server... port:" + port)
+	logger.ZapLogger.Info("staring gRPC server... port:" + port)
 
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %s", err)
@@ -152,6 +152,6 @@ func runServer() {
 }
 
 func Server() {
-	logger.Init(-1, time.RFC3339Nano)
+	logger.InitZapGlobal(logger.LevelDebug, time.RFC3339Nano)
 	runServer()
 }

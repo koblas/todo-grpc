@@ -1,0 +1,42 @@
+<table class="content" cellspacing="0" cellpadding="0" align="center" width="100%">
+    <tr>
+        <td align="left">
+            <font size="+1"><br><br></font>
+            <div class="title thin">
+                <font face="'HelveticaNeue-Thin','HelveticaNeue-Light','Helvetica-Light','Helvetica','Arial','Lucida Grande',sans-serif" size="5" style="line-height:120% !important">
+                    Hi! {{ .User.Name }}, welcome to {{ .AppName }}
+                </font>
+            </div>
+            <font size="+1"><br></font>
+        </td>
+    </tr>
+    <tr>
+        <td align="left" class="text">
+            <span class="text light">
+                <div class="text light">
+                    <font face="'HelveticaNeue-Light','HelveticaNeue-Thin','Helvetica-Light','Helvetica','Arial','Lucida Grande',sans-serif" size="3">
+                        Please confirm your email address
+
+                    </font>
+                </div>
+                <div class="text light">
+                    <font face="'HelveticaNeue-Light','HelveticaNeue-Thin','Helvetica-Light','Helvetica','Arial','Lucida Grande',sans-serif" size="3">
+                        <a href="{{ .URLBase }}{{ .Token }}">{{ .URLBase }}{{ .Token }}</a>
+                    </font>
+                </div>
+            </span>
+        </td>
+    </tr>
+    <tr>
+        <td align="left" class="text">
+            <span class="text light">
+                <div class="text light">
+                    <font face="'HelveticaNeue-Light','HelveticaNeue-Thin','Helvetica-Light','Helvetica','Arial','Lucida Grande',sans-serif" size="3">
+                        <br>Sincerely,
+                        <br>- The {{ .AppName }} Team<br><br><br>
+                    </font>
+                </div>
+            </span>
+        </td>
+    </tr>
+</table>

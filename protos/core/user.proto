@@ -1,18 +1,57 @@
 syntax = "proto3";
 
+import "google/protobuf/timestamp.proto";
+
 package core;
 
 option go_package = "./;core";
+
+enum UserStatus {
+  REGISTERED = 0;
+  INVITED = 1;
+  ACTIVE = 100;
+  DISABLED = 200;
+}
 
 message User {
   string id = 1;
   string name = 2;
   string email = 3;
+  UserStatus status = 4;
+  google.protobuf.Timestamp updated_at = 5;
+  google.protobuf.Timestamp created_at = 6;
+  bool has_tfa = 7;
+  string verification_token = 8;
+  google.protobuf.Timestamp verification_expires = 9;
+}
+
+message UserChangeEvent {
+  User current = 1;
+  User orig = 2;
+}
+
+message UserSettingGroup { map<string, string> values = 1; }
+
+message UserSettings {
+  string user_id = 1;
+  map<string, UserSettingGroup> settings = 2;
+}
+
+message UserSettingsChangeEvent {
+  UserSettings current = 1;
+  UserSettings orig = 2;
+}
+
+message UserSettingsUpdate {
+  string user_id = 1;
+  map<string, UserSettingGroup> settings = 2;
 }
 
 message FindParam {
   // Find by email address
   string email = 1;
+  // Find by GUID
+  string user_id = 2;
 }
 
 message AuthenticateParam {
@@ -20,27 +59,35 @@ message AuthenticateParam {
   string user_id = 1;
   // Password
   string password = 2;
+  // TFA
+  string tfa_type = 3;
+  string tfa_value = 4;
 }
 
 message CreateParam {
-  // ID is required
   string email = 1;
   string password = 2;
   string name = 3;
 }
 
 message UpdateParam {
-  // ID is required
   string user_id = 1;
-  string email = 2;
-  string password = 3;
+  repeated string email = 2;
+  repeated string password = 3;
+  repeated string name = 4;
+  repeated UserStatus status = 5;
 }
 
-service userService {
-  rpc find_by(FindParam) returns(User) {}
+message UserIdParam { string user_id = 1; }
 
-  rpc create(CreateParam) returns(User) {}
-  rpc update(UpdateParam) returns(User) {}
+service UserService {
+  rpc FindBy(FindParam) returns (User) {}
 
-  rpc compare_password(AuthenticateParam) returns(User) {}
+  rpc Create(CreateParam) returns (User) {}
+  rpc Update(UpdateParam) returns (User) {}
+
+  rpc ComparePassword(AuthenticateParam) returns (User) {}
+
+  rpc GetSettings(UserIdParam) returns (UserSettings) {}
+  rpc SetSettings(UserSettingsUpdate) returns (UserSettings) {}
 }

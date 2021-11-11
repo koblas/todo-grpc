@@ -3,7 +3,6 @@ package user
 // https://medium.com/@amsokol.com/tutorial-part-3-how-to-develop-go-grpc-microservice-with-http-rest-endpoint-middleware-739aac8f1d7e
 
 import (
-	"log"
 	"net"
 	"os"
 	"os/signal"
@@ -18,28 +17,29 @@ import (
 )
 
 func Server() {
-	logger.Init(-1, time.RFC3339Nano)
+	logger.InitZapGlobal(logger.LevelDebug, time.RFC3339Nano)
 	runServer()
 }
 
 func runServer() {
+	log := logger.NewZap(logger.LevelInfo)
 	ctx := context.Background()
 	port := util.Getenv("PORT", "14586")
 	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		log.With(err).Fatal("failed to listen")
 	}
 
 	// gRPC server statup options
 	opts := []grpc.ServerOption{}
 
 	// add middleware
-	opts = middleware.AddLogging(logger.Log, opts)
+	opts = middleware.AddLogging(logger.ZapLogger, opts)
 
 	grpcServer := grpc.NewServer(opts...)
 
 	// attach the Todo service
-	s := NewUserServer()
+	s := NewUserServer(log)
 	genpb.RegisterUserServiceServer(grpcServer, s)
 
 	// graceful shutdown
@@ -48,7 +48,7 @@ func runServer() {
 	go func() {
 		for range c {
 			// sig is a ^C, handle it
-			logger.Log.Info("shutting down gRPC server...")
+			log.Info("shutting down gRPC server...")
 
 			grpcServer.GracefulStop()
 
@@ -56,11 +56,11 @@ func runServer() {
 		}
 	}()
 
-	logger.Log.Info("staring gRPC server... port=" + port)
+	log.Info("staring gRPC server... port=" + port)
 
 	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %s", err)
+		log.With(err).Fatal("failed to serve: %s", err)
 	} else {
-		log.Printf("Server started successfully")
+		log.Info("Server started successfully")
 	}
 }

@@ -24,7 +24,7 @@ import (
 )
 
 func Server() {
-	logger.Init(-1, time.RFC3339Nano)
+	logger.InitZapGlobal(logger.LevelDebug, time.RFC3339Nano)
 	runServer()
 }
 
@@ -43,7 +43,7 @@ func runServer() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	zapMiddleware := middleware.NewZapLogger(logger.Log)
+	zapMiddleware := middleware.NewZapLogger(logger.ZapLogger)
 	authMiddleware := middleware.NewAuthenticator(os.Getenv("JWT_SECRET"))
 
 	// add middleware
@@ -80,7 +80,7 @@ func runServer() {
 	go func() {
 		for range c {
 			// sig is a ^C, handle it
-			logger.Log.Info("shutting down gRPC server...")
+			logger.ZapLogger.Info("shutting down gRPC server...")
 
 			grpcServer.GracefulStop()
 
@@ -88,7 +88,7 @@ func runServer() {
 		}
 	}()
 
-	logger.Log.Info("staring gRPC server... port:" + port)
+	logger.ZapLogger.Info("staring gRPC server... port:" + port)
 
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %s", err)

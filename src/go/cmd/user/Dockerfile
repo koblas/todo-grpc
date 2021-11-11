@@ -4,7 +4,7 @@ COPY go.mod .
 COPY go.sum .
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -o /app cmd/user/*.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o /app -gcflags=-G=3 cmd/user/*.go
 
 FROM alpine:3.14
 COPY --from=builder /app ./

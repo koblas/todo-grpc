@@ -40,5 +40,6 @@ while true; do
         echo "Exiting with code $EXIT_CODE"
         exit $EXIT_CODE
     fi
+    sleep 1
     echo "Restarting"
 done
