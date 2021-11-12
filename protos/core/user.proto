@@ -13,6 +13,14 @@ enum UserStatus {
   DISABLED = 200;
 }
 
+enum UserSecurity {
+  UNKNOWN = 0;
+  USER_PASSWORD_CHANGE = 1;
+  USER_FORGOT_REQUEST = 2;
+  USER_REGISTER_TOKEN = 3;
+  USER_INVITE_TOKEN = 4;
+}
+
 message User {
   string id = 1;
   string name = 2;
@@ -21,11 +29,20 @@ message User {
   google.protobuf.Timestamp updated_at = 5;
   google.protobuf.Timestamp created_at = 6;
   bool has_tfa = 7;
-  string verification_token = 8;
-  google.protobuf.Timestamp verification_expires = 9;
+}
+
+// Used for ForgotPassword / Registration events
+message UserSecurityEvent {
+  UserSecurity action = 1;
+  User user = 2;
+  // SECURE -- For password recovery and email confirmation
+  string token = 3;
+  // Used for invitations
+  User sender = 4;
 }
 
 message UserChangeEvent {
+  // Since some changes (e.g. password) cannot be seen in the serialized version
   User current = 1;
   User orig = 2;
 }
@@ -68,14 +85,26 @@ message CreateParam {
   string email = 1;
   string password = 2;
   string name = 3;
+  UserStatus status = 4;
 }
 
 message UpdateParam {
   string user_id = 1;
   repeated string email = 2;
   repeated string password = 3;
-  repeated string name = 4;
-  repeated UserStatus status = 5;
+  repeated string password_new = 4;
+  repeated string name = 5;
+  repeated UserStatus status = 6;
+  repeated UserSettings settings = 7;
+}
+
+message VerificationParam {
+  // The user identifier
+  string user_id = 1;
+  // Check to see if this token is present
+  string token = 2;
+  // If we're setting the password
+  string password = 3;
 }
 
 message UserIdParam { string user_id = 1; }
@@ -90,4 +119,8 @@ service UserService {
 
   rpc GetSettings(UserIdParam) returns (UserSettings) {}
   rpc SetSettings(UserSettingsUpdate) returns (UserSettings) {}
+
+  rpc VerificationVerify(VerificationParam) returns (User) {}
+  rpc VerificationUpdate(VerificationParam) returns (User) {}
+  rpc ForgotSend(FindParam) returns (User) {}
 }

@@ -9,9 +9,9 @@ docker_compose("./docker-compose.yml")
 go_common = ['./pkg', './genpb', './go.sum', './go.mod', './tilt-scripts']
 
 docker_build('public-auth', 'src/go', 
-  dockerfile='./src/go/cmd/auth/Dockerfile.tilt',
+  dockerfile='./src/go/cmd/publicapi/auth/Dockerfile.tilt',
   only=go_common + [
-    './cmd/auth',
+    './cmd/publicapi/auth',
     './services/api/auth',
   ],
   live_update=[
@@ -21,9 +21,9 @@ docker_build('public-auth', 'src/go',
 )
 
 docker_build('public-todo', 'src/go', 
-  dockerfile='./src/go/cmd/todo/Dockerfile.tilt',
+  dockerfile='./src/go/cmd/publicapi/todo/Dockerfile.tilt',
   only=go_common + [
-    './cmd/todo',
+    './cmd/publicapi/todo',
     './services/api/todo',
   ],
   live_update=[
@@ -34,9 +34,9 @@ docker_build('public-todo', 'src/go',
 
 
 docker_build('api-extauth', 'src/go', 
-  dockerfile='./src/go/cmd/extauth/Dockerfile.tilt',
+  dockerfile='./src/go/cmd/middleware/extauth/Dockerfile.tilt',
   only=go_common + [
-    './cmd/extauth',
+    './cmd/middleware/extauth',
     './services/api/extauth',
   ],
   live_update=[
@@ -46,9 +46,9 @@ docker_build('api-extauth', 'src/go',
 )
 
 docker_build('core-user', 'src/go', 
-  dockerfile='./src/go/cmd/user/Dockerfile.tilt',
+  dockerfile='./src/go/cmd/core/user/Dockerfile.tilt',
   only=go_common + [
-    './cmd/user',
+    './cmd/core/user',
     './services/core/user',
   ],
   live_update=[
@@ -58,9 +58,9 @@ docker_build('core-user', 'src/go',
 )
 
 docker_build('core-send-email', 'src/go', 
-  dockerfile='./src/go/cmd/send_email/Dockerfile.tilt',
+  dockerfile='./src/go/cmd/core/send_email/Dockerfile.tilt',
   only=go_common + [
-    './cmd/send_email',
+    './cmd/core/send_email',
     './services/core/send_email',
   ],
   live_update=[
@@ -70,9 +70,9 @@ docker_build('core-send-email', 'src/go',
 )
 
 docker_build('core-workers', 'src/go',
-  dockerfile='./src/go/cmd/workers/Dockerfile.tilt',
+  dockerfile='./src/go/cmd/core/workers/Dockerfile.tilt',
   only=go_common + [
-    './cmd/workers',
+    './cmd/core/workers',
     './services/core/workers',
   ],
   live_update=[

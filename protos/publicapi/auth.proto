@@ -15,8 +15,6 @@ message RegisterParams {
   string name = 4;
   // invite code
   string invite = 5;
-  // URL base for the UI
-  string urlbase = 6;
 }
 
 message LoginParams {
@@ -36,17 +34,15 @@ message ConfirmParams {
 }
 
 message RecoveryParams {
-  // URL base for the UI
-  string urlbase = 1;
   // Required: Send
-  string email = 2;
+  string email = 1;
   // Required: Verify and Update
-  string token = 3;
+  string token = 2;
   // Required: Update
-  string password = 4;
+  string password = 3;
 }
 
-// Response structures 
+// Response structures
 
 message ValidationError {
   // Field name
@@ -55,9 +51,7 @@ message ValidationError {
   string message = 2;
 }
 
-message Success {
-  bool success = 1;
-}
+message Success { bool success = 1; }
 
 message Token {
   string access_token = 1;
@@ -71,7 +65,7 @@ message TokenEither {
   repeated ValidationError errors = 1;
 
   // Present if errors is empty
-  Token token = 2; 
+  Token token = 2;
 }
 
 message SuccessEither {
@@ -79,49 +73,49 @@ message SuccessEither {
   repeated ValidationError errors = 1;
 
   // Present if errors is empty
-  bool success = 2; 
+  bool success = 2;
 }
 
 service AuthenticationService {
   rpc register(RegisterParams) returns (Token) {
     option (google.api.http) = {
-      post: "/auth/register"
-      body: "*"
+      post : "/auth/register"
+      body : "*"
     };
   }
 
   rpc authenticate(LoginParams) returns (Token) {
     option (google.api.http) = {
-      post: "/auth/authenticate"
-      body: "*"
+      post : "/auth/authenticate"
+      body : "*"
     };
   }
 
   rpc verify_email(ConfirmParams) returns (TokenEither) {
     option (google.api.http) = {
-      post: "/auth/verify/email"
-      body: "*"
+      post : "/auth/verify/email"
+      body : "*"
     };
   }
 
   rpc recover_send(RecoveryParams) returns (SuccessEither) {
     option (google.api.http) = {
-      post: "/auth/recover/send"
-      body: "*"
+      post : "/auth/recover/send"
+      body : "*"
     };
   }
 
   rpc recover_verify(RecoveryParams) returns (SuccessEither) {
     option (google.api.http) = {
-      post: "/auth/recover/verify"
-      body: "*"
+      post : "/auth/recover/verify"
+      body : "*"
     };
   }
 
   rpc recover_update(RecoveryParams) returns (TokenEither) {
     option (google.api.http) = {
-      post: "/auth/recover/update"
-      body: "*"
+      post : "/auth/recover/update"
+      body : "*"
     };
   }
 }

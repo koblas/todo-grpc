@@ -20,7 +20,7 @@ services:
     image: public-todo
     build:
       context: src/go
-      dockerfile: cmd/todo/Dockerfile
+      dockerfile: cmd/publicapi/todo/Dockerfile
     ports:
       - 14001:14586
     networks:
@@ -31,7 +31,7 @@ services:
     image: public-auth
     build:
       context: src/go
-      dockerfile: cmd/auth/Dockerfile
+      dockerfile: cmd/publicapi/auth/Dockerfile
     ports:
       - 14002:14586
     networks:
@@ -46,7 +46,7 @@ services:
     image: api-extauth
     build:
       context: src/go
-      dockerfile: cmd/extauth/Dockerfile
+      dockerfile: cmd/middleware/extauth/Dockerfile
     ports:
       - 14010:14586
     networks:
@@ -61,7 +61,7 @@ services:
     image: core-user
     build:
       context: src/go
-      dockerfile: cmd/user/Dockerfile
+      dockerfile: cmd/core/user/Dockerfile
     ports:
       - 13001:14586
     networks:
@@ -71,7 +71,7 @@ services:
     image: core-workers
     build:
       context: src/go
-      dockerfile: cmd/workers/Dockerfile
+      dockerfile: cmd/core/workers/Dockerfile
     env_file:
       dev-variables.env
     networks:
@@ -81,7 +81,7 @@ services:
     image: core-send-email
     build:
       context: src/go
-      dockerfile: cmd/send_email/Dockerfile
+      dockerfile: cmd/core/send_email/Dockerfile
     environment:
       - SMTP_HOST
       - SMTP_USERNAME
