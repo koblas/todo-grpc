@@ -4,7 +4,7 @@
             <font size="+1"><br><br></font>
             <div class="title thin">
                 <font face="'HelveticaNeue-Thin','HelveticaNeue-Light','Helvetica-Light','Helvetica','Arial','Lucida Grande',sans-serif" size="5" style="line-height:120% !important">
-                    Hi! {{ .User.Name }}, has invited you to {{ .AppName }}
+                    Hi! {{ .Sender.Name }}, has invited you to {{ .AppName }}
                 </font>
             </div>
             <font size="+1"><br></font>
@@ -21,7 +21,7 @@
                 </div>
                 <div class="text light">
                     <font face="'HelveticaNeue-Light','HelveticaNeue-Thin','Helvetica-Light','Helvetica','Arial','Lucida Grande',sans-serif" size="3">
-                        <a href="{{ .InviteUrl }}">{{ .InviteUrl }}</a>
+                        <a href="{{ .URLBase }}/auth/invite/{{ .Token }}">{{ .InviteUrl }}</a>
                     </font>
                 </div>
             </span>

@@ -16,7 +16,6 @@ import (
 type SendEmailServer struct {
 	genpb.UnimplementedSendEmailServiceServer
 
-	logger logger.Logger
 	sender Sender
 	pubsub *redisqueue.Producer
 }
@@ -115,8 +114,13 @@ func (s *SendEmailServer) InviteUserMessage(ctx context.Context, params *genpb.E
 			"Email": params.Recipient.Email,
 			"Name":  params.Recipient.Name,
 		},
-		"AppName":   params.AppInfo.AppName,
-		"InviteUrl": params.InviteUrl,
+		"Sender": map[string]string{
+			"Email": params.Sender.Email,
+			"Name":  params.Sender.Name,
+		},
+		"AppName": params.AppInfo.AppName,
+		"URLBase": params.AppInfo.UrlBase,
+		"Token":   params.Token,
 	}
 
 	if err := s.simpleSend(ctx, sender, recipient, data, genpb.EmailTemplate_USER_INVITED, params.ReferenceId); err != nil {

@@ -24,6 +24,9 @@ type UserServiceClient interface {
 	ComparePassword(ctx context.Context, in *AuthenticateParam, opts ...grpc.CallOption) (*User, error)
 	GetSettings(ctx context.Context, in *UserIdParam, opts ...grpc.CallOption) (*UserSettings, error)
 	SetSettings(ctx context.Context, in *UserSettingsUpdate, opts ...grpc.CallOption) (*UserSettings, error)
+	VerificationVerify(ctx context.Context, in *VerificationParam, opts ...grpc.CallOption) (*User, error)
+	VerificationUpdate(ctx context.Context, in *VerificationParam, opts ...grpc.CallOption) (*User, error)
+	ForgotSend(ctx context.Context, in *FindParam, opts ...grpc.CallOption) (*User, error)
 }
 
 type userServiceClient struct {
@@ -88,6 +91,33 @@ func (c *userServiceClient) SetSettings(ctx context.Context, in *UserSettingsUpd
 	return out, nil
 }
 
+func (c *userServiceClient) VerificationVerify(ctx context.Context, in *VerificationParam, opts ...grpc.CallOption) (*User, error) {
+	out := new(User)
+	err := c.cc.Invoke(ctx, "/core.UserService/VerificationVerify", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) VerificationUpdate(ctx context.Context, in *VerificationParam, opts ...grpc.CallOption) (*User, error) {
+	out := new(User)
+	err := c.cc.Invoke(ctx, "/core.UserService/VerificationUpdate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) ForgotSend(ctx context.Context, in *FindParam, opts ...grpc.CallOption) (*User, error) {
+	out := new(User)
+	err := c.cc.Invoke(ctx, "/core.UserService/ForgotSend", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility
@@ -98,6 +128,9 @@ type UserServiceServer interface {
 	ComparePassword(context.Context, *AuthenticateParam) (*User, error)
 	GetSettings(context.Context, *UserIdParam) (*UserSettings, error)
 	SetSettings(context.Context, *UserSettingsUpdate) (*UserSettings, error)
+	VerificationVerify(context.Context, *VerificationParam) (*User, error)
+	VerificationUpdate(context.Context, *VerificationParam) (*User, error)
+	ForgotSend(context.Context, *FindParam) (*User, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -122,6 +155,15 @@ func (UnimplementedUserServiceServer) GetSettings(context.Context, *UserIdParam)
 }
 func (UnimplementedUserServiceServer) SetSettings(context.Context, *UserSettingsUpdate) (*UserSettings, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetSettings not implemented")
+}
+func (UnimplementedUserServiceServer) VerificationVerify(context.Context, *VerificationParam) (*User, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VerificationVerify not implemented")
+}
+func (UnimplementedUserServiceServer) VerificationUpdate(context.Context, *VerificationParam) (*User, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VerificationUpdate not implemented")
+}
+func (UnimplementedUserServiceServer) ForgotSend(context.Context, *FindParam) (*User, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ForgotSend not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 
@@ -244,6 +286,60 @@ func _UserService_SetSettings_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_VerificationVerify_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VerificationParam)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).VerificationVerify(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/core.UserService/VerificationVerify",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).VerificationVerify(ctx, req.(*VerificationParam))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_VerificationUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VerificationParam)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).VerificationUpdate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/core.UserService/VerificationUpdate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).VerificationUpdate(ctx, req.(*VerificationParam))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_ForgotSend_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FindParam)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).ForgotSend(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/core.UserService/ForgotSend",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).ForgotSend(ctx, req.(*FindParam))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -274,6 +370,18 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetSettings",
 			Handler:    _UserService_SetSettings_Handler,
+		},
+		{
+			MethodName: "VerificationVerify",
+			Handler:    _UserService_VerificationVerify_Handler,
+		},
+		{
+			MethodName: "VerificationUpdate",
+			Handler:    _UserService_VerificationUpdate_Handler,
+		},
+		{
+			MethodName: "ForgotSend",
+			Handler:    _UserService_ForgotSend_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

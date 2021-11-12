@@ -18,7 +18,7 @@ func init() {
 
 	workers = append(workers, Worker{
 		Stream:    "event:user_security",
-		GroupName: "userSecurity/register",
+		GroupName: "userSecurity/forgot",
 		Process: func(ctx context.Context, msg *redisqueue.Message) error {
 			log := logger.FromContext(ctx)
 			event := genpb.UserSecurityEvent{}
@@ -29,11 +29,11 @@ func init() {
 			}
 			log.With("action", action).Info("processing message")
 			cuser := event.User
-			if event.Action != genpb.UserSecurity_USER_REGISTER_TOKEN || event.Token == "" {
+			if event.Action != genpb.UserSecurity_USER_FORGOT_REQUEST || event.Token == "" {
 				return nil
 			}
 
-			params := genpb.EmailRegisterParam{
+			params := genpb.EmailPasswordRecoveryParam{
 				AppInfo: appInfo,
 				Recipient: &genpb.EmailUser{
 					Name:  cuser.Name,
@@ -48,7 +48,7 @@ func init() {
 				return err
 			}
 			log.With("email", cuser.Email).Info("Sending registration email")
-			_, err = email.RegisterMessage(ctx, &params)
+			_, err = email.PasswordRecoveryMessage(ctx, &params)
 
 			if err != nil {
 				log.With("email", cuser.Email, "error", err).Info("Failed to send")

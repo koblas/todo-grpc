@@ -1,9 +1,7 @@
 package user
 
 import (
-	"errors"
-	"log"
-	"reflect"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -16,11 +14,7 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/proto"
 )
-
-const ENTITY_USER = "entity:user"
-const ENTITY_SETTINGS = "entity:user_settings"
 
 // Server represents the gRPC server
 type UserServer struct {
@@ -29,6 +23,19 @@ type UserServer struct {
 	logger logger.Logger
 	users  []User
 	pubsub *redisqueue.Producer
+}
+
+var pbStatusToStatus = map[genpb.UserStatus]UserStatus{
+	genpb.UserStatus_ACTIVE:     UserStatus_ACTIVE,
+	genpb.UserStatus_INVITED:    UserStatus_INVITED,
+	genpb.UserStatus_DISABLED:   UserStatus_DISABLED,
+	genpb.UserStatus_REGISTERED: UserStatus_REGISTERED,
+}
+var statusToPbStatus = map[UserStatus]genpb.UserStatus{
+	UserStatus_ACTIVE:     genpb.UserStatus_ACTIVE,
+	UserStatus_INVITED:    genpb.UserStatus_INVITED,
+	UserStatus_DISABLED:   genpb.UserStatus_DISABLED,
+	UserStatus_REGISTERED: genpb.UserStatus_REGISTERED,
 }
 
 func NewUserServer(log logger.Logger) *UserServer {
@@ -50,7 +57,8 @@ func NewUserServer(log logger.Logger) *UserServer {
 }
 
 func (s *UserServer) FindBy(ctx context.Context, params *genpb.FindParam) (*genpb.User, error) {
-	s.logger.With("email", params.Email).Info("Received find")
+	log := logger.FromContext(ctx).With("email", params.Email).With("userId", params.UserId)
+	log.Info("FindBy")
 
 	var user *User
 	if params.Email != "" {
@@ -60,22 +68,33 @@ func (s *UserServer) FindBy(ctx context.Context, params *genpb.FindParam) (*genp
 	}
 
 	if user == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "User not found")
+		return nil, status.Errorf(codes.NotFound, "User not found")
 	}
 
-	s.logger.With("ID", user.ID).Info("found")
+	log.With("ID", user.ID).Info("found")
 
 	return s.toProtoUser(user), nil
 }
 
 func (s *UserServer) Create(ctx context.Context, params *genpb.CreateParam) (*genpb.User, error) {
-	s.logger.With("Email", params.Email).Info("Received Create")
+	log := logger.FromContext(ctx).With("email", params.Email)
+	log.Info("Received Create")
+
+	if params.Status != genpb.UserStatus_REGISTERED && params.Status != genpb.UserStatus_INVITED {
+		log.Error("Bad user status")
+		return nil, fmt.Errorf("invalid user status = %s", params.Status)
+	}
 
 	if s.getByEmail(params.Email) != nil {
 		return nil, status.Errorf(codes.AlreadyExists, "Email address not found")
 	}
+	pass, errmsg := passwordEncrypt(params.Password)
+	if errmsg != "" {
+		return nil, status.Errorf(codes.InvalidArgument, errmsg)
+	}
 
-	pass, err := bcrypt.GenerateFromPassword([]byte(params.Password), bcrypt.DefaultCost)
+	vExpires := time.Now().Add(time.Duration(24 * time.Hour))
+	vToken, secret, err := tokenEncrypt(shortuuid.New())
 	if err != nil {
 		return nil, err
 	}
@@ -85,31 +104,58 @@ func (s *UserServer) Create(ctx context.Context, params *genpb.CreateParam) (*ge
 		Name:     params.Name,
 		Email:    params.Email,
 		Password: pass,
-		Status:   int(genpb.UserStatus_ACTIVE),
+		Status:   UserStatus_REGISTERED,
 		Settings: map[string]map[string]string{},
 
-		VerificationToken:   shortuuid.New(),
-		VerificationExpires: time.Now().Add(time.Duration(24 * time.Hour)),
+		VerificationToken:   &vToken,
+		VerificationExpires: &vExpires,
 	}
 
 	s.users = append(s.users, user)
 
 	if err := s.publishUser(ENTITY_USER, nil, &user); err != nil {
-		s.logger.With(err).Info("Publish failed")
+		log.With("error", err).Info("user entity publish failed")
+	}
+	if params.Status == genpb.UserStatus_REGISTERED {
+		if err := s.publishSecurity(genpb.UserSecurity_USER_REGISTER_TOKEN, user, secret); err != nil {
+			log.With("error", err).Info("register user publish failed")
+		}
+	} else if params.Status == genpb.UserStatus_INVITED {
+		if err := s.publishSecurity(genpb.UserSecurity_USER_INVITE_TOKEN, user, secret); err != nil {
+			log.With("error", err).Info("invite user publish failed")
+		}
 	}
 
 	return s.toProtoUser(&user), nil
 }
 
 func (s *UserServer) Update(ctx context.Context, params *genpb.UpdateParam) (*genpb.User, error) {
-	s.logger.With("UserId", params.UserId).Info("User Update")
+	log := logger.FromContext(ctx).With("userId", params.UserId)
+	log.Info("User Update")
 
 	orig := s.getById(params.UserId)
 
 	if orig == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "User not found")
+		return nil, status.Errorf(codes.NotFound, "User not found")
+	}
+	// Some basic validation
+	if len(params.PasswordNew) != 0 || len(params.Password) != 0 {
+		if len(params.PasswordNew) == 1 {
+			// If you're setting a new password, you must provide the old
+			if len(params.Password) == 0 {
+				return nil, status.Errorf(codes.InvalidArgument, "Password missing")
+			}
+			if errmsg := validatePassword(params.PasswordNew[0]); errmsg != "" {
+				return nil, status.Errorf(codes.InvalidArgument, "Password too short")
+			}
+		}
+		// If you provided a password, we will check it...
+		if len(params.Password) != 0 && !passwordCompare(orig, params.Password[0]) {
+			return nil, status.Errorf(codes.InvalidArgument, "Password mismatch")
+		}
 	}
 
+	// Now do the updates
 	updated := *orig
 	if len(params.Email) == 1 && params.Email[0] != "" {
 		updated.Email = params.Email[0]
@@ -118,10 +164,10 @@ func (s *UserServer) Update(ctx context.Context, params *genpb.UpdateParam) (*ge
 		updated.Name = params.Name[0]
 	}
 	if len(params.Status) == 1 {
-		updated.Status = int(params.Status[0])
+		updated.Status = pbStatusToStatus[params.Status[0]]
 	}
-	if len(params.Password) == 1 && params.Password[0] != "" {
-		pass, err := bcrypt.GenerateFromPassword([]byte(params.Password[0]), bcrypt.DefaultCost)
+	if len(params.PasswordNew) == 1 && params.Password[0] != "" {
+		pass, err := bcrypt.GenerateFromPassword([]byte(params.PasswordNew[0]), bcrypt.DefaultCost)
 		if err != nil {
 			return nil, err
 		}
@@ -129,22 +175,30 @@ func (s *UserServer) Update(ctx context.Context, params *genpb.UpdateParam) (*ge
 	}
 
 	s.updateUser(&updated)
-	s.publishUser(ENTITY_USER, orig, &updated)
+	if err := s.publishUser(ENTITY_USER, orig, &updated); err != nil {
+		log.With("error", err).Error("unable to publish user event")
+	}
+	if len(params.PasswordNew) != 0 {
+		if err := s.publishSecurity(genpb.UserSecurity_USER_PASSWORD_CHANGE, updated, ""); err != nil {
+			log.With("error", err).Error("unable to publish user security event")
+		}
+	}
 
 	return s.toProtoUser(&updated), nil
 }
 
 func (s *UserServer) ComparePassword(ctx context.Context, params *genpb.AuthenticateParam) (*genpb.User, error) {
-	s.logger.With("UserId", params.UserId).Info("Compare Passwords")
+	log := logger.FromContext(ctx).With("userId", params.UserId)
+	log.Info("check password")
 
 	user := s.getById(params.UserId)
 
 	if user == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "ID address not found")
+		return nil, status.Errorf(codes.NotFound, "ID address not found")
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(params.Password)); err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "Password mismatch")
+	if !passwordCompare(user, params.Password) {
+		return nil, status.Errorf(codes.InvalidArgument, "Password missmatch")
 	}
 
 	return s.toProtoUser(user), nil
@@ -154,17 +208,18 @@ func (s *UserServer) GetSettings(ctx context.Context, params *genpb.UserIdParam)
 	user := s.getById(params.UserId)
 
 	if user == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "ID address not found")
+		return nil, status.Errorf(codes.NotFound, "ID address not found")
 	}
 
 	return s.toProtoSettings(user), nil
 }
 
 func (s *UserServer) SetSettings(ctx context.Context, params *genpb.UserSettingsUpdate) (*genpb.UserSettings, error) {
+	log := logger.FromContext(ctx)
 	orig := s.getById(params.UserId)
 
 	if orig == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "ID address not found")
+		return nil, status.Errorf(codes.NotFound, "ID address not found")
 	}
 
 	updated := *orig
@@ -183,112 +238,112 @@ func (s *UserServer) SetSettings(ctx context.Context, params *genpb.UserSettings
 	}
 
 	s.updateUser(&updated)
-	s.publishSettings(ENTITY_SETTINGS, orig, &updated)
+	if err := s.publishSettings(ENTITY_SETTINGS, orig, &updated); err != nil {
+		log.With("error", err).Error("unable to publish user security event")
+	}
 
 	return s.toProtoSettings(&updated), nil
 }
 
-func (s *UserServer) toProtoUser(user *User) *genpb.User {
+func (s *UserServer) getUserByVerification(ctx context.Context, params *genpb.VerificationParam) (*User, error) {
+	user := s.getById(params.UserId)
+
 	if user == nil {
-		return nil
+		return nil, status.Errorf(codes.NotFound, "User not found")
+	}
+	if user.VerificationToken == nil || user.VerificationExpires == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "User not found")
+	}
+	if user.VerificationExpires.Before(time.Now()) {
+		// Should we remove it at this point?
+		return nil, status.Errorf(codes.InvalidArgument, "Expired")
+	}
+	if !tokenCompare(user, params.Token) {
+		return nil, status.Errorf(codes.InvalidArgument, "token")
 	}
 
-	return &genpb.User{
-		Id:                user.ID,
-		Name:              user.Name,
-		Email:             user.Email,
-		Status:            genpb.UserStatus(user.Status),
-		VerificationToken: user.VerificationToken,
-	}
+	return user, nil
 }
 
-func (s *UserServer) toProtoSettings(user *User) *genpb.UserSettings {
-	if user == nil {
-		return nil
+func (s *UserServer) VerificationVerify(ctx context.Context, params *genpb.VerificationParam) (*genpb.User, error) {
+	user, err := s.getUserByVerification(ctx, params)
+	if err != nil {
+		return nil, err
 	}
 
-	output := map[string]*genpb.UserSettingGroup{}
-	for key, value := range user.Settings {
-		subgroup := genpb.UserSettingGroup{}
-		output[key] = &subgroup
-		for subkey, subvalue := range value {
-			subgroup.Values[subkey] = subvalue
+	return s.toProtoUser(user), nil
+}
+
+func (s *UserServer) VerificationUpdate(ctx context.Context, params *genpb.VerificationParam) (*genpb.User, error) {
+	log := logger.FromContext(ctx).With("userId", params.UserId)
+	log.Info("Verification update")
+
+	user, err := s.getUserByVerification(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+	if user.Status == UserStatus_DISABLED {
+		return nil, status.Errorf(codes.NotFound, "User is disabled")
+	}
+
+	update := *user
+
+	if params.Password != "" {
+		pass, errmsg := passwordEncrypt(params.Password)
+		if errmsg != "" {
+			return nil, status.Errorf(codes.InvalidArgument, errmsg)
+		}
+
+		update.Password = pass
+		s.updateUser(&update)
+	}
+	// No longer valid
+	update.VerificationExpires = nil
+	update.VerificationToken = nil
+	// You could be "REGISTERED" or "INVITED"
+	update.Status = UserStatus_ACTIVE
+	s.updateUser(&update)
+
+	if err := s.publishUser(ENTITY_USER, user, &update); err != nil {
+		log.With("error", err).Info("Publish failed")
+	}
+	if params.Password != "" {
+		if err := s.publishSecurity(genpb.UserSecurity_USER_PASSWORD_CHANGE, *user, ""); err != nil {
+			log.With("error", err).Info("Publish security failed")
 		}
 	}
 
-	return &genpb.UserSettings{
-		UserId:   user.ID,
-		Settings: output,
-	}
+	return s.toProtoUser(user), nil
 }
 
-// Can't wait for generics...  func buildAction[T any](orig, current *T) string {}
-func buildAction(orig, current interface{}) string {
-	origNil := orig == nil || (reflect.ValueOf(orig).Kind() == reflect.Ptr && reflect.ValueOf(orig).IsNil())
-	currentNil := current == nil || (reflect.ValueOf(current).Kind() == reflect.Ptr && reflect.ValueOf(current).IsNil())
+func (s *UserServer) ForgotSend(ctx context.Context, params *genpb.FindParam) (*genpb.User, error) {
+	log := logger.FromContext(ctx).With("userId", params.UserId)
+	log.Info("Forgot send")
 
-	log.Printf("buildAction origNil=%v currentNil=%v", origNil, currentNil)
-
-	if origNil && !currentNil {
-		return "created"
+	if params.Email == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "Must provide email")
 	}
-	if !origNil && currentNil {
-		return "deleted"
+	user := s.getByEmail(params.Email)
+	if user == nil {
+		return nil, status.Errorf(codes.NotFound, "user not found")
 	}
 
-	return "updated"
-}
-
-func (s *UserServer) publishUser(stream string, orig, current *User) error {
-	action := buildAction(orig, current)
-	change := genpb.UserChangeEvent{
-		Current: s.toProtoUser(current),
-		Orig:    s.toProtoUser(orig),
-	}
-	body, err := proto.Marshal(&change)
+	update := *user
+	vExpires := time.Now().Add(time.Duration(24 * time.Hour))
+	vToken, secret, err := tokenEncrypt(shortuuid.New())
 	if err != nil {
-		return err
+		return nil, err
 	}
-	if body == nil {
-		return errors.New("Body is nil")
+	update.VerificationToken = &vToken
+	update.VerificationExpires = &vExpires
+	s.updateUser(&update)
+
+	if err := s.publishUser(ENTITY_USER, user, &update); err != nil {
+		log.With("error", err).Info("Publish failed")
+	}
+	if err := s.publishSecurity(genpb.UserSecurity_USER_FORGOT_REQUEST, update, secret); err != nil {
+		log.With("error", err).Info("Publish security failed")
 	}
 
-	return s.publishMsg(stream, action, body)
-}
-
-func (s *UserServer) publishSettings(stream string, orig, current *User) error {
-	action := buildAction(orig, current)
-	change := genpb.UserSettingsChangeEvent{
-		Current: s.toProtoSettings(current),
-		Orig:    s.toProtoSettings(orig),
-	}
-	body, err := proto.Marshal(&change)
-	if err != nil {
-		return err
-	}
-	if body == nil {
-		return errors.New("Body is nil")
-	}
-
-	return s.publishMsg(stream, action, body)
-}
-
-func (s *UserServer) publishMsg(stream string, action string, body []byte) error {
-	values := []*genpb.MetadataEntry{
-		{Key: "stream", Value: stream},
-		{Key: "action", Value: action},
-	}
-	mbytes, err := proto.Marshal(&genpb.Metadata{
-		Metadata: values,
-	})
-	if err != nil {
-		return err
-	}
-	return s.pubsub.Enqueue(&redisqueue.Message{
-		Stream: stream,
-		Values: map[string]interface{}{
-			"metadata": mbytes,
-			"body":     body,
-		},
-	})
+	return nil, nil
 }

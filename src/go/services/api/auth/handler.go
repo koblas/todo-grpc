@@ -7,6 +7,7 @@ import (
 
 	"github.com/koblas/grpc-todo/genpb/core"
 	"github.com/koblas/grpc-todo/genpb/publicapi"
+	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/tokenmanager"
 	"golang.org/x/net/context"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
@@ -35,7 +36,8 @@ func NewAuthenticationServer(userClient core.UserServiceClient) AuthenticationSe
 }
 
 func (s AuthenticationServer) Authenticate(ctx context.Context, params *publicapi.LoginParams) (*publicapi.Token, error) {
-	log.Printf("Received login %s", params.Email)
+	log := logger.FromContext(ctx).With("email", params.Email)
+	log.Info("Authenticate")
 
 	user, err := s.userClient.FindBy(ctx, &core.FindParam{
 		Email: params.Email,
@@ -44,7 +46,7 @@ func (s AuthenticationServer) Authenticate(ctx context.Context, params *publicap
 		return nil, err
 	}
 	if user == nil {
-		log.Print("User not found")
+		log.Info("User not found")
 		s, err := status.New(codes.InvalidArgument, "Bad email or password").WithDetails(
 			&errdetails.BadRequest_FieldViolation{
 				Field:       "Email",
@@ -62,7 +64,7 @@ func (s AuthenticationServer) Authenticate(ctx context.Context, params *publicap
 		Password: params.Password,
 	})
 	if err != nil {
-		log.Print("Password mismatch", err)
+		log.With("error", err).Info("Password mismatch")
 		s, err := status.New(codes.InvalidArgument, "Bad email or password").WithDetails(
 			&errdetails.BadRequest_FieldViolation{
 				Field:       "Email",
@@ -89,9 +91,11 @@ func (s AuthenticationServer) Authenticate(ctx context.Context, params *publicap
 }
 
 func (s AuthenticationServer) Register(ctx context.Context, params *publicapi.RegisterParams) (*publicapi.Token, error) {
-	log.Printf("Received register %s", params.Email)
+	log := logger.FromContext(ctx).With("email", params.Email)
+	log.Info("Register")
 
 	user, err := s.userClient.Create(ctx, &core.CreateParam{
+		Status:   core.UserStatus_REGISTERED,
 		Email:    params.Email,
 		Password: params.Password,
 		Name:     params.Name,
@@ -123,8 +127,8 @@ func (s AuthenticationServer) Register(ctx context.Context, params *publicapi.Re
 }
 
 func (s AuthenticationServer) VerifyEmail(ctx context.Context, params *publicapi.ConfirmParams) (*publicapi.TokenEither, error) {
-	// TODO: Not Token
-	log.Printf("Received verify %s", params.Token)
+	log := logger.FromContext(ctx)
+	log.Info("Verify register user")
 
 	bearer, err := s.jwtMaker.CreateToken(params.Token, time.Hour*24*365)
 	if err != nil {
@@ -141,9 +145,10 @@ func (s AuthenticationServer) VerifyEmail(ctx context.Context, params *publicapi
 }
 
 func (s AuthenticationServer) RecoverSend(ctx context.Context, params *publicapi.RecoveryParams) (*publicapi.SuccessEither, error) {
+	log := logger.FromContext(ctx).With("email", params.Email)
+	log.Info("Recover Send")
+
 	log.Fatal("RecoverVerify Not Implemented")
-	// TODO: Not Token
-	log.Printf("Received recovoery %s", params.Email)
 
 	return &publicapi.SuccessEither{
 		Success: true,
@@ -151,9 +156,10 @@ func (s AuthenticationServer) RecoverSend(ctx context.Context, params *publicapi
 }
 
 func (s AuthenticationServer) RecoverVerify(ctx context.Context, params *publicapi.RecoveryParams) (*publicapi.SuccessEither, error) {
+	log := logger.FromContext(ctx).With("email", params.Email)
+	log.Info("Recover Verify")
+
 	log.Fatal("RecoverVerify Not Implemented")
-	// TODO: Not Token
-	log.Printf("Received recovoery %s", params.Email)
 
 	return &publicapi.SuccessEither{
 		Success: true,
@@ -161,9 +167,10 @@ func (s AuthenticationServer) RecoverVerify(ctx context.Context, params *publica
 }
 
 func (s AuthenticationServer) RecoverUpdate(ctx context.Context, params *publicapi.RecoveryParams) (*publicapi.TokenEither, error) {
+	log := logger.FromContext(ctx)
+	log.Info("Recover Update password")
+
 	log.Fatal("RecoverUpdate Not Implemented")
-	// TODO: Not Token
-	log.Printf("Received update %s", params.Token)
 
 	bearer, err := s.jwtMaker.CreateToken(params.Token, time.Hour*24*365)
 	if err != nil {

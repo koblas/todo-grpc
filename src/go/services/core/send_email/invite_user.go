@@ -6,6 +6,6 @@ import _ "embed"
 var inviteUserTmpl string
 
 var inviteUser = emailContent{
-	subject: `You've been invited by {{ .User.Name }} to {{ .AppName }}`,
+	subject: `You've been invited by {{ .Sender.Name }} to {{ .AppName }}`,
 	body:    "{{ define content }}" + inviteUserTmpl + "{{ end }}",
 }

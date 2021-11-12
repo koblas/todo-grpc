@@ -2,8 +2,6 @@ package workers
 
 import (
 	"context"
-	"log"
-	"os"
 
 	genpb "github.com/koblas/grpc-todo/genpb/core"
 	"github.com/koblas/grpc-todo/pkg/logger"
@@ -11,14 +9,9 @@ import (
 )
 
 func init() {
-	urlBase := os.Getenv("URL_BASE_UI")
-	if urlBase == "" {
-		log.Fatal("environment variable URL_BASE_UI must be set")
-	}
-
 	workers = append(workers, Worker{
 		Stream:    "event:user_security",
-		GroupName: "userSecurity/register",
+		GroupName: "userSecurity/invite",
 		Process: func(ctx context.Context, msg *redisqueue.Message) error {
 			log := logger.FromContext(ctx)
 			event := genpb.UserSecurityEvent{}
@@ -29,12 +22,16 @@ func init() {
 			}
 			log.With("action", action).Info("processing message")
 			cuser := event.User
-			if event.Action != genpb.UserSecurity_USER_REGISTER_TOKEN || event.Token == "" {
+			if event.Action != genpb.UserSecurity_USER_INVITE_TOKEN || event.Token == "" {
 				return nil
 			}
 
-			params := genpb.EmailRegisterParam{
+			params := genpb.EmailInviteUserParam{
 				AppInfo: appInfo,
+				Sender: &genpb.EmailUser{
+					Name:  event.Sender.Name,
+					Email: event.Sender.Email,
+				},
 				Recipient: &genpb.EmailUser{
 					Name:  cuser.Name,
 					Email: cuser.Email,
@@ -48,7 +45,7 @@ func init() {
 				return err
 			}
 			log.With("email", cuser.Email).Info("Sending registration email")
-			_, err = email.RegisterMessage(ctx, &params)
+			_, err = email.InviteUserMessage(ctx, &params)
 
 			if err != nil {
 				log.With("email", cuser.Email, "error", err).Info("Failed to send")

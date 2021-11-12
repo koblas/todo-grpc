@@ -5,16 +5,25 @@ import (
 	"time"
 )
 
+type UserStatus string
+
+const (
+	UserStatus_REGISTERED = "registered"
+	UserStatus_ACTIVE     = "active"
+	UserStatus_INVITED    = "invited"
+	UserStatus_DISABLED   = "disabled"
+)
+
 type User struct {
 	ID       string
 	Name     string
 	Email    string
-	Status   int
+	Status   UserStatus
 	Password []byte
 	Settings map[string]map[string]string
 
-	VerificationToken   string
-	VerificationExpires time.Time
+	VerificationToken   *[]byte
+	VerificationExpires *time.Time
 }
 
 func (s *UserServer) getById(id string) *User {
