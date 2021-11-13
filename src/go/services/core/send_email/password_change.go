@@ -7,5 +7,5 @@ var passwordChangeTmpl string
 
 var passwordChange = emailContent{
 	subject: `Your password was changed`,
-	body:    "{{ define content }}" + passwordChangeTmpl + "{{ end }}",
+	body:    `{{ define "content" }}` + passwordChangeTmpl + "{{ end }}",
 }

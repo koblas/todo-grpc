@@ -6,37 +6,15 @@ import (
 
 	"github.com/jaswdr/faker"
 	genpb "github.com/koblas/grpc-todo/genpb/core"
-	"github.com/koblas/grpc-todo/pkg/logger"
-	email "github.com/koblas/grpc-todo/services/core/send_email"
 	"github.com/stretchr/testify/require"
 )
 
-type stubSender struct {
-	subject string
-	body    string
-}
-
-func (svc *stubSender) SendEmail(ctx context.Context, sender, to, subject, html string) (string, error) {
-	svc.subject = subject
-	svc.body = html
-
-	return "", nil
-}
-
-func buildTestService() (genpb.SendEmailServiceServer, *stubSender) {
-	logger := logger.NewNopLogger()
-	senderData := &stubSender{}
-	svc := email.NewSendEmailServer(logger, senderData)
-
-	return svc, senderData
-}
-
-func TestPasswordChange(t *testing.T) {
+func TestRegisterUser(t *testing.T) {
 	faker := faker.New()
 
 	svc, msgData := buildTestService()
 
-	params := genpb.EmailPasswordChangeParam{
+	params := genpb.EmailRegisterParam{
 		Recipient: &genpb.EmailUser{
 			Name:  faker.Person().Name(),
 			Email: faker.Internet().Email(),
@@ -45,12 +23,15 @@ func TestPasswordChange(t *testing.T) {
 			AppName: faker.Company().Name(),
 			UrlBase: faker.Internet().URL(),
 		},
+		Token: faker.Hash().MD5(),
 	}
-	_, err := svc.PasswordChangeMessage(context.Background(), &params)
+
+	_, err := svc.RegisterMessage(context.Background(), &params)
 
 	require.Nil(t, err, "Failed to build")
 	require.NotEmpty(t, msgData.subject, "No subject")
 	require.NotEmpty(t, msgData.body, "No body")
 
+	require.Contains(t, msgData.body, params.Token, "Mesage doesn't contain token")
 	require.Contains(t, msgData.body, params.Recipient.Name, "Mesage doesn't contain sender's firstname")
 }

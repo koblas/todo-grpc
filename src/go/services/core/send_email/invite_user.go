@@ -7,5 +7,5 @@ var inviteUserTmpl string
 
 var inviteUser = emailContent{
 	subject: `You've been invited by {{ .Sender.Name }} to {{ .AppName }}`,
-	body:    "{{ define content }}" + inviteUserTmpl + "{{ end }}",
+	body:    `{{ define "content" }}` + inviteUserTmpl + "{{ end }}",
 }

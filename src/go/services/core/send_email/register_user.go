@@ -7,5 +7,5 @@ var registerUserTmpl string
 
 var registerUser = emailContent{
 	subject: `Confirm your email address`,
-	body:    "{{ define content }}" + registerUserTmpl + "{{ end }}",
+	body:    `{{ define "content" }}` + registerUserTmpl + "{{ end }}",
 }

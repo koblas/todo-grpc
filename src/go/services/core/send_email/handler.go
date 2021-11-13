@@ -29,7 +29,7 @@ var templates map[genpb.EmailTemplate]emailContent = map[genpb.EmailTemplate]ema
 	genpb.EmailTemplate_PASSWORD_RECOVERY: passwordRecovery,
 }
 
-func NewSendEmailServer(logger logger.Logger, sender Sender) *SendEmailServer {
+func NewSendEmailServer(logger logger.Logger, sender Sender) genpb.SendEmailServiceServer {
 	pubsub, err := redisqueue.NewProducerWithOptions(&redisqueue.ProducerOptions{
 		StreamMaxLength:      1000,
 		ApproximateMaxLength: true,

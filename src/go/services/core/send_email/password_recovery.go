@@ -7,5 +7,5 @@ var passwordRecoveryTmpl string
 
 var passwordRecovery = emailContent{
 	subject: `Reset your password`,
-	body:    "{{ define content }}" + passwordRecoveryTmpl + "{{ end }}",
+	body:    `{{ define "content" }}` + passwordRecoveryTmpl + "{{ end }}",
 }

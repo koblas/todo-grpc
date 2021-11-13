@@ -4,34 +4,38 @@ import (
 	"context"
 	"testing"
 
-	"github.com/koblas/projectx/server-go/pkg/services/email"
-	send "github.com/koblas/projectx/server-go/pkg/services/send_email"
+	"github.com/jaswdr/faker"
+	genpb "github.com/koblas/grpc-todo/genpb/core"
 	"github.com/stretchr/testify/require"
 )
 
 func TestInviteUser(t *testing.T) {
-	senderData := &stubSender{}
+	faker := faker.New()
 
-	url := "THIS_IS_THE_URL_XXX"
+	svc, msgData := buildTestService()
 
-	svc := email.NewService(senderData)
+	params := genpb.EmailInviteUserParam{
+		Sender: &genpb.EmailUser{
+			Name:  faker.Person().Name(),
+			Email: faker.Internet().Email(),
+		},
+		Recipient: &genpb.EmailUser{
+			Name:  faker.Person().Name(),
+			Email: faker.Internet().Email(),
+		},
+		AppInfo: &genpb.EmailAppInfo{
+			AppName: faker.Company().Name(),
+			UrlBase: faker.Internet().URL(),
+		},
+		Token: faker.Hash().MD5(),
+	}
 
-	user := send.EmailUser{}
-	user.Email = "foo@example.com"
-	user.Name = "Tom Smith"
-	newUser := send.EmailUser{}
-	newUser.Email = "bar@example.com"
-	newUser.Name = "Mary Jane"
-
-	err := svc.InviteUser(context.Background(), "test@example.com", send.Params{
-		"User":      user,
-		"NewUser":   newUser,
-		"InviteUrl": url,
-	})
+	_, err := svc.InviteUserMessage(context.Background(), &params)
 
 	require.Nil(t, err, "Failed to build")
-	require.NotEmpty(t, senderData.subject, "No subject")
-	require.NotEmpty(t, senderData.body, "No body")
-	require.Contains(t, senderData.body, url, "Mesage doesn't contain url")
-	require.Contains(t, senderData.body, user.Name, "Mesage doesn't contain sender's firstname")
+	require.NotEmpty(t, msgData.subject, "No subject")
+	require.NotEmpty(t, msgData.body, "No body")
+	require.Contains(t, msgData.body, params.Token, "Mesage doesn't contain url")
+	require.Contains(t, msgData.body, params.Recipient.Name, "Mesage doesn't contain recipients's name")
+	require.Contains(t, msgData.body, params.Sender.Name, "Mesage doesn't contain sender's name")
 }

@@ -4,32 +4,34 @@ import (
 	"context"
 	"testing"
 
-	"github.com/koblas/projectx/server-go/pkg/entity"
-	"github.com/koblas/projectx/server-go/pkg/services/email"
+	"github.com/jaswdr/faker"
+	genpb "github.com/koblas/grpc-todo/genpb/core"
 	"github.com/stretchr/testify/require"
 )
 
 func TestPasswordRecovery(t *testing.T) {
-	senderData := &stubSender{}
-	svc := email.NewService(senderData)
+	faker := faker.New()
 
-	url := "THIS_IS_THE_URL_XXX"
-	token := "QuickBrownFox"
+	svc, msgData := buildTestService()
 
-	user := entity.User{}
-	user.Email = "foo@example.com"
-	user.Name = "John Smith"
+	params := genpb.EmailPasswordRecoveryParam{
+		Recipient: &genpb.EmailUser{
+			Name:  faker.Person().Name(),
+			Email: faker.Internet().Email(),
+		},
+		AppInfo: &genpb.EmailAppInfo{
+			AppName: faker.Company().Name(),
+			UrlBase: faker.Internet().URL(),
+		},
+		Token: faker.Hash().MD5(),
+	}
 
-	err := svc.PasswordRecovery(context.Background(), "foo@example.com", email.Params{
-		"User":    user,
-		"URLBase": url,
-		"Token":   token,
-	})
+	_, err := svc.PasswordRecoveryMessage(context.Background(), &params)
 
 	require.Nil(t, err, "Failed to build")
-	require.NotEmpty(t, senderData.subject, "No subject")
-	require.NotEmpty(t, senderData.body, "No body")
+	require.NotEmpty(t, msgData.subject, "No subject")
+	require.NotEmpty(t, msgData.body, "No body")
 
-	require.Contains(t, senderData.body, url+token, "Mesage doesn't contain url")
-	require.Contains(t, senderData.body, user.Name, "Mesage doesn't contain sender's firstname")
+	require.Contains(t, msgData.body, params.AppInfo.UrlBase+params.Token, "Mesage doesn't contain url")
+	require.Contains(t, msgData.body, params.Recipient.Name, "Mesage doesn't contain sender's firstname")
 }
