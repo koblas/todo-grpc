@@ -1,0 +1,5 @@
+    <mj-font name="Source Sans Pro" href="https://fonts.googleapis.com/css?family=Source%20Sans%20Pro" />
+    <mj-attributes>
+      <mj-text font-family="Source Sans Pro, sans-serif" font-size="16px" color="#000000" line-height="150%" />
+      <mj-button background-color="#31EFB8" color="#1F1F1F" font-family="Source Sans Pro, sans-serif" font-size="16px" />
+    </mj-attributes>

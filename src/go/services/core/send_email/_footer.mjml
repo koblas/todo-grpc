@@ -1,0 +1,29 @@
+    <mj-section padding="24px 0 0 0">
+      <mj-column width="425px">
+        <mj-text align="center" font-size="14px" color="#64666A">
+          {{ .AppName }} is the first Open Source prototyping platform that will be embraced by multidisciplinary teams.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!--
+    <mj-section padding="0">
+      <mj-column>
+        <mj-social icon-size="24px" mode="horizontal">
+          <mj-social-element src="{{ .PublicUrl }}/images/email/logo-uxbox.png" href="https://penpot.app/" padding="0 8px" />
+          <mj-social-element src="{{ .PublicUrl }}/images/email/logo-twitter.png" href="https://twitter.com/penpotapp" padding="0 8px" />
+          <mj-social-element src="{{ .PublicUrl }}/images/email/logo-github.png" href="https://github.com/penpot/" padding="0 8px" />
+          <mj-social-element src="{{ .PublicUrl }}/images/email/logo-instagram.png" href="https://instagram.com/penpotapp/" padding="0 8px" />
+          <mj-social-element src="{{ .PublicUrl }}/images/email/logo-taiga.png" href="https://tree.taiga.io/project/uxbox" padding="0 8px" />
+        </mj-social>
+      </mj-column>
+    </mj-section>
+    -->
+
+    <mj-section padding="0 0 24px 0">
+      <mj-column>
+        <mj-text align="center" font-size="14px" color="#64666A" line-height="150%">
+          {{ .AppName }} © 2020 | Made with &lt;3 and Open Source
+        </mj-text>
+      </mj-column>
+    </mj-section>

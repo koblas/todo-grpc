@@ -2,6 +2,7 @@ package send_email
 
 import (
 	"context"
+	"html/template"
 )
 
 type EmailUser struct {
@@ -12,8 +13,8 @@ type EmailUser struct {
 type Params map[string]interface{}
 
 type emailContent struct {
-	subject string
-	body    string
+	subject *template.Template
+	body    *template.Template
 }
 
 type Sender interface {

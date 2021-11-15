@@ -1,0 +1,28 @@
+<mjml>
+
+  <mj-head>
+    <mj-include path="./_headblock.mjml" />
+  </mj-head>
+
+  <mj-body background-color="#E5E5E5">
+    <mj-include path="./_header.mjml" />
+
+    <mj-section background-color="#FFFFFF">
+      <mj-column>
+        <mj-text font-size="24px" font-weight="600">Hello {{ .User.Name }}!</mj-text>
+        <mj-text>
+          Thanks for signing up for your {{ .AppName }} account! Please verify your
+          email using the link below adn get started building mockups and
+          prototypes today!
+        </mj-text>
+        <mj-button href="{{ .URLBase }}/auth/email/confirm/{{ .User.Id }}/{{ .Token }}">
+          Verify email
+        </mj-button>
+        <mj-text>Enjoy!</mj-text>
+        <mj-text>The {{ .AppName }} team.</mj-text>
+      </mj-column>
+    </mj-section>
+
+    <mj-include path="./_footer.mjml" />
+  </mg-body>
+</mjml>

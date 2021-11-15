@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	genpb "github.com/koblas/grpc-todo/genpb/core"
+	"github.com/koblas/grpc-todo/pkg/key_manager"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/util"
 	"github.com/renstrom/shortuuid"
@@ -23,6 +24,7 @@ type UserServer struct {
 	logger logger.Logger
 	users  []User
 	pubsub *redisqueue.Producer
+	kms    key_manager.Encoder
 }
 
 var pbStatusToStatus = map[genpb.UserStatus]UserStatus{
@@ -53,6 +55,7 @@ func NewUserServer(log logger.Logger) *UserServer {
 		logger: log,
 		users:  []User{},
 		pubsub: pubsub,
+		kms:    key_manager.NewSecureClear(),
 	}
 }
 
@@ -117,11 +120,11 @@ func (s *UserServer) Create(ctx context.Context, params *genpb.CreateParam) (*ge
 		log.With("error", err).Info("user entity publish failed")
 	}
 	if params.Status == genpb.UserStatus_REGISTERED {
-		if err := s.publishSecurity(genpb.UserSecurity_USER_REGISTER_TOKEN, user, secret); err != nil {
+		if err := s.publishSecurity(log, genpb.UserSecurity_USER_REGISTER_TOKEN, user, secret); err != nil {
 			log.With("error", err).Info("register user publish failed")
 		}
 	} else if params.Status == genpb.UserStatus_INVITED {
-		if err := s.publishSecurity(genpb.UserSecurity_USER_INVITE_TOKEN, user, secret); err != nil {
+		if err := s.publishSecurity(log, genpb.UserSecurity_USER_INVITE_TOKEN, user, secret); err != nil {
 			log.With("error", err).Info("invite user publish failed")
 		}
 	}
@@ -179,7 +182,7 @@ func (s *UserServer) Update(ctx context.Context, params *genpb.UpdateParam) (*ge
 		log.With("error", err).Error("unable to publish user event")
 	}
 	if len(params.PasswordNew) != 0 {
-		if err := s.publishSecurity(genpb.UserSecurity_USER_PASSWORD_CHANGE, updated, ""); err != nil {
+		if err := s.publishSecurity(log, genpb.UserSecurity_USER_PASSWORD_CHANGE, updated, ""); err != nil {
 			log.With("error", err).Error("unable to publish user security event")
 		}
 	}
@@ -246,19 +249,26 @@ func (s *UserServer) SetSettings(ctx context.Context, params *genpb.UserSettings
 }
 
 func (s *UserServer) getUserByVerification(ctx context.Context, params *genpb.VerificationParam) (*User, error) {
+	log := logger.FromContext(ctx).With("userId", params.UserId)
+	log.Info("getUserByVerification BEGIN")
+
 	user := s.getById(params.UserId)
 
 	if user == nil {
+		log.Info("User not found")
 		return nil, status.Errorf(codes.NotFound, "User not found")
 	}
 	if user.VerificationToken == nil || user.VerificationExpires == nil {
+		log.Info("User has no verification token")
 		return nil, status.Errorf(codes.InvalidArgument, "User not found")
 	}
 	if user.VerificationExpires.Before(time.Now()) {
+		log.Info("Token is expired")
 		// Should we remove it at this point?
 		return nil, status.Errorf(codes.InvalidArgument, "Expired")
 	}
 	if !tokenCompare(user, params.Token) {
+		log.Info("Token mismatch")
 		return nil, status.Errorf(codes.InvalidArgument, "token")
 	}
 
@@ -308,7 +318,7 @@ func (s *UserServer) VerificationUpdate(ctx context.Context, params *genpb.Verif
 		log.With("error", err).Info("Publish failed")
 	}
 	if params.Password != "" {
-		if err := s.publishSecurity(genpb.UserSecurity_USER_PASSWORD_CHANGE, *user, ""); err != nil {
+		if err := s.publishSecurity(log, genpb.UserSecurity_USER_PASSWORD_CHANGE, *user, ""); err != nil {
 			log.With("error", err).Info("Publish security failed")
 		}
 	}
@@ -341,7 +351,7 @@ func (s *UserServer) ForgotSend(ctx context.Context, params *genpb.FindParam) (*
 	if err := s.publishUser(ENTITY_USER, user, &update); err != nil {
 		log.With("error", err).Info("Publish failed")
 	}
-	if err := s.publishSecurity(genpb.UserSecurity_USER_FORGOT_REQUEST, update, secret); err != nil {
+	if err := s.publishSecurity(log, genpb.UserSecurity_USER_FORGOT_REQUEST, update, secret); err != nil {
 		log.With("error", err).Info("Publish security failed")
 	}
 

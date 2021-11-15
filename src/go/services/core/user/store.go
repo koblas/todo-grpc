@@ -1,7 +1,6 @@
 package user
 
 import (
-	"log"
 	"time"
 )
 
@@ -49,7 +48,6 @@ func (s *UserServer) updateUser(user *User) error {
 
 func (s *UserServer) getByEmail(email string) *User {
 	for _, u := range s.users {
-		log.Print("CHECKING ", email, u.Email)
 		if u.Email == email {
 			return &u
 		}

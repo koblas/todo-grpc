@@ -1,0 +1,25 @@
+<mjml>
+  <mj-head>
+    <mj-include path="./_headblock.mjml" />
+  </mj-head>
+
+  <mj-body background-color="#E5E5E5">
+    <mj-include path="./_header.mjml" />
+
+    <mj-section background-color="#FFFFFF">
+      <mj-column>
+        <mj-text font-size="24px" font-weight="600">Hello!</mj-text>
+        <mj-text>
+          Hi! {{ .User.Name }} you have been invited by {{ .Sender.Name }} to {{ .AppName }}
+        </mj-text>
+        <mj-button href="{{ .URLBase }}/auth/invite/{{ .Recipient.Id }}/{{ .Token }}">
+          Accept invite
+        </mj-button>
+        <mj-text>Enjoy!</mj-text>
+        <mj-text>The {{ .AppName }} team.</mj-text>
+      </mj-column>
+    </mj-section>
+
+    <mj-include path="./_footer.mjml" />
+  </mg-body>
+</mjml>

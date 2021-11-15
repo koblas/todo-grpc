@@ -1,11 +1,14 @@
 package send_email
 
-import _ "embed"
+import (
+	_ "embed"
+	"html/template"
+)
 
 //go:embed password_change.html
 var passwordChangeTmpl string
 
 var passwordChange = emailContent{
-	subject: `Your password was changed`,
-	body:    `{{ define "content" }}` + passwordChangeTmpl + "{{ end }}",
+	subject: template.Must(template.New("passwordChangeSubject").Parse(`Your password was changed`)),
+	body:    template.Must(template.New("passwordChangeBody").Parse(passwordChangeTmpl)),
 }

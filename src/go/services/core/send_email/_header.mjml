@@ -1,0 +1,6 @@
+<mj-section padding="0">
+  <mj-column>
+    <mj-image src="{{ .PublicUrl }}/images/email/uxbox-title.png"
+              width="97px" height="32px" align="left" padding="16px" />
+  </mj-column>
+</mj-section>

@@ -29,17 +29,26 @@ func init() {
 			}
 			log.With("action", action).Info("processing message")
 			cuser := event.User
-			if event.Action != genpb.UserSecurity_USER_REGISTER_TOKEN || event.Token == "" {
+			if event.Action != genpb.UserSecurity_USER_REGISTER_TOKEN {
+				return nil
+			}
+
+			token, err := decodeSecure(log, event.Token)
+			if err != nil {
+				return err
+			}
+			if token == "" {
 				return nil
 			}
 
 			params := genpb.EmailRegisterParam{
 				AppInfo: appInfo,
 				Recipient: &genpb.EmailUser{
-					Name:  cuser.Name,
-					Email: cuser.Email,
+					UserId: cuser.Id,
+					Name:   cuser.Name,
+					Email:  cuser.Email,
 				},
-				Token: event.Token,
+				Token: token,
 			}
 
 			email, err := getEmailService(log)

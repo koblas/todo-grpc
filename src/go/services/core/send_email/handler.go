@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"html/template"
 
 	genpb "github.com/koblas/grpc-todo/genpb/core"
 	"github.com/koblas/grpc-todo/pkg/logger"
@@ -52,6 +51,7 @@ func (s *SendEmailServer) RegisterMessage(ctx context.Context, params *genpb.Ema
 	sender := params.Recipient.Email
 	data := Params{
 		"User": map[string]string{
+			"Id":    params.Recipient.UserId,
 			"Email": params.Recipient.Email,
 			"Name":  params.Recipient.Name,
 		},
@@ -72,6 +72,7 @@ func (s *SendEmailServer) PasswordChangeMessage(ctx context.Context, params *gen
 	sender := params.Recipient.Email
 	data := Params{
 		"User": map[string]string{
+			"Id":    params.Recipient.UserId,
 			"Email": params.Recipient.Email,
 			"Name":  params.Recipient.Name,
 		},
@@ -91,6 +92,7 @@ func (s *SendEmailServer) PasswordRecoveryMessage(ctx context.Context, params *g
 	sender := params.Recipient.Email
 	data := Params{
 		"User": map[string]string{
+			"Id":    params.Recipient.UserId,
 			"Email": params.Recipient.Email,
 			"Name":  params.Recipient.Name,
 		},
@@ -111,10 +113,12 @@ func (s *SendEmailServer) InviteUserMessage(ctx context.Context, params *genpb.E
 	sender := params.Recipient.Email
 	data := Params{
 		"User": map[string]string{
+			"Id":    params.Recipient.UserId,
 			"Email": params.Recipient.Email,
 			"Name":  params.Recipient.Name,
 		},
 		"Sender": map[string]string{
+			"Id":    params.Sender.UserId,
 			"Email": params.Sender.Email,
 			"Name":  params.Sender.Name,
 		},
@@ -137,7 +141,7 @@ func (svc *SendEmailServer) simpleSend(ctx context.Context, sender, recipient st
 		return fmt.Errorf("unable to find template id=%d name=%s", tmpl, genpb.EmailTemplate_name[int32(tmpl)])
 	}
 
-	subject, body, err := buildEmail(data, content.subject, content.body)
+	subject, body, err := buildEmail(data, content)
 	if err != nil {
 		return err
 	}
@@ -185,47 +189,16 @@ func (svc *SendEmailServer) notify(ctx context.Context, messageId string, recipi
 }
 
 // Common functionality to build and email message from a template
-func buildEmail(data map[string]interface{}, subjectTmpl, bodyTmpl string) (string, string, error) {
-	funcMap := template.FuncMap{
-		/*
-			"Currency": func(v interface{}) string {
-				ac := accounting.Accounting{Symbol: "$", Precision: 2}
+func buildEmail(data map[string]interface{}, content emailContent) (string, string, error) {
+	var subject bytes.Buffer
+	var body bytes.Buffer
 
-				return ac.FormatMoney(v)
-			},
-		*/
-		"Round": func(v interface{}) string {
-			return fmt.Sprintf("%.2f", v)
-		},
+	if err := content.subject.Execute(&subject, data); err != nil {
+		return "", "", err
 	}
-
-	var doc bytes.Buffer
-
-	// Create the subject
-	tmpl, err := template.New("subject").Funcs(funcMap).Parse(subjectTmpl)
-	if err != nil {
+	if err := content.body.Execute(&body, data); err != nil {
 		return "", "", err
 	}
 
-	doc.Reset()
-	if err := tmpl.Execute(&doc, data); err != nil {
-		return "", "", err
-	}
-
-	subject := doc.String()
-
-	// Create the body
-	tmpl, err = Layout().Funcs(funcMap).Parse(bodyTmpl)
-	if err != nil {
-		return "", "", err
-	}
-
-	doc.Reset()
-	if err := tmpl.Execute(&doc, data); err != nil {
-		return "", "", err
-	}
-
-	body := doc.String()
-
-	return subject, body, nil
+	return subject.String(), body.String(), nil
 }

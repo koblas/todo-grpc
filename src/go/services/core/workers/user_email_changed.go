@@ -29,15 +29,16 @@ func init() {
 			}
 			log.With("action", action).Info("processing message")
 			cuser := event.User
-			if event.Action != genpb.UserSecurity_USER_PASSWORD_CHANGE || event.Token == "" {
+			if event.Action != genpb.UserSecurity_USER_PASSWORD_CHANGE {
 				return nil
 			}
 
 			params := genpb.EmailPasswordChangeParam{
 				AppInfo: appInfo,
 				Recipient: &genpb.EmailUser{
-					Name:  cuser.Name,
-					Email: cuser.Email,
+					UserId: cuser.Id,
+					Name:   cuser.Name,
+					Email:  cuser.Email,
 				},
 			}
 

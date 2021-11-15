@@ -29,17 +29,26 @@ func init() {
 			}
 			log.With("action", action).Info("processing message")
 			cuser := event.User
-			if event.Action != genpb.UserSecurity_USER_FORGOT_REQUEST || event.Token == "" {
+			if event.Action != genpb.UserSecurity_USER_FORGOT_REQUEST {
+				return nil
+			}
+
+			token, err := decodeSecure(log, event.Token)
+			if err != nil {
+				return err
+			}
+			if token == "" {
 				return nil
 			}
 
 			params := genpb.EmailPasswordRecoveryParam{
 				AppInfo: appInfo,
 				Recipient: &genpb.EmailUser{
-					Name:  cuser.Name,
-					Email: cuser.Email,
+					UserId: cuser.Id,
+					Name:   cuser.Name,
+					Email:  cuser.Email,
 				},
-				Token: event.Token,
+				Token: token,
 			}
 
 			email, err := getEmailService(log)
@@ -47,7 +56,7 @@ func init() {
 				log.With("email", cuser.Email, "error", err).Info("Failed to send")
 				return err
 			}
-			log.With("email", cuser.Email).Info("Sending registration email")
+			log.With("email", cuser.Email).Info("Sending forgot email")
 			_, err = email.PasswordRecoveryMessage(ctx, &params)
 
 			if err != nil {

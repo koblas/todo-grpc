@@ -35,6 +35,22 @@ func NewAuthenticationServer(userClient core.UserServiceClient) AuthenticationSe
 	}
 }
 
+func (s AuthenticationServer) returnToken(ctx context.Context, user *core.User) (*publicapi.Token, error) {
+	// TODO: This is an authentication event that should be pushed onto
+	//  the messagebus
+
+	bearer, err := s.jwtMaker.CreateToken(user.Id, time.Hour*24*365)
+	if err != nil {
+		return nil, err
+	}
+
+	return &publicapi.Token{
+		AccessToken: bearer,
+		TokenType:   "Bearer",
+		ExpiresIn:   24 * 3600,
+	}, nil
+}
+
 func (s AuthenticationServer) Authenticate(ctx context.Context, params *publicapi.LoginParams) (*publicapi.Token, error) {
 	log := logger.FromContext(ctx).With("email", params.Email)
 	log.Info("Authenticate")
@@ -78,16 +94,7 @@ func (s AuthenticationServer) Authenticate(ctx context.Context, params *publicap
 		return nil, s.Err()
 	}
 
-	bearer, err := s.jwtMaker.CreateToken(user.Id, time.Hour*24*365)
-	if err != nil {
-		return nil, err
-	}
-
-	return &publicapi.Token{
-		AccessToken: bearer,
-		TokenType:   "Bearer",
-		ExpiresIn:   24 * 3600,
-	}, nil
+	return s.returnToken(ctx, user)
 }
 
 func (s AuthenticationServer) Register(ctx context.Context, params *publicapi.RegisterParams) (*publicapi.Token, error) {
@@ -114,74 +121,112 @@ func (s AuthenticationServer) Register(ctx context.Context, params *publicapi.Re
 		return nil, s.Err()
 	}
 
-	bearer, err := s.jwtMaker.CreateToken(user.Id, time.Hour*24*365)
-	if err != nil {
-		return nil, err
-	}
-
-	return &publicapi.Token{
-		AccessToken: bearer,
-		TokenType:   "Bearer",
-		ExpiresIn:   24 * 3600,
-	}, nil
+	return s.returnToken(ctx, user)
 }
 
-func (s AuthenticationServer) VerifyEmail(ctx context.Context, params *publicapi.ConfirmParams) (*publicapi.TokenEither, error) {
+func (s AuthenticationServer) VerifyEmail(ctx context.Context, params *publicapi.ConfirmParams) (*publicapi.Success, error) {
 	log := logger.FromContext(ctx)
 	log.Info("Verify register user")
 
-	bearer, err := s.jwtMaker.CreateToken(params.Token, time.Hour*24*365)
+	user, err := s.userClient.VerificationVerify(ctx, &core.VerificationParam{
+		UserId: params.UserId,
+		Token:  params.Token,
+	})
 	if err != nil {
-		return nil, err
+		log.With("error", err).Info("Recover Send")
+	}
+	if user == nil {
+		s, err := status.New(codes.InvalidArgument, "token not found").WithDetails(
+			&errdetails.BadRequest_FieldViolation{
+				Field:       "Token",
+				Description: "not found",
+			},
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		return nil, s.Err()
 	}
 
-	return &publicapi.TokenEither{
-		Token: &publicapi.Token{
-			AccessToken: bearer,
-			TokenType:   "Bearer",
-			ExpiresIn:   24 * 3600,
-		},
+	return &publicapi.Success{
+		Success: true,
 	}, nil
 }
 
-func (s AuthenticationServer) RecoverSend(ctx context.Context, params *publicapi.RecoveryParams) (*publicapi.SuccessEither, error) {
+func (s AuthenticationServer) RecoverSend(ctx context.Context, params *publicapi.RecoverySendParams) (*publicapi.Success, error) {
 	log := logger.FromContext(ctx).With("email", params.Email)
 	log.Info("Recover Send")
 
-	log.Fatal("RecoverVerify Not Implemented")
+	user, err := s.userClient.ForgotSend(ctx, &core.FindParam{
+		Email: params.Email,
+	})
+	if err != nil {
+		log.With("error", err).Info("Recover Send")
+	}
+	if user != nil {
+		log.Info("RecoverSend - found user")
+	}
 
-	return &publicapi.SuccessEither{
+	return &publicapi.Success{
 		Success: true,
 	}, nil
 }
 
-func (s AuthenticationServer) RecoverVerify(ctx context.Context, params *publicapi.RecoveryParams) (*publicapi.SuccessEither, error) {
-	log := logger.FromContext(ctx).With("email", params.Email)
+func (s AuthenticationServer) RecoverVerify(ctx context.Context, params *publicapi.RecoveryUpdateParams) (*publicapi.Success, error) {
+	log := logger.FromContext(ctx).With("user_id", params.UserId)
 	log.Info("Recover Verify")
 
-	log.Fatal("RecoverVerify Not Implemented")
+	user, err := s.userClient.VerificationVerify(ctx, &core.VerificationParam{
+		UserId: params.UserId,
+		Token:  params.Token,
+	})
+	if err != nil {
+		log.With("error", err).Info("Recover Send")
+	}
+	if user == nil {
+		s, err := status.New(codes.InvalidArgument, "token not found").WithDetails(
+			&errdetails.BadRequest_FieldViolation{
+				Field:       "Token",
+				Description: "not found",
+			},
+		)
+		if err != nil {
+			return nil, err
+		}
 
-	return &publicapi.SuccessEither{
+		return nil, s.Err()
+	}
+
+	return &publicapi.Success{
 		Success: true,
 	}, nil
 }
 
-func (s AuthenticationServer) RecoverUpdate(ctx context.Context, params *publicapi.RecoveryParams) (*publicapi.TokenEither, error) {
+func (s AuthenticationServer) RecoverUpdate(ctx context.Context, params *publicapi.RecoveryUpdateParams) (*publicapi.Token, error) {
 	log := logger.FromContext(ctx)
 	log.Info("Recover Update password")
 
-	log.Fatal("RecoverUpdate Not Implemented")
+	user, err := s.userClient.VerificationUpdate(ctx, &core.VerificationParam{
+		UserId:   params.UserId,
+		Token:    params.Token,
+		Password: params.Password,
+	})
+	if err != nil || user == nil {
+		log.With("error", err).Info("Recover Update")
 
-	bearer, err := s.jwtMaker.CreateToken(params.Token, time.Hour*24*365)
-	if err != nil {
-		return nil, err
+		s, err := status.New(codes.InvalidArgument, "token not found").WithDetails(
+			&errdetails.BadRequest_FieldViolation{
+				Field:       "Password",
+				Description: "Unable to update password",
+			},
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		return nil, s.Err()
 	}
 
-	return &publicapi.TokenEither{
-		Token: &publicapi.Token{
-			AccessToken: bearer,
-			TokenType:   "Bearer",
-			ExpiresIn:   24 * 3600,
-		},
-	}, nil
+	return s.returnToken(ctx, user)
 }

@@ -6,6 +6,7 @@ import (
 	"reflect"
 
 	genpb "github.com/koblas/grpc-todo/genpb/core"
+	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/robinjoseph08/redisqueue"
 	"google.golang.org/protobuf/proto"
 )
@@ -119,11 +120,21 @@ func (s *UserServer) publishSettings(stream string, orig, current *User) error {
 	return s.publishMsg(stream, action, body)
 }
 
-func (s *UserServer) publishSecurity(action genpb.UserSecurity, user User, token string) error {
+func (s *UserServer) publishSecurity(log logger.Logger, action genpb.UserSecurity, user User, token string) error {
+	log.With("userSecurity", action).Info("Sending security event")
+	svalue, err := s.kms.Encode([]byte(token))
+	if err != nil {
+		return err
+	}
+	stoken := genpb.SecureValue{
+		KeyUri:  svalue.KmsUri,
+		DataKey: string(svalue.DataKey),
+		Value:   string(svalue.Data),
+	}
 	event := genpb.UserSecurityEvent{
 		Action: action,
 		User:   s.toProtoUser(&user),
-		Token:  token,
+		Token:  &stoken,
 	}
 	body, err := proto.Marshal(&event)
 	if err != nil {
