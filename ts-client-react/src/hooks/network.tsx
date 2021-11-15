@@ -1,19 +1,28 @@
-import React, { createContext, useContext, PropsWithChildren, useCallback, useState } from "react";
+import React, { createContext, useContext, PropsWithChildren } from "react";
 import { useImmerReducer } from "use-immer";
 import { Draft } from "immer";
-import { RpcOptions } from "../rpc/errors";
+import { RpcOptions, RpcError } from "../rpc/errors";
+import { assert } from "../util/assert";
 
-type Handlers = Pick<RpcOptions<unknown>, "onError" | "onErrorAuthentication" | "onErrorNetwork" | "onErrorField">;
+type Handlers = Pick<
+  RpcOptions<unknown>,
+  "onError" | "onErrorAuthentication" | "onErrorNetwork" | "onErrorField" | "onFinished" | "onFinished" | "onBegin"
+>;
 
+enum ActionType {
+  SET,
+}
 ///
 type DispatchAction = {
-  type: "set";
+  type: ActionType.SET;
   value: Handlers;
 };
 
 interface NetworkState extends Handlers {}
 
 const defaultState: NetworkState = {
+  onBegin: undefined,
+  onFinished: undefined,
   onErrorField: undefined,
   onError: undefined,
   onErrorAuthentication: undefined,
@@ -31,13 +40,11 @@ const NetworkContext = createContext<{
 });
 
 function authReducer(draft: Draft<NetworkState>, action: DispatchAction) {
-  switch (action.type) {
-    case "set":
-      draft.onError = action.value.onError;
-      draft.onErrorAuthentication = action.value.onErrorAuthentication;
-      draft.onErrorNetwork = action.value.onErrorNetwork;
-      break;
-  }
+  assert(action.type === ActionType.SET);
+
+  draft.onError = action.value.onError;
+  draft.onErrorAuthentication = action.value.onErrorAuthentication;
+  draft.onErrorNetwork = action.value.onErrorNetwork;
 }
 
 export function NetworkContextProvider({ children }: PropsWithChildren<unknown>) {
@@ -56,13 +63,15 @@ export function useNetworkContext() {
 
   return {
     networkErrors: {
+      onBegin: state.onBegin,
+      onFinished: state.onFinished,
       onError: state.onError,
       onErrorField: state.onErrorField,
       onErrorNetwork: state.onErrorNetwork,
       onErrorAuthentication: state.onErrorAuthentication,
     },
     setHandlers(handlers: Handlers) {
-      dispatch({ type: "set", value: handlers });
+      dispatch({ type: ActionType.SET, value: handlers });
     },
   };
 }
@@ -72,28 +81,42 @@ export type ErrorHandler<T> = (options: RpcOptions<T>) => RpcOptions<T>;
 export function useNetworkContextErrors<T>(parent?: RpcOptions<T>) {
   const { networkErrors } = useNetworkContext();
 
-  function handle<V, U>(base: RpcOptions<V>, ...options: (RpcOptions<U> | undefined)[]) {
+  function handle<V, U = V>(base: RpcOptions<V>, ...options: (RpcOptions<U> | undefined)[]) {
     return {
       onCompleted(data: V) {
-        base?.onCompleted?.(data);
+        [base, ...options].forEach((option) => {
+          // U and V should be the same but I can't get the types right
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          option?.onCompleted?.(data as any);
+        });
       },
-      onError(error: unknown) {
-        [networkErrors, parent, ...options].forEach((option) => {
+      onBegin() {
+        [networkErrors, parent, base, ...options].forEach((option) => {
+          option?.onBegin?.();
+        });
+      },
+      onFinished() {
+        [networkErrors, parent, base, ...options].forEach((option) => {
+          option?.onFinished?.();
+        });
+      },
+      onError(error: RpcError) {
+        [networkErrors, parent, base, ...options].forEach((option) => {
           option?.onError?.(error);
         });
       },
       onErrorField(fields: Record<string, string[]>) {
-        [networkErrors, parent, ...options].forEach((option) => {
+        [networkErrors, parent, base, ...options].forEach((option) => {
           option?.onErrorField?.(fields);
         });
       },
-      onErrorNetwork(error: unknown) {
-        [networkErrors, parent, ...options].forEach((option) => {
+      onErrorNetwork(error: RpcError) {
+        [networkErrors, parent, base, ...options].forEach((option) => {
           option?.onErrorNetwork?.(error);
         });
       },
       onErrorAuthentication(error: unknown) {
-        [networkErrors, parent, ...options].forEach((option) => {
+        [networkErrors, parent, base, ...options].forEach((option) => {
           option?.onErrorAuthentication?.(error);
         });
       },

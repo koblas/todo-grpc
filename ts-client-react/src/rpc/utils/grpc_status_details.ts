@@ -40,6 +40,7 @@ function parseErrorDetails(details: Any): ErrorDetails | null {
   const typeUrl = details.getTypeUrl();
   const errorDetailsClass = mapTypeUrlToErrorDetailClass.get(typeUrl);
   if (!errorDetailsClass) {
+    // eslint-disable-next-line no-console
     console.warn(`grpc-web-error-details: typeUrl "${typeUrl}" is not supported`);
     return null;
   }
@@ -47,6 +48,7 @@ function parseErrorDetails(details: Any): ErrorDetails | null {
 }
 
 export function statusFromError(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   err: any | { metadata: { "grpc-status-details-bin"?: string } },
 ): [Status, ErrorDetails[]] | [null, null] {
   // to get status, we requires err['metadata']['grpc-status-details-bin']

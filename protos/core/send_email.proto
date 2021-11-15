@@ -8,6 +8,7 @@ option go_package = "./;core";
 message EmailUser {
   string email = 1;
   string name = 2;
+  string user_id = 3;
 }
 
 // Basic Application information for the message

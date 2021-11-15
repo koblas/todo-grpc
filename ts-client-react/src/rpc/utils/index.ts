@@ -1,4 +1,6 @@
 import { Json } from "../../types/json";
+import { RpcOptions } from "../errors";
+import { handleJsonError } from "./json_helpers";
 
 export const BASE_URL = "http://localhost:8080";
 
@@ -25,13 +27,34 @@ export type FetchHandlers = Record<
 const fetchHandlers: FetchHandlers = {
   "2xx": async (response) => response,
   "3xx": async (response) => {
-    throw new FetchError(response.status, await response.json());
+    const body = await response.text();
+    let error;
+    try {
+      error = new FetchError(response.status, JSON.parse(body));
+    } catch {
+      error = new FetchError(response.status, body);
+    }
+    throw error;
   },
   "4xx": async (response) => {
-    throw new FetchError(response.status, await response.json());
+    const body = await response.text();
+    let error;
+    try {
+      error = new FetchError(response.status, JSON.parse(body));
+    } catch {
+      error = new FetchError(response.status, body);
+    }
+    throw error;
   },
   "5xx": async (response) => {
-    throw new FetchError(response.status, await response.json());
+    const body = await response.text();
+    let error;
+    try {
+      error = new FetchError(response.status, JSON.parse(body));
+    } catch {
+      error = new FetchError(response.status, body);
+    }
+    throw error;
   },
   "401": async () => {
     throw new Error("Need authentication");
@@ -110,6 +133,30 @@ export function newFetchClient(config?: { token?: string | null; base?: string |
       });
 
       return response.json();
+    },
+  };
+}
+
+/**
+ * newFetchPOST is a standard wrapper around newFetchClient that
+ * handles the error cases without a lot of DRY violations.
+ */
+export function newFetchPOST() {
+  const client = newFetchClient();
+
+  return {
+    call<T, R>(url: string, params: Json, options: RpcOptions<R>, xform: (input: T) => R) {
+      client
+        .POST<T>(url, params)
+        .then((data) => {
+          options.onCompleted?.(xform(data));
+        })
+        .catch((err) => {
+          handleJsonError(err, options);
+        })
+        .finally(() => {
+          options.onFinished?.();
+        });
     },
   };
 }

@@ -29,13 +29,20 @@ message LoginParams {
 }
 
 message ConfirmParams {
+  // Required: Verify and Update
+  string user_id = 1;
   // Email confirmation token
-  string token = 1;
+  string token = 2;
 }
 
-message RecoveryParams {
+message RecoverySendParams {
   // Required: Send
   string email = 1;
+}
+
+message RecoveryUpdateParams {
+  // Required: Verify and Update
+  string user_id = 1;
   // Required: Verify and Update
   string token = 2;
   // Required: Update
@@ -60,22 +67,6 @@ message Token {
   string refresh_token = 4;
 }
 
-message TokenEither {
-  // If there are errors
-  repeated ValidationError errors = 1;
-
-  // Present if errors is empty
-  Token token = 2;
-}
-
-message SuccessEither {
-  // If there are errors
-  repeated ValidationError errors = 1;
-
-  // Present if errors is empty
-  bool success = 2;
-}
-
 service AuthenticationService {
   rpc register(RegisterParams) returns (Token) {
     option (google.api.http) = {
@@ -91,28 +82,28 @@ service AuthenticationService {
     };
   }
 
-  rpc verify_email(ConfirmParams) returns (TokenEither) {
+  rpc verify_email(ConfirmParams) returns (Success) {
     option (google.api.http) = {
       post : "/auth/verify/email"
       body : "*"
     };
   }
 
-  rpc recover_send(RecoveryParams) returns (SuccessEither) {
+  rpc recover_send(RecoverySendParams) returns (Success) {
     option (google.api.http) = {
       post : "/auth/recover/send"
       body : "*"
     };
   }
 
-  rpc recover_verify(RecoveryParams) returns (SuccessEither) {
+  rpc recover_verify(RecoveryUpdateParams) returns (Success) {
     option (google.api.http) = {
       post : "/auth/recover/verify"
       body : "*"
     };
   }
 
-  rpc recover_update(RecoveryParams) returns (TokenEither) {
+  rpc recover_update(RecoveryUpdateParams) returns (Token) {
     option (google.api.http) = {
       post : "/auth/recover/update"
       body : "*"

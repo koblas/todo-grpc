@@ -28,56 +28,69 @@ interface TodoState {
   readonly todos: TodoItem[];
 }
 
+enum ActionType {
+  SET,
+  SET_CLIENT,
+  DELETE,
+  APPEND,
+  UPDATE,
+}
+
 type DispatchAction =
   | {
-      type: "set";
+      type: ActionType.SET;
       list: TodoItem[];
     }
   | {
-      type: "setClient";
+      type: ActionType.SET_CLIENT;
       client: TodoService;
     }
   | {
-      type: "delete";
+      type: ActionType.DELETE;
       id: string;
     }
   | {
-      type: "append";
+      type: ActionType.APPEND;
       value: TodoItem;
     }
   | {
-      type: "update";
+      type: ActionType.UPDATE;
       id: string;
       value: TodoItem;
     };
 
 function listReducer(draft: Draft<TodoState>, action: DispatchAction) {
-  switch (action.type) {
-    case "setClient":
+  const handlers: Record<ActionType, () => void> = {
+    [ActionType.SET_CLIENT]() {
+      assert(action.type === ActionType.SET_CLIENT);
       assert(action.client);
       draft.client = action.client;
-      break;
-    case "set":
+    },
+    [ActionType.SET]() {
+      assert(action.type === ActionType.SET);
       assert(action.list);
       draft.todos = action.list;
-      break;
-    case "update":
-      {
-        assert(action.id, "ID missing");
-        assert(action.value, "Value missing");
-        const itemIdx = draft.todos.findIndex((todo) => todo.id === action.id);
-        draft.todos[itemIdx] = action.value;
-      }
-      break;
-    case "delete":
+    },
+    [ActionType.UPDATE]() {
+      assert(action.type === ActionType.UPDATE);
+      assert(action.id, "ID missing");
+      assert(action.value, "Value missing");
+      const itemIdx = draft.todos.findIndex((todo) => todo.id === action.id);
+      draft.todos[itemIdx] = action.value;
+    },
+    [ActionType.DELETE]() {
+      assert(action.type === ActionType.DELETE);
       assert(action.id, "ID missing");
       draft.todos = draft.todos.filter((todo) => todo.id !== action.id);
-      break;
-    case "append":
+    },
+    [ActionType.APPEND]() {
+      assert(action.type === ActionType.APPEND);
       assert(action.value, "Value missing");
       draft.todos.push(action.value);
-      break;
-  }
+    },
+  };
+
+  handlers[action.type]();
 }
 
 const initialState: TodoState = {
@@ -99,7 +112,7 @@ export function TodoContextProvider({ children }: PropsWithChildren<unknown>) {
   useEffect(() => {
     const todoClient = newTodoClient(token, "grpc");
 
-    dispatch({ type: "setClient", client: todoClient });
+    dispatch({ type: ActionType.SET_CLIENT, client: todoClient });
   }, [token, dispatch]);
 
   function refresh() {
@@ -107,7 +120,7 @@ export function TodoContextProvider({ children }: PropsWithChildren<unknown>) {
       state.client.getTodos(
         addHandlers({
           onCompleted(todos) {
-            dispatch({ type: "set", list: todos });
+            dispatch({ type: ActionType.SET, list: todos });
           },
           onErrorAuthentication() {
             logout();
@@ -115,7 +128,7 @@ export function TodoContextProvider({ children }: PropsWithChildren<unknown>) {
         }),
       );
     } else {
-      dispatch({ type: "set", list: [] });
+      dispatch({ type: ActionType.SET, list: [] });
     }
   }
 
@@ -145,7 +158,7 @@ export function useTodos() {
       const id = new Date().toISOString();
       // optimistic creation
       dispatch({
-        type: "append",
+        type: ActionType.APPEND,
         value: {
           task,
           id,
@@ -155,11 +168,11 @@ export function useTodos() {
         task,
         addHandlers({
           onCompleted(data) {
-            dispatch({ type: "update", id, value: data });
+            dispatch({ type: ActionType.UPDATE, id, value: data });
             refresh();
           },
           onError() {
-            dispatch({ type: "delete", id });
+            dispatch({ type: ActionType.DELETE, id });
           },
         }),
       );
@@ -167,7 +180,7 @@ export function useTodos() {
     deleteTodo(id: TodoItem["id"]) {
       const obj = todos.find((todo) => todo.id === id);
       if (obj) {
-        dispatch({ type: "delete", id });
+        dispatch({ type: ActionType.DELETE, id });
         client?.deleteTodo(
           id,
           addHandlers({
@@ -175,7 +188,7 @@ export function useTodos() {
               refresh();
             },
             onError() {
-              dispatch({ type: "append", value: obj });
+              dispatch({ type: ActionType.APPEND, value: obj });
             },
           }),
         );

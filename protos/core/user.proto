@@ -31,12 +31,22 @@ message User {
   bool has_tfa = 7;
 }
 
+message SecureValue {
+  // e.g.
+  // "arn:aws:kms:us-east-1:111111111:key/abcdef00-0123-4567-7799-012345678990"
+  string key_uri = 1;
+  // opaque value that key encrypted
+  string data_key = 2;
+  // encrypted value
+  string value = 3;
+}
+
 // Used for ForgotPassword / Registration events
 message UserSecurityEvent {
   UserSecurity action = 1;
   User user = 2;
   // SECURE -- For password recovery and email confirmation
-  string token = 3;
+  SecureValue token = 3;
   // Used for invitations
   User sender = 4;
 }

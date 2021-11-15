@@ -4,7 +4,8 @@ import * as ErrorDetailsPb from "../../genpb/google/rpc/error_details_pb";
 import { RpcOptions } from "../errors";
 
 export function handleGrpcError<T>(err: grpcWeb.RpcError, options: RpcOptions<T>) {
-  options.onError?.(err);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  options.onError?.(err as any);
 
   const [st, details] = statusFromError(err);
   if (details) {
@@ -25,5 +26,6 @@ export function handleGrpcError<T>(err: grpcWeb.RpcError, options: RpcOptions<T>
     return;
   }
 
-  options.onErrorNetwork?.(st);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  options.onErrorNetwork?.(st as any);
 }

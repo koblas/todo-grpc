@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { useHistory, Link as RouterLink } from "react-router-dom";
 import {
   Link,
@@ -14,7 +14,7 @@ import {
   FormErrorMessage,
 } from "@chakra-ui/react";
 import { useForm } from "react-hook-form";
-import { useAuth } from "../hooks/auth";
+import { useAuth } from "../../hooks/auth";
 
 export function AuthRegisterPage() {
   const {
@@ -24,7 +24,7 @@ export function AuthRegisterPage() {
     setError,
   } = useForm();
   const { mutations } = useAuth();
-  const [authRegister] = mutations.useRegister();
+  const [authRegister, { loading }] = mutations.useRegister();
   const history = useHistory();
 
   function onSubmit(data: { email: string; password: string; name: string }) {
@@ -33,7 +33,6 @@ export function AuthRegisterPage() {
         history.replace("/todo");
       },
       onErrorField(serror: Record<string, string[]>) {
-        console.log("FIELD ERRORS", serror);
         ["name", "email", "password"].forEach((key) => {
           const message = serror[key]?.[0];
           if (message) {
@@ -94,7 +93,7 @@ export function AuthRegisterPage() {
               <FormErrorMessage>{errors.password?.message}</FormErrorMessage>
             </FormControl>
             <Stack spacing={6}>
-              <Button type="submit" colorScheme="blue" variant="solid">
+              <Button isLoading={loading} type="submit" colorScheme="blue" variant="solid">
                 Register
               </Button>
             </Stack>

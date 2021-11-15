@@ -1,10 +1,11 @@
-import React, { createContext, useContext, PropsWithChildren, useCallback, useState } from "react";
+import React, { createContext, useContext, PropsWithChildren, useState } from "react";
 import { useImmerReducer } from "use-immer";
 import { Draft } from "immer";
 import { newAuthClient } from "../rpc/auth/factory";
 import { storageFactory } from "../util/storageFactory";
-import { useNetworkContext, useNetworkContextErrors } from "./network";
-import { RpcMutation, RpcOptions, RpcResult } from "../rpc/errors";
+import { useNetworkContextErrors } from "./network";
+import { RpcMutation, RpcOptions, RpcError } from "../rpc/errors";
+import { assert } from "../util/assert";
 
 /**
  * Construct an accessor for a persistent token store
@@ -34,8 +35,12 @@ function newTokenStore() {
 const tokenStore = newTokenStore();
 
 ///
+enum ActionType {
+  SET,
+}
+
 type DispatchAction = {
-  type: "set";
+  type: ActionType.SET;
   token: string | null;
 };
 
@@ -58,12 +63,10 @@ const AuthContext = createContext<{
 });
 
 function authReducer(draft: Draft<AuthState>, action: DispatchAction) {
-  switch (action.type) {
-    case "set":
-      draft.token = action.token;
-      tokenStore.set(action.token);
-      break;
-  }
+  assert(action.type === ActionType.SET);
+
+  draft.token = action.token;
+  tokenStore.set(action.token);
 }
 
 export function AuthContextProvider({ children }: PropsWithChildren<unknown>) {
@@ -83,6 +86,22 @@ export type LoginParams = {
   email: string;
   password: string;
 };
+
+export type RecoverSendParams = {
+  email: string;
+};
+
+export type RecoverVerifyParams = {
+  userId: string;
+  token: string;
+};
+
+export type RecoverUpdateParams = {
+  userId: string;
+  token: string;
+  password: string;
+};
+
 export type RegisterParams = {
   name: string;
   email: string;
@@ -99,10 +118,11 @@ export function useAuth() {
     mutations: {
       useRegister(): RpcMutation<RegisterParams, string> {
         const [data, setData] = useState<string | undefined>("");
-        const [loading, setLoading] = useState(true);
-        const [error, setError] = useState<any>(undefined);
+        const [loading, setLoading] = useState(false);
+        const [error, setError] = useState<RpcError | undefined>(undefined);
 
         const func = (params: RegisterParams, options?: RpcOptions<string>) => {
+          setLoading(true);
           authClient.register(
             params,
             addHandler(
@@ -110,13 +130,14 @@ export function useAuth() {
                 onCompleted: ({ token }) => {
                   setLoading(false);
                   setData(token);
-                  dispatch({ type: "set", token });
+                  dispatch({ type: ActionType.SET, token });
 
                   options?.onCompleted?.(token);
                 },
-                onError(error: unknown) {
-                  setError(error);
-                  options?.onError?.(error);
+                onError(err: RpcError) {
+                  setLoading(false);
+                  setError(err);
+                  options?.onError?.(err);
                 },
               },
               options,
@@ -126,12 +147,37 @@ export function useAuth() {
 
         return [func, { data, loading, error }];
       },
+      useEmailConfirm(): RpcMutation<RecoverVerifyParams, void> {
+        const [loading, setLoading] = useState(false);
+        const [error, setError] = useState<RpcError | undefined>(undefined);
+
+        const func = (params: RecoverVerifyParams, options?: RpcOptions<void>) => {
+          setLoading(true);
+          authClient.verifyEmail(
+            params,
+            addHandler(
+              {
+                onError(err: RpcError) {
+                  setError(err);
+                },
+                onFinished() {
+                  setLoading(false);
+                },
+              },
+              options,
+            ),
+          );
+        };
+
+        return [func, { data: undefined, loading, error }];
+      },
       useLogin(): RpcMutation<LoginParams, string> {
         const [data, setData] = useState<string>("");
-        const [loading, setLoading] = useState(true);
-        const [error, setError] = useState<any>(null);
+        const [loading, setLoading] = useState(false);
+        const [error, setError] = useState<RpcError | undefined>(undefined);
 
         const func = (params: LoginParams, options?: RpcOptions<string>) => {
+          setLoading(true);
           authClient.authenticate(
             params,
             addHandler(
@@ -139,13 +185,93 @@ export function useAuth() {
                 onCompleted: ({ token }) => {
                   setLoading(false);
                   setData(token);
-                  dispatch({ type: "set", token });
+                  dispatch({ type: ActionType.SET, token });
 
                   options?.onCompleted?.(token);
                 },
-                onError(error: unknown) {
-                  setError(error);
-                  options?.onError?.(error);
+                onError(err: RpcError) {
+                  setLoading(true);
+                  setError(err);
+                  options?.onError?.(err);
+                },
+              },
+              options,
+            ),
+          );
+        };
+
+        return [func, { data, loading, error }];
+      },
+      useRecoverSend(): RpcMutation<RecoverSendParams, void> {
+        const [loading, setLoading] = useState(false);
+        const [error, setError] = useState<RpcError | undefined>(undefined);
+
+        const func = (params: RecoverSendParams, options?: RpcOptions<void>) => {
+          setLoading(true);
+          authClient.recoverSend(
+            params,
+            addHandler(
+              {
+                onError(err: RpcError) {
+                  setError(err);
+                },
+                onFinished() {
+                  setLoading(false);
+                },
+              },
+              options,
+            ),
+          );
+        };
+
+        return [func, { data: undefined, loading, error }];
+      },
+      useRecoveryVerify(): RpcMutation<RecoverVerifyParams, void> {
+        const [loading, setLoading] = useState(false);
+        const [error, setError] = useState<RpcError | undefined>(undefined);
+
+        const func = (params: RecoverVerifyParams, options?: RpcOptions<void>) => {
+          setLoading(true);
+          authClient.recoverVerify(
+            params,
+            addHandler(
+              {
+                onError(err: RpcError) {
+                  setError(err);
+                },
+                onFinished() {
+                  setLoading(false);
+                },
+              },
+              options,
+            ),
+          );
+        };
+
+        return [func, { data: undefined, loading, error }];
+      },
+      useRecoveryUpdate(): RpcMutation<RecoverUpdateParams, string> {
+        const [data, setData] = useState<string>("");
+        const [loading, setLoading] = useState(false);
+        const [error, setError] = useState<RpcError | undefined>(undefined);
+
+        const func = (params: RecoverUpdateParams, options?: RpcOptions<string>) => {
+          setLoading(true);
+          authClient.recoverUpdate(
+            params,
+            addHandler(
+              {
+                onCompleted: ({ token }) => {
+                  setData(token);
+                  dispatch({ type: ActionType.SET, token });
+
+                  options?.onCompleted?.(token);
+                },
+                onError(err: RpcError) {
+                  setError(err);
+                },
+                onFinished() {
+                  setLoading(false);
                 },
               },
               options,
@@ -157,7 +283,7 @@ export function useAuth() {
       },
       useLogout() {
         return (options?: RpcOptions<void>) => {
-          dispatch({ type: "set", token: null });
+          dispatch({ type: ActionType.SET, token: null });
 
           options?.onCompleted?.();
         };

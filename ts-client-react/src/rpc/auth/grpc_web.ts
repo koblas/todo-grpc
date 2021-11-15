@@ -1,5 +1,5 @@
 import * as grpcWeb from "grpc-web";
-import { AuthService, LoginSuccess } from "./index";
+import { AuthOk, AuthService, LoginSuccess } from "./index";
 import { BASE_URL } from "../utils";
 import { AuthenticationServiceClient } from "../../genpb/publicapi/auth_grpc_web_pb";
 import { RegisterParams, LoginParams, Token } from "../../genpb/publicapi/auth_pb";
@@ -42,6 +42,23 @@ export function newAuthClient(): AuthService {
         const token = data.getAccessToken();
         options.onCompleted?.({ token });
       });
+    },
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    verifyEmail(params: { token: string }, options: RpcOptions<AuthOk>): void {
+      throw new Error("Not Impelmented");
+    },
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    recoverSend(params: { email: string }, options: RpcOptions<AuthOk>): void {
+      throw new Error("Not Impelmented");
+    },
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    recoverVerify(params: { token: string }, options: RpcOptions<AuthOk>): void {
+      throw new Error("Not Impelmented");
+    },
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    recoverUpdate(params: { token: string; password: string }, options: RpcOptions<AuthOk>): void {
+      throw new Error("Not Impelmented");
     },
   };
 }

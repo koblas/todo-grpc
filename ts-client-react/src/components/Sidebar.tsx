@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Flex, IconButton, Divider, Avatar, Heading, Box, Button, Icon } from "@chakra-ui/react";
+import { Flex, IconButton, Divider, Heading, Box, Button, Icon } from "@chakra-ui/react";
 import {
   FiMenu,
   FiHome,
@@ -127,9 +127,9 @@ export default function Sidebar() {
           transitionDuration="0.22s"
           transitionProperty="left,opacity,width"
           transitionTimingFunction="cubic-bezier(0.2,0,0,1)"
-        ></Box>
+        />
         <Button h="100%" width="24px" p="0" b="0" bgColor="transparent" cursor="ew-resize" minWidth="0">
-          <Box cursor="ew-resize" h="100%" w="2px" transition="background-color 200ms"></Box>
+          <Box cursor="ew-resize" h="100%" w="2px" transition="background-color 200ms" />
         </Button>
         <Box>
           <Button
@@ -161,7 +161,7 @@ export default function Sidebar() {
             <Box as="span" display="inline-block" flexShrink={0} lineHeight="1">
               <Icon as={FiChevronLeft} strokeWidth="1" color="rgb(107, 119, 140)" w={6} h={6} />
             </Box>
-            <Box position="absolute" left="-8px" right="-12px" bottom="-8px" top="-8px"></Box>
+            <Box position="absolute" left="-8px" right="-12px" bottom="-8px" top="-8px" />
           </Button>
         </Box>
       </Box>

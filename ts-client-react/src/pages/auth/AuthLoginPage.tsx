@@ -1,9 +1,8 @@
-import React, { useState } from "react";
+import React from "react";
 import { useHistory, Link as RouterLink } from "react-router-dom";
 import {
   Text,
   Button,
-  Checkbox,
   Flex,
   FormControl,
   FormLabel,
@@ -15,7 +14,7 @@ import {
   FormErrorMessage,
 } from "@chakra-ui/react";
 import { useForm } from "react-hook-form";
-import { useAuth } from "../hooks/auth";
+import { useAuth } from "../../hooks/auth";
 
 export function AuthLoginPage() {
   const {
@@ -25,7 +24,7 @@ export function AuthLoginPage() {
     setError,
   } = useForm();
   const auth = useAuth();
-  const [login] = auth.mutations.useLogin();
+  const [login, { loading }] = auth.mutations.useLogin();
   const history = useHistory();
 
   function onSubmit(data: { email: string; password: string }) {
@@ -78,7 +77,7 @@ export function AuthLoginPage() {
               <FormErrorMessage>{errors.password?.message}</FormErrorMessage>
             </FormControl>
             <Stack spacing={6}>
-              <Button type="submit" colorScheme="blue" variant="solid">
+              <Button isLoading={loading} type="submit" colorScheme="blue" variant="solid">
                 Sign in
               </Button>
               <Stack direction={{ base: "column", sm: "row" }} align="start" justify="space-between">
@@ -88,7 +87,7 @@ export function AuthLoginPage() {
                     Register
                   </Link>
                 </Text>
-                <Link as={RouterLink} to="/auth/recover" color="blue.500">
+                <Link as={RouterLink} to="/auth/recover/send" color="blue.500">
                   Forgot password?
                 </Link>
               </Stack>
