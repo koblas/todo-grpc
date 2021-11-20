@@ -6,6 +6,8 @@ import { storageFactory } from "../util/storageFactory";
 import { useNetworkContextErrors } from "./network";
 import { RpcMutation, RpcOptions, RpcError } from "../rpc/errors";
 import { assert } from "../util/assert";
+import { randomString } from "../util/randomeString";
+import { AuthToken, LoginRegisterSuccess, OauthLoginUrl } from "../rpc/auth";
 
 /**
  * Construct an accessor for a persistent token store
@@ -108,6 +110,18 @@ export type RegisterParams = {
   password: string;
 };
 
+export type OauthUrlParams = {
+  provider: string;
+  returnUrl: string;
+};
+
+export type OauthAssociateParms = {
+  provider: string;
+  redirectUrl: string;
+  code: string;
+  state: string;
+};
+
 export function useAuth() {
   const { state, dispatch } = useContext(AuthContext);
   const addHandler = useNetworkContextErrors();
@@ -116,28 +130,26 @@ export function useAuth() {
     token: state.token,
     isAuthenticated: !!state.token,
     mutations: {
-      useRegister(): RpcMutation<RegisterParams, string> {
-        const [data, setData] = useState<string | undefined>("");
+      useRegister(): RpcMutation<RegisterParams, LoginRegisterSuccess> {
+        const [data, setData] = useState<LoginRegisterSuccess | undefined>();
         const [loading, setLoading] = useState(false);
         const [error, setError] = useState<RpcError | undefined>(undefined);
 
-        const func = (params: RegisterParams, options?: RpcOptions<string>) => {
+        const func = (params: RegisterParams, options?: RpcOptions<LoginRegisterSuccess>) => {
           setLoading(true);
           authClient.register(
             params,
             addHandler(
               {
-                onCompleted: ({ token }) => {
-                  setLoading(false);
-                  setData(token);
-                  dispatch({ type: ActionType.SET, token });
-
-                  options?.onCompleted?.(token);
+                onCompleted(input) {
+                  setData(input);
+                  dispatch({ type: ActionType.SET, token: input.token.accessToken });
                 },
                 onError(err: RpcError) {
-                  setLoading(false);
                   setError(err);
-                  options?.onError?.(err);
+                },
+                onFinished() {
+                  setLoading(false);
                 },
               },
               options,
@@ -171,28 +183,26 @@ export function useAuth() {
 
         return [func, { data: undefined, loading, error }];
       },
-      useLogin(): RpcMutation<LoginParams, string> {
-        const [data, setData] = useState<string>("");
+      useLogin(): RpcMutation<LoginParams, AuthToken> {
+        const [data, setData] = useState<AuthToken | undefined>();
         const [loading, setLoading] = useState(false);
         const [error, setError] = useState<RpcError | undefined>(undefined);
 
-        const func = (params: LoginParams, options?: RpcOptions<string>) => {
+        const func = (params: LoginParams, options?: RpcOptions<AuthToken>) => {
           setLoading(true);
           authClient.authenticate(
             params,
             addHandler(
               {
-                onCompleted: ({ token }) => {
-                  setLoading(false);
-                  setData(token);
-                  dispatch({ type: ActionType.SET, token });
-
-                  options?.onCompleted?.(token);
-                },
                 onError(err: RpcError) {
-                  setLoading(true);
                   setError(err);
-                  options?.onError?.(err);
+                },
+                onFinished() {
+                  setLoading(false);
+                },
+                onCompleted: (input) => {
+                  setData(input);
+                  dispatch({ type: ActionType.SET, token: input.accessToken });
                 },
               },
               options,
@@ -250,22 +260,20 @@ export function useAuth() {
 
         return [func, { data: undefined, loading, error }];
       },
-      useRecoveryUpdate(): RpcMutation<RecoverUpdateParams, string> {
-        const [data, setData] = useState<string>("");
+      useRecoveryUpdate(): RpcMutation<RecoverUpdateParams, AuthToken> {
+        const [data, setData] = useState<AuthToken | undefined>();
         const [loading, setLoading] = useState(false);
         const [error, setError] = useState<RpcError | undefined>(undefined);
 
-        const func = (params: RecoverUpdateParams, options?: RpcOptions<string>) => {
+        const func = (params: RecoverUpdateParams, options?: RpcOptions<AuthToken>) => {
           setLoading(true);
           authClient.recoverUpdate(
             params,
             addHandler(
               {
-                onCompleted: ({ token }) => {
-                  setData(token);
-                  dispatch({ type: ActionType.SET, token });
-
-                  options?.onCompleted?.(token);
+                onCompleted: (input) => {
+                  setData(input);
+                  dispatch({ type: ActionType.SET, token: input.accessToken });
                 },
                 onError(err: RpcError) {
                   setError(err);
@@ -287,6 +295,73 @@ export function useAuth() {
 
           options?.onCompleted?.();
         };
+      },
+
+      // OAuth Functionality
+      useOauthRedirect(): RpcMutation<OauthUrlParams, { url: string }> {
+        const [data, setData] = useState<OauthLoginUrl>({ url: "" });
+        const [loading, setLoading] = useState(false);
+        const [error, setError] = useState<RpcError | undefined>(undefined);
+
+        const func = (params: OauthUrlParams, options?: RpcOptions<OauthLoginUrl>) => {
+          const st = randomString(20);
+
+          authClient.oauthRedirect(
+            {
+              provider: params.provider,
+              redirectUrl: params.returnUrl,
+              state: st,
+            },
+            addHandler(
+              {
+                onCompleted: (dvalue) => {
+                  setData(dvalue);
+                },
+                onError(err: RpcError) {
+                  setError(err);
+                },
+                onFinished() {
+                  setLoading(false);
+                },
+              },
+              options,
+            ),
+          );
+        };
+
+        return [func, { data, loading, error }];
+      },
+
+      useOauthLogin(): RpcMutation<OauthAssociateParms, LoginRegisterSuccess> {
+        const [data, setData] = useState<LoginRegisterSuccess | undefined>();
+        const [loading, setLoading] = useState(false);
+        const [error, setError] = useState<RpcError | undefined>(undefined);
+
+        const func = (
+          params: { provider: string; code: string; state: string; redirectUrl: string },
+          options?: RpcOptions<LoginRegisterSuccess>,
+        ) => {
+          authClient.oauthLogin(
+            params,
+            addHandler(
+              {
+                onCompleted: (input) => {
+                  setData(data);
+                  dispatch({ type: ActionType.SET, token: input.token.accessToken });
+                },
+                onError(err: RpcError) {
+                  setError(err);
+                },
+                onFinished() {
+                  setLoading(false);
+                },
+              },
+              options,
+            ),
+          );
+        };
+
+        return [func, { data, loading, error }];
       },
     },
   };

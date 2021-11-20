@@ -87,7 +87,7 @@ export default function Sidebar() {
             icon={FiSettings}
             active={pathname.startsWith("/settings")}
             onClick={() => {
-              history.push("/settings");
+              history.push("/settings/");
             }}
           >
             Settings

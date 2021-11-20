@@ -16,9 +16,6 @@ export class RegisterParams extends jspb.Message {
   getInvite(): string;
   setInvite(value: string): RegisterParams;
 
-  getUrlbase(): string;
-  setUrlbase(value: string): RegisterParams;
-
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): RegisterParams.AsObject;
   static toObject(includeInstance: boolean, msg: RegisterParams): RegisterParams.AsObject;
@@ -33,7 +30,6 @@ export namespace RegisterParams {
     password: string,
     name: string,
     invite: string,
-    urlbase: string,
   }
 }
 
@@ -68,6 +64,9 @@ export namespace LoginParams {
 }
 
 export class ConfirmParams extends jspb.Message {
+  getUserId(): string;
+  setUserId(value: string): ConfirmParams;
+
   getToken(): string;
   setToken(value: string): ConfirmParams;
 
@@ -81,37 +80,126 @@ export class ConfirmParams extends jspb.Message {
 
 export namespace ConfirmParams {
   export type AsObject = {
+    userId: string,
     token: string,
   }
 }
 
-export class RecoveryParams extends jspb.Message {
-  getUrlbase(): string;
-  setUrlbase(value: string): RecoveryParams;
-
+export class RecoverySendParams extends jspb.Message {
   getEmail(): string;
-  setEmail(value: string): RecoveryParams;
-
-  getToken(): string;
-  setToken(value: string): RecoveryParams;
-
-  getPassword(): string;
-  setPassword(value: string): RecoveryParams;
+  setEmail(value: string): RecoverySendParams;
 
   serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): RecoveryParams.AsObject;
-  static toObject(includeInstance: boolean, msg: RecoveryParams): RecoveryParams.AsObject;
-  static serializeBinaryToWriter(message: RecoveryParams, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): RecoveryParams;
-  static deserializeBinaryFromReader(message: RecoveryParams, reader: jspb.BinaryReader): RecoveryParams;
+  toObject(includeInstance?: boolean): RecoverySendParams.AsObject;
+  static toObject(includeInstance: boolean, msg: RecoverySendParams): RecoverySendParams.AsObject;
+  static serializeBinaryToWriter(message: RecoverySendParams, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): RecoverySendParams;
+  static deserializeBinaryFromReader(message: RecoverySendParams, reader: jspb.BinaryReader): RecoverySendParams;
 }
 
-export namespace RecoveryParams {
+export namespace RecoverySendParams {
   export type AsObject = {
-    urlbase: string,
     email: string,
+  }
+}
+
+export class RecoveryUpdateParams extends jspb.Message {
+  getUserId(): string;
+  setUserId(value: string): RecoveryUpdateParams;
+
+  getToken(): string;
+  setToken(value: string): RecoveryUpdateParams;
+
+  getPassword(): string;
+  setPassword(value: string): RecoveryUpdateParams;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): RecoveryUpdateParams.AsObject;
+  static toObject(includeInstance: boolean, msg: RecoveryUpdateParams): RecoveryUpdateParams.AsObject;
+  static serializeBinaryToWriter(message: RecoveryUpdateParams, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): RecoveryUpdateParams;
+  static deserializeBinaryFromReader(message: RecoveryUpdateParams, reader: jspb.BinaryReader): RecoveryUpdateParams;
+}
+
+export namespace RecoveryUpdateParams {
+  export type AsObject = {
+    userId: string,
     token: string,
     password: string,
+  }
+}
+
+export class OauthUrlParams extends jspb.Message {
+  getProvider(): string;
+  setProvider(value: string): OauthUrlParams;
+
+  getRedirectUrl(): string;
+  setRedirectUrl(value: string): OauthUrlParams;
+
+  getState(): string;
+  setState(value: string): OauthUrlParams;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): OauthUrlParams.AsObject;
+  static toObject(includeInstance: boolean, msg: OauthUrlParams): OauthUrlParams.AsObject;
+  static serializeBinaryToWriter(message: OauthUrlParams, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): OauthUrlParams;
+  static deserializeBinaryFromReader(message: OauthUrlParams, reader: jspb.BinaryReader): OauthUrlParams;
+}
+
+export namespace OauthUrlParams {
+  export type AsObject = {
+    provider: string,
+    redirectUrl: string,
+    state: string,
+  }
+}
+
+export class OauthUrlResult extends jspb.Message {
+  getUrl(): string;
+  setUrl(value: string): OauthUrlResult;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): OauthUrlResult.AsObject;
+  static toObject(includeInstance: boolean, msg: OauthUrlResult): OauthUrlResult.AsObject;
+  static serializeBinaryToWriter(message: OauthUrlResult, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): OauthUrlResult;
+  static deserializeBinaryFromReader(message: OauthUrlResult, reader: jspb.BinaryReader): OauthUrlResult;
+}
+
+export namespace OauthUrlResult {
+  export type AsObject = {
+    url: string,
+  }
+}
+
+export class OauthAssociateParams extends jspb.Message {
+  getProvider(): string;
+  setProvider(value: string): OauthAssociateParams;
+
+  getRedirectUrl(): string;
+  setRedirectUrl(value: string): OauthAssociateParams;
+
+  getCode(): string;
+  setCode(value: string): OauthAssociateParams;
+
+  getState(): string;
+  setState(value: string): OauthAssociateParams;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): OauthAssociateParams.AsObject;
+  static toObject(includeInstance: boolean, msg: OauthAssociateParams): OauthAssociateParams.AsObject;
+  static serializeBinaryToWriter(message: OauthAssociateParams, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): OauthAssociateParams;
+  static deserializeBinaryFromReader(message: OauthAssociateParams, reader: jspb.BinaryReader): OauthAssociateParams;
+}
+
+export namespace OauthAssociateParams {
+  export type AsObject = {
+    provider: string,
+    redirectUrl: string,
+    code: string,
+    state: string,
   }
 }
 
@@ -185,53 +273,27 @@ export namespace Token {
   }
 }
 
-export class TokenEither extends jspb.Message {
-  getErrorsList(): Array<ValidationError>;
-  setErrorsList(value: Array<ValidationError>): TokenEither;
-  clearErrorsList(): TokenEither;
-  addErrors(value?: ValidationError, index?: number): ValidationError;
-
+export class TokenRegister extends jspb.Message {
   getToken(): Token | undefined;
-  setToken(value?: Token): TokenEither;
+  setToken(value?: Token): TokenRegister;
   hasToken(): boolean;
-  clearToken(): TokenEither;
+  clearToken(): TokenRegister;
+
+  getCreated(): boolean;
+  setCreated(value: boolean): TokenRegister;
 
   serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): TokenEither.AsObject;
-  static toObject(includeInstance: boolean, msg: TokenEither): TokenEither.AsObject;
-  static serializeBinaryToWriter(message: TokenEither, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): TokenEither;
-  static deserializeBinaryFromReader(message: TokenEither, reader: jspb.BinaryReader): TokenEither;
+  toObject(includeInstance?: boolean): TokenRegister.AsObject;
+  static toObject(includeInstance: boolean, msg: TokenRegister): TokenRegister.AsObject;
+  static serializeBinaryToWriter(message: TokenRegister, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): TokenRegister;
+  static deserializeBinaryFromReader(message: TokenRegister, reader: jspb.BinaryReader): TokenRegister;
 }
 
-export namespace TokenEither {
+export namespace TokenRegister {
   export type AsObject = {
-    errorsList: Array<ValidationError.AsObject>,
     token?: Token.AsObject,
-  }
-}
-
-export class SuccessEither extends jspb.Message {
-  getErrorsList(): Array<ValidationError>;
-  setErrorsList(value: Array<ValidationError>): SuccessEither;
-  clearErrorsList(): SuccessEither;
-  addErrors(value?: ValidationError, index?: number): ValidationError;
-
-  getSuccess(): boolean;
-  setSuccess(value: boolean): SuccessEither;
-
-  serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): SuccessEither.AsObject;
-  static toObject(includeInstance: boolean, msg: SuccessEither): SuccessEither.AsObject;
-  static serializeBinaryToWriter(message: SuccessEither, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): SuccessEither;
-  static deserializeBinaryFromReader(message: SuccessEither, reader: jspb.BinaryReader): SuccessEither;
-}
-
-export namespace SuccessEither {
-  export type AsObject = {
-    errorsList: Array<ValidationError.AsObject>,
-    success: boolean,
+    created: boolean,
   }
 }
 

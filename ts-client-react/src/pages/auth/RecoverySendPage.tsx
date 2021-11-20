@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useHistory, Link as RouterLink } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link as RouterLink, useLocation } from "react-router-dom";
 import {
   Text,
   Button,
@@ -10,20 +10,22 @@ import {
   Input,
   Link,
   Stack,
-  Box,
   FormErrorMessage,
   Alert,
   AlertIcon,
 } from "@chakra-ui/react";
 import { useForm } from "react-hook-form";
 import { useAuth } from "../../hooks/auth";
+import AuthWrapper from "./AuthWrapper";
 
 export function AuthRecoverSendPage() {
+  const location = useLocation();
   const {
     register,
     handleSubmit,
     formState: { errors },
     setError,
+    setValue,
   } = useForm();
   const auth = useAuth();
   const [recoverSend, { loading }] = auth.mutations.useRecoverSend();
@@ -45,9 +47,16 @@ export function AuthRecoverSendPage() {
     });
   }
 
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+
+    setValue("email", params.get("email"));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search]);
+
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <Stack minH="100vh" direction={{ base: "column", md: "row" }}>
+      <AuthWrapper>
         <Flex p={8} flex={1} align="center" justify="center">
           <Stack spacing={8} w="full" maxW="md">
             <Heading fontSize="2xl">Forgot your password?</Heading>
@@ -63,6 +72,7 @@ export function AuthRecoverSendPage() {
               <FormControl id="email" isInvalid={!!errors.email}>
                 <FormLabel>Email address</FormLabel>
                 <Input
+                  autoFocus
                   type="email"
                   {...register("email", {
                     required: {
@@ -91,17 +101,7 @@ export function AuthRecoverSendPage() {
             </Stack>
           </Stack>
         </Flex>
-        <Flex flex={1}>
-          <Box
-            width="100%"
-            bgImage="url(https://source.unsplash.com/random)"
-            bgRepeat="no-repeat"
-            bgPosition="center"
-            // bgColor={(t) => (t.palette.mode === "light" ? t.palette.grey[50] : t.palette.grey[900])},
-            bgSize="cover"
-          />
-        </Flex>
-      </Stack>
+      </AuthWrapper>
     </form>
   );
 }

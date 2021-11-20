@@ -17,7 +17,6 @@ export function AuthEmailConfirmPage() {
   const [emailConfirm, { loading }] = auth.mutations.useEmailConfirm();
 
   useEffect(() => {
-    console.log("VERIFY TOKEN", token);
     emailConfirm(
       { userId, token },
       {
@@ -36,17 +35,14 @@ export function AuthEmailConfirmPage() {
       <Flex p={8} flex={1} align="center" justify="center">
         <Stack spacing={8} w="full" maxW="md">
           <Heading fontSize="2xl">Confirm email address</Heading>
-          <Text></Text>
+          <Text>TODO: Insert some nice text to keep you interested</Text>
           {loading && <Spinner />}
           {!loading && verified && <Alert type="success">Thank you</Alert>}
-          {!loading && !verified && <Alert type="error">Email already confirmed</Alert>}
+          {!loading && !verified && <Alert type="error">This confirmation link has already been used</Alert>}
           <Stack spacing={6}>
             <Stack direction={{ base: "column", sm: "row" }} align="start" justify="space-between">
               <Link as={RouterLink} to="/auth/login" color="blue.500">
                 Sign-in
-              </Link>
-              <Link as={RouterLink} to="/auth/recover/send" color="blue.500">
-                Forgot password?
               </Link>
             </Stack>
           </Stack>

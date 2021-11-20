@@ -1,8 +1,8 @@
 import * as grpcWeb from "grpc-web";
-import { AuthOk, AuthService, LoginSuccess } from "./index";
+import { AuthOk, AuthService, AuthToken, LoginRegisterSuccess, OauthLoginUrl } from "./index";
 import { BASE_URL } from "../utils";
 import { AuthenticationServiceClient } from "../../genpb/publicapi/auth_grpc_web_pb";
-import { RegisterParams, LoginParams, Token } from "../../genpb/publicapi/auth_pb";
+import { RegisterParams, LoginParams, Token, TokenRegister } from "../../genpb/publicapi/auth_pb";
 import { handleGrpcError } from "../utils/grpc_helpers";
 import { RpcOptions } from "../errors";
 
@@ -10,26 +10,23 @@ export function newAuthClient(): AuthService {
   const client = new AuthenticationServiceClient(BASE_URL);
 
   return {
-    register(params, options: RpcOptions<LoginSuccess>): void {
+    register(params, options: RpcOptions<LoginRegisterSuccess>): void {
       const req = new RegisterParams();
       req.setEmail(params.email);
       req.setName(params.name);
       req.setPassword(params.password);
-      if (params.urlbase) {
-        req.setUrlbase(params.urlbase);
-      }
 
-      client.register(req, undefined, (err: grpcWeb.RpcError, data: Token) => {
+      client.register(req, undefined, (err: grpcWeb.RpcError, data: TokenRegister) => {
         if (err) {
           handleGrpcError(err, options);
           return;
         }
-        const token = data.getAccessToken();
-        options.onCompleted?.({ token });
+        const value = data.toObject() as Required<TokenRegister.AsObject>;
+        options.onCompleted?.(value);
       });
     },
 
-    authenticate(params: { email: string; password: string }, options: RpcOptions<LoginSuccess>): void {
+    authenticate(params: { email: string; password: string }, options: RpcOptions<AuthToken>): void {
       const req = new LoginParams();
       req.setEmail(params.email);
       req.setPassword(params.password);
@@ -39,8 +36,7 @@ export function newAuthClient(): AuthService {
           handleGrpcError(err, options);
           return;
         }
-        const token = data.getAccessToken();
-        options.onCompleted?.({ token });
+        options.onCompleted?.(data.toObject());
       });
     },
 
@@ -58,6 +54,22 @@ export function newAuthClient(): AuthService {
     },
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     recoverUpdate(params: { token: string; password: string }, options: RpcOptions<AuthOk>): void {
+      throw new Error("Not Impelmented");
+    },
+    oauthRedirect(
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      params: { provider: string; redirectUrl: string; state: string },
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      options: RpcOptions<OauthLoginUrl>,
+    ): void {
+      throw new Error("Not Impelmented");
+    },
+    oauthLogin(
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      params: { provider: string; redirectUrl: string; code: string; state: string },
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      options: RpcOptions<LoginRegisterSuccess>,
+    ): void {
       throw new Error("Not Impelmented");
     },
   };

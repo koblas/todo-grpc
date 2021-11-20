@@ -76,13 +76,13 @@ proto.auth.AuthenticationServicePromiseClient =
  * @const
  * @type {!grpc.web.MethodDescriptor<
  *   !proto.auth.RegisterParams,
- *   !proto.auth.Token>}
+ *   !proto.auth.TokenRegister>}
  */
 const methodDescriptor_AuthenticationService_register = new grpc.web.MethodDescriptor(
   '/auth.AuthenticationService/register',
   grpc.web.MethodType.UNARY,
   proto.auth.RegisterParams,
-  proto.auth.Token,
+  proto.auth.TokenRegister,
   /**
    * @param {!proto.auth.RegisterParams} request
    * @return {!Uint8Array}
@@ -90,7 +90,7 @@ const methodDescriptor_AuthenticationService_register = new grpc.web.MethodDescr
   function(request) {
     return request.serializeBinary();
   },
-  proto.auth.Token.deserializeBinary
+  proto.auth.TokenRegister.deserializeBinary
 );
 
 
@@ -99,9 +99,9 @@ const methodDescriptor_AuthenticationService_register = new grpc.web.MethodDescr
  *     request proto
  * @param {?Object<string, string>} metadata User defined
  *     call metadata
- * @param {function(?grpc.web.RpcError, ?proto.auth.Token)}
+ * @param {function(?grpc.web.RpcError, ?proto.auth.TokenRegister)}
  *     callback The callback function(error, response)
- * @return {!grpc.web.ClientReadableStream<!proto.auth.Token>|undefined}
+ * @return {!grpc.web.ClientReadableStream<!proto.auth.TokenRegister>|undefined}
  *     The XHR Node Readable Stream
  */
 proto.auth.AuthenticationServiceClient.prototype.register =
@@ -120,7 +120,7 @@ proto.auth.AuthenticationServiceClient.prototype.register =
  *     request proto
  * @param {?Object<string, string>=} metadata User defined
  *     call metadata
- * @return {!Promise<!proto.auth.Token>}
+ * @return {!Promise<!proto.auth.TokenRegister>}
  *     Promise that resolves to the response
  */
 proto.auth.AuthenticationServicePromiseClient.prototype.register =
@@ -198,13 +198,13 @@ proto.auth.AuthenticationServicePromiseClient.prototype.authenticate =
  * @const
  * @type {!grpc.web.MethodDescriptor<
  *   !proto.auth.ConfirmParams,
- *   !proto.auth.TokenEither>}
+ *   !proto.auth.Success>}
  */
 const methodDescriptor_AuthenticationService_verify_email = new grpc.web.MethodDescriptor(
   '/auth.AuthenticationService/verify_email',
   grpc.web.MethodType.UNARY,
   proto.auth.ConfirmParams,
-  proto.auth.TokenEither,
+  proto.auth.Success,
   /**
    * @param {!proto.auth.ConfirmParams} request
    * @return {!Uint8Array}
@@ -212,7 +212,7 @@ const methodDescriptor_AuthenticationService_verify_email = new grpc.web.MethodD
   function(request) {
     return request.serializeBinary();
   },
-  proto.auth.TokenEither.deserializeBinary
+  proto.auth.Success.deserializeBinary
 );
 
 
@@ -221,9 +221,9 @@ const methodDescriptor_AuthenticationService_verify_email = new grpc.web.MethodD
  *     request proto
  * @param {?Object<string, string>} metadata User defined
  *     call metadata
- * @param {function(?grpc.web.RpcError, ?proto.auth.TokenEither)}
+ * @param {function(?grpc.web.RpcError, ?proto.auth.Success)}
  *     callback The callback function(error, response)
- * @return {!grpc.web.ClientReadableStream<!proto.auth.TokenEither>|undefined}
+ * @return {!grpc.web.ClientReadableStream<!proto.auth.Success>|undefined}
  *     The XHR Node Readable Stream
  */
 proto.auth.AuthenticationServiceClient.prototype.verify_email =
@@ -242,7 +242,7 @@ proto.auth.AuthenticationServiceClient.prototype.verify_email =
  *     request proto
  * @param {?Object<string, string>=} metadata User defined
  *     call metadata
- * @return {!Promise<!proto.auth.TokenEither>}
+ * @return {!Promise<!proto.auth.Success>}
  *     Promise that resolves to the response
  */
 proto.auth.AuthenticationServicePromiseClient.prototype.verify_email =
@@ -258,33 +258,33 @@ proto.auth.AuthenticationServicePromiseClient.prototype.verify_email =
 /**
  * @const
  * @type {!grpc.web.MethodDescriptor<
- *   !proto.auth.RecoveryParams,
- *   !proto.auth.SuccessEither>}
+ *   !proto.auth.RecoverySendParams,
+ *   !proto.auth.Success>}
  */
 const methodDescriptor_AuthenticationService_recover_send = new grpc.web.MethodDescriptor(
   '/auth.AuthenticationService/recover_send',
   grpc.web.MethodType.UNARY,
-  proto.auth.RecoveryParams,
-  proto.auth.SuccessEither,
+  proto.auth.RecoverySendParams,
+  proto.auth.Success,
   /**
-   * @param {!proto.auth.RecoveryParams} request
+   * @param {!proto.auth.RecoverySendParams} request
    * @return {!Uint8Array}
    */
   function(request) {
     return request.serializeBinary();
   },
-  proto.auth.SuccessEither.deserializeBinary
+  proto.auth.Success.deserializeBinary
 );
 
 
 /**
- * @param {!proto.auth.RecoveryParams} request The
+ * @param {!proto.auth.RecoverySendParams} request The
  *     request proto
  * @param {?Object<string, string>} metadata User defined
  *     call metadata
- * @param {function(?grpc.web.RpcError, ?proto.auth.SuccessEither)}
+ * @param {function(?grpc.web.RpcError, ?proto.auth.Success)}
  *     callback The callback function(error, response)
- * @return {!grpc.web.ClientReadableStream<!proto.auth.SuccessEither>|undefined}
+ * @return {!grpc.web.ClientReadableStream<!proto.auth.Success>|undefined}
  *     The XHR Node Readable Stream
  */
 proto.auth.AuthenticationServiceClient.prototype.recover_send =
@@ -299,11 +299,11 @@ proto.auth.AuthenticationServiceClient.prototype.recover_send =
 
 
 /**
- * @param {!proto.auth.RecoveryParams} request The
+ * @param {!proto.auth.RecoverySendParams} request The
  *     request proto
  * @param {?Object<string, string>=} metadata User defined
  *     call metadata
- * @return {!Promise<!proto.auth.SuccessEither>}
+ * @return {!Promise<!proto.auth.Success>}
  *     Promise that resolves to the response
  */
 proto.auth.AuthenticationServicePromiseClient.prototype.recover_send =
@@ -319,33 +319,33 @@ proto.auth.AuthenticationServicePromiseClient.prototype.recover_send =
 /**
  * @const
  * @type {!grpc.web.MethodDescriptor<
- *   !proto.auth.RecoveryParams,
- *   !proto.auth.SuccessEither>}
+ *   !proto.auth.RecoveryUpdateParams,
+ *   !proto.auth.Success>}
  */
 const methodDescriptor_AuthenticationService_recover_verify = new grpc.web.MethodDescriptor(
   '/auth.AuthenticationService/recover_verify',
   grpc.web.MethodType.UNARY,
-  proto.auth.RecoveryParams,
-  proto.auth.SuccessEither,
+  proto.auth.RecoveryUpdateParams,
+  proto.auth.Success,
   /**
-   * @param {!proto.auth.RecoveryParams} request
+   * @param {!proto.auth.RecoveryUpdateParams} request
    * @return {!Uint8Array}
    */
   function(request) {
     return request.serializeBinary();
   },
-  proto.auth.SuccessEither.deserializeBinary
+  proto.auth.Success.deserializeBinary
 );
 
 
 /**
- * @param {!proto.auth.RecoveryParams} request The
+ * @param {!proto.auth.RecoveryUpdateParams} request The
  *     request proto
  * @param {?Object<string, string>} metadata User defined
  *     call metadata
- * @param {function(?grpc.web.RpcError, ?proto.auth.SuccessEither)}
+ * @param {function(?grpc.web.RpcError, ?proto.auth.Success)}
  *     callback The callback function(error, response)
- * @return {!grpc.web.ClientReadableStream<!proto.auth.SuccessEither>|undefined}
+ * @return {!grpc.web.ClientReadableStream<!proto.auth.Success>|undefined}
  *     The XHR Node Readable Stream
  */
 proto.auth.AuthenticationServiceClient.prototype.recover_verify =
@@ -360,11 +360,11 @@ proto.auth.AuthenticationServiceClient.prototype.recover_verify =
 
 
 /**
- * @param {!proto.auth.RecoveryParams} request The
+ * @param {!proto.auth.RecoveryUpdateParams} request The
  *     request proto
  * @param {?Object<string, string>=} metadata User defined
  *     call metadata
- * @return {!Promise<!proto.auth.SuccessEither>}
+ * @return {!Promise<!proto.auth.Success>}
  *     Promise that resolves to the response
  */
 proto.auth.AuthenticationServicePromiseClient.prototype.recover_verify =
@@ -380,33 +380,33 @@ proto.auth.AuthenticationServicePromiseClient.prototype.recover_verify =
 /**
  * @const
  * @type {!grpc.web.MethodDescriptor<
- *   !proto.auth.RecoveryParams,
- *   !proto.auth.TokenEither>}
+ *   !proto.auth.RecoveryUpdateParams,
+ *   !proto.auth.Token>}
  */
 const methodDescriptor_AuthenticationService_recover_update = new grpc.web.MethodDescriptor(
   '/auth.AuthenticationService/recover_update',
   grpc.web.MethodType.UNARY,
-  proto.auth.RecoveryParams,
-  proto.auth.TokenEither,
+  proto.auth.RecoveryUpdateParams,
+  proto.auth.Token,
   /**
-   * @param {!proto.auth.RecoveryParams} request
+   * @param {!proto.auth.RecoveryUpdateParams} request
    * @return {!Uint8Array}
    */
   function(request) {
     return request.serializeBinary();
   },
-  proto.auth.TokenEither.deserializeBinary
+  proto.auth.Token.deserializeBinary
 );
 
 
 /**
- * @param {!proto.auth.RecoveryParams} request The
+ * @param {!proto.auth.RecoveryUpdateParams} request The
  *     request proto
  * @param {?Object<string, string>} metadata User defined
  *     call metadata
- * @param {function(?grpc.web.RpcError, ?proto.auth.TokenEither)}
+ * @param {function(?grpc.web.RpcError, ?proto.auth.Token)}
  *     callback The callback function(error, response)
- * @return {!grpc.web.ClientReadableStream<!proto.auth.TokenEither>|undefined}
+ * @return {!grpc.web.ClientReadableStream<!proto.auth.Token>|undefined}
  *     The XHR Node Readable Stream
  */
 proto.auth.AuthenticationServiceClient.prototype.recover_update =
@@ -421,11 +421,11 @@ proto.auth.AuthenticationServiceClient.prototype.recover_update =
 
 
 /**
- * @param {!proto.auth.RecoveryParams} request The
+ * @param {!proto.auth.RecoveryUpdateParams} request The
  *     request proto
  * @param {?Object<string, string>=} metadata User defined
  *     call metadata
- * @return {!Promise<!proto.auth.TokenEither>}
+ * @return {!Promise<!proto.auth.Token>}
  *     Promise that resolves to the response
  */
 proto.auth.AuthenticationServicePromiseClient.prototype.recover_update =
@@ -435,6 +435,128 @@ proto.auth.AuthenticationServicePromiseClient.prototype.recover_update =
       request,
       metadata || {},
       methodDescriptor_AuthenticationService_recover_update);
+};
+
+
+/**
+ * @const
+ * @type {!grpc.web.MethodDescriptor<
+ *   !proto.auth.OauthAssociateParams,
+ *   !proto.auth.TokenRegister>}
+ */
+const methodDescriptor_AuthenticationService_oauth_login = new grpc.web.MethodDescriptor(
+  '/auth.AuthenticationService/oauth_login',
+  grpc.web.MethodType.UNARY,
+  proto.auth.OauthAssociateParams,
+  proto.auth.TokenRegister,
+  /**
+   * @param {!proto.auth.OauthAssociateParams} request
+   * @return {!Uint8Array}
+   */
+  function(request) {
+    return request.serializeBinary();
+  },
+  proto.auth.TokenRegister.deserializeBinary
+);
+
+
+/**
+ * @param {!proto.auth.OauthAssociateParams} request The
+ *     request proto
+ * @param {?Object<string, string>} metadata User defined
+ *     call metadata
+ * @param {function(?grpc.web.RpcError, ?proto.auth.TokenRegister)}
+ *     callback The callback function(error, response)
+ * @return {!grpc.web.ClientReadableStream<!proto.auth.TokenRegister>|undefined}
+ *     The XHR Node Readable Stream
+ */
+proto.auth.AuthenticationServiceClient.prototype.oauth_login =
+    function(request, metadata, callback) {
+  return this.client_.rpcCall(this.hostname_ +
+      '/auth.AuthenticationService/oauth_login',
+      request,
+      metadata || {},
+      methodDescriptor_AuthenticationService_oauth_login,
+      callback);
+};
+
+
+/**
+ * @param {!proto.auth.OauthAssociateParams} request The
+ *     request proto
+ * @param {?Object<string, string>=} metadata User defined
+ *     call metadata
+ * @return {!Promise<!proto.auth.TokenRegister>}
+ *     Promise that resolves to the response
+ */
+proto.auth.AuthenticationServicePromiseClient.prototype.oauth_login =
+    function(request, metadata) {
+  return this.client_.unaryCall(this.hostname_ +
+      '/auth.AuthenticationService/oauth_login',
+      request,
+      metadata || {},
+      methodDescriptor_AuthenticationService_oauth_login);
+};
+
+
+/**
+ * @const
+ * @type {!grpc.web.MethodDescriptor<
+ *   !proto.auth.OauthUrlParams,
+ *   !proto.auth.OauthUrlResult>}
+ */
+const methodDescriptor_AuthenticationService_oauth_url = new grpc.web.MethodDescriptor(
+  '/auth.AuthenticationService/oauth_url',
+  grpc.web.MethodType.UNARY,
+  proto.auth.OauthUrlParams,
+  proto.auth.OauthUrlResult,
+  /**
+   * @param {!proto.auth.OauthUrlParams} request
+   * @return {!Uint8Array}
+   */
+  function(request) {
+    return request.serializeBinary();
+  },
+  proto.auth.OauthUrlResult.deserializeBinary
+);
+
+
+/**
+ * @param {!proto.auth.OauthUrlParams} request The
+ *     request proto
+ * @param {?Object<string, string>} metadata User defined
+ *     call metadata
+ * @param {function(?grpc.web.RpcError, ?proto.auth.OauthUrlResult)}
+ *     callback The callback function(error, response)
+ * @return {!grpc.web.ClientReadableStream<!proto.auth.OauthUrlResult>|undefined}
+ *     The XHR Node Readable Stream
+ */
+proto.auth.AuthenticationServiceClient.prototype.oauth_url =
+    function(request, metadata, callback) {
+  return this.client_.rpcCall(this.hostname_ +
+      '/auth.AuthenticationService/oauth_url',
+      request,
+      metadata || {},
+      methodDescriptor_AuthenticationService_oauth_url,
+      callback);
+};
+
+
+/**
+ * @param {!proto.auth.OauthUrlParams} request The
+ *     request proto
+ * @param {?Object<string, string>=} metadata User defined
+ *     call metadata
+ * @return {!Promise<!proto.auth.OauthUrlResult>}
+ *     Promise that resolves to the response
+ */
+proto.auth.AuthenticationServicePromiseClient.prototype.oauth_url =
+    function(request, metadata) {
+  return this.client_.unaryCall(this.hostname_ +
+      '/auth.AuthenticationService/oauth_url',
+      request,
+      metadata || {},
+      methodDescriptor_AuthenticationService_oauth_url);
 };
 
 

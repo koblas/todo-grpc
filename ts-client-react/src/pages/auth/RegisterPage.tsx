@@ -1,6 +1,7 @@
 import React from "react";
 import { useHistory, Link as RouterLink } from "react-router-dom";
 import {
+  Link,
   Text,
   Button,
   Flex,
@@ -8,32 +9,32 @@ import {
   FormLabel,
   Heading,
   Input,
-  Link,
   Stack,
-  Box,
   FormErrorMessage,
 } from "@chakra-ui/react";
 import { useForm } from "react-hook-form";
 import { useAuth } from "../../hooks/auth";
+import { PasswordInput } from "../../components/PasswordInput";
+import AuthWrapper from "./AuthWrapper";
 
-export function AuthLoginPage() {
+export function AuthRegisterPage() {
   const {
     register,
     handleSubmit,
     formState: { errors },
     setError,
   } = useForm();
-  const auth = useAuth();
-  const [login, { loading }] = auth.mutations.useLogin();
+  const { mutations } = useAuth();
+  const [authRegister, { loading }] = mutations.useRegister();
   const history = useHistory();
 
-  function onSubmit(data: { email: string; password: string }) {
-    login(data, {
+  function onSubmit(data: { email: string; password: string; name: string }) {
+    authRegister(data, {
       onCompleted() {
         history.replace("/todo");
       },
       onErrorField(serror: Record<string, string[]>) {
-        ["email", "password"].forEach((key) => {
+        ["name", "email", "password"].forEach((key) => {
           const message = serror[key]?.[0];
           if (message) {
             setError(key, { message });
@@ -45,11 +46,24 @@ export function AuthLoginPage() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <Stack minH="100vh" direction={{ base: "column", md: "row" }}>
+      <AuthWrapper>
         <Flex p={8} flex={1} align="center" justify="center">
           <Stack spacing={8} w="full" maxW="md">
-            <Heading fontSize="2xl">Welcome back to ProjectX</Heading>
-            <Text>Sign in to your account</Text>
+            <Heading fontSize="2xl">Create your account</Heading>
+            <FormControl id="name" isInvalid={!!errors.name}>
+              <FormLabel>Your Name</FormLabel>
+              <Input
+                autoFocus
+                type="text"
+                {...register("name", {
+                  required: {
+                    value: true,
+                    message: "Name is required",
+                  },
+                })}
+              />
+              <FormErrorMessage>{errors.name?.message}</FormErrorMessage>
+            </FormControl>
             <FormControl id="email" isInvalid={!!errors.email}>
               <FormLabel>Email address</FormLabel>
               <Input
@@ -57,7 +71,7 @@ export function AuthLoginPage() {
                 {...register("email", {
                   required: {
                     value: true,
-                    message: "Email address is required",
+                    message: "Email is required",
                   },
                 })}
               />
@@ -65,12 +79,15 @@ export function AuthLoginPage() {
             </FormControl>
             <FormControl id="password" isInvalid={!!errors.password}>
               <FormLabel>Password</FormLabel>
-              <Input
-                type="password"
+              <PasswordInput
                 {...register("password", {
                   required: {
                     value: true,
-                    message: "Password is required",
+                    message: "Please provide a password",
+                  },
+                  minLength: {
+                    value: 8,
+                    message: "Passwords must have 8 characters",
                   },
                 })}
               />
@@ -78,33 +95,19 @@ export function AuthLoginPage() {
             </FormControl>
             <Stack spacing={6}>
               <Button isLoading={loading} type="submit" colorScheme="blue" variant="solid">
-                Sign in
+                Register
               </Button>
-              <Stack direction={{ base: "column", sm: "row" }} align="start" justify="space-between">
-                <Text>
-                  Don't have an account?{" "}
-                  <Link as={RouterLink} to="/auth/register" color="blue.500">
-                    Register
-                  </Link>
-                </Text>
-                <Link as={RouterLink} to="/auth/recover/send" color="blue.500">
-                  Forgot password?
-                </Link>
-              </Stack>
             </Stack>
+
+            <Text>
+              Already have an account?{" "}
+              <Link as={RouterLink} to="/auth/login" color="blue.500">
+                Sign-in
+              </Link>
+            </Text>
           </Stack>
         </Flex>
-        <Flex flex={1}>
-          <Box
-            width="100%"
-            bgImage="url(https://source.unsplash.com/random)"
-            bgRepeat="no-repeat"
-            bgPosition="center"
-            // bgColor={(t) => (t.palette.mode === "light" ? t.palette.grey[50] : t.palette.grey[900])},
-            bgSize="cover"
-          />
-        </Flex>
-      </Stack>
+      </AuthWrapper>
     </form>
   );
 }

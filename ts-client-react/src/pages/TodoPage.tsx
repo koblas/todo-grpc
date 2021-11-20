@@ -48,28 +48,25 @@ export function TodoPage() {
   }
 
   return (
-    <Flex w="100%">
-      <Sidebar />
-      <Box w="100%" p="8" bgColor="gray.100">
-        <Box w="100%" bgColor="white" p="5">
-          <Heading as="h3" size="xl" textColor="gray.800" textAlign="center" fontWeight="light" padding="5">
-            TODO gRPC Client
-          </Heading>
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <Flex justifyContent="center">
-              <Flex>
-                <Input padding="2" width="80" placeholder="Walk my dog" type="text" {...register("text")} />
-                <Button marginLeft="5" size="md" colorScheme="blue" variant="solid" onClick={handleSubmit(onSubmit)}>
-                  Add Todo
-                </Button>
-              </Flex>
+    <Box w="100%" p="8" bgColor="gray.100">
+      <Box w="100%" bgColor="white" p="5">
+        <Heading as="h3" size="xl" textColor="gray.800" textAlign="center" fontWeight="light" padding="5">
+          TODO gRPC Client
+        </Heading>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <Flex justifyContent="center">
+            <Flex>
+              <Input padding="2" width="80" placeholder="Walk my dog" type="text" {...register("text")} />
+              <Button marginLeft="5" size="md" colorScheme="blue" variant="solid" onClick={handleSubmit(onSubmit)}>
+                Add Todo
+              </Button>
             </Flex>
-          </form>
-        </Box>
-        <Box p="5" bgColor="white">
-          <List todos={todos} />
-        </Box>
+          </Flex>
+        </form>
       </Box>
-    </Flex>
+      <Box p="5" bgColor="white">
+        <List todos={todos} />
+      </Box>
+    </Box>
   );
 }

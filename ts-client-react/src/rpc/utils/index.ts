@@ -145,11 +145,11 @@ export function newFetchPOST() {
   const client = newFetchClient();
 
   return {
-    call<T, R>(url: string, params: Json, options: RpcOptions<R>, xform: (input: T) => R) {
+    call<T, R>(url: string, params: Json, options: RpcOptions<R>, xform?: (input: T) => R) {
       client
         .POST<T>(url, params)
         .then((data) => {
-          options.onCompleted?.(xform(data));
+          options.onCompleted?.(xform ? xform(data) : (data as unknown as R));
         })
         .catch((err) => {
           handleJsonError(err, options);

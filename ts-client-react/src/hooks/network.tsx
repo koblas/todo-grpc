@@ -84,39 +84,39 @@ export function useNetworkContextErrors<T>(parent?: RpcOptions<T>) {
   function handle<V, U = V>(base: RpcOptions<V>, ...options: (RpcOptions<U> | undefined)[]) {
     return {
       onCompleted(data: V) {
-        [base, ...options].forEach((option) => {
+        [base, ...options].reverse().forEach((option) => {
           // U and V should be the same but I can't get the types right
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           option?.onCompleted?.(data as any);
         });
       },
       onBegin() {
-        [networkErrors, parent, base, ...options].forEach((option) => {
+        [networkErrors, parent, base, ...options].reverse().forEach((option) => {
           option?.onBegin?.();
         });
       },
       onFinished() {
-        [networkErrors, parent, base, ...options].forEach((option) => {
+        [networkErrors, parent, base, ...options].reverse().forEach((option) => {
           option?.onFinished?.();
         });
       },
       onError(error: RpcError) {
-        [networkErrors, parent, base, ...options].forEach((option) => {
+        [networkErrors, parent, base, ...options].reverse().forEach((option) => {
           option?.onError?.(error);
         });
       },
       onErrorField(fields: Record<string, string[]>) {
-        [networkErrors, parent, base, ...options].forEach((option) => {
+        [networkErrors, parent, base, ...options].reverse().forEach((option) => {
           option?.onErrorField?.(fields);
         });
       },
       onErrorNetwork(error: RpcError) {
-        [networkErrors, parent, base, ...options].forEach((option) => {
+        [networkErrors, parent, base, ...options].reverse().forEach((option) => {
           option?.onErrorNetwork?.(error);
         });
       },
       onErrorAuthentication(error: unknown) {
-        [networkErrors, parent, base, ...options].forEach((option) => {
+        [networkErrors, parent, base, ...options].reverse().forEach((option) => {
           option?.onErrorAuthentication?.(error);
         });
       },
