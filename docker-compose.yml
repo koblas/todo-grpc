@@ -24,6 +24,7 @@ services:
     ports:
       - 14001:14586
     networks:
+      - backend
       - envoymesh
     env_file:
       dev-variables.env
@@ -66,6 +67,21 @@ services:
       - 13001:14586
     networks:
       - backend
+
+  core-oauth-user:
+    image: core-oauth-user
+    build:
+      context: src/go
+      dockerfile: cmd/core/oauth_user/Dockerfile
+    ports:
+      - 13002:14586
+    networks:
+      - backend
+    environment:
+      - GOOGLE_SECRET
+      - GOOGLE_CLIENT_ID
+    env_file:
+      dev-variables.env
 
   core-workers:
     image: core-workers
