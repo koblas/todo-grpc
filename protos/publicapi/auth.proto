@@ -49,6 +49,22 @@ message RecoveryUpdateParams {
   string password = 3;
 }
 
+// Oauth
+message OauthUrlParams {
+  string provider = 1;
+  string redirect_url = 2;
+  string state = 3;
+}
+
+message OauthUrlResult { string url = 1; }
+
+message OauthAssociateParams {
+  string provider = 1;
+  string redirect_url = 2;
+  string code = 3;
+  string state = 4;
+}
+
 // Response structures
 
 message ValidationError {
@@ -67,8 +83,15 @@ message Token {
   string refresh_token = 4;
 }
 
+message TokenRegister {
+  Token token = 1;
+
+  // More for the OAuth case to distingish between new account and old
+  bool created = 2;
+}
+
 service AuthenticationService {
-  rpc register(RegisterParams) returns (Token) {
+  rpc register(RegisterParams) returns (TokenRegister) {
     option (google.api.http) = {
       post : "/auth/register"
       body : "*"
@@ -106,6 +129,27 @@ service AuthenticationService {
   rpc recover_update(RecoveryUpdateParams) returns (Token) {
     option (google.api.http) = {
       post : "/auth/recover/update"
+      body : "*"
+    };
+  }
+
+  // rpc oauth_associate(OauthAssociateParams) returns (Success) {
+  //   option (google.api.http) = {
+  //     post : "/auth/oauth/associate"
+  //     body : "*"
+  //   };
+  // }
+
+  rpc oauth_login(OauthAssociateParams) returns (TokenRegister) {
+    option (google.api.http) = {
+      post : "/auth/oauth/login"
+      body : "*"
+    };
+  }
+
+  rpc oauth_url(OauthUrlParams) returns (OauthUrlResult) {
+    option (google.api.http) = {
+      post : "/auth/oauth/url"
       body : "*"
     };
   }

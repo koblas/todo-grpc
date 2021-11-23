@@ -57,6 +57,18 @@ docker_build('core-user', 'src/go',
   ],
 )
 
+docker_build('core-oauth-user', 'src/go', 
+  dockerfile='./src/go/cmd/core/oauth_user/Dockerfile.tilt',
+  only=go_common + [
+    './cmd/core/oauth_user',
+    './services/core/oauth_user',
+  ],
+  live_update=[
+    sync('./src/go', '/build'),
+    run('./tilt-scripts/restart.sh'),
+  ],
+)
+
 docker_build('core-send-email', 'src/go', 
   dockerfile='./src/go/cmd/core/send_email/Dockerfile.tilt',
   only=go_common + [

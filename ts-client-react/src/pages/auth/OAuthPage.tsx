@@ -66,7 +66,7 @@ export default function OAuthPage() {
   //  if everything is valid and the account exists or needs to be created
   if (code && loading) {
     return (
-      <Box width="100%" height="100vh" alignContent="center" verticalAlign="center">
+      <Box width="100%" height="100vh" alignContent="center" alignItems="center">
         <Flex p={8} flex={1} align="center" justify="center">
           <Spinner />;
         </Flex>
