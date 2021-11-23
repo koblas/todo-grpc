@@ -18,12 +18,14 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AuthenticationServiceClient interface {
-	Register(ctx context.Context, in *RegisterParams, opts ...grpc.CallOption) (*Token, error)
+	Register(ctx context.Context, in *RegisterParams, opts ...grpc.CallOption) (*TokenRegister, error)
 	Authenticate(ctx context.Context, in *LoginParams, opts ...grpc.CallOption) (*Token, error)
 	VerifyEmail(ctx context.Context, in *ConfirmParams, opts ...grpc.CallOption) (*Success, error)
 	RecoverSend(ctx context.Context, in *RecoverySendParams, opts ...grpc.CallOption) (*Success, error)
 	RecoverVerify(ctx context.Context, in *RecoveryUpdateParams, opts ...grpc.CallOption) (*Success, error)
 	RecoverUpdate(ctx context.Context, in *RecoveryUpdateParams, opts ...grpc.CallOption) (*Token, error)
+	OauthLogin(ctx context.Context, in *OauthAssociateParams, opts ...grpc.CallOption) (*TokenRegister, error)
+	OauthUrl(ctx context.Context, in *OauthUrlParams, opts ...grpc.CallOption) (*OauthUrlResult, error)
 }
 
 type authenticationServiceClient struct {
@@ -34,8 +36,8 @@ func NewAuthenticationServiceClient(cc grpc.ClientConnInterface) AuthenticationS
 	return &authenticationServiceClient{cc}
 }
 
-func (c *authenticationServiceClient) Register(ctx context.Context, in *RegisterParams, opts ...grpc.CallOption) (*Token, error) {
-	out := new(Token)
+func (c *authenticationServiceClient) Register(ctx context.Context, in *RegisterParams, opts ...grpc.CallOption) (*TokenRegister, error) {
+	out := new(TokenRegister)
 	err := c.cc.Invoke(ctx, "/auth.AuthenticationService/register", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -88,16 +90,36 @@ func (c *authenticationServiceClient) RecoverUpdate(ctx context.Context, in *Rec
 	return out, nil
 }
 
+func (c *authenticationServiceClient) OauthLogin(ctx context.Context, in *OauthAssociateParams, opts ...grpc.CallOption) (*TokenRegister, error) {
+	out := new(TokenRegister)
+	err := c.cc.Invoke(ctx, "/auth.AuthenticationService/oauth_login", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authenticationServiceClient) OauthUrl(ctx context.Context, in *OauthUrlParams, opts ...grpc.CallOption) (*OauthUrlResult, error) {
+	out := new(OauthUrlResult)
+	err := c.cc.Invoke(ctx, "/auth.AuthenticationService/oauth_url", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AuthenticationServiceServer is the server API for AuthenticationService service.
 // All implementations must embed UnimplementedAuthenticationServiceServer
 // for forward compatibility
 type AuthenticationServiceServer interface {
-	Register(context.Context, *RegisterParams) (*Token, error)
+	Register(context.Context, *RegisterParams) (*TokenRegister, error)
 	Authenticate(context.Context, *LoginParams) (*Token, error)
 	VerifyEmail(context.Context, *ConfirmParams) (*Success, error)
 	RecoverSend(context.Context, *RecoverySendParams) (*Success, error)
 	RecoverVerify(context.Context, *RecoveryUpdateParams) (*Success, error)
 	RecoverUpdate(context.Context, *RecoveryUpdateParams) (*Token, error)
+	OauthLogin(context.Context, *OauthAssociateParams) (*TokenRegister, error)
+	OauthUrl(context.Context, *OauthUrlParams) (*OauthUrlResult, error)
 	mustEmbedUnimplementedAuthenticationServiceServer()
 }
 
@@ -105,7 +127,7 @@ type AuthenticationServiceServer interface {
 type UnimplementedAuthenticationServiceServer struct {
 }
 
-func (UnimplementedAuthenticationServiceServer) Register(context.Context, *RegisterParams) (*Token, error) {
+func (UnimplementedAuthenticationServiceServer) Register(context.Context, *RegisterParams) (*TokenRegister, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Register not implemented")
 }
 func (UnimplementedAuthenticationServiceServer) Authenticate(context.Context, *LoginParams) (*Token, error) {
@@ -122,6 +144,12 @@ func (UnimplementedAuthenticationServiceServer) RecoverVerify(context.Context, *
 }
 func (UnimplementedAuthenticationServiceServer) RecoverUpdate(context.Context, *RecoveryUpdateParams) (*Token, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RecoverUpdate not implemented")
+}
+func (UnimplementedAuthenticationServiceServer) OauthLogin(context.Context, *OauthAssociateParams) (*TokenRegister, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method OauthLogin not implemented")
+}
+func (UnimplementedAuthenticationServiceServer) OauthUrl(context.Context, *OauthUrlParams) (*OauthUrlResult, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method OauthUrl not implemented")
 }
 func (UnimplementedAuthenticationServiceServer) mustEmbedUnimplementedAuthenticationServiceServer() {}
 
@@ -244,6 +272,42 @@ func _AuthenticationService_RecoverUpdate_Handler(srv interface{}, ctx context.C
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AuthenticationService_OauthLogin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(OauthAssociateParams)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthenticationServiceServer).OauthLogin(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/auth.AuthenticationService/oauth_login",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthenticationServiceServer).OauthLogin(ctx, req.(*OauthAssociateParams))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuthenticationService_OauthUrl_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(OauthUrlParams)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthenticationServiceServer).OauthUrl(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/auth.AuthenticationService/oauth_url",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthenticationServiceServer).OauthUrl(ctx, req.(*OauthUrlParams))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AuthenticationService_ServiceDesc is the grpc.ServiceDesc for AuthenticationService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -274,6 +338,14 @@ var AuthenticationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "recover_update",
 			Handler:    _AuthenticationService_RecoverUpdate_Handler,
+		},
+		{
+			MethodName: "oauth_login",
+			Handler:    _AuthenticationService_OauthLogin_Handler,
+		},
+		{
+			MethodName: "oauth_url",
+			Handler:    _AuthenticationService_OauthUrl_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -22,7 +22,7 @@ type UserServer struct {
 	genpb.UnimplementedUserServiceServer
 
 	logger logger.Logger
-	users  []User
+	users  UserStore
 	pubsub *redisqueue.Producer
 	kms    key_manager.Encoder
 }
@@ -53,7 +53,7 @@ func NewUserServer(log logger.Logger) *UserServer {
 	}
 	return &UserServer{
 		logger: log,
-		users:  []User{},
+		users:  NewUserMemoryStore(),
 		pubsub: pubsub,
 		kms:    key_manager.NewSecureClear(),
 	}
@@ -65,9 +65,9 @@ func (s *UserServer) FindBy(ctx context.Context, params *genpb.FindParam) (*genp
 
 	var user *User
 	if params.Email != "" {
-		user = s.getByEmail(params.Email)
+		user = s.users.GetByEmail(params.Email)
 	} else if params.UserId != "" {
-		user = s.getById(params.Email)
+		user = s.users.GetById(params.UserId)
 	}
 
 	if user == nil {
@@ -88,18 +88,29 @@ func (s *UserServer) Create(ctx context.Context, params *genpb.CreateParam) (*ge
 		return nil, fmt.Errorf("invalid user status = %s", params.Status)
 	}
 
-	if s.getByEmail(params.Email) != nil {
+	if s.users.GetByEmail(params.Email) != nil {
 		return nil, status.Errorf(codes.AlreadyExists, "Email address not found")
 	}
-	pass, errmsg := passwordEncrypt(params.Password)
-	if errmsg != "" {
-		return nil, status.Errorf(codes.InvalidArgument, errmsg)
+	pass := []byte{}
+	if params.Password != "" {
+		var errmsg string
+
+		pass, errmsg = passwordEncrypt(params.Password)
+		if errmsg != "" {
+			return nil, status.Errorf(codes.InvalidArgument, errmsg)
+		}
 	}
 
-	vExpires := time.Now().Add(time.Duration(24 * time.Hour))
-	vToken, secret, err := tokenEncrypt(shortuuid.New())
-	if err != nil {
-		return nil, err
+	var vExpires time.Time
+	vToken := []byte{}
+	var secret string
+	if params.Status != genpb.UserStatus_ACTIVE {
+		var err error
+		vExpires = time.Now().Add(time.Duration(24 * time.Hour))
+		vToken, secret, err = tokenEncrypt(shortuuid.New())
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	user := User{
@@ -107,25 +118,31 @@ func (s *UserServer) Create(ctx context.Context, params *genpb.CreateParam) (*ge
 		Name:     params.Name,
 		Email:    params.Email,
 		Password: pass,
-		Status:   UserStatus_REGISTERED,
+		Status:   pbStatusToStatus[params.Status],
 		Settings: map[string]map[string]string{},
 
 		VerificationToken:   &vToken,
 		VerificationExpires: &vExpires,
 	}
 
-	s.users = append(s.users, user)
+	if err := s.users.CreateUser(&user); err != nil {
+		return nil, err
+	}
+
+	log.With("userId", user.ID, "email", user.Email).Info("User Created")
 
 	if err := s.publishUser(ENTITY_USER, nil, &user); err != nil {
 		log.With("error", err).Info("user entity publish failed")
 	}
-	if params.Status == genpb.UserStatus_REGISTERED {
-		if err := s.publishSecurity(log, genpb.UserSecurity_USER_REGISTER_TOKEN, user, secret); err != nil {
-			log.With("error", err).Info("register user publish failed")
-		}
-	} else if params.Status == genpb.UserStatus_INVITED {
-		if err := s.publishSecurity(log, genpb.UserSecurity_USER_INVITE_TOKEN, user, secret); err != nil {
-			log.With("error", err).Info("invite user publish failed")
+	if secret != "" {
+		if params.Status == genpb.UserStatus_REGISTERED {
+			if err := s.publishSecurity(log, genpb.UserSecurity_USER_REGISTER_TOKEN, user, secret); err != nil {
+				log.With("error", err).Info("register user publish failed")
+			}
+		} else if params.Status == genpb.UserStatus_INVITED {
+			if err := s.publishSecurity(log, genpb.UserSecurity_USER_INVITE_TOKEN, user, secret); err != nil {
+				log.With("error", err).Info("invite user publish failed")
+			}
 		}
 	}
 
@@ -136,7 +153,7 @@ func (s *UserServer) Update(ctx context.Context, params *genpb.UpdateParam) (*ge
 	log := logger.FromContext(ctx).With("userId", params.UserId)
 	log.Info("User Update")
 
-	orig := s.getById(params.UserId)
+	orig := s.users.GetById(params.UserId)
 
 	if orig == nil {
 		return nil, status.Errorf(codes.NotFound, "User not found")
@@ -177,7 +194,7 @@ func (s *UserServer) Update(ctx context.Context, params *genpb.UpdateParam) (*ge
 		updated.Password = pass
 	}
 
-	s.updateUser(&updated)
+	s.users.UpdateUser(&updated)
 	if err := s.publishUser(ENTITY_USER, orig, &updated); err != nil {
 		log.With("error", err).Error("unable to publish user event")
 	}
@@ -194,7 +211,7 @@ func (s *UserServer) ComparePassword(ctx context.Context, params *genpb.Authenti
 	log := logger.FromContext(ctx).With("userId", params.UserId)
 	log.Info("check password")
 
-	user := s.getById(params.UserId)
+	user := s.users.GetById(params.UserId)
 
 	if user == nil {
 		return nil, status.Errorf(codes.NotFound, "ID address not found")
@@ -208,7 +225,7 @@ func (s *UserServer) ComparePassword(ctx context.Context, params *genpb.Authenti
 }
 
 func (s *UserServer) GetSettings(ctx context.Context, params *genpb.UserIdParam) (*genpb.UserSettings, error) {
-	user := s.getById(params.UserId)
+	user := s.users.GetById(params.UserId)
 
 	if user == nil {
 		return nil, status.Errorf(codes.NotFound, "ID address not found")
@@ -219,7 +236,7 @@ func (s *UserServer) GetSettings(ctx context.Context, params *genpb.UserIdParam)
 
 func (s *UserServer) SetSettings(ctx context.Context, params *genpb.UserSettingsUpdate) (*genpb.UserSettings, error) {
 	log := logger.FromContext(ctx)
-	orig := s.getById(params.UserId)
+	orig := s.users.GetById(params.UserId)
 
 	if orig == nil {
 		return nil, status.Errorf(codes.NotFound, "ID address not found")
@@ -240,7 +257,7 @@ func (s *UserServer) SetSettings(ctx context.Context, params *genpb.UserSettings
 		}
 	}
 
-	s.updateUser(&updated)
+	s.users.UpdateUser(&updated)
 	if err := s.publishSettings(ENTITY_SETTINGS, orig, &updated); err != nil {
 		log.With("error", err).Error("unable to publish user security event")
 	}
@@ -252,7 +269,7 @@ func (s *UserServer) getUserByVerification(ctx context.Context, params *genpb.Ve
 	log := logger.FromContext(ctx).With("userId", params.UserId)
 	log.Info("getUserByVerification BEGIN")
 
-	user := s.getById(params.UserId)
+	user := s.users.GetById(params.UserId)
 
 	if user == nil {
 		log.Info("User not found")
@@ -276,9 +293,25 @@ func (s *UserServer) getUserByVerification(ctx context.Context, params *genpb.Ve
 }
 
 func (s *UserServer) VerificationVerify(ctx context.Context, params *genpb.VerificationParam) (*genpb.User, error) {
+	log := logger.FromContext(ctx).With("userId", params.UserId)
+	log.Info("Verification email")
+
 	user, err := s.getUserByVerification(ctx, params)
 	if err != nil {
 		return nil, err
+	}
+
+	update := *user
+
+	// No longer valid
+	update.VerificationExpires = nil
+	update.VerificationToken = nil
+	// You could be "REGISTERED" or "INVITED"
+	update.Status = UserStatus_ACTIVE
+	s.users.UpdateUser(&update)
+
+	if err := s.publishUser(ENTITY_USER, user, &update); err != nil {
+		log.With("error", err).Info("Publish failed")
 	}
 
 	return s.toProtoUser(user), nil
@@ -305,14 +338,14 @@ func (s *UserServer) VerificationUpdate(ctx context.Context, params *genpb.Verif
 		}
 
 		update.Password = pass
-		s.updateUser(&update)
+		s.users.UpdateUser(&update)
 	}
 	// No longer valid
 	update.VerificationExpires = nil
 	update.VerificationToken = nil
 	// You could be "REGISTERED" or "INVITED"
 	update.Status = UserStatus_ACTIVE
-	s.updateUser(&update)
+	s.users.UpdateUser(&update)
 
 	if err := s.publishUser(ENTITY_USER, user, &update); err != nil {
 		log.With("error", err).Info("Publish failed")
@@ -333,7 +366,7 @@ func (s *UserServer) ForgotSend(ctx context.Context, params *genpb.FindParam) (*
 	if params.Email == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "Must provide email")
 	}
-	user := s.getByEmail(params.Email)
+	user := s.users.GetByEmail(params.Email)
 	if user == nil {
 		return nil, status.Errorf(codes.NotFound, "user not found")
 	}
@@ -346,7 +379,7 @@ func (s *UserServer) ForgotSend(ctx context.Context, params *genpb.FindParam) (*
 	}
 	update.VerificationToken = &vToken
 	update.VerificationExpires = &vExpires
-	s.updateUser(&update)
+	s.users.UpdateUser(&update)
 
 	if err := s.publishUser(ENTITY_USER, user, &update); err != nil {
 		log.With("error", err).Info("Publish failed")

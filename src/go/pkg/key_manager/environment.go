@@ -3,6 +3,7 @@ package key_manager
 import (
 	cryptoaes "crypto/aes"
 	"encoding/base64"
+	"io"
 	"log"
 	"regexp"
 
@@ -19,7 +20,8 @@ type environmentKms struct {
 	key []byte
 }
 
-const nonceSize int = 32
+// 32 bytes is 256 bits for AES256
+const envKeySize = 32
 
 type encryptedValue struct {
 	data     []byte
@@ -28,6 +30,7 @@ type encryptedValue struct {
 	datatype string
 }
 
+// Borrowed from sops
 var encre = regexp.MustCompile(`^ENC\[AES256_GCM,data:(.+),iv:(.+),tag:(.+),type:(.+)\]`)
 
 func NewSecureEnvironment() KeyManager {
@@ -35,7 +38,7 @@ func NewSecureEnvironment() KeyManager {
 
 	// Technically this should fail, but ....
 	if len(secret) == 0 {
-		secret = make([]byte, nonceSize)
+		secret = make([]byte, envKeySize)
 		_, err := rand.Read(secret)
 		if err != nil {
 			log.Fatal("Unable to build default secret")
@@ -56,46 +59,43 @@ func (kms *environmentKms) createDataKey() ([]byte, []byte, error) {
 		return nil, nil, err
 	}
 
-	iv := make([]byte, nonceSize)
-	_, err = rand.Read(iv)
-	if err != nil {
-		return nil, nil, fmt.Errorf("could not generate random bytes for IV: %s", err)
-	}
-	gcm, err := cipher.NewGCMWithNonceSize(aescipher, nonceSize)
+	gcm, err := cipher.NewGCM(aescipher)
 	if err != nil {
 		return nil, nil, fmt.Errorf("could not create GCM: %s", err)
 	}
+	nonceSize := gcm.NonceSize()
 
-	additionalData := []byte{}
-	value := make([]byte, nonceSize)
-	_, err = rand.Read(value)
-	if err != nil {
-		return nil, nil, fmt.Errorf("could not generate random bytes for IV: %s", err)
+	nonce := make([]byte, nonceSize)
+	value := make([]byte, envKeySize)
+
+	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
+		panic(err.Error())
+	}
+	if _, err = io.ReadFull(rand.Reader, value); err != nil {
+		panic(err.Error())
 	}
 
-	out := gcm.Seal(nil, iv, value, additionalData)
+	// Since we don't want to save the nonce somewhere else in this case, we add it as a prefix to
+	//  the encrypted data. The first nonce argument in Seal is the prefix.
+	out := gcm.Seal(nonce, nonce, value, nil)
 
 	return out, value, nil
 }
 
 func (kms *environmentKms) decodeDataKey(datakey []byte) ([]byte, error) {
-	if len(datakey) < 64 {
-		return nil, fmt.Errorf("datakey too small")
-	}
-	iv := datakey[0:nonceSize]
-	data := datakey[nonceSize:]
-
 	aescipher, err := cryptoaes.NewCipher(kms.key)
 	if err != nil {
 		return nil, err
 	}
 
-	gcm, err := cipher.NewGCMWithNonceSize(aescipher, nonceSize)
+	gcm, err := cipher.NewGCM(aescipher)
 	if err != nil {
 		return nil, err
 	}
-	additionalData := []byte{}
-	decryptedBytes, err := gcm.Open(nil, iv, data, []byte(additionalData))
+	nonceSize := gcm.NonceSize()
+
+	nonce, data := datakey[:nonceSize], datakey[nonceSize:]
+	decryptedBytes, err := gcm.Open(nil, nonce, data, nil)
 	if err != nil {
 		return nil, fmt.Errorf("could not decrypt with AES_GCM: %s", err)
 	}
@@ -146,14 +146,14 @@ func (skms *environmentKms) Encode(value []byte) (SecureValue, error) {
 		return SecureValue{}, fmt.Errorf("could not initialize AES GCM encryption cipher: %s", err)
 	}
 
-	iv := make([]byte, nonceSize)
-	_, err = rand.Read(iv)
-	if err != nil {
-		return SecureValue{}, fmt.Errorf("could not generate random bytes for IV: %s", err)
-	}
-	gcm, err := cipher.NewGCMWithNonceSize(aescipher, nonceSize)
+	gcm, err := cipher.NewGCM(aescipher)
 	if err != nil {
 		return SecureValue{}, fmt.Errorf("could not create GCM: %s", err)
+	}
+	nonceSize := gcm.NonceSize()
+	iv := make([]byte, nonceSize)
+	if _, err = io.ReadFull(rand.Reader, iv); err != nil {
+		panic(err.Error())
 	}
 
 	out := gcm.Seal(nil, iv, value, additionalData)
@@ -162,7 +162,7 @@ func (skms *environmentKms) Encode(value []byte) (SecureValue, error) {
 		base64.StdEncoding.EncodeToString(out[:len(out)-cryptoaes.BlockSize]),
 		base64.StdEncoding.EncodeToString(iv),
 		base64.StdEncoding.EncodeToString(out[len(out)-cryptoaes.BlockSize:]),
-		"str")
+		"byte")
 
 	return SecureValue{
 		KmsUri:  "localenv:KMS_SECRET",
@@ -201,7 +201,7 @@ func (smks *environmentKms) Decode(value SecureValue) ([]byte, error) {
 		return nil, fmt.Errorf("could not decrypt with AES_GCM: %s", err)
 	}
 
-	if encryptedValue.datatype != "str" {
+	if encryptedValue.datatype != "byte" {
 		return nil, fmt.Errorf("should only be string")
 	}
 

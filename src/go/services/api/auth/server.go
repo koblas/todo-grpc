@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/koblas/grpc-todo/genpb/core"
 	"github.com/koblas/grpc-todo/genpb/publicapi"
 	"github.com/koblas/grpc-todo/pkg/grpcutil"
@@ -42,6 +43,22 @@ func connectUserService() (core.UserServiceClient, *grpc.ClientConn) {
 	return svc, conn
 }
 
+func connectOAuthService() (core.OauthUserServiceClient, *grpc.ClientConn) {
+	opts := []grpc.DialOption{
+		grpc.WithInsecure(),
+	}
+
+	host := util.Getenv("OAUTH_USER_SERVICE_ADDR", ":13002")
+	conn, err := grpc.Dial(host, opts...)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	svc := core.NewOauthUserServiceClient(conn)
+
+	return svc, conn
+}
+
 func runServer() {
 	ctx := context.Background()
 	port := util.Getenv("PORT", "14586")
@@ -53,7 +70,17 @@ func runServer() {
 	// Connect to the user service
 	userService, userConn := connectUserService()
 	defer userConn.Close()
-	s := NewAuthenticationServer(userService)
+	oauthService, oauthConn := connectOAuthService()
+	defer oauthConn.Close()
+
+	// Connect to redis
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     util.Getenv("REDIS_ADDR", "localhost:6379"),
+		Password: "", // no password set
+		DB:       0,  // use default DB
+	})
+
+	s := NewAuthenticationServer(userService, oauthService, NewAttemptCounter("publicapi:authentication", rdb))
 
 	// gRPC server statup options
 	opts := []grpc.ServerOption{}
