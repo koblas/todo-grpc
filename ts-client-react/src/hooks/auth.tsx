@@ -9,6 +9,8 @@ import { assert } from "../util/assert";
 import { randomString } from "../util/randomeString";
 import { AuthToken, LoginRegisterSuccess, OauthLoginUrl } from "../rpc/auth";
 
+// https://www.npmjs.com/package/zustand
+
 /**
  * Construct an accessor for a persistent token store
  */
@@ -143,7 +145,7 @@ export function useAuth() {
               {
                 onCompleted(input) {
                   setData(input);
-                  dispatch({ type: ActionType.SET, token: input.token.accessToken });
+                  dispatch({ type: ActionType.SET, token: input.token.access_token });
                 },
                 onError(err: RpcError) {
                   setError(err);
@@ -202,7 +204,7 @@ export function useAuth() {
                 },
                 onCompleted: (input) => {
                   setData(input);
-                  dispatch({ type: ActionType.SET, token: input.accessToken });
+                  dispatch({ type: ActionType.SET, token: input.access_token });
                 },
               },
               options,
@@ -273,7 +275,7 @@ export function useAuth() {
               {
                 onCompleted: (input) => {
                   setData(input);
-                  dispatch({ type: ActionType.SET, token: input.accessToken });
+                  dispatch({ type: ActionType.SET, token: input.access_token });
                 },
                 onError(err: RpcError) {
                   setError(err);
@@ -347,7 +349,7 @@ export function useAuth() {
               {
                 onCompleted: (input) => {
                   setData(data);
-                  dispatch({ type: ActionType.SET, token: input.token.accessToken });
+                  dispatch({ type: ActionType.SET, token: input.token.access_token });
                 },
                 onError(err: RpcError) {
                   setError(err);

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useHistory, Link as RouterLink, useParams } from "react-router-dom";
+import { Link as RouterLink, useParams } from "react-router-dom";
 import {
   Text,
   Button,
@@ -40,13 +40,11 @@ export function AuthRecoveryResetPage() {
   const { userId, token } = useParams<{ userId: string; token: string }>();
   const auth = useAuth();
   const [verified, setVerified] = useState(false);
-  const [verifiedSuccess, setVerifiedSuccess] = useState(true);
   const [recoverVerify, { loading: loadingVerify }] = auth.mutations.useRecoveryVerify();
   const [recoverUpdate, { loading: loadingUpdate }] = auth.mutations.useRecoveryUpdate();
   const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
-    console.log("VERIFY TOKEN", token);
     recoverVerify(
       { userId, token },
       {
@@ -110,8 +108,6 @@ export function AuthRecoveryResetPage() {
       </Alert>
     );
   }
-
-  console.log("STATE", completed, verified);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>

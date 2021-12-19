@@ -3,18 +3,19 @@ import { newFetchPOST } from "../utils";
 import { RpcOptions } from "../errors";
 
 type TokenResponse = {
-  accessToken: string;
+  access_token: string;
 };
 
 export function newAuthClient(): AuthService {
   const client = newFetchPOST();
+  const base = "/v1/auth.AuthenticationService";
 
   return {
     register(params, options: RpcOptions<LoginRegisterSuccess>): void {
-      client.call<TokenResponse, LoginRegisterSuccess>("/auth/register", params, options);
+      client.call<TokenResponse, LoginRegisterSuccess>(`${base}/register`, params, options);
     },
     authenticate(params, options: RpcOptions<AuthToken>): void {
-      client.call<TokenResponse, AuthToken>("/auth/authenticate", params, options);
+      client.call<TokenResponse, AuthToken>(`${base}/authenticate`, params, options);
     },
     verifyEmail(params, options: RpcOptions<AuthOk>): void {
       client.call<AuthOk, AuthOk>("/auth/verify/email", params, options);

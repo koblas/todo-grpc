@@ -1,5 +1,5 @@
 import React from "react";
-import { useHistory, Link as RouterLink } from "react-router-dom";
+import { useNavigate, Link as RouterLink } from "react-router-dom";
 import {
   Link,
   Text,
@@ -26,12 +26,12 @@ export function AuthRegisterPage() {
   } = useForm();
   const { mutations } = useAuth();
   const [authRegister, { loading }] = mutations.useRegister();
-  const history = useHistory();
+  const navigate = useNavigate();
 
   function onSubmit(data: { email: string; password: string; name: string }) {
     authRegister(data, {
       onCompleted() {
-        history.replace("/todo");
+        navigate("/todo", { replace: true });
       },
       onErrorField(serror: Record<string, string[]>) {
         ["name", "email", "password"].forEach((key) => {

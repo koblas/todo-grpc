@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { useHistory, Link as RouterLink, useParams } from "react-router-dom";
-import { Text, Flex, Heading, Link, Stack, Box, Alert, AlertIcon, Spinner } from "@chakra-ui/react";
+import { Link as RouterLink, useParams } from "react-router-dom";
+import { Text, Flex, Heading, Link, Stack, Box, Alert, Spinner } from "@chakra-ui/react";
 import { useForm } from "react-hook-form";
 import { useAuth } from "../../hooks/auth";
 

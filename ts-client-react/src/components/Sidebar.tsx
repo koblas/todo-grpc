@@ -12,14 +12,14 @@ import {
   FiLogOut,
 } from "react-icons/fi";
 import { IoPawOutline } from "react-icons/io5";
-import { useHistory, useLocation } from "react-router";
+import { useNavigate, useLocation } from "react-router";
 import NavItem from "./NavItem";
 
 // https://github.com/bjcarlson42/chakra-left-responsive-navbar
 
 export default function Sidebar() {
   const { pathname } = useLocation();
-  const history = useHistory();
+  const navigate = useNavigate();
   const [isExpanded, setExpanded] = useState(true);
   const [showExpando, setShowExpando] = useState(false);
 
@@ -46,7 +46,7 @@ export default function Sidebar() {
             icon={FiHome}
             active={pathname === "/todo"}
             onClick={() => {
-              history.push("/todo");
+              navigate("/todo");
             }}
           >
             Dashboard
@@ -56,7 +56,7 @@ export default function Sidebar() {
             icon={FiCalendar}
             active={pathname === "/calendar"}
             onClick={() => {
-              history.push("/calendar");
+              navigate("/calendar");
             }}
           >
             Calendar
@@ -78,7 +78,7 @@ export default function Sidebar() {
         <Flex flexDir="column" w="100%" alignItems={isExpanded ? "flex-start" : "center"}>
           <Divider display={isExpanded ? "flex" : "none"} />
           <NavItem expanded={isExpanded} avatar="avatar-1.jpg">
-            <Heading as="h3" size="sm" style={{ textOverflow: "truncate" }}>
+            <Heading as="p" size="sm" style={{ textOverflow: "truncate" }}>
               Sylwia Weller
             </Heading>
           </NavItem>
@@ -87,7 +87,7 @@ export default function Sidebar() {
             icon={FiSettings}
             active={pathname.startsWith("/settings")}
             onClick={() => {
-              history.push("/settings/");
+              navigate("/settings/");
             }}
           >
             Settings
@@ -96,7 +96,7 @@ export default function Sidebar() {
             expanded={isExpanded}
             icon={FiLogOut}
             onClick={() => {
-              history.push("/auth/logout");
+              navigate("/auth/logout");
             }}
           >
             Logout

@@ -1,17 +1,17 @@
 import { useEffect } from "react";
-import { useHistory, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/auth";
 
 export function HomePage() {
-  const history = useHistory();
+  const navigate = useNavigate();
   const { pathname } = useLocation();
   const auth = useAuth();
 
   useEffect(() => {
     if (auth.isAuthenticated) {
-      history.push("/todo");
+      navigate("/todo");
     } else {
-      history.push({
+      navigate({
         pathname: "/auth/login",
         search: `?next=${encodeURI(pathname)}`,
       });

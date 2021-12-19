@@ -1,11 +1,10 @@
 import React from "react";
 import { useForm } from "react-hook-form";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Heading, Box, Text, CloseButton, Grid, Flex, Input, Button } from "@chakra-ui/react";
 import { useTodos } from "../hooks/todo";
 import { TodoItem } from "../rpc/todo";
 import { useAuth } from "../hooks/auth";
-import Sidebar from "../components/Sidebar";
 
 function Item({ todo }: { todo: TodoItem }) {
   const { deleteTodo } = useTodos();
@@ -34,11 +33,11 @@ function List({ todos }: { todos: TodoItem[] }) {
 export function TodoPage() {
   const { addTodo, todos } = useTodos();
   const { register, handleSubmit, setValue } = useForm();
-  const history = useHistory();
+  const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
 
   if (!isAuthenticated) {
-    history.push("/auth/login");
+    navigate("/auth/login");
     return null;
   }
 

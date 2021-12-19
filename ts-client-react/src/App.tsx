@@ -2,7 +2,7 @@ import React from "react";
 
 import { ChakraProvider, CSSReset, Flex } from "@chakra-ui/react";
 
-import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { TodoContextProvider } from "./hooks/todo";
 import { AuthPages } from "./pages/auth";
 import { SettingsPage } from "./pages/settings";
@@ -14,22 +14,22 @@ import Sidebar from "./components/Sidebar";
 
 // const theme = createTheme();
 
-function Site() {
+function SiteLayout() {
   return (
     <Flex w="100%">
       <Sidebar />
-      <Switch>
-        <Route path="/settings">
-          <SettingsPage />
-        </Route>
-        <Route path="/todo">
-          <TodoPage />
-        </Route>
-        <Route path="*">
-          <HomePage />
-        </Route>
-      </Switch>
     </Flex>
+  );
+}
+function Site() {
+  return (
+    <Routes>
+      <Route path="/" element={<SiteLayout />}>
+        <Route path="settings/*" element={<SettingsPage />} />
+        <Route path="todo/*" element={<TodoPage />} />
+        <Route path="*" element={<HomePage />} />
+      </Route>
+    </Routes>
   );
 }
 
@@ -40,16 +40,12 @@ export default function App() {
       <NetworkContextProvider>
         <AuthContextProvider>
           <TodoContextProvider>
-            <Router>
-              <Switch>
-                <Route path="/auth">
-                  <AuthPages />
-                </Route>
-                <Route path="*">
-                  <Site />
-                </Route>
-              </Switch>
-            </Router>
+            <BrowserRouter>
+              <Routes>
+                <Route path="/auth/*" element={<AuthPages />} />
+                <Route path="*" element={<Site />} />
+              </Routes>
+            </BrowserRouter>
           </TodoContextProvider>
         </AuthContextProvider>
       </NetworkContextProvider>

@@ -2,7 +2,8 @@ import { Json } from "../../types/json";
 import { RpcOptions } from "../errors";
 import { handleJsonError } from "./json_helpers";
 
-export const BASE_URL = "http://localhost:8080";
+// https://fny9c2xm3b.execute-api.us-east-1.amazonaws.com/v1/auth.AuthenticationService/Authenticate
+export const BASE_URL = process.env.BASE_URL ?? "http://localhost:8080";
 
 export class FetchError extends Error {
   public body: Json;

@@ -22,7 +22,12 @@ export function newAuthClient(): AuthService {
           return;
         }
         const value = data.toObject() as Required<TokenRegister.AsObject>;
-        options.onCompleted?.(value);
+        options.onCompleted?.({
+          created: value.created,
+          token: {
+            access_token: value.token.accessToken,
+          },
+        });
       });
     },
 
@@ -36,7 +41,7 @@ export function newAuthClient(): AuthService {
           handleGrpcError(err, options);
           return;
         }
-        options.onCompleted?.(data.toObject());
+        options.onCompleted?.({ access_token: data.getAccessToken() });
       });
     },
 

@@ -1,6 +1,6 @@
 /* eslint-disable react/require-default-props */
 import React, { ReactNode, ReactText } from "react";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   IconButton,
   Avatar,
@@ -96,7 +96,7 @@ interface MobileProps extends FlexProps {
   onOpen: () => void;
 }
 function MobileNav({ onOpen, ...rest }: MobileProps) {
-  const history = useHistory();
+  const navigate = useNavigate();
 
   return (
     <Flex
@@ -156,7 +156,7 @@ function MobileNav({ onOpen, ...rest }: MobileProps) {
               <MenuItem
                 onClick={(e) => {
                   e.preventDefault();
-                  history.push("/auth/logout");
+                  navigate("/auth/logout");
                 }}
               >
                 Sign out

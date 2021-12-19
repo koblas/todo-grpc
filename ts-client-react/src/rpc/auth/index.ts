@@ -3,7 +3,7 @@ import { RpcOptions } from "../errors";
 export interface AuthOk {}
 
 export interface AuthToken {
-  accessToken: string;
+  access_token: string;
 }
 
 export interface LoginSuccess {
