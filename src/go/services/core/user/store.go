@@ -14,67 +14,20 @@ const (
 )
 
 type User struct {
-	ID       string
-	Name     string
-	Email    string
-	Status   UserStatus
-	Password []byte
-	Settings map[string]map[string]string
+	ID       string                       `dynamodbav:"id"`
+	Name     string                       `dynamodbav:"name"`
+	Email    string                       `dynamodbav:"email"`
+	Status   UserStatus                   `dynamodbav:"status"`
+	Password []byte                       `dynamodbav:"password"`
+	Settings map[string]map[string]string `dynamodbav:"settings"`
 
-	VerificationToken   *[]byte
-	VerificationExpires *time.Time
+	VerificationToken   *[]byte    `dynamodbav:"verification_token,nullempty"`
+	VerificationExpires *time.Time `dynamodbav:"verification_expires,nullempty"`
 }
 
 type UserStore interface {
-	GetById(id string) *User
-	GetByEmail(email string) *User
+	GetById(id string) (*User, error)
+	GetByEmail(email string) (*User, error)
 	CreateUser(user *User) error
 	UpdateUser(user *User) error
-}
-
-type userStore struct {
-	database []User
-}
-
-func NewUserMemoryStore() UserStore {
-	return &userStore{
-		database: []User{},
-	}
-}
-
-func (store *userStore) GetById(id string) *User {
-	for _, u := range store.database {
-		if u.ID == id {
-			return &u
-		}
-	}
-
-	return nil
-}
-
-func (store *userStore) GetByEmail(email string) *User {
-	for _, u := range store.database {
-		if u.Email == email {
-			return &u
-		}
-	}
-
-	return nil
-}
-
-func (store *userStore) CreateUser(user *User) error {
-	store.database = append(store.database, *user)
-
-	return nil
-}
-
-func (store *userStore) UpdateUser(user *User) error {
-	for idx, u := range store.database {
-		if u.ID == user.ID {
-			store.database[idx] = *user
-			return nil
-		}
-	}
-
-	return nil
 }
