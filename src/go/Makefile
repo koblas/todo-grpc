@@ -17,3 +17,20 @@ start:
 	# Backend
 	PORT=13001 go run cmd/user/main.go
 	PORT=13009 go run cmd/send_email/main.go
+
+
+build-lambda:
+	GOOS=linux GOARCH=amd64 go build -o build/publicapi-auth ./lambda/publicapi/auth/main.go
+	GOOS=linux GOARCH=amd64 go build -o build/publicapi-todo ./lambda/publicapi/todo/main.go
+	GOOS=linux GOARCH=amd64 go build -o build/core-todo ./lambda/core/todo/main.go
+	GOOS=linux GOARCH=amd64 go build -o build/core-user ./lambda/core/user/main.go
+	GOOS=linux GOARCH=amd64 go build -o build/core-oauth-user ./lambda/core/oauth_user/main.go
+	GOOS=linux GOARCH=amd64 go build -o build/core-send-email ./lambda/core/send_email/main.go
+	GOOS=linux GOARCH=amd64 go build -o build/core-workers ./lambda/core/workers/main.go
+
+run-lambda: build-lambda
+	sam local start-api --template-file ./lambda/template.yaml --env-vars ../../dev-variables.json
+
+aws-deploy: build-lambda
+	( cd pulumi && pulumi up )
+

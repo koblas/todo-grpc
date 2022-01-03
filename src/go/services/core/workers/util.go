@@ -1,9 +1,9 @@
 package workers
 
 import (
-	genpb "github.com/koblas/grpc-todo/genpb/core"
 	"github.com/koblas/grpc-todo/pkg/key_manager"
 	"github.com/koblas/grpc-todo/pkg/logger"
+	genpb "github.com/koblas/grpc-todo/twpb/core"
 )
 
 func decodeSecure(log logger.Logger, value *genpb.SecureValue) (string, error) {

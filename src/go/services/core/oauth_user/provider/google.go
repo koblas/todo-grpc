@@ -39,7 +39,7 @@ func (svc googleProvider) BuildRedirect(ctx context.Context, redirectURI string,
 	)
 }
 
-func (svc googleProvider) GetAccessToken(ctx context.Context, code string, redirectURI string, state string) (TokenResult, error) {
+func (svc googleProvider) GetAccessToken(ctx context.Context, code string, redirectURI string) (TokenResult, error) {
 	logger := svc.logger.With("method", "googleProvider.GetAccessToken")
 
 	return svc.httpTokenRequest(ctx, logger, "https://www.googleapis.com/oauth2/v4/token", map[string]interface{}{

@@ -21,11 +21,17 @@ func (s *UserServer) toProtoUser(user *User) *genpb.User {
 		return nil
 	}
 
+	isVerified := false
+	for _, v := range user.VerifiedEmails {
+		isVerified = isVerified || (v == user.Email)
+	}
+
 	return &genpb.User{
-		Id:     user.ID,
-		Name:   user.Name,
-		Email:  user.Email,
-		Status: statusToPbStatus[user.Status],
+		Id:              user.ID,
+		Name:            user.Name,
+		Email:           user.Email,
+		Status:          statusToPbStatus[user.Status],
+		EmailIsVerified: isVerified,
 	}
 }
 
@@ -51,22 +57,15 @@ func (s *UserServer) toProtoSettings(user *User) *genpb.UserSettings {
 
 // Common method to create wire version
 func (s *UserServer) publishMsg(ctx context.Context, stream string, action string, body []byte) error {
-	values := []*genpb.MetadataEntry{
-		{Key: "stream", Value: stream},
-		{Key: "action", Value: action},
-	}
-	mbytes, err := proto.Marshal(&genpb.Metadata{
-		Metadata: values,
-	})
-	if err != nil {
-		return err
+	attr := map[string]string{
+		"stream":       stream,
+		"action":       action,
+		"content-type": "application/protobuf",
 	}
 	return s.pubsub.Enqueue(ctx, &eventbus.Message{
-		Stream: stream,
-		Values: map[string]interface{}{
-			"metadata": mbytes,
-			"body":     body,
-		},
+		Stream:     stream,
+		Attributes: attr,
+		BodyBytes:  body,
 	})
 }
 

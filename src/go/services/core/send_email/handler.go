@@ -5,48 +5,44 @@ import (
 	"context"
 	"fmt"
 
-	genpb "github.com/koblas/grpc-todo/genpb/core"
-	"github.com/koblas/grpc-todo/pkg/logger"
-	"github.com/koblas/grpc-todo/pkg/util"
-	"github.com/robinjoseph08/redisqueue"
+	"github.com/koblas/grpc-todo/pkg/eventbus"
+	"github.com/koblas/grpc-todo/twpb/core"
 	"google.golang.org/protobuf/proto"
 )
 
 type SendEmailServer struct {
-	genpb.UnimplementedSendEmailServiceServer
-
 	sender Sender
-	pubsub *redisqueue.Producer
+	pubsub eventbus.Producer
 }
 
 // This is really hear to make it easy to make sure that you've
 //  tied the correct event to the template that will be sent
-var templates map[genpb.EmailTemplate]emailContent = map[genpb.EmailTemplate]emailContent{
-	genpb.EmailTemplate_USER_REGISTERED:   registerUser,
-	genpb.EmailTemplate_USER_INVITED:      inviteUser,
-	genpb.EmailTemplate_PASSWORD_CHANGE:   passwordChange,
-	genpb.EmailTemplate_PASSWORD_RECOVERY: passwordRecovery,
+var templates map[core.EmailTemplate]emailContent = map[core.EmailTemplate]emailContent{
+	core.EmailTemplate_USER_REGISTERED:   registerUser,
+	core.EmailTemplate_USER_INVITED:      inviteUser,
+	core.EmailTemplate_PASSWORD_CHANGE:   passwordChange,
+	core.EmailTemplate_PASSWORD_RECOVERY: passwordRecovery,
 }
 
-func NewSendEmailServer(logger logger.Logger, sender Sender) genpb.SendEmailServiceServer {
-	pubsub, err := redisqueue.NewProducerWithOptions(&redisqueue.ProducerOptions{
-		StreamMaxLength:      1000,
-		ApproximateMaxLength: true,
-		RedisOptions: &redisqueue.RedisOptions{
-			Addr: util.Getenv("REDIS_ADDR", "redis:6379"),
-		},
-	})
-	if err != nil {
-		logger.With(err).Fatal("unable to start producer")
-	}
+func NewSendEmailServer(producer eventbus.Producer, sender Sender) core.SendEmailService {
+	// pubsub, err := redisqueue.NewProducerWithOptions(&redisqueue.ProducerOptions{
+	// 	StreamMaxLength:      1000,
+	// 	ApproximateMaxLength: true,
+	// 	RedisOptions: &redisqueue.RedisOptions{
+	// 		Addr: util.Getenv("REDIS_ADDR", "redis:6379"),
+	// 	},
+	// })
+	// if err != nil {
+	// 	logger.With(err).Fatal("unable to start producer")
+	// }
 
 	return &SendEmailServer{
-		pubsub: pubsub,
+		pubsub: producer,
 		sender: sender,
 	}
 }
 
-func (s *SendEmailServer) RegisterMessage(ctx context.Context, params *genpb.EmailRegisterParam) (*genpb.EmailOkResponse, error) {
+func (s *SendEmailServer) RegisterMessage(ctx context.Context, params *core.EmailRegisterParam) (*core.EmailOkResponse, error) {
 	recipient := params.Recipient.Email
 	sender := params.Recipient.Email
 	data := Params{
@@ -60,14 +56,14 @@ func (s *SendEmailServer) RegisterMessage(ctx context.Context, params *genpb.Ema
 		"Token":   params.Token,
 	}
 
-	if err := s.simpleSend(ctx, sender, recipient, data, genpb.EmailTemplate_USER_REGISTERED, params.ReferenceId); err != nil {
+	if err := s.simpleSend(ctx, sender, recipient, data, core.EmailTemplate_USER_REGISTERED, params.ReferenceId); err != nil {
 		return nil, err
 	}
 
-	return &genpb.EmailOkResponse{Ok: true}, nil
+	return &core.EmailOkResponse{Ok: true}, nil
 }
 
-func (s *SendEmailServer) PasswordChangeMessage(ctx context.Context, params *genpb.EmailPasswordChangeParam) (*genpb.EmailOkResponse, error) {
+func (s *SendEmailServer) PasswordChangeMessage(ctx context.Context, params *core.EmailPasswordChangeParam) (*core.EmailOkResponse, error) {
 	recipient := params.Recipient.Email
 	sender := params.Recipient.Email
 	data := Params{
@@ -80,14 +76,14 @@ func (s *SendEmailServer) PasswordChangeMessage(ctx context.Context, params *gen
 		"URLBase": params.AppInfo.UrlBase,
 	}
 
-	if err := s.simpleSend(ctx, sender, recipient, data, genpb.EmailTemplate_PASSWORD_CHANGE, params.ReferenceId); err != nil {
+	if err := s.simpleSend(ctx, sender, recipient, data, core.EmailTemplate_PASSWORD_CHANGE, params.ReferenceId); err != nil {
 		return nil, err
 	}
 
-	return &genpb.EmailOkResponse{Ok: true}, nil
+	return &core.EmailOkResponse{Ok: true}, nil
 }
 
-func (s *SendEmailServer) PasswordRecoveryMessage(ctx context.Context, params *genpb.EmailPasswordRecoveryParam) (*genpb.EmailOkResponse, error) {
+func (s *SendEmailServer) PasswordRecoveryMessage(ctx context.Context, params *core.EmailPasswordRecoveryParam) (*core.EmailOkResponse, error) {
 	recipient := params.Recipient.Email
 	sender := params.Recipient.Email
 	data := Params{
@@ -101,14 +97,14 @@ func (s *SendEmailServer) PasswordRecoveryMessage(ctx context.Context, params *g
 		"Token":   params.Token,
 	}
 
-	if err := s.simpleSend(ctx, sender, recipient, data, genpb.EmailTemplate_PASSWORD_RECOVERY, params.ReferenceId); err != nil {
+	if err := s.simpleSend(ctx, sender, recipient, data, core.EmailTemplate_PASSWORD_RECOVERY, params.ReferenceId); err != nil {
 		return nil, err
 	}
 
-	return &genpb.EmailOkResponse{Ok: true}, nil
+	return &core.EmailOkResponse{Ok: true}, nil
 }
 
-func (s *SendEmailServer) InviteUserMessage(ctx context.Context, params *genpb.EmailInviteUserParam) (*genpb.EmailOkResponse, error) {
+func (s *SendEmailServer) InviteUserMessage(ctx context.Context, params *core.EmailInviteUserParam) (*core.EmailOkResponse, error) {
 	recipient := params.Recipient.Email
 	sender := params.Recipient.Email
 	data := Params{
@@ -127,18 +123,18 @@ func (s *SendEmailServer) InviteUserMessage(ctx context.Context, params *genpb.E
 		"Token":   params.Token,
 	}
 
-	if err := s.simpleSend(ctx, sender, recipient, data, genpb.EmailTemplate_USER_INVITED, params.ReferenceId); err != nil {
+	if err := s.simpleSend(ctx, sender, recipient, data, core.EmailTemplate_USER_INVITED, params.ReferenceId); err != nil {
 		return nil, err
 	}
 
-	return &genpb.EmailOkResponse{Ok: true}, nil
+	return &core.EmailOkResponse{Ok: true}, nil
 }
 
 // One stop shop to send a message
-func (svc *SendEmailServer) simpleSend(ctx context.Context, sender, recipient string, data Params, tmpl genpb.EmailTemplate, referenceId string) error {
+func (svc *SendEmailServer) simpleSend(ctx context.Context, sender, recipient string, data Params, tmpl core.EmailTemplate, referenceId string) error {
 	content, found := templates[tmpl]
 	if !found {
-		return fmt.Errorf("unable to find template id=%d name=%s", tmpl, genpb.EmailTemplate_name[int32(tmpl)])
+		return fmt.Errorf("unable to find template id=%d name=%s", tmpl, core.EmailTemplate_name[int32(tmpl)])
 	}
 
 	subject, body, err := buildEmail(data, content)
@@ -156,20 +152,10 @@ func (svc *SendEmailServer) simpleSend(ctx context.Context, sender, recipient st
 	return nil
 }
 
-func (svc *SendEmailServer) notify(ctx context.Context, messageId string, recipient string, tmpl genpb.EmailTemplate, referenceId string) error {
+func (svc *SendEmailServer) notify(ctx context.Context, messageId string, recipient string, tmpl core.EmailTemplate, referenceId string) error {
 	stream := "email_messages"
 
-	values := []*genpb.MetadataEntry{
-		{Key: "stream", Value: stream},
-		{Key: "action", Value: "sent"},
-	}
-	mbytes, err := proto.Marshal(&genpb.Metadata{
-		Metadata: values,
-	})
-	if err != nil {
-		return err
-	}
-	bbytes, err := proto.Marshal(&genpb.EmailSentEvent{
+	bbytes, err := proto.Marshal(&core.EmailSentEvent{
 		RecipientEmail: recipient,
 		MessageId:      messageId,
 		Template:       tmpl,
@@ -179,12 +165,14 @@ func (svc *SendEmailServer) notify(ctx context.Context, messageId string, recipi
 		return err
 	}
 
-	return svc.pubsub.Enqueue(&redisqueue.Message{
-		Stream: stream,
-		Values: map[string]interface{}{
-			"metadata": mbytes,
-			"body":     bbytes,
-		},
+	attr := map[string]string{
+		"stream":       stream,
+		"content-type": "application/protobuf",
+	}
+	return svc.pubsub.Enqueue(ctx, &eventbus.Message{
+		Stream:     stream,
+		Attributes: attr,
+		BodyBytes:  bbytes,
 	})
 }
 

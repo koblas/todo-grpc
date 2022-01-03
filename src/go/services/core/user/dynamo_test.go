@@ -48,21 +48,21 @@ func (suite *DynamoBasicSuite) SetupSuite() {
 			{AttributeName: aws.String("pk"), AttributeType: types.ScalarAttributeTypeS},
 			// {AttributeName: aws.String("sk"), AttributeType: types.ScalarAttributeTypeS},
 			// {AttributeName: aws.String("user_id"), AttributeType: types.ScalarAttributeTypeS},
-			{AttributeName: aws.String("email_lc"), AttributeType: types.ScalarAttributeTypeS},
+			// {AttributeName: aws.String("email_lc"), AttributeType: types.ScalarAttributeTypeS},
 		},
 		KeySchema: []types.KeySchemaElement{
 			{AttributeName: aws.String("pk"), KeyType: types.KeyTypeHash},
 		},
 
-		GlobalSecondaryIndexes: []types.GlobalSecondaryIndex{
-			{
-				IndexName:  aws.String(suite.tableName + "-by-email"),
-				Projection: &types.Projection{ProjectionType: types.ProjectionTypeKeysOnly},
-				KeySchema: []types.KeySchemaElement{
-					{AttributeName: aws.String("email_lc"), KeyType: types.KeyTypeHash},
-				},
-			},
-		},
+		// GlobalSecondaryIndexes: []types.GlobalSecondaryIndex{
+		// 	{
+		// 		IndexName:  aws.String(suite.tableName + "-by-email"),
+		// 		Projection: &types.Projection{ProjectionType: types.ProjectionTypeKeysOnly},
+		// 		KeySchema: []types.KeySchemaElement{
+		// 			{AttributeName: aws.String("email_lc"), KeyType: types.KeyTypeHash},
+		// 		},
+		// 	},
+		// },
 	})
 
 	if err != nil {
@@ -108,6 +108,8 @@ func (suite *DynamoBasicSuite) createUser(t *testing.T) user.User {
 	err := suite.store.CreateUser(&user)
 	require.NoError(t, err, "Create user error")
 
+	time.Sleep(time.Millisecond * 1000)
+
 	return user
 }
 
@@ -116,7 +118,7 @@ func (suite *DynamoBasicSuite) TestByEmail() {
 	user := suite.createUser(t)
 
 	// give the secondary index a chance to catchup
-	time.Sleep(2 * time.Second)
+	// time.Sleep(2 * time.Second)
 
 	u1, err := suite.store.GetByEmail("bad-email")
 	require.NoError(t, err, "bad email failed")
@@ -140,4 +142,58 @@ func (suite *DynamoBasicSuite) TestById() {
 	require.NoError(t, err, "good-id returned error")
 	require.NotNil(t, u2, "good-id not found")
 	require.Equal(t, u2.ID, user.ID, "IDs should match")
+}
+
+func (suite *DynamoBasicSuite) TestUpdateUser() {
+	t := suite.T()
+	u0 := suite.createUser(t)
+
+	u0.Status = user.UserStatus(uuid.NewString())
+
+	err := suite.store.UpdateUser(&u0)
+	require.NoError(t, err, "update user 1")
+
+	u, err := suite.store.GetById(u0.ID)
+	require.NoError(t, err, "get by ID success")
+	require.NotNil(t, u, "record found")
+
+	require.Equal(t, u.ID, u0.ID, "IDs should match")
+	require.Equal(t, u.Status, u0.Status, "status updated")
+}
+
+func (suite *DynamoBasicSuite) TestUpdateEmail() {
+	t := suite.T()
+	u0 := suite.createUser(t)
+
+	oldEmail := u0.Email
+
+	u0.Email = faker.New().Internet().Email()
+
+	err := suite.store.UpdateUser(&u0)
+	require.NoError(t, err, "update user 1")
+
+	u, err := suite.store.GetById(u0.ID)
+	require.NoError(t, err, "get by ID success")
+	require.NotNil(t, u, "record found")
+	require.Equal(t, u.ID, u0.ID, "IDs should match")
+
+	u, err = suite.store.GetByEmail(u0.Email)
+	require.NoError(t, err, "get by Email success")
+	require.NotNil(t, u, "record found")
+	require.Equal(t, u.ID, u0.ID, "IDs should match")
+
+	u, err = suite.store.GetByEmail(oldEmail)
+	require.NoError(t, err, "get by oldEmail success")
+	require.Nil(t, u, "record not found")
+}
+
+func (suite *DynamoBasicSuite) TestUpdateDupEmail() {
+	t := suite.T()
+	u0 := suite.createUser(t)
+	u1 := suite.createUser(t)
+
+	u1.Email = u0.Email
+
+	err := suite.store.UpdateUser(&u1)
+	require.Error(t, err, "Update duplicate email")
 }

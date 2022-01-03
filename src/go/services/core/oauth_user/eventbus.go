@@ -1,12 +1,11 @@
 package user
 
 import (
+	"context"
 	"log"
 	"reflect"
 
-	genpb "github.com/koblas/grpc-todo/genpb/core"
-	"github.com/robinjoseph08/redisqueue"
-	"google.golang.org/protobuf/proto"
+	"github.com/koblas/grpc-todo/pkg/eventbus"
 )
 
 const ENTITY_USER = "entity:user"
@@ -14,23 +13,16 @@ const ENTITY_SETTINGS = "entity:user_settings"
 const ENTITY_SECURITY = "event:user_security"
 
 // Common method to create wire version
-func (s *OauthUserServer) publishMsg(stream string, action string, body []byte) error {
-	values := []*genpb.MetadataEntry{
-		{Key: "stream", Value: stream},
-		{Key: "action", Value: action},
+func (s *OauthUserServer) publishMsg(ctx context.Context, stream string, action string, body []byte) error {
+	attr := map[string]string{
+		"stream":       stream,
+		"action":       action,
+		"content-type": "application/protobuf",
 	}
-	mbytes, err := proto.Marshal(&genpb.Metadata{
-		Metadata: values,
-	})
-	if err != nil {
-		return err
-	}
-	return s.pubsub.Enqueue(&redisqueue.Message{
-		Stream: stream,
-		Values: map[string]interface{}{
-			"metadata": mbytes,
-			"body":     body,
-		},
+	return s.pubsub.Enqueue(ctx, &eventbus.Message{
+		Stream:     stream,
+		Attributes: attr,
+		BodyBytes:  body,
 	})
 }
 

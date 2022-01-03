@@ -4,6 +4,7 @@ package user
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -11,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/twitchtv/twirp"
 )
 
 type dynamoStore struct {
@@ -21,7 +23,14 @@ type dynamoStore struct {
 type dynamoUser struct {
 	Pk      string `dynamodbav:"pk"`
 	EmailLc string `dynamodbav:"email_lc"`
+	UserId  string `dynamodbav:"user_id"`
 	User
+}
+
+type dynamoAuth struct {
+	Pk string `dynamodbav:"pk"`
+	Sk string `dynamodbav:"sk"`
+	UserAuth
 }
 
 type DynamoOption struct {
@@ -67,8 +76,11 @@ func NewUserDynamoStore(opts ...DynamoOption) UserStore {
 	return &state
 }
 
+func (store *dynamoStore) buildAuthKey(provider, provider_id string) *types.AttributeValueMemberS {
+	return &types.AttributeValueMemberS{Value: "auth#" + provider + "#" + provider_id}
+}
 func (store *dynamoStore) buildIdKey(id string) *types.AttributeValueMemberS {
-	return &types.AttributeValueMemberS{Value: "id#" + id}
+	return &types.AttributeValueMemberS{Value: "user#" + id}
 }
 func (store *dynamoStore) buildEmailKey(email string) *types.AttributeValueMemberS {
 	return &types.AttributeValueMemberS{Value: "userEmail#" + strings.ToLower(email)}
@@ -98,32 +110,30 @@ func (store *dynamoStore) GetById(id string) (*User, error) {
 func (store *dynamoStore) GetByEmail(email string) (*User, error) {
 	ctx := context.TODO()
 
-	out, err := store.client.Query(ctx, &dynamodb.QueryInput{
-		TableName:              store.table,
-		IndexName:              aws.String(*store.table + "-by-email"),
-		KeyConditionExpression: aws.String("email_lc = :email_lc"),
-		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":email_lc": &types.AttributeValueMemberS{Value: strings.ToLower(email)},
+	out, err := store.client.GetItem(ctx, &dynamodb.GetItemInput{
+		TableName: store.table,
+		Key: map[string]types.AttributeValue{
+			"pk": store.buildEmailKey(email),
 		},
 	})
 
-	if err != nil || out == nil || len(out.Items) == 0 {
+	if err != nil || len(out.Item) == 0 {
 		return nil, err
 	}
 
 	user := dynamoUser{}
-	if err := attributevalue.UnmarshalMap(out.Items[0], &user); err != nil {
+	if err := attributevalue.UnmarshalMap(out.Item, &user); err != nil {
 		return nil, err
 	}
 
-	return store.GetById(user.Pk[3:])
+	return store.GetById(user.UserId)
 }
 
-func (store *dynamoStore) CreateUser(user *User) error {
+func (store *dynamoStore) CreateUser(user User) error {
 	av, err := attributevalue.MarshalMap(dynamoUser{
-		Pk:      "id#" + user.ID,
+		Pk:      store.buildIdKey(user.ID).Value,
 		EmailLc: strings.ToLower(user.Email),
-		User:    *user,
+		User:    user,
 	})
 	if err != nil {
 		return err
@@ -142,7 +152,7 @@ func (store *dynamoStore) CreateUser(user *User) error {
 					TableName: store.table,
 					Item: map[string]types.AttributeValue{
 						"pk":      store.buildEmailKey(user.Email),
-						"user_id": &types.AttributeValueMemberS{Value: strings.ToLower(user.Email)},
+						"user_id": &types.AttributeValueMemberS{Value: user.ID},
 					},
 				},
 			},
@@ -153,19 +163,134 @@ func (store *dynamoStore) CreateUser(user *User) error {
 }
 
 func (store *dynamoStore) UpdateUser(user *User) error {
+	old, err := store.GetById(user.ID)
+
+	if err != nil {
+		return err
+	}
+
 	av, err := attributevalue.MarshalMap(dynamoUser{
 		User: *user,
-		Pk:   user.ID,
+		Pk:   store.buildIdKey(user.ID).Value,
 	})
 	if err != nil {
 		return err
 	}
 
-	// TODO -- if email changes, we need to update it...
-	_, err = store.client.PutItem(context.TODO(), &dynamodb.PutItemInput{
-		TableName: store.table,
-		Item:      av,
+	transact := []types.TransactWriteItem{}
+
+	transact = append(transact, types.TransactWriteItem{
+		Put: &types.Put{
+			TableName: store.table,
+			Item:      av,
+		},
+	})
+	if old.Email != user.Email {
+		transact = append(transact,
+			types.TransactWriteItem{
+				Delete: &types.Delete{
+					TableName: store.table,
+					Key: map[string]types.AttributeValue{
+						"pk": store.buildEmailKey(old.Email),
+					},
+				},
+			},
+			types.TransactWriteItem{
+				Put: &types.Put{
+					TableName: store.table,
+					Item: map[string]types.AttributeValue{
+						"pk":      store.buildEmailKey(user.Email),
+						"user_id": &types.AttributeValueMemberS{Value: user.ID},
+					},
+					ConditionExpression: aws.String("attribute_not_exists(pk)"),
+				},
+			},
+		)
+	}
+
+	_, err = store.client.TransactWriteItems(context.TODO(), &dynamodb.TransactWriteItemsInput{
+		TransactItems: transact,
 	})
 
 	return err
+}
+
+func (store *dynamoStore) AuthUpsert(provider, provider_id string, auth UserAuth) error {
+	if provider == "" || provider_id == "" {
+		return twirp.InvalidArgumentError("provider", "provider or provider_id is empty")
+	}
+	av, err := attributevalue.MarshalMap(dynamoAuth{
+		Pk:       store.buildAuthKey(provider, provider_id).Value,
+		UserAuth: auth,
+	})
+	if err != nil {
+		return err
+	}
+
+	request := map[string][]types.WriteRequest{}
+
+	request[*store.table] = []types.WriteRequest{
+		{
+			PutRequest: &types.PutRequest{
+				Item: av,
+			},
+		},
+	}
+
+	out, err := store.client.BatchWriteItem(context.TODO(), &dynamodb.BatchWriteItemInput{
+		RequestItems: request,
+	})
+
+	if len(out.UnprocessedItems) != 0 {
+		return fmt.Errorf("write failed - uprocessed items")
+	}
+
+	return err
+}
+
+func (store *dynamoStore) AuthGet(provider, provider_id string) (*UserAuth, error) {
+	if provider == "" || provider_id == "" {
+		return nil, twirp.InvalidArgumentError("provider", "provider or provider_id is empty")
+	}
+	out, err := store.client.GetItem(context.TODO(), &dynamodb.GetItemInput{
+		TableName: store.table,
+		Key: map[string]types.AttributeValue{
+			"pk": store.buildAuthKey(provider, provider_id),
+			// "sk": store.buildIdKey(id),
+		},
+	})
+
+	if err != nil || len(out.Item) == 0 {
+		return nil, err
+	}
+
+	obj := UserAuth{}
+	if err := attributevalue.UnmarshalMap(out.Item, &obj); err != nil {
+		return nil, err
+	}
+
+	return &obj, nil
+}
+
+func (store *dynamoStore) AuthDelete(provider, provider_id string, auth UserAuth) error {
+	if provider == "" || provider_id == "" {
+		return twirp.InvalidArgumentError("provider", "provider or provider_id is empty")
+	}
+	_, err := store.client.DeleteItem(context.TODO(), &dynamodb.DeleteItemInput{
+		TableName: store.table,
+		Key: map[string]types.AttributeValue{
+			"pk": store.buildAuthKey(provider, provider_id),
+			// "sk": store.buildIdKey(id),
+		},
+		ConditionExpression: aws.String("user_id = :user_id"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":user_id": &types.AttributeValueMemberS{Value: auth.UserID},
+		},
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

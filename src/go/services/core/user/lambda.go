@@ -2,7 +2,6 @@ package user
 
 import (
 	"context"
-	"log"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
@@ -19,24 +18,28 @@ var ssmConfig *SsmConfig
 var api core.TwirpServer
 
 func HandleLambda() func(context.Context, events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
+	log := logger.NewZap(logger.LevelInfo)
+
 	if ssmConfig == nil || api == nil {
+		log.Info("BEGIN: lambda initialization")
 		ssmConfig = &SsmConfig{}
 		err := awsutil.LoadSsmConfig("/common/", ssmConfig)
 		if err != nil {
 			log.Fatal(err.Error())
 		}
+		log.Info("Getting parameters finished")
 
 		producer, err := aws.NewAwsPublish(ssmConfig.EventArn)
 		if err != nil {
-			log.Fatal(err)
+			log.With("error", err).Fatal("Unable to initilaize AwsPublisher")
 		}
 
 		s := NewUserServer(producer, NewUserDynamoStore())
 		api = core.NewUserServiceServer(s)
+		log.Info("FINISHED: lambda initialization")
 	}
 
-	linfo := logger.NewZap(logger.LevelInfo)
-	ctx := logger.ToContext(context.Background(), linfo)
+	ctx := logger.ToContext(context.Background(), log)
 
 	return awsutil.HandleLambda(ctx, api)
 }
