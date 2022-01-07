@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"github.com/jaswdr/faker"
-	genpb "github.com/koblas/grpc-todo/genpb/core"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	email "github.com/koblas/grpc-todo/services/core/send_email"
+	genpb "github.com/koblas/grpc-todo/twpb/core"
 	"github.com/stretchr/testify/require"
 )
 

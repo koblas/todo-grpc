@@ -6,8 +6,6 @@ import (
 
 	"github.com/koblas/grpc-todo/twpb/core"
 
-	// "github.com/koblas/grpc-todo/genpb/publicapi"
-
 	"github.com/koblas/grpc-todo/pkg/tokenmanager"
 	"github.com/koblas/grpc-todo/twpb/publicapi"
 	"golang.org/x/net/context"

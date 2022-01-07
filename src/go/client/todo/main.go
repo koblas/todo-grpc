@@ -7,7 +7,7 @@ import (
 
 	"google.golang.org/grpc"
 
-	todo "github.com/koblas/grpc-todo/genpb"
+	todo "github.com/koblas/grpc-todo/twpb"
 )
 
 func main() {
