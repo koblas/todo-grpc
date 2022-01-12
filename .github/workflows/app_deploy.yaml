@@ -46,21 +46,21 @@ jobs:
         with:
           working_dir: ts-client-react/deploy
           cdk_subcommand: 'deploy'
-            #cdk_stack: 'stack1'
           cdk_args: '--require-approval never'
+            #cdk_stack: 'stack1'
           actions_comment: false
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: 'us-east-1'
 
-      - name: cdk synth
-        uses: youyo/aws-cdk-github-actions@v2
-        with:
-          working_dir: ts-client-react/deploy
-          cdk_subcommand: 'synth'
-          cdk_version: '1.16.2'
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: 'us-east-1'
+      # - name: cdk synth
+      #   uses: youyo/aws-cdk-github-actions@v2
+      #   with:
+      #     working_dir: ts-client-react/deploy
+      #     cdk_subcommand: 'synth'
+      #     cdk_version: '1.16.2'
+      #   env:
+      #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     AWS_DEFAULT_REGION: 'us-east-1'
