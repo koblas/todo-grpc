@@ -47,7 +47,7 @@ jobs:
           working_dir: ts-client-react/deploy
           cdk_subcommand: 'deploy'
             #cdk_stack: 'stack1'
-          cdk_args: '--require-approval never --all'
+          cdk_args: '--require-approval never'
           actions_comment: false
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
