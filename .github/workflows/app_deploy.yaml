@@ -30,29 +30,44 @@ jobs:
       #- run: npm run test:unit # run the tests
       # deploy site to netlify using secrets created on repository
 
-      - name: cdk diff
-        uses: youyo/aws-cdk-github-actions@v2
+      - uses: actions/cache@v2
         with:
-          working_dir: ts-client-react/deploy
-          cdk_subcommand: 'diff'
-          actions_comment: true
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}-cdk
+          restore-keys: ${{ runner.os }}-node-
+      - run: npm ci
+        working-directory: ts-client-react/deploy
+      - run: npx cdk deploy --require-approval never --all
+        working-directory: ts-client-react/deploy
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: 'us-east-1'
+          AWS_DEFAULT_REGION: 'ap-northeast-1'
 
-      - name: cdk deploy
-        uses: youyo/aws-cdk-github-actions@v2
-        with:
-          working_dir: ts-client-react/deploy
-          cdk_subcommand: 'deploy'
-          cdk_args: '--require-approval never'
-            #cdk_stack: 'stack1'
-          actions_comment: false
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: 'us-east-1'
+
+      # - name: cdk diff
+      #   uses: youyo/aws-cdk-github-actions@v2
+      #   with:
+      #     working_dir: ts-client-react/deploy
+      #     cdk_subcommand: 'diff'
+      #     actions_comment: true
+      #   env:
+      #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     AWS_DEFAULT_REGION: 'us-east-1'
+
+      # - name: cdk deploy
+      #   uses: youyo/aws-cdk-github-actions@v2
+      #   with:
+      #     working_dir: ts-client-react/deploy
+      #     cdk_subcommand: 'deploy'
+      #     cdk_args: '--require-approval never'
+      #       #cdk_stack: 'stack1'
+      #     actions_comment: false
+      #   env:
+      #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     AWS_DEFAULT_REGION: 'us-east-1'
 
       # - name: cdk synth
       #   uses: youyo/aws-cdk-github-actions@v2

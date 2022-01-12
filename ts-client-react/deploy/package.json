@@ -2,7 +2,7 @@
   "name": "x",
   "version": "0.1.0",
   "bin": {
-    "x": "bin/x.js"
+    "app": "bin/app.js"
   },
   "scripts": {
     "build": "tsc",
