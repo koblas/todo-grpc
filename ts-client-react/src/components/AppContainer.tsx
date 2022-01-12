@@ -1,6 +1,6 @@
 /* eslint-disable react/require-default-props */
 import React, { ReactNode, ReactText } from "react";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   IconButton,
   Avatar,
@@ -24,17 +24,7 @@ import {
   MenuItem,
   MenuList,
 } from "@chakra-ui/react";
-import {
-  FiHome,
-  FiTrendingUp,
-  FiCompass,
-  FiStar,
-  FiSettings,
-  FiMenu,
-  FiBell,
-  FiChevronDown,
-  FiLogOut,
-} from "react-icons/fi";
+import { FiHome, FiTrendingUp, FiCompass, FiStar, FiSettings, FiMenu, FiBell, FiChevronDown } from "react-icons/fi";
 import { IconType } from "react-icons";
 
 interface LinkItemProps {
@@ -96,7 +86,7 @@ interface MobileProps extends FlexProps {
   onOpen: () => void;
 }
 function MobileNav({ onOpen, ...rest }: MobileProps) {
-  const history = useHistory();
+  const navigate = useNavigate();
 
   return (
     <Flex
@@ -124,15 +114,13 @@ function MobileNav({ onOpen, ...rest }: MobileProps) {
 
       <HStack spacing={{ base: "0", md: "6" }}>
         <IconButton size="lg" variant="ghost" aria-label="open menu" icon={<FiBell />} />
-        <Flex alignItems={"center"}>
+        <Flex alignItems="center">
           <Menu>
             <MenuButton py={2} transition="all 0.3s" _focus={{ boxShadow: "none" }}>
               <HStack>
                 <Avatar
-                  size={"sm"}
-                  src={
-                    "https://images.unsplash.com/photo-1619946794135-5bc917a27793?ixlib=rb-0.3.5&q=80&fm=jpg&crop=faces&fit=crop&h=200&w=200&s=b616b2c5b373a80ffc9636ba24f7a4a9"
-                  }
+                  size="sm"
+                  src="https://images.unsplash.com/photo-1619946794135-5bc917a27793?ixlib=rb-0.3.5&q=80&fm=jpg&crop=faces&fit=crop&h=200&w=200&s=b616b2c5b373a80ffc9636ba24f7a4a9"
                 />
                 <VStack display={{ base: "none", md: "flex" }} alignItems="flex-start" spacing="1px" ml="2">
                   <Text fontSize="sm">Justina Clark</Text>
@@ -156,7 +144,7 @@ function MobileNav({ onOpen, ...rest }: MobileProps) {
               <MenuItem
                 onClick={(e) => {
                   e.preventDefault();
-                  history.push("/auth/logout");
+                  navigate("/auth/logout");
                 }}
               >
                 Sign out

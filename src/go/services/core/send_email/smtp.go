@@ -2,18 +2,39 @@ package send_email
 
 import (
 	"context"
-	"os"
+	"log"
+	"strconv"
+	"strings"
 
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"gopkg.in/gomail.v2"
 )
 
 type smtpService struct {
+	host     string
+	port     int
+	username string
+	password string
 }
 
 // NewService construct a default email service
-func NewSmtpService() Sender {
-	return &smtpService{}
+func NewSmtpService(config SsmConfig) Sender {
+	parts := strings.Split(config.SmtpAddr, ":")
+	host := parts[0]
+	port := 587
+	if len(parts) == 2 {
+		var err error
+		port, err = strconv.Atoi(parts[1])
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	return &smtpService{
+		host:     host,
+		port:     port,
+		username: config.SmtpUser,
+		password: config.SmtpPass,
+	}
 }
 
 func (svc *smtpService) SendEmail(ctx context.Context, sender, to, subject, html string) (string, error) {
@@ -25,12 +46,8 @@ func (svc *smtpService) SendEmail(ctx context.Context, sender, to, subject, html
 	m.SetHeader("Subject", subject)
 	m.SetBody("text/html", html)
 
-	host := os.Getenv("SMTP_HOST")
-	username := os.Getenv("SMTP_USERNAME")
-	password := os.Getenv("SMTP_PASSWORD")
-
-	d := gomail.NewDialer(host, 587, username, password)
-	log.With("stmpHost", host, "smtpUser", username).Info("Sending email")
+	d := gomail.NewDialer(svc.host, svc.port, svc.username, svc.password)
+	log.With("stmpHost", svc.host, "smtpUser", svc.username).Info("Sending email")
 
 	err := d.DialAndSend(m)
 

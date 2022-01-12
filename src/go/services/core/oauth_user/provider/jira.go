@@ -41,7 +41,7 @@ func (svc jiraProvider) BuildRedirect(ctx context.Context, redirectURI string, s
 	)
 }
 
-func (svc jiraProvider) GetAccessToken(ctx context.Context, code string, redirectURI string, state string) (TokenResult, error) {
+func (svc jiraProvider) GetAccessToken(ctx context.Context, code string, redirectURI string) (TokenResult, error) {
 	logger := svc.logger.With("method", "jiraProvider.GetAccessToken")
 
 	return svc.httpTokenRequest(ctx, logger, "https://auth.atlassian.com/oauth/token", map[string]interface{}{

@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"github.com/jaswdr/faker"
-	genpb "github.com/koblas/grpc-todo/genpb/core"
-	"github.com/koblas/grpc-todo/pkg/logger"
+	eventstub "github.com/koblas/grpc-todo/pkg/eventbus/stub"
 	email "github.com/koblas/grpc-todo/services/core/send_email"
+	genpb "github.com/koblas/grpc-todo/twpb/core"
 	"github.com/stretchr/testify/require"
 )
 
@@ -23,10 +23,10 @@ func (svc *stubSender) SendEmail(ctx context.Context, sender, to, subject, html 
 	return "", nil
 }
 
-func buildTestService() (genpb.SendEmailServiceServer, *stubSender) {
-	logger := logger.NewNopLogger()
+func buildTestService() (genpb.SendEmailService, *stubSender) {
 	senderData := &stubSender{}
-	svc := email.NewSendEmailServer(logger, senderData)
+	bus := eventstub.NewEventbusStub()
+	svc := email.NewSendEmailServer(bus, senderData)
 
 	return svc, senderData
 }

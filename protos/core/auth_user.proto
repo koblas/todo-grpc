@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package core.auth;
+
+option go_package = "./;core";
+
+message Empty {}
+
+message AuthOAuthGetUrlParams {
+  string provider = 1;
+  string redirect_url = 2;
+  string state = 3;
+}
+
+message AuthUserGetUrlResult { string url = 1; }
+
+message AuthUserGetParams {
+  string user_id = 1;
+  string provider = 2;
+}
+
+message AuthOauthParams {
+  string provider = 1;
+  string provider_id = 2;
+  string code = 3;
+}
+
+message AuthEmailParams {
+  string email = 1;
+  string password = 2;
+}
+
+message AuthUserListAssoicationsResponse { repeated string provider = 1; }
+
+message AuthUserUpsertParams {
+  // If provide, then we're additing an association
+  string user_id = 1;
+  AuthOauthParams oauth = 2;
+  AuthEmailParams email = 3;
+  string redirect_url = 4;
+  string state = 5;
+}
+
+message AuthUserUpsertResult {
+  string user_id = 1;
+  bool created = 2;
+}
+
+service AuthUserService {
+  // Get an authentiction url
+  rpc GetAuthURL(AuthOAuthGetUrlParams) returns (AuthUserGetUrlResult);
+
+  // List all associations for this user
+  rpc ListAssociations(AuthUserGetParams)
+      returns (AuthUserListAssoicationsResponse);
+  // Remove this token from the system
+  rpc RemoveAssociation(AuthUserGetParams) returns (Empty);
+  // Assoicate or create the user as needed
+  rpc UpsertUser(AuthUserUpsertParams) returns (AuthUserUpsertResult);
+
+  // TO make 3rd party calls we need a bearer token...
+  //   GetTokenSource(ctx context.Context, userGUID entity.UserGUID, provider
+  //   string) (oauth2.TokenSource, error)
+}

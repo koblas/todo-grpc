@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Alert, Text, Box, Flex, Heading, Link, Stack, Spinner } from "@chakra-ui/react";
-import { Link as RouterLink, useHistory, useLocation, useParams } from "react-router-dom";
+import { Link as RouterLink, useNavigate, useLocation, useParams } from "react-router-dom";
 import { useAuth } from "../../hooks/auth";
 import AuthWrapper from "./AuthWrapper";
 
 export default function OAuthPage() {
   const auth = useAuth();
   const location = useLocation();
-  const history = useHistory();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [success, setSuccess] = useState(false);
   // const [lError, setLError] = useState<string>("");
@@ -16,8 +16,9 @@ export default function OAuthPage() {
   const [oauthRedirect, { loading: loadingRedirect }] = auth.mutations.useOauthRedirect();
 
   const redirectUrl = `${window.location.origin}/auth/oauth/${provider}`;
-  const code = new URLSearchParams(location.search).get("code");
-  // const { next } = location.state || { next: { pathname: "/" } };
+  const search = new URLSearchParams(location.search);
+  const code = search.get("code");
+  const state = search.get("state") ?? "";
 
   if (!provider) {
     throw new Error("Missing provider");
@@ -44,14 +45,14 @@ export default function OAuthPage() {
     }
 
     oauthLogin(
-      { provider, code, redirectUrl, state: "" },
+      { provider, code, redirectUrl, state },
       {
         onCompleted(data) {
           setSuccess(true);
 
           if (!data?.created) {
             // TODO - should be "next"
-            history.replace("/");
+            navigate("/", { replace: true });
           }
         },
         onFinished() {

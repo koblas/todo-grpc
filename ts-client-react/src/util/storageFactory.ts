@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { Json } from "../types/json";
 /* ISC License (ISC). Copyright 2017 Michal Zalecki */
 
 // Handle localStorage/sessionStorage when we're presented with Safari inconginito mode
@@ -84,4 +86,27 @@ export function storageFactory(getStorage: () => Storage): Storage {
       return length();
     },
   };
+}
+
+export function useLocalStorage<T extends Json>(key: string, initialValue: T) {
+  const storage = storageFactory(() => localStorage);
+
+  const [storedValue, setStoredValue] = useState(() => {
+    const item = storage.getItem(key);
+    const valueToStore = item ? JSON.parse(item) : initialValue;
+    localStorage.setItem(key, JSON.stringify(valueToStore));
+    return valueToStore;
+  });
+
+  const setValue = (value: T): void => {
+    setStoredValue(value);
+    storage.setItem(key, JSON.stringify(value));
+  };
+
+  const clearValue = (): void => {
+    setStoredValue(undefined);
+    storage.removeItem(key);
+  };
+
+  return [storedValue, setValue, clearValue];
 }

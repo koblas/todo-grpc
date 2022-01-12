@@ -14,7 +14,7 @@ module.exports = {
   ],
   parser: "@typescript-eslint/parser",
   parserOptions: {
-    project: `${__dirname}/tsconfig.json`,
+    project: [`${__dirname}/tsconfig.json`, `${__dirname}/tsconfig.eslint.json`],
     ecmaFeatures: {
       jsx: true,
     },
@@ -42,4 +42,9 @@ module.exports = {
     // "default-case": "off",
     // "new-cap": "off",
   },
+  // overrides: {
+  //   files: ["*.test.*"],
+  //   rules: {
+  //   }
+  // }
 };

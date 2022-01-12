@@ -2,7 +2,8 @@ import { Json } from "../../types/json";
 import { RpcOptions } from "../errors";
 import { handleJsonError } from "./json_helpers";
 
-export const BASE_URL = "http://localhost:8080";
+// https://fny9c2xm3b.execute-api.us-east-1.amazonaws.com/v1/auth.AuthenticationService/Authenticate
+export const BASE_URL = process.env.BASE_URL ?? "http://localhost:8080";
 
 export class FetchError extends Error {
   public body: Json;
@@ -141,11 +142,11 @@ export function newFetchClient(config?: { token?: string | null; base?: string |
  * newFetchPOST is a standard wrapper around newFetchClient that
  * handles the error cases without a lot of DRY violations.
  */
-export function newFetchPOST() {
-  const client = newFetchClient();
+export function newFetchPOST(opts?: Parameters<typeof newFetchClient>[0]) {
+  const client = newFetchClient(opts);
 
   return {
-    call<T, R>(url: string, params: Json, options: RpcOptions<R>, xform?: (input: T) => R) {
+    call<T, R = T>(url: string, params: Json, options: RpcOptions<R>, xform?: (input: T) => R) {
       client
         .POST<T>(url, params)
         .then((data) => {

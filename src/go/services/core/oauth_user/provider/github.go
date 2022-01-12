@@ -40,7 +40,7 @@ func (svc githubProvider) BuildRedirect(ctx context.Context, redirectURI string,
 	)
 }
 
-func (svc githubProvider) GetAccessToken(ctx context.Context, code string, redirectURI string, state string) (TokenResult, error) {
+func (svc githubProvider) GetAccessToken(ctx context.Context, code string, redirectURI string) (TokenResult, error) {
 	logger := svc.logger.With("method", "githubProvider.GetAccessToken")
 
 	return svc.httpTokenRequest(ctx, logger, "https://github.com/login/oauth/access_token", map[string]interface{}{
@@ -49,7 +49,7 @@ func (svc githubProvider) GetAccessToken(ctx context.Context, code string, redir
 		"code":          code,
 		"scope":         "user",
 		"redirect_uri":  redirectURI,
-		"state":         state, // @todo -- should match
+		// "state":         state, // @todo -- should match
 	})
 }
 

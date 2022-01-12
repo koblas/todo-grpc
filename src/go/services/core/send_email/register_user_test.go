@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/jaswdr/faker"
-	genpb "github.com/koblas/grpc-todo/genpb/core"
+	genpb "github.com/koblas/grpc-todo/twpb/core"
 	"github.com/stretchr/testify/require"
 )
 

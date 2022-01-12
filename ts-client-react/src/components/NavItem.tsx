@@ -1,11 +1,11 @@
 import React from "react";
-import { Flex, Text, Icon, Link, Menu, MenuButton, MenuList, As, Avatar } from "@chakra-ui/react";
-import NavHoverBox from "./NavHoverBox";
+import { Flex, Text, Icon, Link, Menu, MenuButton, As, Avatar } from "@chakra-ui/react";
+// import NavHoverBox from "./NavHoverBox";
 
 type Props = {
-  description?: string;
+  // description?: string;
   active?: boolean;
-  navSize?: string;
+  // navSize?: string;
   expanded: boolean;
   icon?: As;
   avatar?: string;
@@ -16,7 +16,7 @@ export default function NavItem({
   avatar,
   icon,
   children,
-  description,
+  // description,
   active,
   expanded,
   onClick,

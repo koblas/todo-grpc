@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"errors"
 
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"golang.org/x/oauth2"
@@ -38,7 +37,7 @@ func (svc stravaProvider) BuildRedirect(ctx context.Context, redirectURI string,
 	)
 }
 
-func (svc stravaProvider) GetAccessToken(ctx context.Context, code string, redirectURI string, state string) (TokenResult, error) {
+func (svc stravaProvider) GetAccessToken(ctx context.Context, code string, redirectURI string) (TokenResult, error) {
 	logger := svc.logger.With("method", "stravaProvider.GetAccesToken")
 
 	// Strava returns "state" in ther response....
@@ -54,10 +53,10 @@ func (svc stravaProvider) GetAccessToken(ctx context.Context, code string, redir
 		return TokenResult{}, err
 	}
 
-	if token.State != state {
-		logger.With("stateExpected", state, "stateReceived", token.State).Error("State mismatch")
-		return TokenResult{}, errors.New("strava oauth2 state didn't match")
-	}
+	// if token.State != state {
+	// 	logger.With("stateExpected", state, "stateReceived", token.State).Error("State mismatch")
+	// 	return TokenResult{}, errors.New("strava oauth2 state didn't match")
+	// }
 
 	return token, nil
 }

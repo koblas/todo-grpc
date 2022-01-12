@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Switch, useRouteMatch, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { useToast } from "@chakra-ui/react";
 
 import { AuthRecoverSendPage } from "./RecoverySendPage";
@@ -13,7 +13,6 @@ import { NotFoundPage } from "../NotFoundPage";
 import { NetworkContextProvider, useNetworkContext } from "../../hooks/network";
 
 function AuthPagesActions() {
-  const { path } = useRouteMatch();
   const toast = useToast();
   const network = useNetworkContext();
 
@@ -33,34 +32,16 @@ function AuthPagesActions() {
   }, []);
 
   return (
-    <>
-      <Switch>
-        <Route path={`${path}/register`}>
-          <AuthRegisterPage />
-        </Route>
-        <Route path={`${path}/login`}>
-          <LoginPage />
-        </Route>
-        <Route path={`${path}/logout`}>
-          <AuthLogoutPage />
-        </Route>
-        <Route path={`${path}/oauth/:provider`}>
-          <OAuthPage />
-        </Route>
-        <Route path={`${path}/recover/send`}>
-          <AuthRecoverSendPage />
-        </Route>
-        <Route path={`${path}/email/confirm/:userId/:token`}>
-          <AuthEmailConfirmPage />
-        </Route>
-        <Route path={`${path}/recover/verify/:userId/:token`}>
-          <AuthRecoveryResetPage />
-        </Route>
-        <Route path={`${path}/*`}>
-          <NotFoundPage />
-        </Route>
-      </Switch>
-    </>
+    <Routes>
+      <Route path="/register" element={<AuthRegisterPage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/logout" element={<AuthLogoutPage />} />
+      <Route path="/oauth/:provider" element={<OAuthPage />} />
+      <Route path="/recover/send" element={<AuthRecoverSendPage />} />
+      <Route path="/email/confirm/:userId/:token" element={<AuthEmailConfirmPage />} />
+      <Route path="/recover/verify/:userId/:token" element={<AuthRecoveryResetPage />} />
+      <Route path="/*" element={<NotFoundPage />} />
+    </Routes>
   );
 }
 

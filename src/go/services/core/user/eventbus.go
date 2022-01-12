@@ -5,9 +5,10 @@ import (
 	"log"
 	"reflect"
 
-	genpb "github.com/koblas/grpc-todo/genpb/core"
+	"github.com/koblas/grpc-todo/pkg/eventbus"
 	"github.com/koblas/grpc-todo/pkg/logger"
-	"github.com/robinjoseph08/redisqueue"
+	genpb "github.com/koblas/grpc-todo/twpb/core"
+	"golang.org/x/net/context"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -20,11 +21,17 @@ func (s *UserServer) toProtoUser(user *User) *genpb.User {
 		return nil
 	}
 
+	isVerified := false
+	for _, v := range user.VerifiedEmails {
+		isVerified = isVerified || (v == user.Email)
+	}
+
 	return &genpb.User{
-		Id:     user.ID,
-		Name:   user.Name,
-		Email:  user.Email,
-		Status: statusToPbStatus[user.Status],
+		Id:              user.ID,
+		Name:            user.Name,
+		Email:           user.Email,
+		Status:          statusToPbStatus[user.Status],
+		EmailIsVerified: isVerified,
 	}
 }
 
@@ -49,23 +56,16 @@ func (s *UserServer) toProtoSettings(user *User) *genpb.UserSettings {
 }
 
 // Common method to create wire version
-func (s *UserServer) publishMsg(stream string, action string, body []byte) error {
-	values := []*genpb.MetadataEntry{
-		{Key: "stream", Value: stream},
-		{Key: "action", Value: action},
+func (s *UserServer) publishMsg(ctx context.Context, stream string, action string, body []byte) error {
+	attr := map[string]string{
+		"stream":       stream,
+		"action":       action,
+		"content-type": "application/protobuf",
 	}
-	mbytes, err := proto.Marshal(&genpb.Metadata{
-		Metadata: values,
-	})
-	if err != nil {
-		return err
-	}
-	return s.pubsub.Enqueue(&redisqueue.Message{
-		Stream: stream,
-		Values: map[string]interface{}{
-			"metadata": mbytes,
-			"body":     body,
-		},
+	return s.pubsub.Enqueue(ctx, &eventbus.Message{
+		Stream:     stream,
+		Attributes: attr,
+		BodyBytes:  body,
 	})
 }
 
@@ -86,7 +86,7 @@ func buildAction(orig, current interface{}) string {
 	return "updated"
 }
 
-func (s *UserServer) publishUser(stream string, orig, current *User) error {
+func (s *UserServer) publishUser(ctx context.Context, stream string, orig, current *User) error {
 	action := buildAction(orig, current)
 	pbchange := genpb.UserChangeEvent{
 		Current: s.toProtoUser(current),
@@ -100,10 +100,10 @@ func (s *UserServer) publishUser(stream string, orig, current *User) error {
 		return errors.New("body is nil")
 	}
 
-	return s.publishMsg(stream, action, body)
+	return s.publishMsg(ctx, stream, action, body)
 }
 
-func (s *UserServer) publishSettings(stream string, orig, current *User) error {
+func (s *UserServer) publishSettings(ctx context.Context, stream string, orig, current *User) error {
 	action := buildAction(orig, current)
 	change := genpb.UserSettingsChangeEvent{
 		Current: s.toProtoSettings(current),
@@ -117,10 +117,10 @@ func (s *UserServer) publishSettings(stream string, orig, current *User) error {
 		return errors.New("body is nil")
 	}
 
-	return s.publishMsg(stream, action, body)
+	return s.publishMsg(ctx, stream, action, body)
 }
 
-func (s *UserServer) publishSecurity(log logger.Logger, action genpb.UserSecurity, user User, token string) error {
+func (s *UserServer) publishSecurity(ctx context.Context, log logger.Logger, action genpb.UserSecurity, user User, token string) error {
 	log.With("userSecurity", action).Info("Sending security event")
 	svalue, err := s.kms.Encode([]byte(token))
 	if err != nil {
@@ -144,5 +144,5 @@ func (s *UserServer) publishSecurity(log logger.Logger, action genpb.UserSecurit
 		return errors.New("body is nil")
 	}
 
-	return s.publishMsg(ENTITY_SECURITY, genpb.UserSecurity_name[int32(action)], body)
+	return s.publishMsg(ctx, ENTITY_SECURITY, genpb.UserSecurity_name[int32(action)], body)
 }

@@ -1,5 +1,5 @@
 import React from "react";
-import { useHistory, Link as RouterLink } from "react-router-dom";
+import { useNavigate, Link as RouterLink } from "react-router-dom";
 import {
   Link,
   Text,
@@ -17,24 +17,31 @@ import { useAuth } from "../../hooks/auth";
 import { PasswordInput } from "../../components/PasswordInput";
 import AuthWrapper from "./AuthWrapper";
 
+type FormFields = {
+  name: string;
+  email: string;
+  password: string;
+};
+
 export function AuthRegisterPage() {
   const {
     register,
     handleSubmit,
     formState: { errors },
     setError,
-  } = useForm();
+  } = useForm<FormFields>();
   const { mutations } = useAuth();
   const [authRegister, { loading }] = mutations.useRegister();
-  const history = useHistory();
+  const navigate = useNavigate();
 
   function onSubmit(data: { email: string; password: string; name: string }) {
     authRegister(data, {
       onCompleted() {
-        history.replace("/todo");
+        navigate("/todo", { replace: true });
       },
       onErrorField(serror: Record<string, string[]>) {
-        ["name", "email", "password"].forEach((key) => {
+        const fields: (keyof FormFields)[] = ["email", "password"];
+        fields.forEach((key) => {
           const message = serror[key]?.[0];
           if (message) {
             setError(key, { message });

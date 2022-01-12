@@ -2,34 +2,36 @@ import React from "react";
 
 import { ChakraProvider, CSSReset, Flex } from "@chakra-ui/react";
 
-import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { TodoContextProvider } from "./hooks/todo";
 import { AuthPages } from "./pages/auth";
 import { SettingsPage } from "./pages/settings";
 import { TodoPage } from "./pages/TodoPage";
 import { HomePage } from "./pages/HomePage";
-import { AuthContextProvider } from "./hooks/auth";
 import { NetworkContextProvider } from "./hooks/network";
 import Sidebar from "./components/Sidebar";
 
 // const theme = createTheme();
 
-function Site() {
+function SiteLayout() {
   return (
     <Flex w="100%">
       <Sidebar />
-      <Switch>
-        <Route path="/settings">
-          <SettingsPage />
-        </Route>
-        <Route path="/todo">
-          <TodoPage />
-        </Route>
-        <Route path="*">
-          <HomePage />
-        </Route>
-      </Switch>
+      <Outlet />
     </Flex>
+  );
+}
+
+function Site() {
+  return (
+    <Routes>
+      <Route path="/" element={<SiteLayout />}>
+        <Route index element={<HomePage />} />
+        <Route path="settings/*" element={<SettingsPage />} />
+        <Route path="todo/*" element={<TodoPage />} />
+        <Route path="*" element={<HomePage />} />
+      </Route>
+    </Routes>
   );
 }
 
@@ -38,20 +40,14 @@ export default function App() {
     <ChakraProvider>
       <CSSReset />
       <NetworkContextProvider>
-        <AuthContextProvider>
-          <TodoContextProvider>
-            <Router>
-              <Switch>
-                <Route path="/auth">
-                  <AuthPages />
-                </Route>
-                <Route path="*">
-                  <Site />
-                </Route>
-              </Switch>
-            </Router>
-          </TodoContextProvider>
-        </AuthContextProvider>
+        <TodoContextProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/auth/*" element={<AuthPages />} />
+              <Route path="*" element={<Site />} />
+            </Routes>
+          </BrowserRouter>
+        </TodoContextProvider>
       </NetworkContextProvider>
     </ChakraProvider>
   );

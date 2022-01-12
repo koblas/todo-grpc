@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useHistory, Link as RouterLink, useLocation } from "react-router-dom";
+import { useNavigate, Link as RouterLink, useLocation } from "react-router-dom";
 import {
   Text,
   Button,
@@ -21,6 +21,11 @@ import { useAuth } from "../../hooks/auth";
 import AuthWrapper from "./AuthWrapper";
 import { PasswordInput } from "../../components/PasswordInput";
 
+type FormFields = {
+  email: string;
+  password: string;
+};
+
 export default function AuthLoginPage() {
   const {
     register,
@@ -28,25 +33,26 @@ export default function AuthLoginPage() {
     formState: { errors },
     setError,
     getValues,
-  } = useForm();
+  } = useForm<FormFields>();
   const auth = useAuth();
   const [login, { loading }] = auth.mutations.useLogin();
-  const history = useHistory();
+  const navigate = useNavigate();
   const { search } = useLocation();
 
   useEffect(() => {
     if (auth.isAuthenticated) {
       const query = new URLSearchParams(search);
 
-      history.replace(query.get("next") ?? "/");
+      navigate(query.get("next") ?? "/", { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auth.isAuthenticated]);
 
-  function onSubmit(data: { email: string; password: string }) {
+  function onSubmit(data: FormFields) {
     login(data, {
       onErrorField(serror: Record<string, string[]>) {
-        ["email", "password"].forEach((key) => {
+        const fields: (keyof FormFields)[] = ["email", "password"];
+        fields.forEach((key: keyof FormFields) => {
           const message = serror[key]?.[0];
           if (message) {
             setError(key, { message });
@@ -57,7 +63,7 @@ export default function AuthLoginPage() {
   }
 
   function onOauthButton(provider: string) {
-    history.push(`/auth/oauth/${provider}`);
+    navigate(`/auth/oauth/${provider}`);
   }
 
   return (
@@ -119,7 +125,7 @@ export default function AuthLoginPage() {
                     e.preventDefault();
                     const { email } = getValues();
 
-                    history.push({
+                    navigate({
                       pathname: "/auth/recover/send",
                       ...(email ? { search: `?email=${encodeURIComponent(email)}` } : {}),
                     });

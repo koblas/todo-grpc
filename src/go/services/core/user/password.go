@@ -1,6 +1,12 @@
 package user
 
-import "golang.org/x/crypto/bcrypt"
+import (
+	"bytes"
+	"crypto/hmac"
+	"crypto/sha256"
+
+	"golang.org/x/crypto/bcrypt"
+)
 
 func validatePassword(password string) string {
 	if len(password) < 8 {
@@ -30,12 +36,28 @@ func tokenEncrypt(password string) ([]byte, string, error) {
 	return enc, password, err
 }
 
-func tokenCompare(user *User, token string) bool {
-	return bcrypt.CompareHashAndPassword(*user.VerificationToken, []byte(token)) == nil
+func passwordCompare(hashedPassword []byte, password string) bool {
+	return bcrypt.CompareHashAndPassword(hashedPassword, []byte(password)) == nil
 }
 
-func passwordCompare(user *User, password string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+/** This is not a secure token value */
+func hmacCreate(key, token string) ([]byte, string, error) {
+	mac := hmac.New(sha256.New, []byte(key))
 
-	return err == nil
+	_, err := mac.Write([]byte(token))
+	if err != nil {
+		return nil, token, err
+	}
+
+	return mac.Sum(nil), token, nil
+}
+
+/** Compare non-secure token values */
+func hmacCompare(key, token string, check []byte) (bool, error) {
+	value, _, err := hmacCreate(key, token)
+	if err != nil {
+		return false, err
+	}
+
+	return bytes.Equal(value, check), nil
 }

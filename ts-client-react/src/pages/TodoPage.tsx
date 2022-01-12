@@ -1,21 +1,25 @@
 import React from "react";
 import { useForm } from "react-hook-form";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Heading, Box, Text, CloseButton, Grid, Flex, Input, Button } from "@chakra-ui/react";
 import { useTodos } from "../hooks/todo";
 import { TodoItem } from "../rpc/todo";
 import { useAuth } from "../hooks/auth";
-import Sidebar from "../components/Sidebar";
+
+type FormFields = {
+  text: string;
+};
 
 function Item({ todo }: { todo: TodoItem }) {
-  const { deleteTodo } = useTodos();
+  const { mutations } = useTodos();
+  const [deleteTodo] = mutations.useDeleteTodo();
   const { task, id } = todo;
 
   return (
     <Box w={2 / 6} border="1px" borderColor="gray.200" margin="1" padding="2">
       <Flex justifyContent="space-between" alignItems="baseline">
         <Text>{task}</Text>
-        <CloseButton size="sm" color="red.500" onClick={() => deleteTodo(id)} />
+        <CloseButton size="sm" color="red.500" onClick={() => deleteTodo({ id })} />
       </Flex>
     </Box>
   );
@@ -32,18 +36,19 @@ function List({ todos }: { todos: TodoItem[] }) {
 }
 
 export function TodoPage() {
-  const { addTodo, todos } = useTodos();
-  const { register, handleSubmit, setValue } = useForm();
-  const history = useHistory();
+  const { mutations, todos } = useTodos();
+  const [addTodo] = mutations.useAddTodo();
+  const { register, handleSubmit, setValue } = useForm<FormFields>();
+  const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
 
   if (!isAuthenticated) {
-    history.push("/auth/login");
+    navigate("/auth/login");
     return null;
   }
 
-  function onSubmit(data: { text: string }) {
-    addTodo(data.text);
+  function onSubmit(data: FormFields) {
+    addTodo({ task: data.text });
     setValue("text", "");
   }
 

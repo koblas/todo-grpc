@@ -1,22 +1,23 @@
 import { useEffect } from "react";
-import { useHistory, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/auth";
 
 export function HomePage() {
-  const history = useHistory();
+  const navigate = useNavigate();
   const { pathname } = useLocation();
-  const auth = useAuth();
+  const { isAuthenticated } = useAuth();
 
+  console.log("IN HOME", isAuthenticated);
   useEffect(() => {
-    if (auth.isAuthenticated) {
-      history.push("/todo");
+    if (isAuthenticated) {
+      navigate("/todo");
     } else {
-      history.push({
+      navigate({
         pathname: "/auth/login",
         search: `?next=${encodeURI(pathname)}`,
       });
     }
-  }, [auth.isAuthenticated, history, pathname]);
+  }, [isAuthenticated, pathname, navigate]);
 
   return null;
 }
