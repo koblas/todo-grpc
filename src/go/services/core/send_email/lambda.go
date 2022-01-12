@@ -19,7 +19,7 @@ type SsmConfig struct {
 
 var lambdaHandler awsutil.TwirpHttpHandler
 
-func init() {
+func buildHandler() {
 	var ssmConfig SsmConfig
 	var api core.TwirpServer
 
@@ -42,5 +42,8 @@ func init() {
 }
 
 func HandleLambda() awsutil.TwirpHttpHandler {
+	if lambdaHandler == nil {
+		buildHandler()
+	}
 	return lambdaHandler
 }

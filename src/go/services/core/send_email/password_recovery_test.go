@@ -32,6 +32,7 @@ func TestPasswordRecovery(t *testing.T) {
 	require.NotEmpty(t, msgData.subject, "No subject")
 	require.NotEmpty(t, msgData.body, "No body")
 
-	require.Contains(t, msgData.body, params.AppInfo.UrlBase+params.Token, "Mesage doesn't contain url")
+	require.Contains(t, msgData.body, params.AppInfo.UrlBase, "Mesage doesn't contain url")
+	require.Contains(t, msgData.body, params.Token, "Mesage doesn't contain token")
 	require.Contains(t, msgData.body, params.Recipient.Name, "Mesage doesn't contain sender's firstname")
 }
