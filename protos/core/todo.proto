@@ -1,0 +1,32 @@
+syntax = "proto3";
+package core.todo;
+
+option go_package = "./;core";
+
+message TodoGetParams { string user_id = 1; }
+
+message TodoAddParams {
+  string user_id = 1;
+  string task = 2;
+}
+
+message TodoDeleteParams {
+  string user_id = 1;
+  string id = 2;
+}
+
+message TodoObject {
+  string user_id = 1;
+  string id = 2;
+  string task = 3;
+}
+
+message TodoResponse { repeated TodoObject todos = 1; }
+
+message TodoDeleteResponse { string message = 1; }
+
+service TodoService {
+  rpc AddTodo(TodoAddParams) returns (TodoObject);
+  rpc DeleteTodo(TodoDeleteParams) returns (TodoDeleteResponse);
+  rpc GetTodos(TodoGetParams) returns (TodoResponse);
+}

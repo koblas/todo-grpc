@@ -2,7 +2,7 @@ syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
 
-package core;
+package core.user;
 
 option go_package = "./;core";
 
@@ -29,6 +29,7 @@ message User {
   google.protobuf.Timestamp updated_at = 5;
   google.protobuf.Timestamp created_at = 6;
   bool has_tfa = 7;
+  bool email_is_verified = 8;
 }
 
 message SecureValue {
@@ -74,21 +75,37 @@ message UserSettingsUpdate {
   map<string, UserSettingGroup> settings = 2;
 }
 
+message AuthInfo {
+  string provider = 1;
+  string provider_id = 2;
+}
+
 message FindParam {
   // Find by email address
   string email = 1;
   // Find by GUID
   string user_id = 2;
+
+  // OAuth authentication information
+  AuthInfo auth = 3;
 }
 
 message AuthenticateParam {
   // User Identifier
-  string user_id = 1;
+  string email = 1;
   // Password
   string password = 2;
   // TFA
   string tfa_type = 3;
   string tfa_value = 4;
+}
+
+// Associate an OAuth Identifier with a user
+message AuthAssociateParam {
+  string user_id = 1;
+
+  // OAuth authentication information
+  AuthInfo auth = 2;
 }
 
 message CreateParam {
@@ -125,12 +142,17 @@ service UserService {
   rpc Create(CreateParam) returns (User) {}
   rpc Update(UpdateParam) returns (User) {}
 
-  rpc ComparePassword(AuthenticateParam) returns (User) {}
+  rpc ComparePassword(AuthenticateParam) returns (UserIdParam) {}
+  rpc AuthAssociate(AuthAssociateParam) returns (UserIdParam) {}
 
   rpc GetSettings(UserIdParam) returns (UserSettings) {}
   rpc SetSettings(UserSettingsUpdate) returns (UserSettings) {}
 
+  // Email address verification
   rpc VerificationVerify(VerificationParam) returns (User) {}
-  rpc VerificationUpdate(VerificationParam) returns (User) {}
+
+  // Forgot password flow
   rpc ForgotSend(FindParam) returns (User) {}
+  rpc ForgotVerify(VerificationParam) returns (User) {}
+  rpc ForgotUpdate(VerificationParam) returns (User) {}
 }
