@@ -16,8 +16,9 @@ export default function OAuthPage() {
   const [oauthRedirect, { loading: loadingRedirect }] = auth.mutations.useOauthRedirect();
 
   const redirectUrl = `${window.location.origin}/auth/oauth/${provider}`;
-  const code = new URLSearchParams(location.search).get("code");
-  // const { next } = location.state || { next: { pathname: "/" } };
+  const search = new URLSearchParams(location.search);
+  const code = search.get("code");
+  const state = search.get("state") ?? "";
 
   if (!provider) {
     throw new Error("Missing provider");
@@ -44,7 +45,7 @@ export default function OAuthPage() {
     }
 
     oauthLogin(
-      { provider, code, redirectUrl, state: "" },
+      { provider, code, redirectUrl, state },
       {
         onCompleted(data) {
           setSuccess(true);

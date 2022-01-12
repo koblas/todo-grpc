@@ -21,6 +21,11 @@ import { useAuth } from "../../hooks/auth";
 import AuthWrapper from "./AuthWrapper";
 import { PasswordInput } from "../../components/PasswordInput";
 
+type FormFields = {
+  email: string;
+  password: string;
+};
+
 export default function AuthLoginPage() {
   const {
     register,
@@ -28,7 +33,7 @@ export default function AuthLoginPage() {
     formState: { errors },
     setError,
     getValues,
-  } = useForm();
+  } = useForm<FormFields>();
   const auth = useAuth();
   const [login, { loading }] = auth.mutations.useLogin();
   const navigate = useNavigate();
@@ -43,10 +48,11 @@ export default function AuthLoginPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auth.isAuthenticated]);
 
-  function onSubmit(data: { email: string; password: string }) {
+  function onSubmit(data: FormFields) {
     login(data, {
       onErrorField(serror: Record<string, string[]>) {
-        ["email", "password"].forEach((key) => {
+        const fields: (keyof FormFields)[] = ["email", "password"];
+        fields.forEach((key: keyof FormFields) => {
           const message = serror[key]?.[0];
           if (message) {
             setError(key, { message });

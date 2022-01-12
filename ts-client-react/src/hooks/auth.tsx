@@ -1,11 +1,10 @@
-import React, { createContext, useContext, PropsWithChildren, useState } from "react";
-import { useImmerReducer } from "use-immer";
-import { Draft } from "immer";
+import { useState } from "react";
+import { produce, Draft } from "immer";
+import create, { GetState, SetState, State, StateCreator, StoreApi } from "zustand";
 import { newAuthClient } from "../rpc/auth/factory";
 import { storageFactory } from "../util/storageFactory";
 import { useNetworkContextErrors } from "./network";
 import { RpcMutation, RpcOptions, RpcError } from "../rpc/errors";
-import { assert } from "../util/assert";
 import { randomString } from "../util/randomeString";
 import { AuthToken, LoginRegisterSuccess, OauthLoginUrl } from "../rpc/auth";
 
@@ -38,50 +37,49 @@ function newTokenStore() {
 
 const tokenStore = newTokenStore();
 
-///
-enum ActionType {
-  SET,
-}
+//
+const immer =
+  <
+    T extends State,
+    CustomSetState extends SetState<T>,
+    CustomGetState extends GetState<T>,
+    CustomStoreApi extends StoreApi<T>,
+  >(
+    config: StateCreator<
+      T,
+      (partial: ((draft: Draft<T>) => void) | T, replace?: boolean) => void,
+      CustomGetState,
+      CustomStoreApi
+    >,
+  ): StateCreator<T, CustomSetState, CustomGetState, CustomStoreApi> =>
+  (set, get, api) =>
+    config(
+      (partial, replace) => {
+        const nextState = typeof partial === "function" ? produce(partial as (state: Draft<T>) => T) : (partial as T);
+        return set(nextState, replace);
+      },
+      get,
+      api,
+    );
 
-type DispatchAction = {
-  type: ActionType.SET;
-  token: string | null;
-};
+const useAuthStore = create<AuthState>(
+  immer((set) => ({
+    token: tokenStore.get(),
+    setToken: (token: string | null) => {
+      set(
+        produce((draft) => {
+          tokenStore.set(token);
+          draft.token = token;
+        }),
+      );
+    },
+  })),
+);
 
 interface AuthState {
   readonly token: string | null;
-}
 
-const defaultState: AuthState = {
-  token: tokenStore.get(),
-};
-
-const AuthContext = createContext<{
-  state: AuthState;
-  dispatch: React.Dispatch<DispatchAction>;
-}>({
-  state: defaultState,
-  dispatch() {
-    throw new Error("not initialized");
-  },
-});
-
-function authReducer(draft: Draft<AuthState>, action: DispatchAction) {
-  assert(action.type === ActionType.SET);
-
-  draft.token = action.token;
-  tokenStore.set(action.token);
-}
-
-export function AuthContextProvider({ children }: PropsWithChildren<unknown>) {
-  // The reason we need to use a reducer here rather that a setState is
-  // that when you are doing optimistic updates your not able to get a handle
-  // on the "current" set of items in your list.  You might have done 2..3 actions
-  // but your local closure will only have the state at the time you dispatched
-  // your asyncronist event.  Thus you need to bump the world into a reducer...
-  const [state, dispatch] = useImmerReducer(authReducer, defaultState);
-
-  return <AuthContext.Provider value={{ state, dispatch }}>{children}</AuthContext.Provider>;
+  setToken(token: string | null): void;
 }
 
 const authClient = newAuthClient("json");
@@ -125,12 +123,13 @@ export type OauthAssociateParms = {
 };
 
 export function useAuth() {
-  const { state, dispatch } = useContext(AuthContext);
+  const token = useAuthStore((state) => state.token);
+  const setToken = useAuthStore((state) => state.setToken);
   const addHandler = useNetworkContextErrors();
 
   return {
-    token: state.token,
-    isAuthenticated: !!state.token,
+    token,
+    isAuthenticated: !!token,
     mutations: {
       useRegister(): RpcMutation<RegisterParams, LoginRegisterSuccess> {
         const [data, setData] = useState<LoginRegisterSuccess | undefined>();
@@ -145,7 +144,7 @@ export function useAuth() {
               {
                 onCompleted(input) {
                   setData(input);
-                  dispatch({ type: ActionType.SET, token: input.token.access_token });
+                  setToken(input.token.access_token);
                 },
                 onError(err: RpcError) {
                   setError(err);
@@ -204,7 +203,7 @@ export function useAuth() {
                 },
                 onCompleted: (input) => {
                   setData(input);
-                  dispatch({ type: ActionType.SET, token: input.access_token });
+                  setToken(input.access_token);
                 },
               },
               options,
@@ -275,7 +274,7 @@ export function useAuth() {
               {
                 onCompleted: (input) => {
                   setData(input);
-                  dispatch({ type: ActionType.SET, token: input.access_token });
+                  setToken(input.access_token);
                 },
                 onError(err: RpcError) {
                   setError(err);
@@ -293,7 +292,7 @@ export function useAuth() {
       },
       useLogout() {
         return (options?: RpcOptions<void>) => {
-          dispatch({ type: ActionType.SET, token: null });
+          setToken(null);
 
           options?.onCompleted?.();
         };
@@ -349,7 +348,7 @@ export function useAuth() {
               {
                 onCompleted: (input) => {
                   setData(data);
-                  dispatch({ type: ActionType.SET, token: input.token.access_token });
+                  setToken(input.token.access_token);
                 },
                 onError(err: RpcError) {
                   setError(err);

@@ -5,10 +5,11 @@ import { useAuth } from "../hooks/auth";
 export function HomePage() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const auth = useAuth();
+  const { isAuthenticated } = useAuth();
 
+  console.log("IN HOME", isAuthenticated);
   useEffect(() => {
-    if (auth.isAuthenticated) {
+    if (isAuthenticated) {
       navigate("/todo");
     } else {
       navigate({
@@ -16,7 +17,7 @@ export function HomePage() {
         search: `?next=${encodeURI(pathname)}`,
       });
     }
-  }, [auth.isAuthenticated, history, pathname]);
+  }, [isAuthenticated, pathname, navigate]);
 
   return null;
 }

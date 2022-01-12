@@ -8,7 +8,7 @@ type TokenResponse = {
 
 export function newAuthClient(): AuthService {
   const client = newFetchPOST();
-  const base = "/v1/auth.AuthenticationService";
+  const base = "/v1/auth";
 
   return {
     register(params, options: RpcOptions<LoginRegisterSuccess>): void {
@@ -18,16 +18,16 @@ export function newAuthClient(): AuthService {
       client.call<TokenResponse, AuthToken>(`${base}/authenticate`, params, options);
     },
     verifyEmail(params, options: RpcOptions<AuthOk>): void {
-      client.call<AuthOk, AuthOk>("/auth/verify/email", params, options);
+      client.call<AuthOk, AuthOk>(`${base}/verify_email`, params, options);
     },
     recoverSend(params, options: RpcOptions<AuthOk>): void {
-      client.call<AuthOk, AuthOk>("/auth/recover/send", params, options);
+      client.call<AuthOk, AuthOk>(`${base}/recover_send`, params, options);
     },
     recoverVerify(params, options: RpcOptions<AuthOk>): void {
-      client.call<AuthOk, AuthOk>("/auth/recover/verify", params, options);
+      client.call<AuthOk, AuthOk>(`${base}/recover_verify`, params, options);
     },
     recoverUpdate(params, options: RpcOptions<AuthToken>): void {
-      client.call<TokenResponse, AuthToken>("/auth/recover/update", params, options);
+      client.call<TokenResponse, AuthToken>(`${base}/recover_update`, params, options);
     },
     oauthRedirect(
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -35,7 +35,7 @@ export function newAuthClient(): AuthService {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       options: RpcOptions<OauthLoginUrl>,
     ): void {
-      client.call<OauthLoginUrl, OauthLoginUrl>("/auth/oauth/url", params, options);
+      client.call<OauthLoginUrl, OauthLoginUrl>(`${base}/oauth_url`, params, options);
     },
     oauthLogin(
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -43,7 +43,7 @@ export function newAuthClient(): AuthService {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       options: RpcOptions<LoginRegisterSuccess>,
     ): void {
-      client.call<TokenResponse, LoginRegisterSuccess>("/auth/oauth/login", params, options);
+      client.call<TokenResponse, LoginRegisterSuccess>(`${base}/oauth_login`, params, options);
     },
   };
 }

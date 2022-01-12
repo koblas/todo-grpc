@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link as RouterLink, useParams } from "react-router-dom";
+import { Link as RouterLink, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   Text,
   Button,
@@ -18,6 +18,11 @@ import {
 } from "@chakra-ui/react";
 import { useForm } from "react-hook-form";
 import { useAuth } from "../../hooks/auth";
+import { assert } from "../../util/assert";
+
+type FormFields = {
+  password: string;
+};
 
 function Verify({ loading, success }: { loading: boolean; success: boolean }) {
   if (loading) {
@@ -36,13 +41,17 @@ export function AuthRecoveryResetPage() {
     handleSubmit,
     formState: { errors },
     setError,
-  } = useForm();
+  } = useForm<FormFields>();
   const { userId, token } = useParams<{ userId: string; token: string }>();
   const auth = useAuth();
+  const { search } = useLocation();
+  const navigate = useNavigate();
   const [verified, setVerified] = useState(false);
   const [recoverVerify, { loading: loadingVerify }] = auth.mutations.useRecoveryVerify();
   const [recoverUpdate, { loading: loadingUpdate }] = auth.mutations.useRecoveryUpdate();
   const [completed, setCompleted] = useState(false);
+
+  assert(userId && token);
 
   useEffect(() => {
     recoverVerify(
@@ -56,17 +65,23 @@ export function AuthRecoveryResetPage() {
         },
       },
     );
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, token]);
 
   function onSubmit({ password }: { password: string }) {
+    assert(userId && token);
+
     recoverUpdate(
       { userId, token, password },
       {
         onCompleted() {
           setCompleted(true);
+          const query = new URLSearchParams(search);
+          navigate(query.get("next") ?? "/", { replace: true });
         },
         onErrorField(serror: Record<string, string[]>) {
-          ["password"].forEach((key) => {
+          const fields: (keyof FormFields)[] = ["password"];
+          fields.forEach((key) => {
             const message = serror[key]?.[0];
             if (message) {
               setError(key, { message });
@@ -82,7 +97,7 @@ export function AuthRecoveryResetPage() {
     body = <Verify loading={loadingVerify} success={verified} />;
   } else if (!completed) {
     body = (
-      <FormControl id="password" isInvalid={!!errors.email}>
+      <FormControl id="password" isInvalid={!!errors.password}>
         <FormLabel>Enter your new password</FormLabel>
         <Input
           type="password"
@@ -97,7 +112,7 @@ export function AuthRecoveryResetPage() {
             },
           })}
         />
-        <FormErrorMessage>{errors.email?.message}</FormErrorMessage>
+        <FormErrorMessage>{errors.password?.message}</FormErrorMessage>
       </FormControl>
     );
   } else {

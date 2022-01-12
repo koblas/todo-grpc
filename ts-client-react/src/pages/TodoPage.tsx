@@ -6,15 +6,20 @@ import { useTodos } from "../hooks/todo";
 import { TodoItem } from "../rpc/todo";
 import { useAuth } from "../hooks/auth";
 
+type FormFields = {
+  text: string;
+};
+
 function Item({ todo }: { todo: TodoItem }) {
-  const { deleteTodo } = useTodos();
+  const { mutations } = useTodos();
+  const [deleteTodo] = mutations.useDeleteTodo();
   const { task, id } = todo;
 
   return (
     <Box w={2 / 6} border="1px" borderColor="gray.200" margin="1" padding="2">
       <Flex justifyContent="space-between" alignItems="baseline">
         <Text>{task}</Text>
-        <CloseButton size="sm" color="red.500" onClick={() => deleteTodo(id)} />
+        <CloseButton size="sm" color="red.500" onClick={() => deleteTodo({ id })} />
       </Flex>
     </Box>
   );
@@ -31,8 +36,9 @@ function List({ todos }: { todos: TodoItem[] }) {
 }
 
 export function TodoPage() {
-  const { addTodo, todos } = useTodos();
-  const { register, handleSubmit, setValue } = useForm();
+  const { mutations, todos } = useTodos();
+  const [addTodo] = mutations.useAddTodo();
+  const { register, handleSubmit, setValue } = useForm<FormFields>();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
 
@@ -41,8 +47,8 @@ export function TodoPage() {
     return null;
   }
 
-  function onSubmit(data: { text: string }) {
-    addTodo(data.text);
+  function onSubmit(data: FormFields) {
+    addTodo({ task: data.text });
     setValue("text", "");
   }
 

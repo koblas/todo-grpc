@@ -18,6 +18,10 @@ import { useForm } from "react-hook-form";
 import { useAuth } from "../../hooks/auth";
 import AuthWrapper from "./AuthWrapper";
 
+type FormFields = {
+  email: string;
+};
+
 export function AuthRecoverSendPage() {
   const location = useLocation();
   const {
@@ -26,7 +30,7 @@ export function AuthRecoverSendPage() {
     formState: { errors },
     setError,
     setValue,
-  } = useForm();
+  } = useForm<FormFields>();
   const auth = useAuth();
   const [recoverSend, { loading }] = auth.mutations.useRecoverSend();
   const [completed, setCompleted] = useState(false);
@@ -37,7 +41,9 @@ export function AuthRecoverSendPage() {
         setCompleted(true);
       },
       onErrorField(serror: Record<string, string[]>) {
-        ["email"].forEach((key) => {
+        const fields: (keyof FormFields)[] = ["email"];
+
+        fields.forEach((key) => {
           const message = serror[key]?.[0];
           if (message) {
             setError(key, { message });
@@ -50,7 +56,10 @@ export function AuthRecoverSendPage() {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
 
-    setValue("email", params.get("email"));
+    const email = params.get("email");
+    if (email) {
+      setValue("email", email);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.search]);
 

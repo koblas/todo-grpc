@@ -17,13 +17,19 @@ import { useAuth } from "../../hooks/auth";
 import { PasswordInput } from "../../components/PasswordInput";
 import AuthWrapper from "./AuthWrapper";
 
+type FormFields = {
+  name: string;
+  email: string;
+  password: string;
+};
+
 export function AuthRegisterPage() {
   const {
     register,
     handleSubmit,
     formState: { errors },
     setError,
-  } = useForm();
+  } = useForm<FormFields>();
   const { mutations } = useAuth();
   const [authRegister, { loading }] = mutations.useRegister();
   const navigate = useNavigate();
@@ -34,7 +40,8 @@ export function AuthRegisterPage() {
         navigate("/todo", { replace: true });
       },
       onErrorField(serror: Record<string, string[]>) {
-        ["name", "email", "password"].forEach((key) => {
+        const fields: (keyof FormFields)[] = ["email", "password"];
+        fields.forEach((key) => {
           const message = serror[key]?.[0];
           if (message) {
             setError(key, { message });
