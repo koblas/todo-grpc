@@ -4,9 +4,11 @@ on:
       - main
     paths:
       - "ts-client-react/**"
+      - .github/workflows/app_deploy.yaml
 
 jobs:
   build-and-test:
+    environment: production
     defaults:
       run:
         working-directory: ts-client-react
