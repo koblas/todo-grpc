@@ -1,4 +1,5 @@
 import * as cdk from "aws-cdk-lib";
+import { Construct } from "constructs";
 
 export interface StackProps extends cdk.StackProps {
   readonly indexDoc: string;
@@ -33,11 +34,11 @@ export interface GlobalProps extends cdk.StackProps {
   readonly role?: cdk.aws_iam.Role;
 }
 
-export class HostingStack extends cdk.Stack {
+export class HostingStack extends Construct {
   globalProps: GlobalProps;
 
-  constructor(scope: cdk.Stack, id: string, props: GlobalProps) {
-    super(scope, id, props);
+  constructor(scope: Construct, id: string, props: GlobalProps) {
+    super(scope, id);
 
     const { encryptBucket = false, ipFilter = false } = props;
 
