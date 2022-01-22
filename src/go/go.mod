@@ -17,9 +17,9 @@ require (
 	github.com/aead/chacha20 v0.0.0-20180709150244-8b13a72661da // indirect
 	github.com/aead/chacha20poly1305 v0.0.0-20201124145622-1a5aba2a8b29 // indirect
 	github.com/aead/poly1305 v0.0.0-20180717145839-3fee0db0b635 // indirect
-	github.com/aws/aws-lambda-go v1.27.0 // indirect
+	github.com/aws/aws-lambda-go v1.28.0 // indirect
 	github.com/aws/aws-sdk-go v1.42.22 // indirect
-	github.com/aws/aws-sdk-go-v2 v1.11.2 // indirect
+	github.com/aws/aws-sdk-go-v2 v1.13.0 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.11.0 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.6.4 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.4.4 // indirect
@@ -38,7 +38,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.17.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.6.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.11.1 // indirect
-	github.com/aws/smithy-go v1.9.0 // indirect
+	github.com/aws/smithy-go v1.10.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/cncf/xds/go v0.0.0-20211011173535-cb28da3451f1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect

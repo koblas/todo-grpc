@@ -103,10 +103,11 @@ export class DeployStack extends cdk.Stack {
     new CoreUser(this, "core-user", { eventbus });
     new CoreTodo(this, "core-todo", { eventbus });
     new CoreOauthUser(this, "core-oauth-user", { eventbus });
-    new CoreSendEmail(this, "core-send-email", { eventbus });
+    // new CoreSendEmail(this, "core-send-email", { eventbus });
     new PublicAuth(this, "public-auth", { eventbus, apigw: apigw });
     new PublicTodo(this, "public-todo", { eventbus, apigw: apigw });
     new CreateWorkers(this, "workers", { eventbus });
+    new CoreSendEmailQueue(this, "send-email-queue", { eventbus });
 
     // await sqsWorkers(corestack);
   }
@@ -147,6 +148,7 @@ export class CoreTodo extends Construct {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, "..", "..", "build")),
       runtime: cdk.aws_lambda.Runtime.GO_1_X,
       handler: "core-todo",
+      logRetention: cdk.Duration.days(3).toDays(),
     });
 
     wireLambda(this, lambda, { eventbus, parameters: ["/common/*"], dynamo: db });
@@ -170,6 +172,7 @@ export class CoreUser extends Construct {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, "..", "..", "build")),
       runtime: cdk.aws_lambda.Runtime.GO_1_X,
       handler: "core-user",
+      logRetention: cdk.Duration.days(3).toDays(),
     });
 
     wireLambda(this, lambda, { eventbus, parameters: ["/common/*"], dynamo: db });
@@ -187,26 +190,44 @@ export class CoreOauthUser extends Construct {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, "..", "..", "build")),
       runtime: cdk.aws_lambda.Runtime.GO_1_X,
       handler: "core-oauth-user",
+      logRetention: cdk.Duration.days(3).toDays(),
     });
 
     wireLambda(this, lambda, { eventbus, parameters: ["/common/*", "/oauth/*"] });
   }
 }
 
-export class CoreSendEmail extends Construct {
-  constructor(scope: Construct, id: string, props: { eventbus: cdk.aws_sns.Topic }) {
+// export class CoreSendEmail extends Construct {
+//   constructor(scope: Construct, id: string, props: { eventbus: cdk.aws_sns.Topic }) {
+//     super(scope, id);
+
+//     const { eventbus } = props;
+
+//     const lambda = new cdk.aws_lambda.Function(this, "lambda", {
+//       functionName: "core-send-email",
+//       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, "..", "..", "build")),
+//       runtime: cdk.aws_lambda.Runtime.GO_1_X,
+//       handler: "core-send-email",
+//     });
+
+//     wireLambda(this, lambda, { eventbus, parameters: ["/common/*"] });
+//   }
+// }
+
+export class CoreSendEmailQueue extends Construct {
+  constructor(scope: Construct, id: string, { eventbus }: { eventbus: cdk.aws_sns.Topic }) {
     super(scope, id);
 
-    const { eventbus } = props;
-
-    const lambda = new cdk.aws_lambda.Function(this, "lambda", {
-      functionName: "core-send-email",
-      code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, "..", "..", "build")),
-      runtime: cdk.aws_lambda.Runtime.GO_1_X,
-      handler: "core-send-email",
+    new QueueLambda(this, "core-send-email", {
+      eventbus,
+      queueProps: { queueName: "send-email" },
+      lambdaFunctionProps: {
+        functionName: "core-send-email",
+        code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, "..", "..", "build")),
+        runtime: cdk.aws_lambda.Runtime.GO_1_X,
+        handler: "core-send-email",
+      },
     });
-
-    wireLambda(this, lambda, { eventbus, parameters: ["/common/*"] });
   }
 }
 
@@ -249,6 +270,7 @@ export class PublicTodo extends Construct {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, "..", "..", "build")),
       runtime: cdk.aws_lambda.Runtime.GO_1_X,
       handler: "publicapi-todo",
+      logRetention: cdk.Duration.days(3).toDays(),
     });
 
     wireLambda(this, lambda, { eventbus, parameters: ["/common/*"] });
@@ -345,44 +367,70 @@ export class QueueWorker extends Construct {
   ) {
     super(scope, id);
 
-    const deadletter = new cdk.aws_sqs.Queue(this, "queue-dql", {
-      queueName: `${id}-dlq`,
-      retentionPeriod: cdk.Duration.days(7),
-    });
-    const queue = new cdk.aws_sqs.Queue(this, "queue", {
-      queueName: id,
-      retentionPeriod: cdk.Duration.days(7),
-      visibilityTimeout: cdk.Duration.minutes(5),
-      deadLetterQueue: {
-        queue: deadletter,
-        maxReceiveCount: 10,
+    const worker = new QueueLambda(this, id, {
+      eventbus,
+      queueProps: {
+        // SNS cannot deliver to encrypted SQS queues
+        encryption: cdk.aws_sqs.QueueEncryption.UNENCRYPTED,
+      },
+      lambdaFunctionProps: {
+        code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, "..", "..", "build")),
+        runtime: cdk.aws_lambda.Runtime.GO_1_X,
+        handler: "core-workers",
+        environment: env,
       },
     });
 
-    // Doesn't work to subscribe multiple times...
     eventbus.addSubscription(
-      new cdk.aws_sns_subscriptions.SqsSubscription(queue, {
+      new cdk.aws_sns_subscriptions.SqsSubscription(worker.queue, {
         rawMessageDelivery: true,
         filterPolicy,
       }),
     );
+  }
+}
 
-    const lambda = new cdk.aws_lambda.Function(this, "lambda", {
-      functionName: `worker-${id}`,
-      code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, "..", "..", "build")),
-      runtime: cdk.aws_lambda.Runtime.GO_1_X,
-      handler: "core-workers",
-      environment: env,
-    });
+export class QueueLambda extends Construct {
+  queue: cdk.aws_sqs.Queue;
+
+  constructor(
+    scope: Construct,
+    id: string,
+    {
+      eventbus,
+      lambdaFunctionProps,
+      queueProps,
+    }: {
+      eventbus: cdk.aws_sns.Topic;
+      queueProps?: cdk.aws_sqs.QueueProps;
+      lambdaFunctionProps: cdk.aws_lambda.FunctionProps;
+    },
+  ) {
+    super(scope, id);
 
     // Connect the queue
-    new SqsToLambda(this, "sqs", {
-      existingLambdaObj: lambda,
-      existingQueueObj: queue,
+    const inst = new SqsToLambda(this, "sqs", {
+      lambdaFunctionProps: {
+        functionName: `worker-${id}`,
+        logRetention: cdk.Duration.days(3).toDays(),
+        ...lambdaFunctionProps,
+      },
+      deadLetterQueueProps: {
+        queueName: `${id}-dlq`,
+        retentionPeriod: cdk.Duration.days(7),
+      },
+      queueProps: {
+        queueName: `${id}`,
+        retentionPeriod: cdk.Duration.days(7),
+        visibilityTimeout: cdk.Duration.minutes(5),
+        ...queueProps,
+      },
     });
 
+    this.queue = inst.sqsQueue;
+
     // Make sure we can write to SNS
-    wireLambda(this, lambda, { eventbus, parameters: ["/common/*"] });
+    wireLambda(this, inst.lambdaFunction, { eventbus, parameters: ["/common/*"] });
   }
 }
 
@@ -415,6 +463,7 @@ function wireLambda(
     });
   }
 
+  // Invoke and SendMessage are good downstream calls
   cdk.aws_iam.Grant.addToPrincipal({
     grantee: lambda,
     actions: ["lambda:InvokeFunction"],
@@ -422,6 +471,17 @@ function wireLambda(
       cdk.Stack.of(scope).formatArn({
         service: "lambda",
         resource: "function:*",
+      }),
+    ],
+  });
+
+  cdk.aws_iam.Grant.addToPrincipal({
+    grantee: lambda,
+    actions: ["sqs:GetQueueUrl", "sqs:SendMessage"],
+    resourceArns: [
+      cdk.Stack.of(scope).formatArn({
+        service: "sqs",
+        resource: "*",
       }),
     ],
   });

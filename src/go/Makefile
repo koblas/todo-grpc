@@ -31,6 +31,5 @@ build-lambda:
 run-lambda: build-lambda
 	sam local start-api --template-file ./lambda/template.yaml --env-vars ../../dev-variables.json
 
-aws-deploy: build-lambda
-	( cd pulumi && pulumi up )
-
+deploy: build-lambda
+	( cd deploy && npx cdk deploy)

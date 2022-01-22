@@ -585,6 +585,7 @@ func (s *sendEmailServiceServer) ServeHTTP(resp http.ResponseWriter, req *http.R
 		return
 	}
 
+
 	// Verify path format: [<prefix>]/<package>.<Service>/<Method>
 	prefix, pkgService, method := parseTwirpPath(req.URL.Path)
 	if pkgService != "core.send_email.SendEmailService" {

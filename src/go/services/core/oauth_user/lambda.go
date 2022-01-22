@@ -60,5 +60,5 @@ func HandleLambda() func(context.Context, events.APIGatewayV2HTTPRequest) (event
 	linfo := logger.NewZap(logger.LevelInfo)
 	ctx := logger.ToContext(context.Background(), linfo)
 
-	return awsutil.HandleLambda(ctx, api)
+	return awsutil.HandleApiLambda(ctx, api)
 }

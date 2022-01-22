@@ -133,3 +133,51 @@ func GatewayToHttpRequestV2(ctx context.Context, event events.APIGatewayV2HTTPRe
 
 	return r, nil
 }
+
+func SqsEventToHttpRequest(ctx context.Context, event events.SQSMessage, forcePath *string) (*http.Request, error) {
+	headers := http.Header{}
+	for k, v := range event.MessageAttributes {
+		if v.DataType == "String" {
+			headers.Add(k, *v.StringValue)
+		} else if v.DataType == "StringList" && len(v.StringListValues) != 0 {
+			headers.Add(k, v.StringListValues[0])
+		}
+	}
+
+	parts := strings.Split(event.EventSourceARN, ":")
+
+	u := url.URL{
+		Scheme: "sqs",
+		Host:   parts[len(parts)-1],
+	}
+	if forcePath != nil {
+		u.Path = *forcePath
+		u.RawPath = *forcePath
+	} else {
+		u.Path = headers.Get("twirp.path")
+		u.RawPath = headers.Get("twirp.path")
+	}
+
+	var body io.Reader = strings.NewReader(event.Body)
+	if headers.Get("content-transfer-encoding") == "base64" {
+		body = base64.NewDecoder(base64.StdEncoding, body)
+	}
+
+	lctx := context.WithValue(ctx, HeaderCtxKey, headers)
+	r, err := http.NewRequestWithContext(lctx, http.MethodPost, u.String(), body)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Set headers.
+	r.Header = headers
+
+	// Set remote IP address.
+	r.RemoteAddr = "0.0.0.0"
+
+	// Set request URI
+	r.RequestURI = u.RequestURI()
+
+	return r, nil
+}

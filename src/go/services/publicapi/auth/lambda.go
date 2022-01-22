@@ -52,5 +52,5 @@ func HandleLambda() func(context.Context, events.APIGatewayV2HTTPRequest) (event
 		api = publicapi.NewAuthenticationServiceServer(s)
 	}
 
-	return awsutil.HandleLambda(ctx, api)
+	return awsutil.HandleApiLambda(ctx, api)
 }

@@ -14,7 +14,7 @@ type SsmConfig struct {
 	JwtSecret string `ssm:"jwt_secret" environment:"JWT_SECRET"`
 }
 
-var lambdaHandler awsutil.TwirpHttpHandler
+var lambdaHandler awsutil.TwirpHttpApiHandler
 
 func init() {
 	var ssmConfig SsmConfig
@@ -32,9 +32,9 @@ func init() {
 	linfo := logger.NewZap(logger.LevelInfo)
 	ctx := logger.ToContext(context.Background(), linfo)
 
-	lambdaHandler = awsutil.HandleLambda(ctx, api)
+	lambdaHandler = awsutil.HandleApiLambda(ctx, api)
 }
 
-func HandleLambda() awsutil.TwirpHttpHandler {
+func HandleLambda() awsutil.TwirpHttpApiHandler {
 	return lambdaHandler
 }

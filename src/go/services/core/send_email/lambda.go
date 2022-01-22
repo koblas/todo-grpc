@@ -17,9 +17,9 @@ type SsmConfig struct {
 	SmtpPass string `ssm:"smtp/password" environment:"SMTP_PASSWORD"`
 }
 
-var lambdaHandler awsutil.TwirpHttpHandler
+var lambdaHandler awsutil.TwirpHttpSqsHandler
 
-func buildHandler() {
+func init() {
 	var ssmConfig SsmConfig
 	var api core.TwirpServer
 
@@ -38,12 +38,9 @@ func buildHandler() {
 	linfo := logger.NewZap(logger.LevelInfo)
 	ctx := logger.ToContext(context.Background(), linfo)
 
-	lambdaHandler = awsutil.HandleLambda(ctx, api)
+	lambdaHandler = awsutil.HandleSqsLambda(ctx, api, nil)
 }
 
-func HandleLambda() awsutil.TwirpHttpHandler {
-	if lambdaHandler == nil {
-		buildHandler()
-	}
+func HandleLambda() awsutil.TwirpHttpSqsHandler {
 	return lambdaHandler
 }

@@ -2,6 +2,7 @@ package util
 
 import (
 	"encoding/base64"
+	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -85,14 +86,19 @@ func SqsToMessage(item sqstypes.Message) (eventbus.Message, error) {
 		message.Attributes[k] = v
 	}
 	// Use the decoded attributes
-	if cte, found := message.Attributes[CONTENT_TRANSFER_ENCODING]; found && cte == "base64" {
-		dec, err := base64.StdEncoding.DecodeString(*body)
-		if err != nil {
-			return eventbus.Message{}, err
-		}
+	for k, v := range message.Attributes {
+		if strings.ToLower(k) == CONTENT_TRANSFER_ENCODING && v == "base64" {
+			dec, err := base64.StdEncoding.DecodeString(*body)
+			if err != nil {
+				return eventbus.Message{}, err
+			}
 
-		message.BodyBytes = dec
-	} else {
+			message.BodyBytes = dec
+			break
+		}
+	}
+	// If it wasn't base64 set it to be a string
+	if message.BodyBytes == nil {
 		message.BodyString = *body
 	}
 

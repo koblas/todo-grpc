@@ -3,7 +3,9 @@ package awsutil
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -15,16 +17,20 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	sqstypes "github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/koblas/grpc-todo/pkg/logger"
+	"github.com/pkg/errors"
 )
 
 var errorResponse = events.APIGatewayV2HTTPResponse{
 	StatusCode: 500,
 }
 
-type TwirpHttpHandler func(lambdaCtx context.Context, request events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error)
+type TwirpHttpApiHandler func(lambdaCtx context.Context, request events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error)
+type TwirpHttpSqsHandler func(lambdaCtx context.Context, request events.SQSEvent) (events.SQSEventResponse, error)
 
-func HandleLambda(ctx context.Context, api http.Handler) TwirpHttpHandler {
+func HandleApiLambda(ctx context.Context, api http.Handler) TwirpHttpApiHandler {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		api.ServeHTTP(w, r)
 	})
@@ -69,13 +75,50 @@ func HandleLambda(ctx context.Context, api http.Handler) TwirpHttpHandler {
 	}
 }
 
+func HandleSqsLambda(ctx context.Context, api http.Handler, forcePath *string) TwirpHttpSqsHandler {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		api.ServeHTTP(w, r)
+	})
+
+	return func(lambdaCtx context.Context, request events.SQSEvent) (events.SQSEventResponse, error) {
+		parentLog := logger.FromContext(ctx).With("eventItemCount", len(request.Records))
+
+		result := events.SQSEventResponse{}
+		for _, record := range request.Records {
+			log := parentLog.With("messageId", record.MessageId)
+			log.Info("Handling SQS Message")
+
+			req, err := SqsEventToHttpRequest(logger.ToContext(lambdaCtx, log), record, forcePath)
+			if err != nil {
+				log.With("error", err).Error("Unable to decode")
+				result.BatchItemFailures = append(result.BatchItemFailures, events.SQSBatchItemFailure{ItemIdentifier: record.MessageId})
+				continue
+			}
+
+			w := httptest.NewRecorder()
+
+			handler.ServeHTTP(w, req)
+
+			res := w.Result()
+			if res.StatusCode != http.StatusOK {
+				buf, _ := io.ReadAll(io.LimitReader(res.Body, 256))
+				log.With("statusCode", res.StatusCode).With("statusMsg", string(buf)).Info("SQS Message error")
+				result.BatchItemFailures = append(result.BatchItemFailures, events.SQSBatchItemFailure{ItemIdentifier: record.MessageId})
+			}
+		}
+
+		return result, nil
+	}
+}
+
 // Matches the Twirp HTTPClient interface
 type TwClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
 type twClient struct {
-	client *lambda.Client
+	lambda *lambda.Client
+	sqs    *sqs.Client
 }
 
 func NewTwirpCallLambda() TwClient {
@@ -84,10 +127,9 @@ func NewTwirpCallLambda() TwClient {
 		panic(err)
 	}
 
-	client := lambda.NewFromConfig(cfg)
-
 	return twClient{
-		client: client,
+		lambda: lambda.NewFromConfig(cfg),
+		sqs:    sqs.NewFromConfig(cfg),
 	}
 }
 
@@ -127,30 +169,92 @@ func (svc twClient) Do(req *http.Request) (*http.Response, error) {
 		return nil, err
 	}
 
-	log := logger.FromContext(req.Context()).With("lambda", req.URL.Host).With("rpcMethod", req.URL.Path)
+	log := logger.FromContext(req.Context()).With("host", req.URL.Host).With("rpcMethod", req.URL.Path)
 	log.Info("BEGIN: calling twirp service")
 	start := time.Now()
-	output, err := svc.client.Invoke(context.TODO(), &lambda.InvokeInput{
-		FunctionName: aws.String(req.URL.Host),
-		Payload:      payload,
-	})
-	elapsed := int64(time.Since(start) / time.Millisecond)
-	log.With("durationInMs", elapsed).Info("END: calling twirp service")
 
-	if err != nil {
-		return nil, err
-	}
+	res := http.Response{}
 
-	// Unmarshal
-	lambdaResponse := events.APIGatewayProxyResponse{}
-	if err := json.Unmarshal(output.Payload, &lambdaResponse); err != nil {
-		return nil, err
-	}
+	if req.URL.Scheme == "http" || req.URL.Scheme == "https" {
+		client := http.Client{}
+		hres, err := client.Do(req)
+		elapsed := int64(time.Since(start) / time.Millisecond)
+		log.With("durationInMs", elapsed).Info("END: calling twirp service")
 
-	res := http.Response{
-		StatusCode: lambdaResponse.StatusCode,
-		Header:     lambdaResponse.MultiValueHeaders,
-		Body:       ioutil.NopCloser(strings.NewReader(lambdaResponse.Body)),
+		if err != nil {
+			return nil, err
+		}
+		res = *hres
+	} else if req.URL.Scheme == "lambda" {
+		output, err := svc.lambda.Invoke(context.TODO(), &lambda.InvokeInput{
+			FunctionName: aws.String(req.URL.Host),
+			Payload:      payload,
+		})
+		elapsed := int64(time.Since(start) / time.Millisecond)
+		log.With("durationInMs", elapsed).Info("END: calling twirp service")
+
+		if err != nil {
+			return nil, err
+		}
+
+		// Unmarshal
+		lambdaResponse := events.APIGatewayProxyResponse{}
+		if err := json.Unmarshal(output.Payload, &lambdaResponse); err != nil {
+			return nil, err
+		}
+
+		res = http.Response{
+			StatusCode: lambdaResponse.StatusCode,
+			Header:     lambdaResponse.MultiValueHeaders,
+			Body:       ioutil.NopCloser(strings.NewReader(lambdaResponse.Body)),
+		}
+	} else if req.URL.Scheme == "sqs" {
+		isJson := false
+
+		attributes := map[string]sqstypes.MessageAttributeValue{
+			"twirp.path": {DataType: aws.String("String"), StringValue: &req.URL.Path},
+		}
+		for k, v := range basicHeaders {
+			attributes[k] = sqstypes.MessageAttributeValue{DataType: aws.String("String"), StringValue: aws.String(v)}
+			if strings.ToLower(k) == "content-type" {
+				isJson = strings.Contains(v, "application/json")
+			}
+		}
+
+		var body *string
+		if isJson {
+			body = &lambdaRequest.Body
+		} else {
+			attributes["Content-Transfer-Encoding"] = sqstypes.MessageAttributeValue{DataType: aws.String("String"), StringValue: aws.String("base64")}
+			uEnc := base64.URLEncoding.EncodeToString([]byte(lambdaRequest.Body))
+			body = &uEnc
+		}
+
+		qurl, err := svc.sqs.GetQueueUrl(context.TODO(), &sqs.GetQueueUrlInput{
+			QueueName: &req.URL.Host,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("unable to get queue url='%s' %w", req.URL.Host, err)
+		}
+
+		_, err = svc.sqs.SendMessage(context.TODO(), &sqs.SendMessageInput{
+			QueueUrl:          qurl.QueueUrl,
+			MessageAttributes: attributes,
+			MessageBody:       body,
+		})
+		elapsed := int64(time.Since(start) / time.Millisecond)
+		log.With("durationInMs", elapsed).Info("END: calling twirp service")
+
+		if err != nil {
+			return nil, err
+		}
+
+		res = http.Response{
+			StatusCode: http.StatusOK,
+			Body:       ioutil.NopCloser(bytes.NewReader([]byte{})),
+		}
+	} else {
+		return nil, errors.New("unknown scheme")
 	}
 
 	return &res, nil
