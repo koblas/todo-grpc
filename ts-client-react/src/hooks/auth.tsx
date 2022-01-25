@@ -1,86 +1,10 @@
 import { useState } from "react";
-import { produce, Draft } from "immer";
-import create, { GetState, SetState, State, StateCreator, StoreApi } from "zustand";
 import { newAuthClient } from "../rpc/auth/factory";
-import { storageFactory } from "../util/storageFactory";
 import { useNetworkContextErrors } from "./network";
 import { RpcMutation, RpcOptions, RpcError } from "../rpc/errors";
 import { randomString } from "../util/randomeString";
 import { AuthToken, LoginRegisterSuccess, OauthLoginUrl } from "../rpc/auth";
-
-// https://www.npmjs.com/package/zustand
-
-/**
- * Construct an accessor for a persistent token store
- */
-function newTokenStore() {
-  const TOKEN = "auth-token";
-
-  const tokenStore = storageFactory(() => localStorage);
-
-  return {
-    get(): string | null {
-      return tokenStore.getItem(TOKEN) ?? null;
-    },
-    clear(): void {
-      tokenStore.clear();
-    },
-    set(value?: string | null): void {
-      if (value === undefined || value === null) {
-        tokenStore.removeItem(TOKEN);
-      } else {
-        tokenStore.setItem(TOKEN, value);
-      }
-    },
-  };
-}
-
-const tokenStore = newTokenStore();
-
-//
-const immer =
-  <
-    T extends State,
-    CustomSetState extends SetState<T>,
-    CustomGetState extends GetState<T>,
-    CustomStoreApi extends StoreApi<T>,
-  >(
-    config: StateCreator<
-      T,
-      (partial: ((draft: Draft<T>) => void) | T, replace?: boolean) => void,
-      CustomGetState,
-      CustomStoreApi
-    >,
-  ): StateCreator<T, CustomSetState, CustomGetState, CustomStoreApi> =>
-  (set, get, api) =>
-    config(
-      (partial, replace) => {
-        const nextState = typeof partial === "function" ? produce(partial as (state: Draft<T>) => T) : (partial as T);
-        return set(nextState, replace);
-      },
-      get,
-      api,
-    );
-
-const useAuthStore = create<AuthState>(
-  immer((set) => ({
-    token: tokenStore.get(),
-    setToken: (token: string | null) => {
-      set(
-        produce((draft) => {
-          tokenStore.set(token);
-          draft.token = token;
-        }),
-      );
-    },
-  })),
-);
-
-interface AuthState {
-  readonly token: string | null;
-
-  setToken(token: string | null): void;
-}
+import { useAuthStore } from "../store/useAuthStore";
 
 const authClient = newAuthClient("json");
 
@@ -123,12 +47,12 @@ export type OauthAssociateParms = {
 };
 
 export function useAuth() {
-  const token = useAuthStore((state) => state.token);
-  const setToken = useAuthStore((state) => state.setToken);
+  const { token, setToken } = useAuthStore((s) => s);
   const addHandler = useNetworkContextErrors();
 
   return {
     token,
+    subscribe: useAuthStore.subscribe,
     isAuthenticated: !!token,
     mutations: {
       useRegister(): RpcMutation<RegisterParams, LoginRegisterSuccess> {

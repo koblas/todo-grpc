@@ -1,17 +1,33 @@
-import React from "react";
+import React, { useEffect } from "react";
 
 import { ChakraProvider, CSSReset, Flex } from "@chakra-ui/react";
 
 import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
-import { TodoContextProvider } from "./hooks/todo";
 import { AuthPages } from "./pages/auth";
 import { SettingsPage } from "./pages/settings";
 import { TodoPage } from "./pages/TodoPage";
 import { HomePage } from "./pages/HomePage";
 import { NetworkContextProvider } from "./hooks/network";
 import Sidebar from "./components/Sidebar";
+import { useTodos } from "./hooks/todo";
+import { useAuth } from "./hooks/auth";
 
-// const theme = createTheme();
+function ReloadState() {
+  const { token } = useAuth();
+  const { mutations } = useTodos();
+  const [loadTodos] = mutations.useLoadTodos();
+  const [clearTodos] = mutations.useClearTodos();
+
+  useEffect(() => {
+    if (token) {
+      loadTodos({});
+    } else {
+      clearTodos();
+    }
+  }, [token]);
+
+  return null;
+}
 
 function SiteLayout() {
   return (
@@ -40,14 +56,13 @@ export default function App() {
     <ChakraProvider>
       <CSSReset />
       <NetworkContextProvider>
-        <TodoContextProvider>
-          <BrowserRouter>
-            <Routes>
-              <Route path="/auth/*" element={<AuthPages />} />
-              <Route path="*" element={<Site />} />
-            </Routes>
-          </BrowserRouter>
-        </TodoContextProvider>
+        <ReloadState />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/auth/*" element={<AuthPages />} />
+            <Route path="*" element={<Site />} />
+          </Routes>
+        </BrowserRouter>
       </NetworkContextProvider>
     </ChakraProvider>
   );

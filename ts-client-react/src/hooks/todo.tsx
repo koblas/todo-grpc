@@ -1,73 +1,10 @@
-import React, { useEffect, PropsWithChildren, useState } from "react";
-import create from "zustand";
-import { Draft, produce } from "immer";
-import { zimmer } from "../util/zimmer";
+import { useState } from "react";
 import { newTodoClient } from "../rpc/todo/factory";
 import { TodoItem, TodoList } from "../rpc/todo";
 import { useAuth } from "./auth";
 import { useNetworkContextErrors } from "./network";
 import { RpcError, RpcMutation, RpcOptions } from "../rpc/errors";
-
-interface TodoState {
-  // readonly client: TodoService | null;
-  readonly todos: TodoItem[];
-
-  // Actions
-  setTodos(todos: TodoItem[]): void;
-  deleteTodo(id: TodoItem["id"]): void;
-  updateTodo(id: TodoItem["id"], todo: TodoItem): void;
-  appendTodo(todo: TodoItem): void;
-  resetTodos(): void;
-}
-
-const useTodoStore = create<TodoState>(
-  zimmer((set) => ({
-    todos: [],
-    resetTodos() {
-      set(
-        produce((draft: Draft<TodoState>) => {
-          draft.todos = [];
-        }),
-      );
-    },
-    setTodos(todos: TodoItem[]) {
-      set(
-        produce((draft: Draft<TodoState>) => {
-          draft.todos = todos;
-        }),
-      );
-    },
-    deleteTodo(id: TodoItem["id"]) {
-      set(
-        produce((draft: Draft<TodoState>) => {
-          const index = draft.todos.findIndex((todo: TodoItem) => todo.id === id);
-
-          if (index !== -1) {
-            draft.todos.splice(index, 1);
-          }
-        }),
-      );
-    },
-    updateTodo(id: TodoItem["id"], todo: TodoItem) {
-      set(
-        produce((draft: Draft<TodoState>) => {
-          const index = draft.todos.findIndex((item: TodoItem) => item.id === id);
-
-          if (index !== -1) {
-            draft.todos[index] = todo;
-          }
-        }),
-      );
-    },
-    appendTodo(todo: TodoItem) {
-      set(
-        produce((draft: Draft<TodoState>) => {
-          draft.todos.push(todo);
-        }),
-      );
-    },
-  })),
-);
+import { useTodoStore } from "../store/useTodoStore";
 
 export function useTodos() {
   const { token } = useAuth();
@@ -193,24 +130,4 @@ export function useTodos() {
       },
     },
   };
-}
-
-const TodoContext = React.createContext({});
-
-export function TodoContextProvider({ children }: PropsWithChildren<unknown>) {
-  const { isAuthenticated } = useAuth();
-  const { mutations } = useTodos();
-  const [clearTodos] = mutations.useClearTodos();
-  const [loadTodos] = mutations.useLoadTodos();
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      loadTodos({});
-    } else {
-      clearTodos();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated]);
-
-  return <TodoContext.Provider value={{}}>{children}</TodoContext.Provider>;
 }

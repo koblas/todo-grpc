@@ -5,9 +5,9 @@ import { GetState, SetState, State, StateCreator, StoreApi } from "zustand";
 export const zimmer =
   <
     T extends State,
-    CustomSetState extends SetState<T>,
-    CustomGetState extends GetState<T>,
-    CustomStoreApi extends StoreApi<T>,
+    CustomSetState extends SetState<T> = SetState<T>,
+    CustomGetState extends GetState<T> = GetState<T>,
+    CustomStoreApi extends StoreApi<T> = StoreApi<T>,
   >(
     config: StateCreator<
       T,
