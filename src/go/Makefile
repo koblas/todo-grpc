@@ -1,3 +1,4 @@
+LDFLAGS="-s -w"
 
 build:
 	go build cmd/auth/main.go
@@ -20,13 +21,13 @@ start:
 
 
 build-lambda:
-	GOOS=linux GOARCH=amd64 go build -o build/publicapi-auth ./lambda/publicapi/auth/main.go
-	GOOS=linux GOARCH=amd64 go build -o build/publicapi-todo ./lambda/publicapi/todo/main.go
-	GOOS=linux GOARCH=amd64 go build -o build/core-todo ./lambda/core/todo/main.go
-	GOOS=linux GOARCH=amd64 go build -o build/core-user ./lambda/core/user/main.go
-	GOOS=linux GOARCH=amd64 go build -o build/core-oauth-user ./lambda/core/oauth_user/main.go
-	GOOS=linux GOARCH=amd64 go build -o build/core-send-email ./lambda/core/send_email/main.go
-	GOOS=linux GOARCH=amd64 go build -o build/core-workers ./lambda/core/workers/main.go
+	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/publicapi-auth ./lambda/publicapi/auth/main.go
+	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/publicapi-todo ./lambda/publicapi/todo/main.go
+	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/core-todo ./lambda/core/todo/main.go
+	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/core-user ./lambda/core/user/main.go
+	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/core-oauth-user ./lambda/core/oauth_user/main.go
+	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/core-send-email ./lambda/core/send_email/main.go
+	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/core-workers ./lambda/core/workers/main.go
 
 run-lambda: build-lambda
 	sam local start-api --template-file ./lambda/template.yaml --env-vars ../../dev-variables.json

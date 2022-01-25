@@ -15,8 +15,14 @@ import { LambdaToSns } from "@aws-solutions-constructs/aws-lambda-sns";
 import { Construct } from "constructs";
 import { SqsToLambda } from "@aws-solutions-constructs/aws-sqs-lambda";
 import { SubscriptionFilter } from "aws-cdk-lib/aws-sns";
-import { Grant } from "aws-cdk-lib/aws-iam";
+import { GoFunction } from "@aws-cdk/aws-lambda-go-alpha";
 // import * as sqs from 'aws-cdk-lib/aws-sqs';
+
+const LAMBDA_DEFAULTS: Partial<cdk.aws_lambda.FunctionProps> = {
+  logRetention: cdk.Duration.days(3).toDays(),
+  insightsVersion: cdk.aws_lambda.LambdaInsightsVersion.VERSION_1_0_119_0,
+  architecture: cdk.aws_lambda.Architecture.ARM_64,
+};
 
 export class DeployStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -144,11 +150,10 @@ export class CoreTodo extends Construct {
       sortKey: { name: "sk", type: cdk.aws_dynamodb.AttributeType.STRING },
     });
 
-    const lambda = new cdk.aws_lambda.Function(this, "lambda", {
-      code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, "..", "..", "build")),
-      runtime: cdk.aws_lambda.Runtime.GO_1_X,
-      handler: "core-todo",
-      logRetention: cdk.Duration.days(3).toDays(),
+    const lambda = new GoFunction(this, "handler", {
+      functionName: "core-todo",
+      entry: "../lambda/core/todo",
+      ...LAMBDA_DEFAULTS,
     });
 
     wireLambda(this, lambda, { eventbus, parameters: ["/common/*"], dynamo: db });
@@ -167,12 +172,10 @@ export class CoreUser extends Construct {
       partitionKey: { name: "pk", type: cdk.aws_dynamodb.AttributeType.STRING },
     });
 
-    const lambda = new cdk.aws_lambda.Function(this, "lambda", {
+    const lambda = new GoFunction(this, "handler", {
       functionName: "core-user",
-      code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, "..", "..", "build")),
-      runtime: cdk.aws_lambda.Runtime.GO_1_X,
-      handler: "core-user",
-      logRetention: cdk.Duration.days(3).toDays(),
+      entry: "../lambda/core/user",
+      ...LAMBDA_DEFAULTS,
     });
 
     wireLambda(this, lambda, { eventbus, parameters: ["/common/*"], dynamo: db });
@@ -185,12 +188,10 @@ export class CoreOauthUser extends Construct {
 
     const { eventbus } = props;
 
-    const lambda = new cdk.aws_lambda.Function(this, "lambda", {
+    const lambda = new GoFunction(this, "handler", {
       functionName: "core-oauth-user",
-      code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, "..", "..", "build")),
-      runtime: cdk.aws_lambda.Runtime.GO_1_X,
-      handler: "core-oauth-user",
-      logRetention: cdk.Duration.days(3).toDays(),
+      entry: "../lambda/core/oauth_user",
+      ...LAMBDA_DEFAULTS,
     });
 
     wireLambda(this, lambda, { eventbus, parameters: ["/common/*", "/oauth/*"] });
@@ -218,15 +219,16 @@ export class CoreSendEmailQueue extends Construct {
   constructor(scope: Construct, id: string, { eventbus }: { eventbus: cdk.aws_sns.Topic }) {
     super(scope, id);
 
+    const lambda = new GoFunction(this, "handler", {
+      functionName: "core-send-email",
+      entry: "../lambda/core/send_email",
+      ...LAMBDA_DEFAULTS,
+    });
+
     new QueueLambda(this, "core-send-email", {
       eventbus,
       queueProps: { queueName: "send-email" },
-      lambdaFunctionProps: {
-        functionName: "core-send-email",
-        code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, "..", "..", "build")),
-        runtime: cdk.aws_lambda.Runtime.GO_1_X,
-        handler: "core-send-email",
-      },
+      existingLambdaObj: lambda,
     });
   }
 }
@@ -235,13 +237,10 @@ export class PublicAuth extends Construct {
   constructor(scope: Construct, id: string, { eventbus, apigw }: { eventbus: cdk.aws_sns.Topic; apigw: HttpApi }) {
     super(scope, id);
 
-    const lambda = new cdk.aws_lambda.Function(this, "lambda", {
+    const lambda = new GoFunction(this, "handler", {
       functionName: "public-auth",
-      code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, "..", "..", "build")),
-      runtime: cdk.aws_lambda.Runtime.GO_1_X,
-      handler: "publicapi-auth",
-      logRetention: cdk.Duration.days(3).toDays(),
-      timeout: cdk.Duration.seconds(10),
+      entry: "../lambda/publicapi/auth",
+      ...LAMBDA_DEFAULTS,
     });
 
     wireLambda(this, lambda, { eventbus, parameters: ["/common/*"] });
@@ -265,12 +264,10 @@ export class PublicTodo extends Construct {
   constructor(scope: Construct, id: string, { eventbus, apigw }: { eventbus: cdk.aws_sns.Topic; apigw: HttpApi }) {
     super(scope, id);
 
-    const lambda = new cdk.aws_lambda.Function(this, "lambda", {
+    const lambda = new GoFunction(this, "handler", {
       functionName: "public-todo",
-      code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, "..", "..", "build")),
-      runtime: cdk.aws_lambda.Runtime.GO_1_X,
-      handler: "publicapi-todo",
-      logRetention: cdk.Duration.days(3).toDays(),
+      entry: "../lambda/publicapi/todo",
+      ...LAMBDA_DEFAULTS,
     });
 
     wireLambda(this, lambda, { eventbus, parameters: ["/common/*"] });
@@ -367,18 +364,20 @@ export class QueueWorker extends Construct {
   ) {
     super(scope, id);
 
+    const lambda = new GoFunction(this, "handler", {
+      functionName: `worker-${id}`,
+      entry: "../lambda/core/workers",
+      environment: env,
+      ...LAMBDA_DEFAULTS,
+    });
+
     const worker = new QueueLambda(this, id, {
       eventbus,
       queueProps: {
         // SNS cannot deliver to encrypted SQS queues
         encryption: cdk.aws_sqs.QueueEncryption.UNENCRYPTED,
       },
-      lambdaFunctionProps: {
-        code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, "..", "..", "build")),
-        runtime: cdk.aws_lambda.Runtime.GO_1_X,
-        handler: "core-workers",
-        environment: env,
-      },
+      existingLambdaObj: lambda,
     });
 
     eventbus.addSubscription(
@@ -399,22 +398,29 @@ export class QueueLambda extends Construct {
     {
       eventbus,
       lambdaFunctionProps,
+      existingLambdaObj,
       queueProps,
     }: {
       eventbus: cdk.aws_sns.Topic;
       queueProps?: cdk.aws_sqs.QueueProps;
-      lambdaFunctionProps: cdk.aws_lambda.FunctionProps;
+      lambdaFunctionProps?: cdk.aws_lambda.FunctionProps;
+      existingLambdaObj?: cdk.aws_lambda.Function;
     },
   ) {
     super(scope, id);
 
     // Connect the queue
     const inst = new SqsToLambda(this, "sqs", {
-      lambdaFunctionProps: {
-        functionName: `worker-${id}`,
-        logRetention: cdk.Duration.days(3).toDays(),
-        ...lambdaFunctionProps,
-      },
+      ...(lambdaFunctionProps
+        ? {
+            lambdaFunctionProps: {
+              functionName: `worker-${id}`,
+              logRetention: cdk.Duration.days(3).toDays(),
+              ...lambdaFunctionProps,
+            },
+          }
+        : {}),
+      ...(existingLambdaObj ? { existingLambdaObj } : {}),
       deadLetterQueueProps: {
         queueName: `${id}-dlq`,
         retentionPeriod: cdk.Duration.days(7),
