@@ -15,13 +15,16 @@ import { LambdaToSns } from "@aws-solutions-constructs/aws-lambda-sns";
 import { Construct } from "constructs";
 import { SqsToLambda } from "@aws-solutions-constructs/aws-sqs-lambda";
 import { SubscriptionFilter } from "aws-cdk-lib/aws-sns";
-import { GoFunction } from "@aws-cdk/aws-lambda-go-alpha";
+import { GoFunction, GoFunctionProps } from "@aws-cdk/aws-lambda-go-alpha";
 // import * as sqs from 'aws-cdk-lib/aws-sqs';
 
-const LAMBDA_DEFAULTS: Partial<cdk.aws_lambda.FunctionProps> = {
+const LAMBDA_DEFAULTS: Partial<GoFunctionProps> = {
   logRetention: cdk.Duration.days(3).toDays(),
   insightsVersion: cdk.aws_lambda.LambdaInsightsVersion.VERSION_1_0_119_0,
   architecture: cdk.aws_lambda.Architecture.ARM_64,
+  bundling: {
+    // goBuildFlags: ['-ldflags "-s -w" -tags lambda.norpc'],
+  },
 };
 
 export class DeployStack extends cdk.Stack {
@@ -152,7 +155,7 @@ export class CoreTodo extends Construct {
 
     const lambda = new GoFunction(this, "handler", {
       functionName: "core-todo",
-      entry: "../lambda/core/todo",
+      entry: path.join(__dirname, "..", "..", "lambda", "core", "todo"),
       ...LAMBDA_DEFAULTS,
     });
 
@@ -174,7 +177,7 @@ export class CoreUser extends Construct {
 
     const lambda = new GoFunction(this, "handler", {
       functionName: "core-user",
-      entry: "../lambda/core/user",
+      entry: path.join(__dirname, "..", "..", "lambda", "core", "user"),
       ...LAMBDA_DEFAULTS,
     });
 
@@ -190,7 +193,7 @@ export class CoreOauthUser extends Construct {
 
     const lambda = new GoFunction(this, "handler", {
       functionName: "core-oauth-user",
-      entry: "../lambda/core/oauth_user",
+      entry: path.join(__dirname, "..", "..", "lambda", "core", "oauth_user"),
       ...LAMBDA_DEFAULTS,
     });
 
@@ -221,7 +224,7 @@ export class CoreSendEmailQueue extends Construct {
 
     const lambda = new GoFunction(this, "handler", {
       functionName: "core-send-email",
-      entry: "../lambda/core/send_email",
+      entry: path.join(__dirname, "..", "..", "lambda", "core", "send_email"),
       ...LAMBDA_DEFAULTS,
     });
 
@@ -239,7 +242,7 @@ export class PublicAuth extends Construct {
 
     const lambda = new GoFunction(this, "handler", {
       functionName: "public-auth",
-      entry: "../lambda/publicapi/auth",
+      entry: path.join(__dirname, "..", "..", "lambda", "publicapi", "auth"),
       ...LAMBDA_DEFAULTS,
     });
 
@@ -266,7 +269,7 @@ export class PublicTodo extends Construct {
 
     const lambda = new GoFunction(this, "handler", {
       functionName: "public-todo",
-      entry: "../lambda/publicapi/todo",
+      entry: path.join(__dirname, "..", "..", "lambda", "publicapi", "todo"),
       ...LAMBDA_DEFAULTS,
     });
 
@@ -366,7 +369,7 @@ export class QueueWorker extends Construct {
 
     const lambda = new GoFunction(this, "handler", {
       functionName: `worker-${id}`,
-      entry: "../lambda/core/workers",
+      entry: path.join(__dirname, "..", "..", "lambda", "core", "workers"),
       environment: env,
       ...LAMBDA_DEFAULTS,
     });
