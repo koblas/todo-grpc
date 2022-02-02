@@ -78,9 +78,7 @@ export default function Sidebar() {
         <Flex flexDir="column" w="100%" alignItems={isExpanded ? "flex-start" : "center"}>
           <Divider display={isExpanded ? "flex" : "none"} />
           <NavItem expanded={isExpanded} avatar="avatar-1.jpg">
-            <Heading as="p" size="sm" style={{ textOverflow: "truncate" }}>
-              Sylwia Weller
-            </Heading>
+            Sylwia Weller
           </NavItem>
           <NavItem
             expanded={isExpanded}

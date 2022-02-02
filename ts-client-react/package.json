@@ -4,6 +4,7 @@
   "description": "",
   "scripts": {
     "start": "BASE_URL=http://localhost:8080 parcel serve public/index.html",
+    "prod": "BASE_URL=https://api.iqvine.com WS_URL=wss://wsapi.iqvine.com/ parcel serve public/index.html",
     "build": "BASE_URL=https://api.iqvine.com parcel build public/index.html",
     "deploy": "cd ./deploy ; npx cdk deploy",
     "lint": "eslint --ext .ts,.tsx,.js,.jsx src",
@@ -38,7 +39,8 @@
     "prettier": "^2.4.1",
     "react-test-renderer": "^17.0.2",
     "ts-jest": "^27.0.5",
-    "typescript": "^4.4.3"
+    "typescript": "^4.4.3",
+    "wscat": "^5.1.0"
   },
   "dependencies": {
     "@chakra-ui/react": "^1.6.10",
@@ -61,6 +63,7 @@
     "react-icons": "^4.3.1",
     "react-router": "^6.1.1",
     "react-router-dom": "^6.1.1",
+    "react-use-websocket": "^2.9.1",
     "use-immer": "^0.6.0",
     "zustand": "^3.6.7"
   },
