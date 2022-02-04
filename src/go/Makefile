@@ -23,6 +23,7 @@ start:
 build-lambda:
 	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/publicapi-auth ./lambda/publicapi/auth/main.go
 	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/publicapi-todo ./lambda/publicapi/todo/main.go
+	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/publicapi-todo ./lambda/websocket/todo/main.go
 	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/core-todo ./lambda/core/todo/main.go
 	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/core-user ./lambda/core/user/main.go
 	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/core-oauth-user ./lambda/core/oauth_user/main.go
@@ -32,5 +33,7 @@ build-lambda:
 run-lambda: build-lambda
 	sam local start-api --template-file ./lambda/template.yaml --env-vars ../../dev-variables.json
 
-deploy: build-lambda
+deploy: 
 	( cd deploy && npx cdk deploy)
+
+.PHONY: deploy

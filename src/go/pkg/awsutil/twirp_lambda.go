@@ -17,6 +17,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
+	"github.com/aws/aws-sdk-go-v2/service/sns"
+	snstypes "github.com/aws/aws-sdk-go-v2/service/sns/types"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	sqstypes "github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/koblas/grpc-todo/pkg/logger"
@@ -75,9 +77,18 @@ func HandleApiLambda(ctx context.Context, api http.Handler) TwirpHttpApiHandler 
 	}
 }
 
-func HandleSqsLambda(ctx context.Context, api http.Handler, forcePath *string) TwirpHttpSqsHandler {
+type SqsHandlers map[string]http.Handler
+
+func HandleSqsLambda(ctx context.Context, handlers SqsHandlers, forcePath *string) TwirpHttpSqsHandler {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		api.ServeHTTP(w, r)
+		for k, v := range handlers {
+			if strings.HasPrefix(r.URL.Path, k) {
+				v.ServeHTTP(w, r)
+				return
+			}
+		}
+
+		w.WriteHeader(http.StatusNotFound)
 	})
 
 	return func(lambdaCtx context.Context, request events.SQSEvent) (events.SQSEventResponse, error) {
@@ -119,6 +130,7 @@ type TwClient interface {
 type twClient struct {
 	lambda *lambda.Client
 	sqs    *sqs.Client
+	sns    *sns.Client
 }
 
 func NewTwirpCallLambda() TwClient {
@@ -130,10 +142,30 @@ func NewTwirpCallLambda() TwClient {
 	return twClient{
 		lambda: lambda.NewFromConfig(cfg),
 		sqs:    sqs.NewFromConfig(cfg),
+		sns:    sns.NewFromConfig(cfg),
 	}
 }
 
 func (svc twClient) Do(req *http.Request) (*http.Response, error) {
+	scheme := req.URL.Scheme
+	path := req.URL.Path
+	arn := ""
+	if req.URL.Scheme == "arn" {
+		parts := strings.Split(req.URL.Opaque, ":")
+		if parts[0] != "aws" {
+			return nil, errors.New("unknown ARN format")
+		}
+		scheme = parts[1]
+		idx := strings.Index(req.URL.Opaque, "/")
+		if idx >= 0 {
+			arn = "arn:" + req.URL.Opaque[:idx]
+			path = req.URL.Opaque[idx:]
+		} else {
+			arn = "arn:" + req.URL.Opaque
+			path = "/"
+		}
+	}
+
 	buf := strings.Builder{}
 	_, err := io.Copy(&buf, req.Body)
 	if err != nil {
@@ -148,11 +180,11 @@ func (svc twClient) Do(req *http.Request) (*http.Response, error) {
 	lambdaRequest := events.APIGatewayV2HTTPRequest{
 		RequestContext: events.APIGatewayV2HTTPRequestContext{
 			HTTP: events.APIGatewayV2HTTPRequestContextHTTPDescription{
-				Path:   req.URL.Path,
+				Path:   path,
 				Method: req.Method,
 			},
 		},
-		RawPath:         req.URL.Path,
+		RawPath:         path,
 		RawQueryString:  req.URL.Query().Encode(),
 		Headers:         basicHeaders,
 		Body:            buf.String(),
@@ -169,25 +201,36 @@ func (svc twClient) Do(req *http.Request) (*http.Response, error) {
 		return nil, err
 	}
 
-	log := logger.FromContext(req.Context()).With("host", req.URL.Host).With("rpcMethod", req.URL.Path)
+	log := logger.FromContext(req.Context()).With(
+		"host", req.URL.Host,
+		"arn", arn,
+		"rpcMethod", path,
+		"scheme", scheme,
+	)
 	log.Info("BEGIN: calling twirp service")
 	start := time.Now()
 
-	res := http.Response{}
+	var res *http.Response
 
-	if req.URL.Scheme == "http" || req.URL.Scheme == "https" {
+	if scheme == "http" || scheme == "https" {
+		if arn != "" {
+			return nil, errors.New("arn not supported for http")
+		}
 		client := http.Client{}
-		hres, err := client.Do(req)
+		res, err = client.Do(req)
 		elapsed := int64(time.Since(start) / time.Millisecond)
 		log.With("durationInMs", elapsed).Info("END: calling twirp service")
 
 		if err != nil {
 			return nil, err
 		}
-		res = *hres
-	} else if req.URL.Scheme == "lambda" {
+	} else if scheme == "lambda" {
+		functionName := req.URL.Host
+		if arn != "" {
+			functionName = arn
+		}
 		output, err := svc.lambda.Invoke(context.TODO(), &lambda.InvokeInput{
-			FunctionName: aws.String(req.URL.Host),
+			FunctionName: aws.String(functionName),
 			Payload:      payload,
 		})
 		elapsed := int64(time.Since(start) / time.Millisecond)
@@ -203,16 +246,22 @@ func (svc twClient) Do(req *http.Request) (*http.Response, error) {
 			return nil, err
 		}
 
-		res = http.Response{
+		res = &http.Response{
 			StatusCode: lambdaResponse.StatusCode,
 			Header:     lambdaResponse.MultiValueHeaders,
 			Body:       ioutil.NopCloser(strings.NewReader(lambdaResponse.Body)),
 		}
-	} else if req.URL.Scheme == "sqs" {
+	} else if scheme == "sqs" {
+		if arn != "" {
+			return nil, errors.New("arn not supported for sqs")
+		}
 		isJson := false
 
 		attributes := map[string]sqstypes.MessageAttributeValue{
-			"twirp.path": {DataType: aws.String("String"), StringValue: &req.URL.Path},
+			"twirp.path": {DataType: aws.String("String"), StringValue: &path},
+		}
+		for k, v := range req.URL.Query() {
+			attributes[k] = sqstypes.MessageAttributeValue{DataType: aws.String("String"), StringValue: aws.String(v[0])}
 		}
 		for k, v := range basicHeaders {
 			attributes[k] = sqstypes.MessageAttributeValue{DataType: aws.String("String"), StringValue: aws.String(v)}
@@ -249,7 +298,48 @@ func (svc twClient) Do(req *http.Request) (*http.Response, error) {
 			return nil, err
 		}
 
-		res = http.Response{
+		res = &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       ioutil.NopCloser(bytes.NewReader([]byte{})),
+		}
+	} else if scheme == "sns" {
+		isJson := false
+
+		attributes := map[string]snstypes.MessageAttributeValue{
+			"twirp.path": {DataType: aws.String("String"), StringValue: &path},
+		}
+		for k, v := range req.URL.Query() {
+			attributes[k] = snstypes.MessageAttributeValue{DataType: aws.String("String"), StringValue: aws.String(v[0])}
+		}
+		for k, v := range basicHeaders {
+			attributes[k] = snstypes.MessageAttributeValue{DataType: aws.String("String"), StringValue: aws.String(v)}
+			if strings.ToLower(k) == "content-type" {
+				isJson = strings.Contains(v, "application/json")
+			}
+		}
+
+		var body *string
+		if isJson {
+			body = &lambdaRequest.Body
+		} else {
+			attributes["Content-Transfer-Encoding"] = snstypes.MessageAttributeValue{DataType: aws.String("String"), StringValue: aws.String("base64")}
+			uEnc := base64.URLEncoding.EncodeToString([]byte(lambdaRequest.Body))
+			body = &uEnc
+		}
+
+		_, err = svc.sns.Publish(context.TODO(), &sns.PublishInput{
+			TopicArn:          aws.String(arn),
+			MessageAttributes: attributes,
+			Message:           body,
+		})
+		elapsed := int64(time.Since(start) / time.Millisecond)
+		log.With("durationInMs", elapsed).Info("END: calling twirp service")
+
+		if err != nil {
+			return nil, err
+		}
+
+		res = &http.Response{
 			StatusCode: http.StatusOK,
 			Body:       ioutil.NopCloser(bytes.NewReader([]byte{})),
 		}
@@ -257,5 +347,5 @@ func (svc twClient) Do(req *http.Request) (*http.Response, error) {
 		return nil, errors.New("unknown scheme")
 	}
 
-	return &res, nil
+	return res, nil
 }

@@ -8,6 +8,6 @@ type Todo struct {
 
 type TodoStore interface {
 	FindByUser(user_id string) ([]Todo, error)
-	DeleteOne(user_id string, id string) error
+	DeleteOne(user_id string, id string) (*Todo, error)
 	Create(todo Todo) (*Todo, error)
 }

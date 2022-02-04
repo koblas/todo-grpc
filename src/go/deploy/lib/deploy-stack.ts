@@ -8,8 +8,10 @@ import {
   ParameterMapping,
   MappingValue,
   DomainName,
+  WebSocketApi,
+  WebSocketStage,
 } from "@aws-cdk/aws-apigatewayv2-alpha";
-import { HttpLambdaIntegration } from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
+import { HttpLambdaIntegration, WebSocketLambdaIntegration } from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
 import { LambdaToDynamoDB } from "@aws-solutions-constructs/aws-lambda-dynamodb";
 import { LambdaToSns } from "@aws-solutions-constructs/aws-lambda-sns";
 import { Construct } from "constructs";
@@ -33,59 +35,41 @@ export class DeployStack extends cdk.Stack {
 
     const config = {
       zoneName: "iqvine.com",
-      subdomain: "api",
+      apihostname: "api",
+      wshostname: "wsapi",
     };
 
     const { hostedZone, certificate } = this.getRoute53HostedZone(config.zoneName, [
-      `${config.subdomain}.${config.zoneName}`,
+      `${config.apihostname}.${config.zoneName}`,
+      `${config.wshostname}.${config.zoneName}`,
     ]);
 
     // The code that defines your stack goes here
     const eventbus = new cdk.aws_sns.Topic(this, "eventbus", {});
 
-    const dn = new DomainName(this, "DN", {
-      domainName: `${config.subdomain}.${config.zoneName}`,
+    const apiDn = new DomainName(this, "apiDn", {
+      domainName: `${config.apihostname}.${config.zoneName}`,
+      certificate,
+    });
+    const wsDn = new DomainName(this, "wsDn", {
+      domainName: `${config.wshostname}.${config.zoneName}`,
       certificate,
     });
 
     //
-    const apigw = new HttpApi(this, "apigw", {
-      corsPreflight: {
-        allowOrigins: ["*"],
-        allowMethods: [CorsHttpMethod.GET, CorsHttpMethod.HEAD, CorsHttpMethod.OPTIONS, CorsHttpMethod.POST],
-        allowHeaders: [
-          // "Content-Type",
-          "X-Api-Key",
-          "Authorization",
-          "Content-Type",
-          // "Accept",
-          // "Accept-Language",
-          // "Content-Language",
-          // "User-Agent",
-          // "Origin",
-        ],
-        maxAge: cdk.Duration.days(10),
-      },
-      defaultDomainMapping: {
-        domainName: dn,
-      },
+    const apigw = new ApiGw(this, "apigw", {
+      dn: apiDn,
+      hostedZone: hostedZone,
+      hostname: config.apihostname,
     });
-
-    new cdk.aws_apigatewayv2.CfnRoute(this, "OptionsResource", {
-      apiId: apigw.apiId,
-      routeKey: "OPTIONS /{proxy+}",
-    });
-
-    new cdk.aws_route53.ARecord(this, "Alias", {
-      zone: hostedZone,
-      recordName: config.subdomain,
-      target: cdk.aws_route53.RecordTarget.fromAlias(
-        new cdk.aws_route53_targets.ApiGatewayv2DomainProperties(dn.regionalDomainName, dn.regionalHostedZoneId),
-      ),
+    const apiws = new WebsocketHandler(this, "websock", {
+      dn: wsDn,
+      hostedZone: hostedZone,
+      hostname: config.wshostname,
     });
 
     //
-    new cdk.aws_ssm.StringParameter(this, "entity", {
+    new cdk.aws_ssm.StringParameter(this, "bus_entity_arn", {
       tier: cdk.aws_ssm.ParameterTier.STANDARD,
       description: "SNS Topic for events",
       parameterName: "/common/bus_entity_arn",
@@ -113,10 +97,11 @@ export class DeployStack extends cdk.Stack {
     new CoreTodo(this, "core-todo", { eventbus });
     new CoreOauthUser(this, "core-oauth-user", { eventbus });
     // new CoreSendEmail(this, "core-send-email", { eventbus });
-    new PublicAuth(this, "public-auth", { eventbus, apigw: apigw });
-    new PublicTodo(this, "public-todo", { eventbus, apigw: apigw });
+    new PublicAuth(this, "public-auth", { eventbus, apigw: apigw.apigw });
+    new PublicTodo(this, "public-todo", { eventbus, apigw: apigw.apigw });
     new CreateWorkers(this, "workers", { eventbus });
     new CoreSendEmailQueue(this, "send-email-queue", { eventbus });
+    new WebsocketTodo(this, "websocket-todo", { eventbus, wsstage: apiws.wsstage, wsapi: apiws.wsapi });
 
     // await sqsWorkers(corestack);
   }
@@ -137,6 +122,114 @@ export class DeployStack extends cdk.Stack {
     });
 
     return { hostedZone, certificate };
+  }
+}
+
+export class ApiGw extends Construct {
+  apigw: HttpApi;
+
+  constructor(
+    scope: Construct,
+    id: string,
+    props: { dn: DomainName; hostedZone: cdk.aws_route53.IHostedZone; hostname: string },
+  ) {
+    super(scope, id);
+
+    const apigw = new HttpApi(this, "apigw", {
+      corsPreflight: {
+        allowOrigins: ["*"],
+        allowMethods: [CorsHttpMethod.GET, CorsHttpMethod.HEAD, CorsHttpMethod.OPTIONS, CorsHttpMethod.POST],
+        allowHeaders: [
+          // "Content-Type",
+          "Authorization",
+          "Content-Type",
+          "X-Api-Key",
+          // "Accept",
+          // "Accept-Language",
+          // "Content-Language",
+          // "User-Agent",
+          // "Origin",
+        ],
+        maxAge: cdk.Duration.days(10),
+      },
+      defaultDomainMapping: {
+        domainName: props.dn,
+      },
+    });
+
+    new cdk.aws_apigatewayv2.CfnRoute(this, "OptionsResource", {
+      apiId: apigw.apiId,
+      routeKey: "OPTIONS /{proxy+}",
+    });
+
+    new cdk.aws_route53.ARecord(this, "Alias", {
+      zone: props.hostedZone,
+      recordName: props.hostname,
+      target: cdk.aws_route53.RecordTarget.fromAlias(
+        new cdk.aws_route53_targets.ApiGatewayv2DomainProperties(
+          props.dn.regionalDomainName,
+          props.dn.regionalHostedZoneId,
+        ),
+      ),
+    });
+
+    this.apigw = apigw;
+  }
+}
+
+export class WebsocketHandler extends Construct {
+  public wsapi: WebSocketApi;
+  public wsstage: WebSocketStage;
+
+  constructor(
+    scope: Construct,
+    id: string,
+    props: { dn: DomainName; hostedZone: cdk.aws_route53.IHostedZone; hostname: string },
+  ) {
+    super(scope, id);
+
+    const db = new cdk.aws_dynamodb.Table(this, "db", {
+      tableName: "ws-connection",
+      billingMode: cdk.aws_dynamodb.BillingMode.PAY_PER_REQUEST,
+      partitionKey: { name: "pk", type: cdk.aws_dynamodb.AttributeType.STRING },
+      sortKey: { name: "sk", type: cdk.aws_dynamodb.AttributeType.STRING },
+      timeToLiveAttribute: "delete_at",
+    });
+
+    const lambda = new GoFunction(this, "handler", {
+      functionName: "public-websocket",
+      entry: path.join(__dirname, "..", "..", "lambda", "publicapi", "websocket"),
+      environment: {
+        CONN_DB: db.tableName,
+      },
+      ...LAMBDA_DEFAULTS,
+    });
+
+    wireLambda(this, lambda, { parameters: ["/common/*"], dynamo: db });
+
+    this.wsapi = new WebSocketApi(this, "wsapi", {
+      connectRouteOptions: { integration: new WebSocketLambdaIntegration("connect", lambda) },
+      disconnectRouteOptions: { integration: new WebSocketLambdaIntegration("disconnect", lambda) },
+      defaultRouteOptions: { integration: new WebSocketLambdaIntegration("default", lambda) },
+    });
+
+    this.wsstage = new WebSocketStage(this, "DefaultStage", {
+      webSocketApi: this.wsapi,
+      stageName: "$default",
+      autoDeploy: true,
+      domainMapping: { domainName: props.dn },
+    });
+
+    new cdk.aws_route53.ARecord(this, "Alias", {
+      zone: props.hostedZone,
+      recordName: props.hostname,
+      target: cdk.aws_route53.RecordTarget.fromAlias(
+        new cdk.aws_route53_targets.ApiGatewayv2DomainProperties(
+          props.dn.regionalDomainName,
+          props.dn.regionalHostedZoneId,
+        ),
+      ),
+    });
   }
 }
 
@@ -197,7 +290,7 @@ export class CoreOauthUser extends Construct {
       ...LAMBDA_DEFAULTS,
     });
 
-    wireLambda(this, lambda, { eventbus, parameters: ["/common/*", "/oauth/*"] });
+    wireLambda(this, lambda, { parameters: ["/common/*", "/oauth/*"], eventbus });
   }
 }
 
@@ -287,6 +380,61 @@ export class PublicTodo extends Construct {
       methods: [HttpMethod.POST],
       integration: integration,
     });
+  }
+}
+
+//
+export class WebsocketTodo extends Construct {
+  constructor(
+    scope: Construct,
+    id: string,
+    { eventbus, wsstage, wsapi }: { eventbus: cdk.aws_sns.Topic; wsstage: WebSocketStage; wsapi: WebSocketApi },
+  ) {
+    super(scope, id);
+
+    const db = cdk.aws_dynamodb.Table.fromTableName(this, "conns", "ws-connection");
+
+    const lambda = new GoFunction(this, "handler", {
+      functionName: "websocket-todo",
+      entry: path.join(__dirname, "..", "..", "lambda", "websocket", "todo"),
+      environment: {
+        CONN_DB: db.tableName,
+        WS_ENDPOINT: wsstage.callbackUrl,
+      },
+      ...LAMBDA_DEFAULTS,
+    });
+
+    wsstage.grantManagementApiAccess(lambda);
+
+    const queue = new SqsToLambda(this, "sqs", {
+      existingLambdaObj: lambda,
+      deadLetterQueueProps: {
+        queueName: `${id}-dlq`,
+        retentionPeriod: cdk.Duration.days(7),
+      },
+      queueProps: {
+        queueName: `${id}`,
+        retentionPeriod: cdk.Duration.days(7),
+        visibilityTimeout: cdk.Duration.minutes(5),
+        // SNS cannot deliver to encrypted SQS queues
+        encryption: cdk.aws_sqs.QueueEncryption.UNENCRYPTED,
+      },
+    });
+
+    wireLambda(this, lambda, { parameters: ["/common/*"], dynamo: db });
+
+    eventbus.addSubscription(
+      new cdk.aws_sns_subscriptions.SqsSubscription(queue.sqsQueue, {
+        rawMessageDelivery: true,
+        filterPolicy: {
+          "twirp.path": SubscriptionFilter.stringFilter({
+            allowlist: ["/twirp/core.eventbus.TodoEventbus/Message"],
+          }),
+        },
+      }),
+    );
+
+    //
   }
 }
 
@@ -454,7 +602,7 @@ function wireLambda(
     parameters,
     dynamo,
   }: {
-    dynamo?: cdk.aws_dynamodb.Table;
+    dynamo?: cdk.aws_dynamodb.ITable;
     eventbus?: cdk.aws_sns.Topic;
     parameters?: string[];
   },
@@ -504,7 +652,7 @@ function wireLambda(
 
   if (dynamo) {
     new LambdaToDynamoDB(scope, "dynamo-perms", {
-      existingTableObj: dynamo,
+      existingTableObj: dynamo as cdk.aws_dynamodb.Table,
       tablePermissions: "ReadWrite",
       existingLambdaObj: lambda,
     });

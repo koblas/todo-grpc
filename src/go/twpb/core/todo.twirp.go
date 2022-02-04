@@ -1060,7 +1060,7 @@ func (s *todoServiceServer) serveGetTodosProtobuf(ctx context.Context, resp http
 }
 
 func (s *todoServiceServer) ServiceDescriptor() ([]byte, int) {
-	return twirpFileDescriptor2, 0
+	return twirpFileDescriptor3, 0
 }
 
 func (s *todoServiceServer) ProtocGenTwirpVersion() string {
@@ -1074,7 +1074,7 @@ func (s *todoServiceServer) PathPrefix() string {
 	return baseServicePath(s.pathPrefix, "core.todo", "TodoService")
 }
 
-var twirpFileDescriptor2 = []byte{
+var twirpFileDescriptor3 = []byte{
 	// 292 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x52, 0x4d, 0x4b, 0xc3, 0x40,
 	0x10, 0x25, 0xa9, 0x36, 0x66, 0xea, 0x17, 0x0b, 0xd2, 0x10, 0x11, 0x4a, 0x4e, 0x01, 0x61, 0x0b,

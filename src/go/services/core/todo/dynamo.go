@@ -93,8 +93,8 @@ func (store *dynamoStore) FindByUser(user_id string) ([]Todo, error) {
 	return todos, nil
 }
 
-func (store *dynamoStore) DeleteOne(user_id string, id string) error {
-	_, err := store.client.DeleteItem(context.TODO(), &dynamodb.DeleteItemInput{
+func (store *dynamoStore) DeleteOne(user_id string, id string) (*Todo, error) {
+	item, err := store.client.GetItem(context.TODO(), &dynamodb.GetItemInput{
 		TableName: store.table,
 		Key: map[string]types.AttributeValue{
 			"pk": &types.AttributeValueMemberS{Value: user_id},
@@ -102,7 +102,25 @@ func (store *dynamoStore) DeleteOne(user_id string, id string) error {
 		},
 	})
 
-	return err
+	// Already deleted (or error)
+	if item == nil {
+		return nil, err
+	}
+
+	todo := Todo{}
+	if err := attributevalue.UnmarshalMap(item.Item, &todo); err != nil {
+		return nil, err
+	}
+
+	_, err = store.client.DeleteItem(context.TODO(), &dynamodb.DeleteItemInput{
+		TableName: store.table,
+		Key: map[string]types.AttributeValue{
+			"pk": &types.AttributeValueMemberS{Value: user_id},
+			"sk": &types.AttributeValueMemberS{Value: id},
+		},
+	})
+
+	return &todo, err
 }
 
 func (store *dynamoStore) Create(todo Todo) (*Todo, error) {

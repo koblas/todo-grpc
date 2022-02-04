@@ -1,20 +1,19 @@
-package send_email
+package todo
 
 import (
 	"context"
 	"log"
 
 	"github.com/koblas/grpc-todo/pkg/awsutil"
-	"github.com/koblas/grpc-todo/pkg/eventbus/aws"
 	"github.com/koblas/grpc-todo/pkg/logger"
+	"github.com/koblas/grpc-todo/pkg/store/websocket"
 	"github.com/koblas/grpc-todo/twpb/core"
 )
 
 type SsmConfig struct {
-	EventArn string `ssm:"bus_entity_arn" environment:"BUS_ENTITY_ARN"`
-	SmtpAddr string `ssm:"smtp/addr" environment:"SMTP_ADDR"`
-	SmtpUser string `ssm:"smtp/username" environment:"SMTP_USERNAME"`
-	SmtpPass string `ssm:"smtp/password" environment:"SMTP_PASSWORD"`
+	UrlBase    string `ssm:"url_base" environment:"URL_BASE_UI"`
+	ConnDb     string `environment:"CONN_DB"`
+	WsEndpoint string `environment:"WS_ENDPOINT"`
 }
 
 var lambdaHandler awsutil.TwirpHttpSqsHandler
@@ -26,15 +25,11 @@ func init() {
 		log.Fatal(err.Error())
 	}
 
-	producer, err := aws.NewAwsPublish(ssmConfig.EventArn)
-	if err != nil {
-		log.Fatal(err)
-	}
-	smtp := NewSmtpService(ssmConfig)
-	s := NewSendEmailServer(producer, smtp)
+	store := websocket.NewUserDynamoStore(websocket.WithDynamoTable(ssmConfig.ConnDb))
 
+	s := NewTodoServer(store, ssmConfig.WsEndpoint)
 	handlers := awsutil.SqsHandlers{
-		core.SendEmailServicePathPrefix: core.NewSendEmailServiceServer(s),
+		core.TodoEventbusPathPrefix: core.NewTodoEventbusServer(s),
 	}
 
 	linfo := logger.NewZap(logger.LevelInfo)

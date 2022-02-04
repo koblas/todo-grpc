@@ -585,7 +585,6 @@ func (s *sendEmailServiceServer) ServeHTTP(resp http.ResponseWriter, req *http.R
 		return
 	}
 
-
 	// Verify path format: [<prefix>]/<package>.<Service>/<Method>
 	prefix, pkgService, method := parseTwirpPath(req.URL.Path)
 	if pkgService != "core.send_email.SendEmailService" {
@@ -1340,7 +1339,7 @@ func (s *sendEmailServiceServer) serveInviteUserMessageProtobuf(ctx context.Cont
 }
 
 func (s *sendEmailServiceServer) ServiceDescriptor() ([]byte, int) {
-	return twirpFileDescriptor1, 0
+	return twirpFileDescriptor2, 0
 }
 
 func (s *sendEmailServiceServer) ProtocGenTwirpVersion() string {
@@ -1354,7 +1353,7 @@ func (s *sendEmailServiceServer) PathPrefix() string {
 	return baseServicePath(s.pathPrefix, "core.send_email", "SendEmailService")
 }
 
-var twirpFileDescriptor1 = []byte{
+var twirpFileDescriptor2 = []byte{
 	// 636 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x55, 0xcd, 0x6e, 0xd3, 0x4c,
 	0x14, 0xad, 0xd3, 0x9f, 0x34, 0x37, 0x6d, 0xe2, 0xce, 0xd7, 0xaa, 0xf9, 0x2a, 0x15, 0x5a, 0x23,

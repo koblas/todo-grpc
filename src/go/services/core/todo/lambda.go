@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/koblas/grpc-todo/pkg/awsutil"
-	"github.com/koblas/grpc-todo/pkg/eventbus/aws"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/twpb/core"
 )
@@ -24,12 +23,9 @@ func init() {
 		log.Fatal(err.Error())
 	}
 
-	producer, err := aws.NewAwsPublish(ssmConfig.EventArn)
-	if err != nil {
-		log.Fatal(err)
-	}
+	eventbus := core.NewTodoEventbusProtobufClient(ssmConfig.EventArn, awsutil.NewTwirpCallLambda())
 
-	s := NewTodoServer(producer, NewTodoDynamoStore())
+	s := NewTodoServer(eventbus, NewTodoDynamoStore())
 	api = core.NewTodoServiceServer(s)
 
 	linfo := logger.NewZap(logger.LevelInfo)
