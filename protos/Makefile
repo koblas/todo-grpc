@@ -26,20 +26,20 @@ go-grpc:
 	
 	
 	# gRPC versions
-	protoc \
-		-I . \
-		--proto_path=$(PROTO_DIR) \
-		--go_out=$(GO_GRPC)/genpb --go_opt=paths=source_relative \
-		--twirp_out=$(GO_GRPC)/twpb/publicapi \
-		--go-grpc_out=$(GO_GRPC)/genpb --go-grpc_opt=paths=source_relative \
-		./publicapi/*
-	protoc \
-		-I . \
-		--proto_path=$(PROTO_DIR) \
-		--go_out=$(GO_GRPC)/genpb --go_opt=paths=source_relative \
-		--twirp_out=$(GO_GRPC)/twpb/core \
-		--go-grpc_out=$(GO_GRPC)/genpb --go-grpc_opt=paths=source_relative \
-		./core/*
+#	protoc \
+#		-I . \
+#		--proto_path=$(PROTO_DIR) \
+#		--go_out=$(GO_GRPC)/genpb --go_opt=paths=source_relative \
+#		--twirp_out=$(GO_GRPC)/twpb/publicapi \
+#		--go-grpc_out=$(GO_GRPC)/genpb --go-grpc_opt=paths=source_relative \
+#		./publicapi/*
+#	protoc \
+#		-I . \
+#		--proto_path=$(PROTO_DIR) \
+#		--go_out=$(GO_GRPC)/genpb --go_opt=paths=source_relative \
+#		--twirp_out=$(GO_GRPC)/twpb/core \
+#		--go-grpc_out=$(GO_GRPC)/genpb --go-grpc_opt=paths=source_relative \
+#		./core/*
 
 	# Twirp versions
 	protoc \
