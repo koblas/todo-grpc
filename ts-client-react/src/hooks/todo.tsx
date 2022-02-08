@@ -4,13 +4,48 @@ import { TodoItem, TodoList } from "../rpc/todo";
 import { useAuth } from "./auth";
 import { useNetworkContextErrors } from "./network";
 import { RpcError, RpcMutation, RpcOptions } from "../rpc/errors";
-import { useTodoStore } from "../store/useTodoStore";
+import { getTodoStore, TodoState } from "../store/useTodoStore";
+import { useWebsocketUpdates } from "../rpc/websocket";
+import { JsonObject } from "../types/json";
+
+const wrapped: Record<string, boolean> = {};
+
+function useWrappedStore(state: TodoState): TodoState {
+  const { addListener, connnectionId } = useWebsocketUpdates();
+
+  if (!wrapped[connnectionId]) {
+    wrapped[connnectionId] = true;
+
+    type TodoEvent = {
+      object_id: string;
+      action: "delete" | "create";
+      topic: "todo";
+      body: null | {
+        id: string;
+        task: string;
+      };
+    };
+
+    addListener("todo", (event: TodoEvent) => {
+      console.log("GOT EVENT", event);
+      if (event.action === "delete") {
+        state.deleteTodo(event.object_id);
+      } else if (event.action === "create" && event.body !== null) {
+        state.appendTodo(event.body);
+      } else {
+        console.log("UNKNOWN EVENT", event);
+      }
+    });
+  }
+
+  return state;
+}
 
 export function useTodos() {
   const { token } = useAuth();
   const client = newTodoClient(token, "json");
   const addHandler = useNetworkContextErrors();
-  const state = useTodoStore((s) => s);
+  const state = useWrappedStore(getTodoStore((s) => s));
 
   return {
     todos: state.todos,

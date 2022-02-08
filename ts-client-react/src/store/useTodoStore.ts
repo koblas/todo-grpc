@@ -16,7 +16,7 @@ export interface TodoState {
   resetTodos(): void;
 }
 
-export const useTodoStore = create(
+export const getTodoStore = create(
   zimmer<TodoState>((set) => ({
     // create<TodoState>(
     todos: [],
@@ -59,7 +59,9 @@ export const useTodoStore = create(
     appendTodo(todo: TodoItem) {
       set(
         produce((draft: Draft<TodoState>) => {
-          draft.todos.push(todo);
+          if (!draft.todos.some((v) => v.id === todo.id)) {
+            draft.todos.push(todo);
+          }
         }),
       );
     },

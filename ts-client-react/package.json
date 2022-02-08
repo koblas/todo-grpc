@@ -24,6 +24,7 @@
     "@types/node": "^17.0.8",
     "@types/react": "^17.0.21",
     "@types/react-dom": "^17.0.9",
+    "@types/uuid": "^8.3.4",
     "@typescript-eslint/eslint-plugin": "^5.9.1",
     "@typescript-eslint/parser": "^5.9.1",
     "autoprefixer": "^10.3.7",
@@ -65,6 +66,7 @@
     "react-router-dom": "^6.1.1",
     "react-use-websocket": "^2.9.1",
     "use-immer": "^0.6.0",
+    "uuid": "^8.3.2",
     "zustand": "^3.6.7"
   },
   "jest": {
