@@ -63,23 +63,24 @@ func (svc *TodoServer) Message(ctx context.Context, event *core.TodoEvent) (*cor
 		return nil, err
 	}
 
-	msg := SocketMessage{
-		Topic:  "todo",
-		Action: event.Action,
-	}
+	var obj *core.TodoObject
 	if event.Current != nil {
-		msg.ObjectId = event.Current.Id
-		msg.Body = publicapi.TodoObject{
-			Id:   event.Current.Id,
-			Task: event.Current.Task,
-		}
+		obj = event.Current
 	} else if event.Previous != nil {
-		msg.ObjectId = event.Previous.Id
+		obj = event.Previous
 	} else {
 		return nil, errors.New("missing object")
 	}
+	data, err := json.Marshal(SocketMessage{
+		Topic:    "todo",
+		ObjectId: obj.Id,
+		Action:   event.Action,
+		Body: publicapi.TodoObject{
+			Id:   obj.Id,
+			Task: obj.Task,
+		},
+	})
 
-	data, err := json.Marshal(msg)
 	if err != nil {
 		return nil, err
 	}
