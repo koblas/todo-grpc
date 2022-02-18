@@ -1,9 +1,8 @@
-import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 import { v4 as uuidV4 } from "uuid";
 
 import create from "zustand";
-import createContext from "zustand/context";
 import { WebSocketHook } from "react-use-websocket/dist/lib/types";
 import { useAuth } from "../hooks/auth";
 import { Json } from "../types/json";
@@ -38,8 +37,10 @@ const createStore = () =>
 
 const useStore = createStore();
 
-export function WebsocketProvider({ children }: React.PropsWithChildren<unknown>) {
+export function WebsocketProvider({ children }: { children: JSX.Element }): JSX.Element | null {
   const { token } = useAuth();
+  const [pingTimer, setPingTimer] = useState<null | NodeJS.Timer>(null);
+  const [heartbeatTimer, setHeartbeatTimer] = useState<null | NodeJS.Timer>(null);
   const pos = useRef<{ value: string | null }>({ value: null });
   const store = useStore();
 
@@ -47,23 +48,61 @@ export function WebsocketProvider({ children }: React.PropsWithChildren<unknown>
     WS_URL,
     {
       queryParams: { t: token ?? "" },
-      // shouldReconnect: (e) => {
-      //   console.log("SHOULD RECONNECT", token, pos.current, e);
-      //   /* some comment */
-      //   if (!token) {
-      //     return false;
-      //   }
-      //   return true;
-      // },
+      shouldReconnect: () => !!token,
       reconnectAttempts: 10,
       reconnectInterval: 10000,
     },
     !!token,
   );
 
+  // console.log("HERE!", readyState);
+
   useEffect(() => {
-    sendJsonMessage({ cursor: pos.current.value });
-  }, [pos.current.value, sendJsonMessage]);
+    if (readyState === ReadyState.OPEN) {
+      sendJsonMessage({ action: "cursor", position: pos.current.value });
+    }
+  }, [pos.current.value, sendJsonMessage, readyState]);
+
+  useEffect(() => {
+    function clearTimers() {
+      if (pingTimer !== null) {
+        clearInterval(pingTimer);
+        setPingTimer(null);
+      }
+      if (heartbeatTimer !== null) {
+        clearInterval(heartbeatTimer);
+        setHeartbeatTimer(null);
+      }
+    }
+
+    if (readyState === ReadyState.OPEN) {
+      // The ping timer fires to keep the socket open, to prevent
+      //  VPN gateways from dropping the connection
+      // -- Every 45seconds
+      if (pingTimer === null) {
+        setPingTimer(
+          setInterval(() => {
+            sendJsonMessage({ action: "ping" });
+          }, 45_000),
+        );
+      }
+      // The heartbeat lets AWS know that the socket is still
+      //  connected and to refresh the connection expiration
+      // -- Every 45minutes
+      if (heartbeatTimer === null) {
+        setHeartbeatTimer(
+          setInterval(() => {
+            sendJsonMessage({ action: "heartbeat" });
+          }, 60 * 45_000),
+        );
+      }
+    } else {
+      clearTimers();
+    }
+
+    return clearTimers;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readyState]);
 
   useEffect(() => {
     if (!lastJsonMessage) {
@@ -78,10 +117,6 @@ export function WebsocketProvider({ children }: React.PropsWithChildren<unknown>
       }
     });
   }, [lastJsonMessage]);
-
-  useEffect(() => {
-    store.setConnected(readyState === ReadyState.OPEN);
-  }, [readyState]);
 
   // return <Provider createStore={createStore}>{children}</Provider>;
   return children;

@@ -61,13 +61,15 @@ export default function App() {
       <CSSReset />
       <NetworkContextProvider>
         <WebsocketProvider>
-          <ReloadState />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/auth/*" element={<AuthPages />} />
-              <Route path="*" element={<Site />} />
-            </Routes>
-          </BrowserRouter>
+          <>
+            <ReloadState />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/auth/*" element={<AuthPages />} />
+                <Route path="*" element={<Site />} />
+              </Routes>
+            </BrowserRouter>
+          </>
         </WebsocketProvider>
       </NetworkContextProvider>
     </ChakraProvider>

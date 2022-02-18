@@ -47,7 +47,7 @@ function authReducer(draft: Draft<NetworkState>, action: DispatchAction) {
   draft.onErrorNetwork = action.value.onErrorNetwork;
 }
 
-export function NetworkContextProvider({ children }: PropsWithChildren<unknown>) {
+export function NetworkContextProvider({ children }: PropsWithChildren<unknown>): JSX.Element {
   // The reason we need to use a reducer here rather that a setState is
   // that when you are doing optimistic updates your not able to get a handle
   // on the "current" set of items in your list.  You might have done 2..3 actions
