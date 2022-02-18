@@ -227,7 +227,11 @@ export class WebsocketHandler extends Construct {
 
     // Setup two websocket responses
     new MockPing(this, "mockPing", { routeKey: "ping", sockapi: this.wsapi });
-    new MockPing(this, "mockCursor", { routeKey: "cursor", sockapi: this.wsapi });
+    new MockPing(this, "mockCursor", {
+      routeKey: "cursor",
+      sockapi: this.wsapi,
+      responseJson: JSON.stringify({ statusCode: 200 }),
+    });
 
     new cdk.aws_route53.ARecord(this, "Alias", {
       zone: props.hostedZone,
@@ -246,7 +250,11 @@ export class WebsocketHandler extends Construct {
 // Usage:  `new MockPing(this, "mockPing", { routeKey: "ping", sockapi: YOUR_WEB_SOCKET});`
 //
 export class MockPing extends Construct {
-  constructor(scope: Construct, id: string, { sockapi, routeKey }: { routeKey: string; sockapi: WebSocketApi }) {
+  constructor(
+    scope: Construct,
+    id: string,
+    { sockapi, routeKey, responseJson }: { routeKey: string; sockapi: WebSocketApi; responseJson?: string },
+  ) {
     super(scope, id);
 
     const intgration = new cdk.aws_apigatewayv2.CfnIntegration(this, "integration", {
@@ -265,19 +273,21 @@ export class MockPing extends Construct {
       operationName: "pingRoute",
       target: new cdk.StringConcat().join("integrations/", intgration.ref),
     });
-    new cdk.aws_apigatewayv2.CfnIntegrationResponse(this, "response", {
-      apiId: sockapi.apiId,
-      integrationId: intgration.ref,
-      integrationResponseKey: "/200/",
-      responseTemplates: {
-        "200": '{"statusCode": 200 }',
-      },
-    });
-    new cdk.aws_apigatewayv2.CfnRouteResponse(this, "routeResponse", {
-      apiId: sockapi.apiId,
-      routeId: route.ref,
-      routeResponseKey: "$default",
-    });
+    if (responseJson) {
+      new cdk.aws_apigatewayv2.CfnIntegrationResponse(this, "response", {
+        apiId: sockapi.apiId,
+        integrationId: intgration.ref,
+        integrationResponseKey: "/200/",
+        responseTemplates: {
+          "200": responseJson,
+        },
+      });
+      new cdk.aws_apigatewayv2.CfnRouteResponse(this, "routeResponse", {
+        apiId: sockapi.apiId,
+        routeId: route.ref,
+        routeResponseKey: "$default",
+      });
+    }
   }
 }
 
