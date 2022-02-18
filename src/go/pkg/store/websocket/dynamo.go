@@ -105,20 +105,83 @@ func (store *dynamoStore) Create(userId string, connectionId string) error {
 	return err
 }
 
-func (store *dynamoStore) Delete(connectionId string) error {
-	out, err := store.client.GetItem(context.TODO(), &dynamodb.GetItemInput{
-		TableName: store.table,
-		Key: map[string]types.AttributeValue{
-			"pk": &types.AttributeValueMemberS{Value: "CONN#" + connectionId},
+/**
+ * Heartbeat will update the expires on the DynamoDB table such that they don't go away
+ */
+func (store *dynamoStore) Heartbeat(connectionId string) error {
+	out, err := store.client.Query(context.TODO(), &dynamodb.QueryInput{
+		TableName:              store.table,
+		KeyConditionExpression: aws.String("pk = :hashKey"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":hashKey": &types.AttributeValueMemberS{Value: "CONN#" + connectionId},
 		},
 	})
 
-	if err != nil || out == nil {
+	if err != nil || len(out.Items) == 0 {
 		return err
 	}
 
 	obj := dynamoConnection{}
-	if err := attributevalue.UnmarshalMap(out.Item, &obj); err != nil {
+	if err := attributevalue.UnmarshalMap(out.Items[0], &obj); err != nil {
+		return err
+	}
+
+	// Update the rows
+
+	expires := time.Now().Add(2 * time.Hour)
+
+	byUser, err := attributevalue.MarshalMap(dynamoConnection{
+		Pk:       "USER#" + obj.Sk,
+		Sk:       connectionId,
+		DeleteAt: expires,
+	})
+	if err != nil {
+		return err
+	}
+	byConn, err := attributevalue.MarshalMap(dynamoConnection{
+		Pk:       obj.Pk,
+		Sk:       obj.Sk,
+		DeleteAt: expires,
+	})
+	if err != nil {
+		return err
+	}
+
+	_, err = store.client.BatchWriteItem(context.TODO(), &dynamodb.BatchWriteItemInput{
+		RequestItems: map[string][]types.WriteRequest{
+			*store.table: {
+				{
+					PutRequest: &types.PutRequest{
+						Item: byUser,
+					},
+				},
+				{
+					PutRequest: &types.PutRequest{
+						Item: byConn,
+					},
+				},
+			},
+		},
+	})
+
+	return err
+}
+
+func (store *dynamoStore) Delete(connectionId string) error {
+	out, err := store.client.Query(context.TODO(), &dynamodb.QueryInput{
+		TableName:              store.table,
+		KeyConditionExpression: aws.String("pk = :hashKey"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":hashKey": &types.AttributeValueMemberS{Value: "CONN#" + connectionId},
+		},
+	})
+
+	if err != nil || len(out.Items) == 0 {
+		return err
+	}
+
+	obj := dynamoConnection{}
+	if err := attributevalue.UnmarshalMap(out.Items[0], &obj); err != nil {
 		return err
 	}
 

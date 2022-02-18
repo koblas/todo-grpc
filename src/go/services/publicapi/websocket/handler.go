@@ -74,6 +74,10 @@ func (svc *WebsocketHandler) HandleRequest(ctx context.Context, req events.APIGa
 		}
 	} else if req.RequestContext.EventType == "MESSAGE" {
 		log.Info("Message event")
+		if err := svc.store.Heartbeat(req.RequestContext.ConnectionID); err != nil {
+			log.With("error", err).Info("DB heartbeaat failed")
+			return responseBad, err
+		}
 		// return responseBad, nil
 	} else {
 		log.With("eventType", req.RequestContext.EventType).Error("Unknown event type")
