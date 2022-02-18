@@ -11,13 +11,18 @@ import {
   WebSocketApi,
   WebSocketStage,
 } from "@aws-cdk/aws-apigatewayv2-alpha";
-import { HttpLambdaIntegration, WebSocketLambdaIntegration } from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
+import {
+  HttpLambdaIntegration,
+  WebSocketLambdaIntegration,
+  WebSocketMockIntegration,
+} from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
 import { LambdaToDynamoDB } from "@aws-solutions-constructs/aws-lambda-dynamodb";
 import { LambdaToSns } from "@aws-solutions-constructs/aws-lambda-sns";
 import { Construct } from "constructs";
 import { SqsToLambda } from "@aws-solutions-constructs/aws-sqs-lambda";
 import { SubscriptionFilter } from "aws-cdk-lib/aws-sns";
 import { GoFunction, GoFunctionProps } from "@aws-cdk/aws-lambda-go-alpha";
+import { isPositiveInteger } from "aws-cdk-lib/aws-stepfunctions";
 // import * as sqs from 'aws-cdk-lib/aws-sqs';
 
 const LAMBDA_DEFAULTS: Partial<GoFunctionProps> = {
@@ -220,6 +225,10 @@ export class WebsocketHandler extends Construct {
       domainMapping: { domainName: props.dn },
     });
 
+    // Setup two websocket responses
+    new MockPing(this, "mockPing", { routeKey: "ping", sockapi: this.wsapi });
+    new MockPing(this, "mockCursor", { routeKey: "cursor", sockapi: this.wsapi });
+
     new cdk.aws_route53.ARecord(this, "Alias", {
       zone: props.hostedZone,
       recordName: props.hostname,
@@ -229,6 +238,42 @@ export class WebsocketHandler extends Construct {
           props.dn.regionalHostedZoneId,
         ),
       ),
+    });
+  }
+}
+
+export class MockPing extends Construct {
+  constructor(scope: Construct, id: string, { sockapi, routeKey }: { routeKey: string; sockapi: WebSocketApi }) {
+    super(scope, id);
+
+    const pIntgration = new cdk.aws_apigatewayv2.CfnIntegration(this, "integration", {
+      apiId: sockapi.apiId,
+      integrationType: "MOCK",
+      requestTemplates: {
+        "200": '{"statusCode":200}',
+      },
+      templateSelectionExpression: "200",
+      passthroughBehavior: "WHEN_NO_MATCH",
+    });
+    const pPingRoute = new cdk.aws_apigatewayv2.CfnRoute(this, "route", {
+      apiId: sockapi.apiId,
+      routeKey,
+      routeResponseSelectionExpression: "$default",
+      operationName: "pingRoute",
+      target: new cdk.StringConcat().join("integrations/", pIntgration.ref),
+    });
+    new cdk.aws_apigatewayv2.CfnIntegrationResponse(this, "response", {
+      apiId: sockapi.apiId,
+      integrationId: pIntgration.ref,
+      integrationResponseKey: "/200/",
+      responseTemplates: {
+        "200": '{"statusCode": 200 }',
+      },
+    });
+    new cdk.aws_apigatewayv2.CfnRouteResponse(this, "routeResponse", {
+      apiId: sockapi.apiId,
+      routeId: pPingRoute.ref,
+      routeResponseKey: "$default",
     });
   }
 }
