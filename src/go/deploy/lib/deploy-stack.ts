@@ -242,11 +242,14 @@ export class WebsocketHandler extends Construct {
   }
 }
 
+///
+// Usage:  `new MockPing(this, "mockPing", { routeKey: "ping", sockapi: YOUR_WEB_SOCKET});`
+//
 export class MockPing extends Construct {
   constructor(scope: Construct, id: string, { sockapi, routeKey }: { routeKey: string; sockapi: WebSocketApi }) {
     super(scope, id);
 
-    const pIntgration = new cdk.aws_apigatewayv2.CfnIntegration(this, "integration", {
+    const intgration = new cdk.aws_apigatewayv2.CfnIntegration(this, "integration", {
       apiId: sockapi.apiId,
       integrationType: "MOCK",
       requestTemplates: {
@@ -255,16 +258,16 @@ export class MockPing extends Construct {
       templateSelectionExpression: "200",
       passthroughBehavior: "WHEN_NO_MATCH",
     });
-    const pPingRoute = new cdk.aws_apigatewayv2.CfnRoute(this, "route", {
+    const route = new cdk.aws_apigatewayv2.CfnRoute(this, "route", {
       apiId: sockapi.apiId,
       routeKey,
       routeResponseSelectionExpression: "$default",
       operationName: "pingRoute",
-      target: new cdk.StringConcat().join("integrations/", pIntgration.ref),
+      target: new cdk.StringConcat().join("integrations/", intgration.ref),
     });
     new cdk.aws_apigatewayv2.CfnIntegrationResponse(this, "response", {
       apiId: sockapi.apiId,
-      integrationId: pIntgration.ref,
+      integrationId: intgration.ref,
       integrationResponseKey: "/200/",
       responseTemplates: {
         "200": '{"statusCode": 200 }',
@@ -272,7 +275,7 @@ export class MockPing extends Construct {
     });
     new cdk.aws_apigatewayv2.CfnRouteResponse(this, "routeResponse", {
       apiId: sockapi.apiId,
-      routeId: pPingRoute.ref,
+      routeId: route.ref,
       routeResponseKey: "$default",
     });
   }
