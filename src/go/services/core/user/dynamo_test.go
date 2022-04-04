@@ -105,7 +105,7 @@ func (suite *DynamoBasicSuite) createUser(t *testing.T) user.User {
 		ID:    uuid.NewString(),
 		Email: faker.New().Internet().Email(),
 	}
-	err := suite.store.CreateUser(&user)
+	err := suite.store.CreateUser(user)
 	require.NoError(t, err, "Create user error")
 
 	time.Sleep(time.Millisecond * 1000)

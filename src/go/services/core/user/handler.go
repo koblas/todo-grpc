@@ -5,16 +5,20 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/koblas/grpc-todo/pkg/eventbus"
 	"github.com/koblas/grpc-todo/pkg/key_manager"
 	"github.com/koblas/grpc-todo/pkg/logger"
+	"github.com/koblas/grpc-todo/pkg/types"
 	genpb "github.com/koblas/grpc-todo/twpb/core"
 	"github.com/renstrom/shortuuid"
 	"github.com/twitchtv/twirp"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/net/context"
 )
+
+type UserId struct{}
+
+func (_ UserId) Prefix() string { return "U" }
 
 // Server represents the gRPC server
 type UserServer struct {
@@ -105,7 +109,8 @@ func (s *UserServer) Create(ctx context.Context, params *genpb.CreateParam) (*ge
 	}
 	log.With("email", params.Email).Info("DONE encrypt password")
 
-	userId := uuid.New().String()
+	userId := types.New[UserId]().String()
+	// userId := xid.New().String()
 
 	var vExpires time.Time
 	vToken := []byte{}
@@ -494,6 +499,7 @@ func (s *UserServer) ForgotSend(ctx context.Context, params *genpb.FindParam) (*
 	}
 
 	vExpires := time.Now().Add(time.Duration(24 * time.Hour))
+	// use shortuuid rather than xid since it's less sequential
 	vToken, secret, err := tokenEncrypt(shortuuid.New())
 	if err != nil {
 		return nil, twirp.InternalErrorWith(err)

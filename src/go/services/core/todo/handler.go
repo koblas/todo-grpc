@@ -5,7 +5,7 @@ import (
 
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/twpb/core"
-	"github.com/renstrom/shortuuid"
+	"github.com/rs/xid"
 	"github.com/twitchtv/twirp"
 )
 
@@ -26,7 +26,7 @@ func (svc *TodoServer) AddTodo(ctx context.Context, newTodo *core.TodoAddParams)
 	log.Info("creating todo event")
 
 	task, err := svc.todos.Create(Todo{
-		ID:     shortuuid.New(),
+		ID:     xid.New().String(),
 		Task:   newTodo.Task,
 		UserId: newTodo.UserId,
 	})
@@ -82,7 +82,7 @@ func (svc *TodoServer) DeleteTodo(ctx context.Context, params *core.TodoDeletePa
 
 	if todo != nil {
 		if _, err := svc.producer.Message(ctx, &core.TodoEvent{
-			IdemponcyId: shortuuid.New(),
+			IdemponcyId: xid.New().String(),
 			Action:      "delete",
 			Previous: &core.TodoObject{
 				Id:     todo.ID,
