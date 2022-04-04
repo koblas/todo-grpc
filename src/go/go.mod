@@ -1,6 +1,6 @@
 module github.com/koblas/grpc-todo
 
-go 1.17
+go 1.18
 
 require (
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
@@ -75,6 +75,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/renstrom/shortuuid v3.0.0+incompatible // indirect
 	github.com/robinjoseph08/redisqueue v1.1.0 // indirect
+	github.com/rs/xid v1.4.0 // indirect
 	github.com/stretchr/testify v1.7.0 // indirect
 	github.com/tsuyoshiwada/go-gitcmd v0.0.0-20180205145712-5f1f5f9475df // indirect
 	github.com/twitchtv/twirp v8.1.1+incompatible // indirect
