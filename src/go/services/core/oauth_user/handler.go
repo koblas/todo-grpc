@@ -24,20 +24,46 @@ type OauthUserServer struct {
 	smanager oauth_provider.SecretManager
 }
 
-func NewOauthUserServer(producer eventbus.Producer, user genpb.UserService, config SsmConfig, smanager oauth_provider.SecretManager) *OauthUserServer {
+type Option func(*OauthUserServer)
+
+func WithUserService(client genpb.UserService) Option {
+	return func(cfg *OauthUserServer) {
+		cfg.user = client
+	}
+}
+
+func WithProducer(bus eventbus.Producer) Option {
+	return func(cfg *OauthUserServer) {
+		cfg.pubsub = bus
+	}
+}
+
+func WithSecretManager(client oauth_provider.SecretManager) Option {
+	return func(cfg *OauthUserServer) {
+		cfg.smanager = client
+	}
+}
+
+func NewOauthUserServer(config SsmConfig, opts ...Option) *OauthUserServer {
 	maker, err := tokenmanager.NewJWTMaker(config.JwtSecret)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return &OauthUserServer{
-		pubsub:   producer,
+	svr := OauthUserServer{
 		kms:      key_manager.NewSecureClear(),
 		jwtMaker: maker,
-		user:     user,
-		smanager: smanager,
+		// user:     user,
+		// pubsub:   producer,
+		// smanager: smanager,
 	}
+
+	for _, opt := range opts {
+		opt(&svr)
+	}
+
+	return &svr
 }
 
 func (svc *OauthUserServer) GetAuthURL(ctx context.Context, params *genpb.AuthOAuthGetUrlParams) (*genpb.AuthUserGetUrlResult, error) {

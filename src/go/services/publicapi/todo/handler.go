@@ -21,16 +21,29 @@ type TodoServer struct {
 	jwtMaker tokenmanager.Maker
 }
 
-func NewTodoServer(todos core.TodoService, config SsmConfig) *TodoServer {
+type Option func(*TodoServer)
+
+func WithTodoService(client core.TodoService) Option {
+	return func(svr *TodoServer) {
+		svr.todos = client
+	}
+}
+
+func NewTodoServer(config SsmConfig, opts ...Option) *TodoServer {
 	maker, err := tokenmanager.NewJWTMaker(config.JwtSecret)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return &TodoServer{
-		todos:    todos,
+	svr := TodoServer{
 		jwtMaker: maker,
 	}
+
+	for _, opt := range opts {
+		opt(&svr)
+	}
+
+	return &svr
 }
 
 func (svc *TodoServer) getUserId(ctx context.Context) (string, error) {

@@ -1,8 +1,11 @@
 package workers
 
-import awsbus "github.com/koblas/grpc-todo/pkg/eventbus/aws"
+import (
+	awsbus "github.com/koblas/grpc-todo/pkg/eventbus/aws"
+	"github.com/koblas/grpc-todo/twpb/core"
+)
 
-type SqsConsumerBuilder func(config *SsmConfig) awsbus.SqsConsumerFunc
+type SqsConsumerBuilder func(SsmConfig, ...Option) awsbus.SqsConsumerFunc
 
 type Worker struct {
 	Stream    string
@@ -10,7 +13,38 @@ type Worker struct {
 	Build     SqsConsumerBuilder
 }
 
+// Some generic handling of definition
+
+type WorkerConfig struct {
+	config    SsmConfig
+	sendEmail core.SendEmailService
+}
+
+type Option func(*WorkerConfig)
+
+func WithSendEmail(sender core.SendEmailService) Option {
+	return func(cfg *WorkerConfig) {
+		cfg.sendEmail = sender
+	}
+}
+
+func buildService(config SsmConfig, opts ...Option) WorkerConfig {
+	cfg := WorkerConfig{
+		config: config,
+	}
+
+	for _, opt := range opts {
+		opt(&cfg)
+	}
+
+	return cfg
+}
+
 var workers = []Worker{}
+
+func GetWorkers() []Worker {
+	return workers
+}
 
 // func startWorker(log logger.Logger, item Worker) {
 // 	c, err := redisqueue.NewConsumerWithOptions(&redisqueue.ConsumerOptions{

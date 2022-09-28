@@ -1,11 +1,9 @@
 package todo
 
 import (
-	"context"
 	"log"
 
 	"github.com/koblas/grpc-todo/pkg/awsutil"
-	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/store/websocket"
 	"github.com/koblas/grpc-todo/twpb/core"
 )
@@ -32,10 +30,7 @@ func init() {
 		core.TodoEventbusPathPrefix: core.NewTodoEventbusServer(s),
 	}
 
-	linfo := logger.NewZap(logger.LevelInfo)
-	ctx := logger.ToContext(context.Background(), linfo)
-
-	lambdaHandler = awsutil.HandleSqsLambda(ctx, handlers, nil)
+	lambdaHandler = awsutil.HandleSqsLambda(handlers, nil)
 }
 
 func HandleLambda() awsutil.TwirpHttpSqsHandler {

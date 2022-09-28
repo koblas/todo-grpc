@@ -11,6 +11,7 @@ import (
 	"github.com/koblas/grpc-todo/pkg/eventbus"
 	busutil "github.com/koblas/grpc-todo/pkg/eventbus/util"
 	"github.com/koblas/grpc-todo/pkg/logger"
+	"go.uber.org/zap"
 )
 
 type awsBus struct {
@@ -18,7 +19,7 @@ type awsBus struct {
 	client *sns.Client
 }
 
-func NewAwsPublish(topic string) (eventbus.Producer, error) {
+func NewAwsProducer(topic string) (eventbus.Producer, error) {
 	cfg, err := config.LoadDefaultConfig(context.Background())
 	if err != nil {
 		log.Fatal(err)
@@ -47,11 +48,11 @@ type SqsConsumer struct {
 }
 
 // This runs by insertion
-func NewAwsSqsConsumer(handler SqsConsumerFunc) (*SqsConsumer, error) {
+func NewAwsSqsConsumer(handler SqsConsumerFunc) *SqsConsumer {
 	// todo
 	return &SqsConsumer{
 		handler: handler,
-	}, nil
+	}
 }
 
 func (svc *SqsConsumer) AddMessages(ctx context.Context, messages []*sqstypes.Message) error {
@@ -70,20 +71,28 @@ func (svc *SqsConsumer) AddMessages(ctx context.Context, messages []*sqstypes.Me
 	return nil
 }
 
-func (svc *SqsConsumer) AddMessagesLambda(ctx context.Context, event events.SQSEvent) error {
+func (svc *SqsConsumer) AddMessagesLambda(ctx context.Context, event events.SQSEvent) (events.SQSEventResponse, error) {
+	failed := []events.SQSBatchItemFailure{}
+	log := logger.FromContext(ctx)
+
 	for _, item := range event.Records {
 		msg := busutil.EventToSqs(item)
 
 		mout, err := busutil.SqsToMessage(msg)
 		if err != nil {
-			return err
+			failed = append(failed, events.SQSBatchItemFailure{ItemIdentifier: item.MessageId})
+
+			log.With(zap.Error(err)).With(zap.String("messageId", item.MessageId)).Error("unmarshaling failed")
+
+			continue
 		}
 
-		err = svc.handler(ctx, &mout)
-		if err != nil {
-			return err
+		if err := svc.handler(ctx, &mout); err != nil {
+			failed = append(failed, events.SQSBatchItemFailure{ItemIdentifier: item.MessageId})
+
+			log.With(zap.Error(err)).With(zap.String("messageId", item.MessageId)).Error("unmarshaling failed")
 		}
 	}
 
-	return nil
+	return events.SQSEventResponse{BatchItemFailures: failed}, nil
 }

@@ -17,7 +17,7 @@ type redisBus struct {
 	pubsub *redisqueue.Producer
 }
 
-func NewRedisProducer() (eventbus.Producer, error) {
+func NewRedisProducer(string) (eventbus.Producer, error) {
 	pubsub, err := redisqueue.NewProducerWithOptions(&redisqueue.ProducerOptions{
 		StreamMaxLength:      1000,
 		ApproximateMaxLength: true,

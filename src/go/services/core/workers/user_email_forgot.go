@@ -17,11 +17,13 @@ func init() {
 	})
 }
 
-func NewUserEmailForgot(config *SsmConfig) awsbus.SqsConsumerFunc {
-	return config.userEmailForgot
+func NewUserEmailForgot(config SsmConfig, opt ...Option) awsbus.SqsConsumerFunc {
+	svc := buildService(config, opt...)
+
+	return svc.userEmailForgot
 }
 
-func (config *SsmConfig) userEmailForgot(ctx context.Context, msg *eventbus.Message) error {
+func (cfg *WorkerConfig) userEmailForgot(ctx context.Context, msg *eventbus.Message) error {
 	log := logger.FromContext(ctx)
 	event := genpb.UserSecurityEvent{}
 	action, err := extractBasic(log, msg, &event)
@@ -44,7 +46,7 @@ func (config *SsmConfig) userEmailForgot(ctx context.Context, msg *eventbus.Mess
 	}
 
 	params := genpb.EmailPasswordRecoveryParam{
-		AppInfo: buildAppInfo(config),
+		AppInfo: buildAppInfo(cfg.config),
 		Recipient: &genpb.EmailUser{
 			UserId: cuser.Id,
 			Name:   cuser.Name,
@@ -53,13 +55,12 @@ func (config *SsmConfig) userEmailForgot(ctx context.Context, msg *eventbus.Mess
 		Token: token,
 	}
 
-	email, err := getEmailService(log)
-	if err != nil {
+	if cfg.sendEmail == nil {
 		log.With("email", cuser.Email, "error", err).Info("Failed to send")
 		return err
 	}
 	log.With("email", cuser.Email).Info("Sending forgot email")
-	_, err = email.PasswordRecoveryMessage(ctx, &params)
+	_, err = cfg.sendEmail.PasswordRecoveryMessage(ctx, &params)
 
 	if err != nil {
 		log.With("email", cuser.Email, "error", err).Info("Failed to send")

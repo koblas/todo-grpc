@@ -14,11 +14,28 @@ type TodoServer struct {
 	producer core.TodoEventbus
 }
 
-func NewTodoServer(producer core.TodoEventbus, store TodoStore) core.TodoService {
-	return &TodoServer{
-		todos:    store,
-		producer: producer,
+type Option func(*TodoServer)
+
+func WithTodoStore(store TodoStore) Option {
+	return func(cfg *TodoServer) {
+		cfg.todos = store
 	}
+}
+
+func WithProducer(bus core.TodoEventbus) Option {
+	return func(cfg *TodoServer) {
+		cfg.producer = bus
+	}
+}
+
+func NewTodoServer(opts ...Option) core.TodoService {
+	svr := TodoServer{}
+
+	for _, opt := range opts {
+		opt(&svr)
+	}
+
+	return &svr
 }
 
 func (svc *TodoServer) AddTodo(ctx context.Context, newTodo *core.TodoAddParams) (*core.TodoObject, error) {

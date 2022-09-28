@@ -14,6 +14,8 @@ type attemptsService struct {
 	rdb    *redis.Client
 }
 
+var _ AttemptService = (*attemptsService)(nil)
+
 type AttemptService interface {
 	GetTries(ctx context.Context, group string, key string) (int64, error)
 	Incr(ctx context.Context, group string, key string, timeout time.Duration) error

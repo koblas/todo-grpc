@@ -1,22 +1,11 @@
 package auth
 
-import (
-	"context"
-	"time"
-
-	"github.com/aws/aws-lambda-go/events"
-	"github.com/go-redis/redis/v8"
-	"github.com/koblas/grpc-todo/pkg/awsutil"
-	"github.com/koblas/grpc-todo/pkg/logger"
-	"github.com/koblas/grpc-todo/twpb/core"
-	publicapi "github.com/koblas/grpc-todo/twpb/publicapi"
-)
-
 type SsmConfig struct {
 	RedisAddr string `ssm:"redis_addr" environment:"REDIS_ADDR"`
-	JwtSecret string `ssm:"jwt_secret" environment:"JWT_SECRET"`
+	JwtSecret string `ssm:"jwt_secret" environment:"JWT_SECRET" validate:"min=32"`
 }
 
+/*
 var ssmConfig *SsmConfig
 var api core.TwirpServer
 
@@ -54,3 +43,5 @@ func HandleLambda() func(context.Context, events.APIGatewayV2HTTPRequest) (event
 
 	return awsutil.HandleApiLambda(ctx, api)
 }
+
+*/

@@ -40,12 +40,30 @@ var statusToPbStatus = map[UserStatus]genpb.UserStatus{
 	UserStatus_REGISTERED: genpb.UserStatus_REGISTERED,
 }
 
-func NewUserServer(producer eventbus.Producer, store UserStore) *UserServer {
-	return &UserServer{
-		users:  store,
-		pubsub: producer,
-		kms:    key_manager.NewSecureClear(),
+type Option func(*UserServer)
+
+func WithUserStore(store UserStore) Option {
+	return func(cfg *UserServer) {
+		cfg.users = store
 	}
+}
+
+func WithProducer(bus eventbus.Producer) Option {
+	return func(cfg *UserServer) {
+		cfg.pubsub = bus
+	}
+}
+
+func NewUserServer(opts ...Option) *UserServer {
+	svr := UserServer{
+		kms: key_manager.NewSecureClear(),
+	}
+
+	for _, opt := range opts {
+		opt(&svr)
+	}
+
+	return &svr
 }
 
 func (s *UserServer) FindBy(ctx context.Context, params *genpb.FindParam) (*genpb.User, error) {

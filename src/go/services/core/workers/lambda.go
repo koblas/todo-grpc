@@ -1,20 +1,10 @@
 package workers
 
-import (
-	"context"
-	"os"
-	"time"
-
-	"github.com/aws/aws-lambda-go/events"
-	"github.com/koblas/grpc-todo/pkg/awsutil"
-	awsbus "github.com/koblas/grpc-todo/pkg/eventbus/aws"
-	"github.com/koblas/grpc-todo/pkg/logger"
-)
-
 type SsmConfig struct {
 	UrlBase string `ssm:"url_base" environment:"URL_BASE_UI"`
 }
 
+/*
 var handler awsbus.SqsConsumerFunc
 
 func HandleLambda(ctx context.Context, event events.SQSEvent) {
@@ -62,3 +52,4 @@ func HandleLambda(ctx context.Context, event events.SQSEvent) {
 
 	sender.AddMessagesLambda(logger.ToContext(ctx, log), event)
 }
+*/

@@ -79,7 +79,7 @@ func HandleApiLambda(ctx context.Context, api http.Handler) TwirpHttpApiHandler 
 
 type SqsHandlers map[string]http.Handler
 
-func HandleSqsLambda(ctx context.Context, handlers SqsHandlers, forcePath *string) TwirpHttpSqsHandler {
+func HandleSqsLambda(handlers SqsHandlers, forcePath *string) TwirpHttpSqsHandler {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		for k, v := range handlers {
 			if strings.HasPrefix(r.URL.Path, k) {
@@ -91,7 +91,7 @@ func HandleSqsLambda(ctx context.Context, handlers SqsHandlers, forcePath *strin
 		w.WriteHeader(http.StatusNotFound)
 	})
 
-	return func(lambdaCtx context.Context, request events.SQSEvent) (events.SQSEventResponse, error) {
+	return func(ctx context.Context, request events.SQSEvent) (events.SQSEventResponse, error) {
 		parentLog := logger.FromContext(ctx).With("eventItemCount", len(request.Records))
 
 		result := events.SQSEventResponse{}
@@ -99,7 +99,7 @@ func HandleSqsLambda(ctx context.Context, handlers SqsHandlers, forcePath *strin
 			log := parentLog.With("messageId", record.MessageId)
 			log.Info("Handling SQS Message")
 
-			req, err := SqsEventToHttpRequest(logger.ToContext(lambdaCtx, log), record, forcePath)
+			req, err := SqsEventToHttpRequest(logger.ToContext(ctx, log), record, forcePath)
 			if err != nil {
 				log.With("error", err).Error("Unable to decode")
 				result.BatchItemFailures = append(result.BatchItemFailures, events.SQSBatchItemFailure{ItemIdentifier: record.MessageId})

@@ -17,11 +17,13 @@ func init() {
 	})
 }
 
-func NewUserEmailInvite(config *SsmConfig) awsbus.SqsConsumerFunc {
-	return config.userEmailInvite
+func NewUserEmailInvite(config SsmConfig, opt ...Option) awsbus.SqsConsumerFunc {
+	svc := buildService(config, opt...)
+
+	return svc.userEmailInvite
 }
 
-func (config *SsmConfig) userEmailInvite(ctx context.Context, msg *eventbus.Message) error {
+func (cfg *WorkerConfig) userEmailInvite(ctx context.Context, msg *eventbus.Message) error {
 	log := logger.FromContext(ctx)
 	event := genpb.UserSecurityEvent{}
 	action, err := extractBasic(log, msg, &event)
@@ -44,7 +46,7 @@ func (config *SsmConfig) userEmailInvite(ctx context.Context, msg *eventbus.Mess
 	}
 
 	params := genpb.EmailInviteUserParam{
-		AppInfo: buildAppInfo(config),
+		AppInfo: buildAppInfo(cfg.config),
 		Sender: &genpb.EmailUser{
 			UserId: event.Sender.Id,
 			Name:   event.Sender.Name,
@@ -58,13 +60,12 @@ func (config *SsmConfig) userEmailInvite(ctx context.Context, msg *eventbus.Mess
 		Token: token,
 	}
 
-	email, err := getEmailService(log)
-	if err != nil {
+	if cfg.sendEmail == nil {
 		log.With("email", cuser.Email, "error", err).Info("Failed to send")
 		return err
 	}
 	log.With("email", cuser.Email).Info("Sending registration email")
-	_, err = email.InviteUserMessage(ctx, &params)
+	_, err = cfg.sendEmail.InviteUserMessage(ctx, &params)
 
 	if err != nil {
 		log.With("email", cuser.Email, "error", err).Info("Failed to send")

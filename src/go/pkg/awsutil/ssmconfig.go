@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/pkg/errors"
 )
 
@@ -27,6 +28,12 @@ func LoadSsmConfig(configPath string, c interface{}) error {
 	client := ssm.NewFromConfig(cfg)
 
 	p := Provider{Client: client}
+
+	return p.LoadSsmConfig(configPath, c)
+}
+
+func LoadEnvConfig(configPath string, c interface{}) error {
+	p := Provider{}
 
 	return p.LoadSsmConfig(configPath, c)
 }
@@ -94,10 +101,17 @@ func (p *Provider) LoadSsmConfig(configPath string, c interface{}) error {
 		}
 	}
 
-	return nil
+	validate := validator.New()
+
+	return validate.Struct(c)
 }
 
 func (p *Provider) getParameters(spec structSpec) (params map[string]string, invalidParams map[string]struct{}, err error) {
+	// If there is no client, do nothing
+	if p.Client == nil {
+		return nil, nil, nil
+	}
+
 	params = map[string]string{}
 	// find all of the params that need to be requested
 	var names []string

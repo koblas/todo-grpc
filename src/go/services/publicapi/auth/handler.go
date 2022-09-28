@@ -24,18 +24,42 @@ type AuthenticationServer struct {
 	attempts    AttemptService
 }
 
-func NewAuthenticationServer(config SsmConfig, userClient core.UserService, oauthClient core.AuthUserService, attempts AttemptService) AuthenticationServer {
+type Option func(*AuthenticationServer)
+
+func WithUserClient(client core.UserService) Option {
+	return func(input *AuthenticationServer) {
+		input.userClient = client
+	}
+}
+
+func WithOAuthClient(client core.AuthUserService) Option {
+	return func(input *AuthenticationServer) {
+		input.oauthClient = client
+	}
+}
+
+func WithAttemptService(client AttemptService) Option {
+	return func(input *AuthenticationServer) {
+		input.attempts = client
+	}
+}
+
+func NewAuthenticationServer(config SsmConfig, opts ...Option) AuthenticationServer {
 	maker, err := tokenmanager.NewJWTMaker(config.JwtSecret)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return AuthenticationServer{
-		userClient:  userClient,
-		oauthClient: oauthClient,
-		jwtMaker:    maker,
-		attempts:    attempts,
+	svr := AuthenticationServer{
+		jwtMaker: maker,
+		attempts: NewAttemptsStub(),
 	}
+
+	for _, opt := range opts {
+		opt(&svr)
+	}
+
+	return svr
 }
 
 func (s AuthenticationServer) returnToken(ctx context.Context, userId string) (*publicapi.Token, error) {

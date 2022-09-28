@@ -17,11 +17,13 @@ func init() {
 	})
 }
 
-func NewUserEmailConfirm(config *SsmConfig) awsbus.SqsConsumerFunc {
-	return config.userEmailConfirm
+func NewUserEmailConfirm(config SsmConfig, opt ...Option) awsbus.SqsConsumerFunc {
+	svc := buildService(config, opt...)
+
+	return svc.userEmailConfirm
 }
 
-func (config *SsmConfig) userEmailConfirm(ctx context.Context, msg *eventbus.Message) error {
+func (cfg *WorkerConfig) userEmailConfirm(ctx context.Context, msg *eventbus.Message) error {
 	log := logger.FromContext(ctx)
 	event := genpb.UserSecurityEvent{}
 	action, err := extractBasic(log, msg, &event)
@@ -44,7 +46,7 @@ func (config *SsmConfig) userEmailConfirm(ctx context.Context, msg *eventbus.Mes
 	}
 
 	params := genpb.EmailRegisterParam{
-		AppInfo: buildAppInfo(config),
+		AppInfo: buildAppInfo(cfg.config),
 		Recipient: &genpb.EmailUser{
 			UserId: cuser.Id,
 			Name:   cuser.Name,
@@ -53,13 +55,12 @@ func (config *SsmConfig) userEmailConfirm(ctx context.Context, msg *eventbus.Mes
 		Token: token,
 	}
 
-	email, err := getEmailService(log)
-	if err != nil {
+	if cfg.sendEmail == nil {
 		log.With("email", cuser.Email, "error", err).Info("Failed to send")
 		return err
 	}
 	log.With("email", cuser.Email).Info("Sending registration email")
-	_, err = email.RegisterMessage(ctx, &params)
+	_, err = cfg.sendEmail.RegisterMessage(ctx, &params)
 
 	if err != nil {
 		log.With("email", cuser.Email, "error", err).Info("Failed to send")
