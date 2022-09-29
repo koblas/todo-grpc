@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 import { v4 as uuidV4 } from "uuid";
 
@@ -9,8 +9,8 @@ import { Json } from "../types/json";
 
 const WS_URL = process.env.WS_URL ?? "";
 
-type ListenerFunc = (event: Json) => void;
-type ListenerSelector = { topic: string | null; handler: <E = Json>(event: E) => void };
+type ListenerFunc<E = Json> = (event: E) => void;
+type ListenerSelector<E = Json> = { topic: string | null; handler: (event: E) => void };
 
 type BearState = {
   connectionId: string;
@@ -19,7 +19,7 @@ type BearState = {
   listeners: ListenerSelector[];
   setSocket: (socket: null | WebSocketHook) => void;
   setConnected: (connected: boolean) => void;
-  addListener: (listener: ListenerSelector) => void;
+  addListener: <E = Json>(listener: ListenerSelector<E>) => void;
 };
 
 // const { Provider, useStore } = createContext<BearState>();
@@ -32,7 +32,8 @@ const createStore = () =>
     listeners: [],
     setSocket: (s: null | WebSocketHook) => set({ socket: s }),
     setConnected: (connected: boolean) => set({ connected }),
-    addListener: (listener: ListenerSelector) => set((state) => ({ listeners: state.listeners.concat(listener) })),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    addListener: (listener: ListenerSelector<any>) => set((state) => ({ listeners: state.listeners.concat(listener) })),
   }));
 
 const useStore = createStore();
@@ -108,14 +109,18 @@ export function WebsocketProvider({ children }: { children: JSX.Element }): JSX.
     if (!lastJsonMessage) {
       return;
     }
-    const { topic } = lastJsonMessage;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { topic } = lastJsonMessage as any;
 
     // store.listeners.console.log(lastJsonMessage);
     store.listeners.forEach((item) => {
       if (!item.topic || item.topic === topic) {
-        item.handler(lastJsonMessage);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        item.handler(lastJsonMessage as any);
       }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lastJsonMessage]);
 
   // return <Provider createStore={createStore}>{children}</Provider>;
@@ -128,9 +133,10 @@ export function useWebsocketUpdates() {
   // console.log("STORE = ", store);
 
   const addListener = useCallback(
-    (topic: string | null, handler: ListenerFunc) => {
+    <E = Json>(topic: string | null, handler: ListenerFunc<E>) => {
       store.addListener({ topic, handler });
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [store.addListener],
   );
 

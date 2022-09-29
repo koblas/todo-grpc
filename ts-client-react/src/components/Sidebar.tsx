@@ -126,7 +126,7 @@ export default function Sidebar() {
           transitionProperty="left,opacity,width"
           transitionTimingFunction="cubic-bezier(0.2,0,0,1)"
         />
-        <Button h="100%" width="24px" p="0" b="0" bgColor="transparent" cursor="ew-resize" minWidth="0">
+        <Button h="100%" width="24px" p="0" border="0" bgColor="transparent" cursor="ew-resize" minWidth="0">
           <Box cursor="ew-resize" h="100%" w="2px" transition="background-color 200ms" />
         </Button>
         <Box>

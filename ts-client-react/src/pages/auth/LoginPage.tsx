@@ -130,7 +130,7 @@ export default function AuthLoginPage() {
                       ...(email ? { search: `?email=${encodeURIComponent(email)}` } : {}),
                     });
                   }}
-                  to="/auth/recover/send"
+                  href="/auth/recover/send"
                   color="blue.500"
                 >
                   Forgot password?

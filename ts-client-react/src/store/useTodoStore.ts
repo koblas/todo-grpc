@@ -1,6 +1,4 @@
 import create from "zustand";
-import { Draft, produce } from "immer";
-import { zimmer } from "../util/zimmer";
 
 import { TodoItem } from "../rpc/todo";
 
@@ -16,54 +14,40 @@ export interface TodoState {
   resetTodos(): void;
 }
 
-export const getTodoStore = create(
-  zimmer<TodoState>((set) => ({
-    // create<TodoState>(
-    todos: [],
-    resetTodos() {
-      set(
-        produce((draft: Draft<TodoState>) => {
-          draft.todos = [];
-        }),
-      );
-    },
-    setTodos(todos: TodoItem[]) {
-      set(
-        produce((draft: Draft<TodoState>) => {
-          draft.todos = todos;
-        }),
-      );
-    },
-    deleteTodo(id: TodoItem["id"]) {
-      set(
-        produce((draft: Draft<TodoState>) => {
-          const index = draft.todos.findIndex((todo: TodoItem) => todo.id === id);
+export const getTodoStore = create<TodoState>((set) => ({
+  todos: [],
 
-          if (index !== -1) {
-            draft.todos.splice(index, 1);
-          }
-        }),
-      );
-    },
-    updateTodo(id: TodoItem["id"], todo: TodoItem) {
-      set(
-        produce((draft: Draft<TodoState>) => {
-          const index = draft.todos.findIndex((item: TodoItem) => item.id === id);
+  setTodos(todos: TodoItem[]): void {
+    return set((state) => ({ ...state, todos: [...todos] }));
+  },
+  deleteTodo(id: TodoItem["id"]): void {
+    return set((state) => ({ ...state, todos: state.todos.filter((v) => v.id !== id) }));
+  },
+  updateTodo(id: TodoItem["id"], todo: TodoItem): void {
+    return set((state) => {
+      const index = state.todos.findIndex((item: TodoItem) => item.id === id);
+      if (index < 0) {
+        return state;
+      }
 
-          if (index !== -1) {
-            draft.todos[index] = todo;
-          }
-        }),
-      );
-    },
-    appendTodo(todo: TodoItem) {
-      set(
-        produce((draft: Draft<TodoState>) => {
-          if (!draft.todos.some((v) => v.id === todo.id)) {
-            draft.todos.push(todo);
-          }
-        }),
-      );
-    },
-  })),
-);
+      const front = state.todos.slice(0, index);
+      const end = state.todos.slice(index + 1);
+
+      return {
+        ...state,
+        todos: [...front, todo, ...end],
+      };
+    });
+  },
+  appendTodo(todo: TodoItem): void {
+    set((state) => {
+      if (!state.todos.some((v) => v.id === todo.id)) {
+        return { ...state, todos: [...state.todos, todo] };
+      }
+      return state;
+    });
+  },
+  resetTodos(): void {
+    set((state) => ({ ...state, todos: [] }));
+  },
+}));

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { RpcOptions } from "../../errors";
 import { TodoService, TodoItem } from "../index";
 
 export function newTodoClient(): TodoService {
@@ -7,13 +9,12 @@ export function newTodoClient(): TodoService {
     async getTodos(): Promise<TodoItem[]> {
       return [...todos];
     },
-    async addTodo(task: string): Promise<TodoItem> {
-      const item = { task, id: new Date().toISOString() };
+    addTodo(params: Pick<TodoItem, "task">, options: RpcOptions<TodoItem>): void {
+      const item = { task: params.task, id: new Date().toISOString() };
       todos = [...todos, item];
-      return item;
     },
-    async deleteTodo(id: string): Promise<void> {
-      todos = todos.filter((todo) => todo.id !== id);
+    deleteTodo(params: Pick<TodoItem, "id">, options: RpcOptions<unknown>): void {
+      todos = todos.filter((todo) => todo.id !== params.id);
     },
   };
 }

@@ -40,8 +40,8 @@ export function AuthEmailConfirmPage() {
           <Heading fontSize="2xl">Confirm email address</Heading>
           <Text>TODO: Insert some nice text to keep you interested</Text>
           {loading && <Spinner />}
-          {!loading && verified && <Alert type="success">Thank you</Alert>}
-          {!loading && !verified && <Alert type="error">This confirmation link has already been used</Alert>}
+          {!loading && verified && <Alert status="success">Thank you</Alert>}
+          {!loading && !verified && <Alert status="error">This confirmation link has already been used</Alert>}
           <Stack spacing={6}>
             <Stack direction={{ base: "column", sm: "row" }} align="start" justify="space-between">
               <Link as={RouterLink} to="/auth/login" color="blue.500">

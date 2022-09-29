@@ -1,7 +1,5 @@
 import create from "zustand";
-import { produce } from "immer";
 import { storageFactory } from "../util/storageFactory";
-import { zimmer } from "../util/zimmer";
 
 function newTokenStore() {
   const TOKEN = "auth-token";
@@ -33,16 +31,10 @@ export interface AuthState {
   setToken(token: string | null): void;
 }
 
-export const useAuthStore = create(
-  zimmer<AuthState>((set) => ({
-    token: tokenStore.get(),
-    setToken: (token: string | null) => {
-      set(
-        produce((draft) => {
-          tokenStore.set(token);
-          draft.token = token;
-        }),
-      );
-    },
-  })),
-);
+export const useAuthStore = create<AuthState>((set) => ({
+  token: tokenStore.get(),
+  setToken: (token: string | null) => {
+    tokenStore.set(token);
+    set((state) => ({ ...state, token }));
+  },
+}));
