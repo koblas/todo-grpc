@@ -3,15 +3,18 @@ package todo
 import (
 	"context"
 
+	"github.com/koblas/grpc-todo/pkg/eventbus"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/twpb/core"
 	"github.com/rs/xid"
 	"github.com/twitchtv/twirp"
+	"go.uber.org/zap"
 )
 
 type TodoServer struct {
-	todos    TodoStore
-	producer core.TodoEventbus
+	todos TodoStore
+	// producer core.TodoEventbus
+	producer eventbus.Producer
 }
 
 type Option func(*TodoServer)
@@ -22,7 +25,7 @@ func WithTodoStore(store TodoStore) Option {
 	}
 }
 
-func WithProducer(bus core.TodoEventbus) Option {
+func WithProducer(bus eventbus.Producer) Option {
 	return func(cfg *TodoServer) {
 		cfg.producer = bus
 	}
@@ -58,12 +61,12 @@ func (svc *TodoServer) AddTodo(ctx context.Context, newTodo *core.TodoAddParams)
 		UserId: task.UserId,
 	}
 
-	if _, err := svc.producer.Message(ctx, &core.TodoEvent{
-		IdemponcyId: todo.Id,
-		Action:      "create",
-		Current:     &todo,
+	if err := eventbus.EnqueuePb(ctx, svc.producer, eventbus.ChangeMessage{
+		ID:      todo.Id,
+		Action:  "create",
+		Current: &todo,
 	}); err != nil {
-		log.With("error", err).Error("Eventbus message failed")
+		log.With(zap.Error(err)).Error("unable to send event")
 	}
 
 	return &todo, nil
@@ -98,16 +101,16 @@ func (svc *TodoServer) DeleteTodo(ctx context.Context, params *core.TodoDeletePa
 	}
 
 	if todo != nil {
-		if _, err := svc.producer.Message(ctx, &core.TodoEvent{
-			IdemponcyId: xid.New().String(),
-			Action:      "delete",
-			Previous: &core.TodoObject{
+		if err := eventbus.EnqueuePb(ctx, svc.producer, eventbus.ChangeMessage{
+			ID:     todo.ID,
+			Action: "delete",
+			Original: &core.TodoObject{
 				Id:     todo.ID,
 				Task:   todo.Task,
 				UserId: todo.UserId,
 			},
 		}); err != nil {
-			log.With("error", err).Error("Eventbus message failed")
+			log.With(zap.Error(err)).Error("unable to send event")
 		}
 	}
 

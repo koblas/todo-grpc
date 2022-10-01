@@ -2,8 +2,9 @@ package main
 
 import (
 	"github.com/koblas/grpc-todo/pkg/awsutil"
-	"github.com/koblas/grpc-todo/pkg/eventbus/redis"
 	"github.com/koblas/grpc-todo/pkg/manager"
+	"github.com/koblas/grpc-todo/pkg/redisutil"
+	"github.com/koblas/grpc-todo/pkg/util"
 	"github.com/koblas/grpc-todo/services/core/user"
 	"github.com/koblas/grpc-todo/twpb/core"
 	"go.uber.org/zap"
@@ -18,14 +19,16 @@ func main() {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
-	producer, err := redis.NewRedisProducer(ssmConfig.EventArn)
-	if err != nil {
-		log.With(zap.Error(err)).Fatal("failed to create producer")
-	}
+	redis := redisutil.NewTwirpRedis(util.Getenv("REDIS_ADDR", "redis:6379"))
+
+	producer := core.NewUserEventServiceJSONClient(
+		"topic://user-events",
+		redis,
+	)
 
 	opts := []user.Option{
 		user.WithProducer(producer),
-		user.WithUserStore(user.NewUserDynamoStore()),
+		user.WithUserStore(user.NewUserMemoryStore()),
 	}
 
 	api := core.NewUserServiceServer(user.NewUserServer(opts...))

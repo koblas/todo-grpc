@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/koblas/grpc-todo/pkg/awsutil"
-	"github.com/koblas/grpc-todo/pkg/eventbus/aws"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	ouser "github.com/koblas/grpc-todo/services/core/oauth_user"
 	"github.com/koblas/grpc-todo/twpb/core"
@@ -24,15 +23,8 @@ func main() {
 		log.With(zap.Error(err)).Fatal("Unable to load oauth configuration")
 	}
 
-	// Connect to the user service
-	producer, err := aws.NewAwsProducer(ssmConfig.EventArn)
-	if err != nil {
-		log.With(zap.Error(err)).Fatal("Unable to connect to bus")
-	}
-
 	opts := []ouser.Option{
 		ouser.WithUserService(core.NewUserServiceJSONClient("lambda://core-user", awsutil.NewTwirpCallLambda())),
-		ouser.WithProducer(producer),
 		ouser.WithSecretManager(oauthConfig),
 	}
 

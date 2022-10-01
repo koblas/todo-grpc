@@ -3,10 +3,9 @@ package workers
 import (
 	"context"
 
-	"github.com/koblas/grpc-todo/pkg/eventbus"
-	awsbus "github.com/koblas/grpc-todo/pkg/eventbus/aws"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	genpb "github.com/koblas/grpc-todo/twpb/core"
+	"go.uber.org/zap"
 )
 
 func init() {
@@ -17,59 +16,54 @@ func init() {
 	})
 }
 
-func NewUserEmailInvite(config SsmConfig, opt ...Option) awsbus.SqsConsumerFunc {
-	svc := buildService(config, opt...)
-
-	return svc.userEmailInvite
+type userEmailInvite struct {
+	WorkerConfig
 }
 
-func (cfg *WorkerConfig) userEmailInvite(ctx context.Context, msg *eventbus.Message) error {
-	log := logger.FromContext(ctx)
-	event := genpb.UserSecurityEvent{}
-	action, err := extractBasic(log, msg, &event)
-	if err != nil {
-		log.With("error", err).Info("Unable to extract message")
-		return err
-	}
-	log.With("action", action).Info("processing message")
-	cuser := event.User
-	if event.Action != genpb.UserSecurity_USER_INVITE_TOKEN {
-		return nil
+func NewUserEmailInvite(config WorkerConfig) genpb.TwirpServer {
+	svc := &userEmailInvite{WorkerConfig: config}
+
+	return genpb.NewUserEventServiceServer(svc)
+}
+
+func (cfg *userEmailInvite) UserChange(ctx context.Context, msg *genpb.UserChangeEvent) (*genpb.EventbusEmpty, error) {
+	return &genpb.EventbusEmpty{}, nil
+}
+
+func (cfg *userEmailInvite) UserSecurity(ctx context.Context, msg *genpb.UserSecurityEvent) (*genpb.EventbusEmpty, error) {
+	log := logger.FromContext(ctx).With(zap.Int32("action", int32(msg.Action))).With(zap.String("email", msg.User.Email))
+
+	log.Info("processing message")
+	if msg.Action != genpb.UserSecurity_USER_INVITE_TOKEN {
+		return &genpb.EventbusEmpty{}, nil
 	}
 
-	token, err := decodeSecure(log, event.Token)
+	tokenValue, err := decodeSecure(log, msg.Token)
 	if err != nil {
-		return err
-	}
-	if token == "" {
-		return nil
+		return nil, err
 	}
 
 	params := genpb.EmailInviteUserParam{
 		AppInfo: buildAppInfo(cfg.config),
 		Sender: &genpb.EmailUser{
-			UserId: event.Sender.Id,
-			Name:   event.Sender.Name,
-			Email:  event.Sender.Email,
+			UserId: msg.Sender.Id,
+			Name:   msg.Sender.Name,
+			Email:  msg.Sender.Email,
 		},
 		Recipient: &genpb.EmailUser{
-			UserId: cuser.Id,
-			Name:   cuser.Name,
-			Email:  cuser.Email,
+			UserId: msg.User.Id,
+			Name:   msg.User.Name,
+			Email:  msg.User.Email,
 		},
-		Token: token,
+		Token: tokenValue,
 	}
 
-	if cfg.sendEmail == nil {
-		log.With("email", cuser.Email, "error", err).Info("Failed to send")
-		return err
-	}
-	log.With("email", cuser.Email).Info("Sending registration email")
-	_, err = cfg.sendEmail.InviteUserMessage(ctx, &params)
-
-	if err != nil {
-		log.With("email", cuser.Email, "error", err).Info("Failed to send")
+	log.Info("Sending registration email")
+	if cfg.sendEmail != nil {
+		_, err := cfg.sendEmail.InviteUserMessage(ctx, &params)
+		log.With(zap.Error(err)).Info("Failed to send")
+		return nil, err
 	}
 
-	return err
+	return &genpb.EventbusEmpty{}, nil
 }

@@ -19,6 +19,8 @@ type awsBus struct {
 	client *sns.Client
 }
 
+var _ eventbus.Producer = (*awsBus)(nil)
+
 func NewAwsProducer(topic string) (eventbus.Producer, error) {
 	cfg, err := config.LoadDefaultConfig(context.Background())
 	if err != nil {

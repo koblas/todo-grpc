@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/koblas/grpc-todo/pkg/awsutil"
-	"github.com/koblas/grpc-todo/pkg/eventbus/redis"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/pkg/util"
 	ouser "github.com/koblas/grpc-todo/services/core/oauth_user"
@@ -22,24 +21,18 @@ func main() {
 	if err != nil {
 		log.With(zap.Error(err)).Fatal("Unable to load configuration")
 	}
-	err = awsutil.LoadSsmConfig("/oauth/", &oauthConfig)
+	err = awsutil.LoadEnvConfig("/oauth/", &oauthConfig)
 	if err != nil {
 		log.With(zap.Error(err)).Fatal("Unable to load oauth configuration")
-	}
-
-	producer, err := redis.NewRedisProducer(ssmConfig.EventArn)
-	if err != nil {
-		log.With(zap.Error(err)).Fatal("Unable to connect to bus")
 	}
 
 	opts := []ouser.Option{
 		ouser.WithUserService(
 			core.NewUserServiceProtobufClient(
-				util.Getenv("USER_SERVICE_ADDR", ":13001"),
+				"http://"+util.Getenv("USER_SERVICE_ADDR", ":13001"),
 				&http.Client{},
 			),
 		),
-		ouser.WithProducer(producer),
 		ouser.WithSecretManager(oauthConfig),
 	}
 

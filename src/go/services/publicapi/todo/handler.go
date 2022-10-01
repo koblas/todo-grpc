@@ -12,6 +12,7 @@ import (
 	"github.com/koblas/grpc-todo/twpb/core"
 	"github.com/koblas/grpc-todo/twpb/publicapi"
 	"github.com/twitchtv/twirp"
+	"go.uber.org/zap"
 	"golang.org/x/net/context"
 )
 
@@ -91,6 +92,7 @@ func (svc *TodoServer) AddTodo(ctx context.Context, newTodo *publicapi.TodoAddPa
 	})
 
 	if err != nil {
+		log.With(zap.Error(err)).Error("Unable to create todo")
 		return nil, twirp.InternalErrorWith(err)
 	}
 	log.With("task", newTodo.Task).Info("Received new task")

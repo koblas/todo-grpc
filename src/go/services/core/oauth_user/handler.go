@@ -4,7 +4,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/koblas/grpc-todo/pkg/eventbus"
 	"github.com/koblas/grpc-todo/pkg/key_manager"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/tokenmanager"
@@ -17,7 +16,6 @@ import (
 
 // Server represents the gRPC server
 type OauthUserServer struct {
-	pubsub   eventbus.Producer
 	kms      key_manager.Encoder
 	user     genpb.UserService
 	jwtMaker tokenmanager.Maker
@@ -29,12 +27,6 @@ type Option func(*OauthUserServer)
 func WithUserService(client genpb.UserService) Option {
 	return func(cfg *OauthUserServer) {
 		cfg.user = client
-	}
-}
-
-func WithProducer(bus eventbus.Producer) Option {
-	return func(cfg *OauthUserServer) {
-		cfg.pubsub = bus
 	}
 }
 

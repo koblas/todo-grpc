@@ -5,14 +5,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/koblas/grpc-todo/pkg/eventbus"
 	"github.com/koblas/grpc-todo/twpb/core"
-	"google.golang.org/protobuf/proto"
 )
 
 type SendEmailServer struct {
 	sender Sender
-	pubsub eventbus.Producer
+	pubsub core.SendEmailEvents
 }
 
 // This is really hear to make it easy to make sure that you've
@@ -24,7 +22,7 @@ var templates map[core.EmailTemplate]emailContent = map[core.EmailTemplate]email
 	core.EmailTemplate_PASSWORD_RECOVERY: passwordRecovery,
 }
 
-func NewSendEmailServer(producer eventbus.Producer, sender Sender) core.SendEmailService {
+func NewSendEmailServer(producer core.SendEmailEvents, sender Sender) core.SendEmailService {
 	// pubsub, err := redisqueue.NewProducerWithOptions(&redisqueue.ProducerOptions{
 	// 	StreamMaxLength:      1000,
 	// 	ApproximateMaxLength: true,
@@ -153,27 +151,14 @@ func (svc *SendEmailServer) simpleSend(ctx context.Context, sender, recipient st
 }
 
 func (svc *SendEmailServer) notify(ctx context.Context, messageId string, recipient string, tmpl core.EmailTemplate, referenceId string) error {
-	stream := "email_messages"
-
-	bbytes, err := proto.Marshal(&core.EmailSentEvent{
+	_, err := svc.pubsub.NotifySent(ctx, &core.EmailSentEvent{
 		RecipientEmail: recipient,
 		MessageId:      messageId,
 		Template:       tmpl,
 		ReferenceId:    referenceId,
 	})
-	if err != nil {
-		return err
-	}
 
-	attr := map[string]string{
-		"stream":       stream,
-		"content-type": "application/protobuf",
-	}
-	return svc.pubsub.Enqueue(ctx, &eventbus.Message{
-		Stream:     stream,
-		Attributes: attr,
-		BodyBytes:  bbytes,
-	})
+	return err
 }
 
 // Common functionality to build and email message from a template

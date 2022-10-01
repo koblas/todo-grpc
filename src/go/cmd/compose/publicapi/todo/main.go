@@ -24,7 +24,7 @@ func main() {
 	opts := []todo.Option{
 		todo.WithTodoService(
 			core.NewTodoServiceProtobufClient(
-				util.Getenv("TODO_SERVICE_ADDR", ":13005"),
+				"http://"+util.Getenv("TODO_SERVICE_ADDR", ":13005"),
 				&http.Client{},
 			),
 		),

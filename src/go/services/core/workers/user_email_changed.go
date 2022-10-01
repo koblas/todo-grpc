@@ -3,10 +3,9 @@ package workers
 import (
 	"context"
 
-	"github.com/koblas/grpc-todo/pkg/eventbus"
-	awsbus "github.com/koblas/grpc-todo/pkg/eventbus/aws"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	genpb "github.com/koblas/grpc-todo/twpb/core"
+	"go.uber.org/zap"
 )
 
 func init() {
@@ -17,45 +16,44 @@ func init() {
 	})
 }
 
-func NewUserEmailChanged(config SsmConfig, opt ...Option) awsbus.SqsConsumerFunc {
-	svc := buildService(config, opt...)
-
-	return svc.userEmailChanged
+type userEmailChanged struct {
+	WorkerConfig
 }
 
-func (cfg *WorkerConfig) userEmailChanged(ctx context.Context, msg *eventbus.Message) error {
-	log := logger.FromContext(ctx)
-	event := genpb.UserSecurityEvent{}
-	action, err := extractBasic(log, msg, &event)
-	if err != nil {
-		log.With("error", err).Info("Unable to extract message")
-		return err
+func NewUserEmailChanged(config WorkerConfig) genpb.TwirpServer {
+	svc := &userEmailChanged{WorkerConfig: config}
+
+	return genpb.NewUserEventServiceServer(svc)
+}
+
+func (cfg *userEmailChanged) UserChange(ctx context.Context, msg *genpb.UserChangeEvent) (*genpb.EventbusEmpty, error) {
+	return &genpb.EventbusEmpty{}, nil
+}
+
+func (cfg *userEmailChanged) UserSecurity(ctx context.Context, msg *genpb.UserSecurityEvent) (*genpb.EventbusEmpty, error) {
+	log := logger.FromContext(ctx).With(zap.Int32("action", int32(msg.Action))).With(zap.String("email", msg.User.Email))
+
+	log.Info("processing message")
+	if msg.Action != genpb.UserSecurity_USER_PASSWORD_CHANGE {
+		return &genpb.EventbusEmpty{}, nil
 	}
-	log.With("action", action).Info("processing message")
-	cuser := event.User
-	if event.Action != genpb.UserSecurity_USER_PASSWORD_CHANGE {
-		return nil
-	}
+	user := msg.User
 
 	params := genpb.EmailPasswordChangeParam{
 		AppInfo: buildAppInfo(cfg.config),
 		Recipient: &genpb.EmailUser{
-			UserId: cuser.Id,
-			Name:   cuser.Name,
-			Email:  cuser.Email,
+			UserId: user.Id,
+			Name:   user.Name,
+			Email:  user.Email,
 		},
 	}
 
-	if cfg.sendEmail == nil {
-		log.With("email", cuser.Email, "error", err).Info("Failed to send")
-		return err
-	}
-	log.With("email", cuser.Email).Info("Sending registration email")
-	_, err = cfg.sendEmail.PasswordChangeMessage(ctx, &params)
-
-	if err != nil {
-		log.With("email", cuser.Email, "error", err).Info("Failed to send")
+	log.Info("Sending password change email")
+	if cfg.sendEmail != nil {
+		_, err := cfg.sendEmail.PasswordChangeMessage(ctx, &params)
+		log.With(zap.Error(err)).Info("Failed to send")
+		return nil, err
 	}
 
-	return err
+	return &genpb.EventbusEmpty{}, nil
 }

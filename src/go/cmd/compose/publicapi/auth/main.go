@@ -27,13 +27,13 @@ func main() {
 	opts := []auth.Option{
 		auth.WithUserClient(
 			core.NewUserServiceProtobufClient(
-				util.Getenv("USER_SERVICE_ADDR", ":13001"),
+				"http://"+util.Getenv("USER_SERVICE_ADDR", ":13001"),
 				&http.Client{},
 			),
 		),
 		auth.WithOAuthClient(
 			core.NewAuthUserServiceProtobufClient(
-				util.Getenv("OAUTH_USER_SERVICE_ADDR", ":13002"),
+				"http://"+util.Getenv("OAUTH_USER_SERVICE_ADDR", ":13002"),
 				&http.Client{},
 			),
 		),

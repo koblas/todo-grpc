@@ -3,10 +3,9 @@ package workers
 import (
 	"context"
 
-	"github.com/koblas/grpc-todo/pkg/eventbus"
-	awsbus "github.com/koblas/grpc-todo/pkg/eventbus/aws"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	genpb "github.com/koblas/grpc-todo/twpb/core"
+	"go.uber.org/zap"
 )
 
 func init() {
@@ -17,54 +16,49 @@ func init() {
 	})
 }
 
-func NewUserEmailForgot(config SsmConfig, opt ...Option) awsbus.SqsConsumerFunc {
-	svc := buildService(config, opt...)
-
-	return svc.userEmailForgot
+type userEmailForgot struct {
+	WorkerConfig
 }
 
-func (cfg *WorkerConfig) userEmailForgot(ctx context.Context, msg *eventbus.Message) error {
-	log := logger.FromContext(ctx)
-	event := genpb.UserSecurityEvent{}
-	action, err := extractBasic(log, msg, &event)
-	if err != nil {
-		log.With("error", err).Info("Unable to extract message")
-		return err
-	}
-	log.With("action", action).Info("processing message")
-	cuser := event.User
-	if event.Action != genpb.UserSecurity_USER_FORGOT_REQUEST {
-		return nil
+func NewUserEmailForgot(config WorkerConfig) genpb.TwirpServer {
+	svc := &userEmailForgot{WorkerConfig: config}
+
+	return genpb.NewUserEventServiceServer(svc)
+}
+
+func (cfg *userEmailForgot) UserChange(ctx context.Context, msg *genpb.UserChangeEvent) (*genpb.EventbusEmpty, error) {
+	return &genpb.EventbusEmpty{}, nil
+}
+
+func (cfg *userEmailForgot) UserSecurity(ctx context.Context, msg *genpb.UserSecurityEvent) (*genpb.EventbusEmpty, error) {
+	log := logger.FromContext(ctx).With(zap.Int32("action", int32(msg.Action))).With(zap.String("email", msg.User.Email))
+
+	log.Info("processing message")
+	if msg.Action != genpb.UserSecurity_USER_FORGOT_REQUEST {
+		return &genpb.EventbusEmpty{}, nil
 	}
 
-	token, err := decodeSecure(log, event.Token)
+	tokenValue, err := decodeSecure(log, msg.Token)
 	if err != nil {
-		return err
-	}
-	if token == "" {
-		return nil
+		return nil, err
 	}
 
 	params := genpb.EmailPasswordRecoveryParam{
 		AppInfo: buildAppInfo(cfg.config),
 		Recipient: &genpb.EmailUser{
-			UserId: cuser.Id,
-			Name:   cuser.Name,
-			Email:  cuser.Email,
+			UserId: msg.User.Id,
+			Name:   msg.User.Name,
+			Email:  msg.User.Email,
 		},
-		Token: token,
+		Token: tokenValue,
 	}
 
-	if cfg.sendEmail == nil {
-		log.With("email", cuser.Email, "error", err).Info("Failed to send")
-		return err
-	}
-	log.With("email", cuser.Email).Info("Sending forgot email")
-	_, err = cfg.sendEmail.PasswordRecoveryMessage(ctx, &params)
-
-	if err != nil {
-		log.With("email", cuser.Email, "error", err).Info("Failed to send")
+	log.Info("Sending forgot email")
+	if cfg.sendEmail != nil {
+		_, err := cfg.sendEmail.PasswordRecoveryMessage(ctx, &params)
+		log.With(zap.Error(err)).Info("Failed to send")
+		return nil, err
 	}
 
-	return err
+	return &genpb.EventbusEmpty{}, err
 }

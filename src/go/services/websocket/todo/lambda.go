@@ -2,6 +2,7 @@ package todo
 
 import (
 	"log"
+	"net/http"
 
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/store/websocket"
@@ -26,11 +27,10 @@ func init() {
 	store := websocket.NewUserDynamoStore(websocket.WithDynamoTable(ssmConfig.ConnDb))
 
 	s := NewTodoServer(store, ssmConfig.WsEndpoint)
-	handlers := awsutil.SqsHandlers{
-		core.TodoEventbusPathPrefix: core.NewTodoEventbusServer(s),
-	}
+	mux := http.NewServeMux()
+	mux.Handle(core.TodoEventbusPathPrefix, core.NewTodoEventbusServer(s))
 
-	lambdaHandler = awsutil.HandleSqsLambda(handlers, nil)
+	lambdaHandler = awsutil.HandleSqsLambda(mux)
 }
 
 func HandleLambda() awsutil.TwirpHttpSqsHandler {

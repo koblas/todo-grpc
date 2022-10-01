@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/koblas/grpc-todo/pkg/awsutil"
+	"github.com/koblas/grpc-todo/pkg/eventbus/redis"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/services/core/todo"
 	"github.com/koblas/grpc-todo/twpb/core"
@@ -17,11 +18,15 @@ func main() {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
-	eventbus := core.NewTodoEventbusProtobufClient(ssmConfig.EventArn, awsutil.NewTwirpCallLambda())
+	// eventbus := core.NewTodoEventbusProtobufClient(ssmConfig.EventArn, awsutil.NewTwirpCallLambda())
+	eventbus, err := redis.NewRedisProducer("todo")
+	if err != nil {
+		log.With(zap.Error(err)).Fatal("unable to create producer")
+	}
 
 	opts := []todo.Option{
 		todo.WithProducer(eventbus),
-		todo.WithTodoStore(todo.NewTodoDynamoStore()),
+		todo.WithTodoStore(todo.NewTodoMemoryStore()),
 	}
 
 	api := core.NewTodoServiceServer(todo.NewTodoServer(opts...))

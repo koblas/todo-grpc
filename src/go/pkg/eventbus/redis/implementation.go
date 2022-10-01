@@ -15,9 +15,12 @@ const CONTENT_TRANSFER_ENCODING = "content-transfer-encoding"
 
 type redisBus struct {
 	pubsub *redisqueue.Producer
+	topic  string
 }
 
-func NewRedisProducer(string) (eventbus.Producer, error) {
+var _ eventbus.Producer = (*redisBus)(nil)
+
+func NewRedisProducer(topic string) (eventbus.Producer, error) {
 	pubsub, err := redisqueue.NewProducerWithOptions(&redisqueue.ProducerOptions{
 		StreamMaxLength:      1000,
 		ApproximateMaxLength: true,
@@ -30,6 +33,7 @@ func NewRedisProducer(string) (eventbus.Producer, error) {
 	}
 
 	return &redisBus{
+		topic:  topic,
 		pubsub: pubsub,
 	}, nil
 }
@@ -51,7 +55,7 @@ func (svc *redisBus) Enqueue(ctx context.Context, msg *eventbus.Message) error {
 	}
 
 	return svc.pubsub.Enqueue(&redisqueue.Message{
-		Stream: msg.Stream,
+		Stream: svc.topic,
 		Values: mvalue,
 	})
 }

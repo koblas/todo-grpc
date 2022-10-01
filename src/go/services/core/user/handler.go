@@ -5,10 +5,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/koblas/grpc-todo/pkg/eventbus"
 	"github.com/koblas/grpc-todo/pkg/key_manager"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/types"
+	"github.com/koblas/grpc-todo/twpb/core"
 	genpb "github.com/koblas/grpc-todo/twpb/core"
 	"github.com/renstrom/shortuuid"
 	"github.com/twitchtv/twirp"
@@ -18,12 +18,12 @@ import (
 
 type UserId struct{}
 
-func (_ UserId) Prefix() string { return "U" }
+func (UserId) Prefix() string { return "U" }
 
 // Server represents the gRPC server
 type UserServer struct {
 	users  UserStore
-	pubsub eventbus.Producer
+	pubsub core.UserEventService
 	kms    key_manager.Encoder
 }
 
@@ -48,7 +48,7 @@ func WithUserStore(store UserStore) Option {
 	}
 }
 
-func WithProducer(bus eventbus.Producer) Option {
+func WithProducer(bus core.UserEventService) Option {
 	return func(cfg *UserServer) {
 		cfg.pubsub = bus
 	}
@@ -167,19 +167,32 @@ func (s *UserServer) Create(ctx context.Context, params *genpb.CreateParam) (*ge
 		return nil, err
 	}
 
-	log.With("userId", user.ID, "email", user.Email).Info("User Created")
+	log = log.With("userId", user.ID, "email", user.Email)
+	log.Info("User Created")
 
-	if err := s.publishUser(ctx, ENTITY_USER, nil, &user); err != nil {
+	if _, err := s.pubsub.UserChange(ctx, &genpb.UserChangeEvent{
+		Current: s.toProtoUser(&user),
+	}); err != nil {
 		log.With("error", err).Info("user entity publish failed")
 	}
 	if secret != "" {
-		if params.Status == genpb.UserStatus_REGISTERED {
-			if err := s.publishSecurity(ctx, log, genpb.UserSecurity_USER_REGISTER_TOKEN, user, secret); err != nil {
-				log.With("error", err).Info("register user publish failed")
+		token, err := s.toProtoToken(secret)
+		if err != nil {
+			log.With("error", err).Info("unable to create token")
+		} else {
+			payload := genpb.UserSecurityEvent{
+				User:  s.toProtoUser(&user),
+				Token: token,
 			}
-		} else if params.Status == genpb.UserStatus_INVITED {
-			if err := s.publishSecurity(ctx, log, genpb.UserSecurity_USER_INVITE_TOKEN, user, secret); err != nil {
-				log.With("error", err).Info("invite user publish failed")
+
+			if params.Status == genpb.UserStatus_REGISTERED {
+				payload.Action = genpb.UserSecurity_USER_REGISTER_TOKEN
+			} else if params.Status == genpb.UserStatus_INVITED {
+				payload.Action = genpb.UserSecurity_USER_INVITE_TOKEN
+			}
+
+			if _, err := s.pubsub.UserSecurity(ctx, &payload); err != nil {
+				log.With("error", err).Info("user security publish failed")
 			}
 		}
 	}
@@ -268,12 +281,19 @@ func (s *UserServer) Update(ctx context.Context, params *genpb.UpdateParam) (*ge
 		}
 	}
 
-	if err := s.publishUser(ctx, ENTITY_USER, orig, &updated); err != nil {
-		log.With("error", err).Error("unable to publish user event")
+	if _, err := s.pubsub.UserChange(ctx, &genpb.UserChangeEvent{
+		Current:  s.toProtoUser(&updated),
+		Original: s.toProtoUser(orig),
+	}); err != nil {
+		log.With("error", err).Info("user entity publish failed")
 	}
+
 	if len(params.PasswordNew) != 0 {
-		if err := s.publishSecurity(ctx, log, genpb.UserSecurity_USER_PASSWORD_CHANGE, updated, ""); err != nil {
-			log.With("error", err).Error("unable to publish user security event")
+		if _, err := s.pubsub.UserSecurity(ctx, &genpb.UserSecurityEvent{
+			Action: genpb.UserSecurity_USER_PASSWORD_CHANGE,
+			User:   s.toProtoUser(&updated),
+		}); err != nil {
+			log.With("error", err).Info("user security publish failed")
 		}
 	}
 
@@ -343,8 +363,11 @@ func (s *UserServer) SetSettings(ctx context.Context, params *genpb.UserSettings
 	}
 
 	s.users.UpdateUser(&updated)
-	if err := s.publishSettings(ctx, ENTITY_SETTINGS, orig, &updated); err != nil {
-		log.With("error", err).Error("unable to publish user security event")
+	if _, err := s.pubsub.UserChange(ctx, &genpb.UserChangeEvent{
+		Current:  s.toProtoUser(&updated),
+		Original: s.toProtoUser(orig),
+	}); err != nil {
+		log.With("error", err).Info("user entity publish failed")
 	}
 
 	return s.toProtoSettings(&updated), nil
@@ -415,8 +438,11 @@ func (s *UserServer) VerificationVerify(ctx context.Context, params *genpb.Verif
 	update.Status = UserStatus_ACTIVE
 	s.users.UpdateUser(&update)
 
-	if err := s.publishUser(ctx, ENTITY_USER, user, &update); err != nil {
-		log.With("error", err).Info("Publish failed")
+	if _, err := s.pubsub.UserChange(ctx, &genpb.UserChangeEvent{
+		Current:  s.toProtoUser(&update),
+		Original: s.toProtoUser(user),
+	}); err != nil {
+		log.With("error", err).Info("user entity publish failed")
 	}
 
 	return s.toProtoUser(user), nil
@@ -487,14 +513,20 @@ func (s *UserServer) ForgotUpdate(ctx context.Context, params *genpb.Verificatio
 		if err != nil {
 			return nil, twirp.InternalErrorWith(err)
 		}
+	}
 
-		if err := s.publishUser(ctx, ENTITY_USER, user, &update); err != nil {
-			log.With("error", err).Info("Publish failed")
-		}
+	if _, err := s.pubsub.UserChange(ctx, &genpb.UserChangeEvent{
+		Current:  s.toProtoUser(&update),
+		Original: s.toProtoUser(user),
+	}); err != nil {
+		log.With("error", err).Info("user entity publish failed")
 	}
 	if params.Password != "" {
-		if err := s.publishSecurity(ctx, log, genpb.UserSecurity_USER_PASSWORD_CHANGE, *user, ""); err != nil {
-			log.With("error", err).Info("Publish security failed")
+		if _, err := s.pubsub.UserSecurity(ctx, &genpb.UserSecurityEvent{
+			Action: genpb.UserSecurity_USER_PASSWORD_CHANGE,
+			User:   s.toProtoUser(user),
+		}); err != nil {
+			log.With("error", err).Info("user security publish failed")
 		}
 	}
 
@@ -535,8 +567,14 @@ func (s *UserServer) ForgotSend(ctx context.Context, params *genpb.FindParam) (*
 	// if err := s.publishUser(ctx, ENTITY_USER, user, &update); err != nil {
 	// 	log.With("error", err).Info("Publish failed")
 	// }
-	if err := s.publishSecurity(ctx, log, genpb.UserSecurity_USER_FORGOT_REQUEST, *user, secret); err != nil {
-		log.With("error", err).Info("Publish security failed")
+	if token, err := s.toProtoToken(secret); err != nil {
+		log.With("error", err).Info("failed to encrypt token")
+	} else if _, err := s.pubsub.UserSecurity(ctx, &genpb.UserSecurityEvent{
+		Action: genpb.UserSecurity_USER_FORGOT_REQUEST,
+		User:   s.toProtoUser(user),
+		Token:  token,
+	}); err != nil {
+		log.With("error", err).Info("user security publish failed")
 	}
 
 	return s.toProtoUser(user), nil

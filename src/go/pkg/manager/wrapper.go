@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
-	"github.com/koblas/grpc-todo/pkg/eventbus/redis"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/util"
 	"go.uber.org/zap"
@@ -48,7 +47,7 @@ func (mgr *Manager) StartWithContext(ctx context.Context, api http.Handler) {
 	} else {
 		server := &http.Server{
 			Addr:        ":" + util.Getenv("PORT", "14586"),
-			Handler:     api,
+			Handler:     withHeaders(api),
 			BaseContext: func(net.Listener) context.Context { return ctx },
 		}
 
@@ -66,30 +65,17 @@ func (mgr *Manager) StartConsumerWithContext(ctx context.Context, handler awsuti
 	if util.Getenv("LAMBDA_TASK_ROOT", "") != "" {
 		lambda.StartWithContext(ctx, handler)
 	} else {
-		svr := redis.NewRedisConsumer(util.Getenv("REDIS_ADDR", "redis:6379"))
-
-		worker, err := svr.BuildWorker("", "")
-		if err != nil {
-			mgr.log.With(zap.Error(err)).Fatal("unable to start redis consumer")
-		}
-
-		for {
-			select {
-			case msg := <-worker.Messages:
-				event := events.SQSEvent{
-					Records: []events.SQSMessage{
-						{
-							MessageId:  msg.ID,
-							Attributes: msg.Attributes,
-							Body:       msg.BodyString,
-						},
-					},
-				}
-
-				handler(ctx, event)
-			case err := <-worker.Errors:
-				mgr.log.With(zap.Error(err)).Error("protocol error")
-			}
-		}
+		// A little funky in that we're assuming this never returns until all messages are consumed
+		//
+		// It would probably be better to re-abstract this to a channel based system
+		handler(ctx, events.SQSEvent{})
 	}
+}
+
+func withHeaders(base http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.WithValue(r.Context(), awsutil.HeaderCtxKey, r.Header)
+
+		base.ServeHTTP(w, r.WithContext(ctx))
+	})
 }

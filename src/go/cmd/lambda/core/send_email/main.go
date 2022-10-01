@@ -1,12 +1,12 @@
 package main
 
 import (
+	"net/http"
+
 	"github.com/koblas/grpc-todo/pkg/awsutil"
-	"github.com/koblas/grpc-todo/pkg/eventbus/aws"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/services/core/send_email"
 	"github.com/koblas/grpc-todo/twpb/core"
-	"go.uber.org/zap"
 )
 
 func main() {
@@ -18,16 +18,14 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	producer, err := aws.NewAwsProducer(ssmConfig.EventArn)
-	if err != nil {
-		log.With(zap.Error(err)).Fatal("unable to create publisher")
-	}
+	producer := core.NewSendEmailEventsProtobufClient(
+		ssmConfig.EventArn,
+		awsutil.NewTwirpCallLambda(),
+	)
 
 	s := send_email.NewSendEmailServer(producer, send_email.NewSmtpService(ssmConfig))
+	mux := http.NewServeMux()
+	mux.Handle(core.SendEmailServicePathPrefix, core.NewSendEmailServiceServer(s))
 
-	handlers := awsutil.SqsHandlers{
-		core.SendEmailServicePathPrefix: core.NewSendEmailServiceServer(s),
-	}
-
-	mgr.StartConsumer(awsutil.HandleSqsLambda(handlers, nil))
+	mgr.StartConsumer(awsutil.HandleSqsLambda(mux))
 }

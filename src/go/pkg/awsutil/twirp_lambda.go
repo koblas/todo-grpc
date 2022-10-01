@@ -23,6 +23,7 @@ import (
 	sqstypes "github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 )
 
 var errorResponse = events.APIGatewayV2HTTPResponse{
@@ -79,17 +80,24 @@ func HandleApiLambda(ctx context.Context, api http.Handler) TwirpHttpApiHandler 
 
 type SqsHandlers map[string]http.Handler
 
-func HandleSqsLambda(handlers SqsHandlers, forcePath *string) TwirpHttpSqsHandler {
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		for k, v := range handlers {
-			if strings.HasPrefix(r.URL.Path, k) {
-				v.ServeHTTP(w, r)
-				return
+func HandleSqsLambda(handler http.Handler) TwirpHttpSqsHandler {
+	/*
+		var handler http.Handler
+		var forcePath *string
+		if len(handlers) == 1 {
+			for k, v := range handlers {
+				handler = v
+				forcePath = &k
 			}
+		} else {
+			mux := http.NewServeMux()
+			for k, v := range handlers {
+				mux.Handle(k, v)
+			}
+			handler = mux
 		}
-
-		w.WriteHeader(http.StatusNotFound)
-	})
+	*/
+	var forcePath *string
 
 	return func(ctx context.Context, request events.SQSEvent) (events.SQSEventResponse, error) {
 		parentLog := logger.FromContext(ctx).With("eventItemCount", len(request.Records))
@@ -101,7 +109,7 @@ func HandleSqsLambda(handlers SqsHandlers, forcePath *string) TwirpHttpSqsHandle
 
 			req, err := SqsEventToHttpRequest(logger.ToContext(ctx, log), record, forcePath)
 			if err != nil {
-				log.With("error", err).Error("Unable to decode")
+				log.With(zap.Error(err)).Error("Unable to decode")
 				result.BatchItemFailures = append(result.BatchItemFailures, events.SQSBatchItemFailure{ItemIdentifier: record.MessageId})
 				continue
 			}
@@ -131,6 +139,8 @@ type twClient struct {
 	lambda *lambda.Client
 	sqs    *sqs.Client
 	sns    *sns.Client
+
+	sqsCache map[string]string
 }
 
 func NewTwirpCallLambda() TwClient {
@@ -140,10 +150,79 @@ func NewTwirpCallLambda() TwClient {
 	}
 
 	return twClient{
-		lambda: lambda.NewFromConfig(cfg),
-		sqs:    sqs.NewFromConfig(cfg),
-		sns:    sns.NewFromConfig(cfg),
+		lambda:   lambda.NewFromConfig(cfg),
+		sqs:      sqs.NewFromConfig(cfg),
+		sns:      sns.NewFromConfig(cfg),
+		sqsCache: map[string]string{},
 	}
+}
+
+func lambdaToSqs(req *http.Request, lambdaRequest events.APIGatewayV2HTTPRequest) (*string, map[string]sqstypes.MessageAttributeValue) {
+	path := req.URL.Path
+
+	isJson := false
+
+	basicHeaders := map[string]string{}
+	for k, v := range req.Header {
+		basicHeaders[k] = strings.Join(v, ",")
+	}
+
+	attributes := map[string]sqstypes.MessageAttributeValue{
+		"twirp.path": {DataType: aws.String("String"), StringValue: &path},
+	}
+	for k, v := range req.URL.Query() {
+		attributes[k] = sqstypes.MessageAttributeValue{DataType: aws.String("String"), StringValue: aws.String(v[0])}
+	}
+	for k, v := range basicHeaders {
+		attributes[k] = sqstypes.MessageAttributeValue{DataType: aws.String("String"), StringValue: aws.String(v)}
+		if strings.ToLower(k) == "content-type" {
+			isJson = strings.Contains(v, "application/json")
+		}
+	}
+
+	var body *string
+	if isJson {
+		body = &lambdaRequest.Body
+	} else {
+		attributes["Content-Transfer-Encoding"] = sqstypes.MessageAttributeValue{DataType: aws.String("String"), StringValue: aws.String("base64")}
+		uEnc := base64.URLEncoding.EncodeToString([]byte(lambdaRequest.Body))
+		body = &uEnc
+	}
+
+	return body, attributes
+}
+
+func lambdaToSns(req *http.Request, lambdaRequest events.APIGatewayV2HTTPRequest) (*string, map[string]snstypes.MessageAttributeValue) {
+	body, sqsAttr := lambdaToSqs(req, lambdaRequest)
+
+	attributes := map[string]snstypes.MessageAttributeValue{}
+	for k, v := range sqsAttr {
+		attributes[k] = snstypes.MessageAttributeValue{
+			DataType:    v.DataType,
+			BinaryValue: v.BinaryValue,
+			StringValue: v.StringValue,
+		}
+	}
+
+	return body, attributes
+}
+
+func (svc twClient) lookupSqs(queueName string) (string, error) {
+	if qurl, found := svc.sqsCache[queueName]; found {
+		return qurl, nil
+	}
+
+	qurl, err := svc.sqs.GetQueueUrl(context.TODO(), &sqs.GetQueueUrlInput{
+		QueueName: &queueName,
+	})
+
+	if err != nil {
+		return "", fmt.Errorf("unable to get queue url='%s' %w", queueName, err)
+	}
+
+	svc.sqsCache[queueName] = *qurl.QueueUrl
+
+	return *qurl.QueueUrl, nil
 }
 
 func (svc twClient) Do(req *http.Request) (*http.Response, error) {
@@ -255,39 +334,16 @@ func (svc twClient) Do(req *http.Request) (*http.Response, error) {
 		if arn != "" {
 			return nil, errors.New("arn not supported for sqs")
 		}
-		isJson := false
 
-		attributes := map[string]sqstypes.MessageAttributeValue{
-			"twirp.path": {DataType: aws.String("String"), StringValue: &path},
-		}
-		for k, v := range req.URL.Query() {
-			attributes[k] = sqstypes.MessageAttributeValue{DataType: aws.String("String"), StringValue: aws.String(v[0])}
-		}
-		for k, v := range basicHeaders {
-			attributes[k] = sqstypes.MessageAttributeValue{DataType: aws.String("String"), StringValue: aws.String(v)}
-			if strings.ToLower(k) == "content-type" {
-				isJson = strings.Contains(v, "application/json")
-			}
-		}
+		body, attributes := lambdaToSqs(req, lambdaRequest)
 
-		var body *string
-		if isJson {
-			body = &lambdaRequest.Body
-		} else {
-			attributes["Content-Transfer-Encoding"] = sqstypes.MessageAttributeValue{DataType: aws.String("String"), StringValue: aws.String("base64")}
-			uEnc := base64.URLEncoding.EncodeToString([]byte(lambdaRequest.Body))
-			body = &uEnc
-		}
-
-		qurl, err := svc.sqs.GetQueueUrl(context.TODO(), &sqs.GetQueueUrlInput{
-			QueueName: &req.URL.Host,
-		})
+		queueUrl, err := svc.lookupSqs(req.URL.Host)
 		if err != nil {
 			return nil, fmt.Errorf("unable to get queue url='%s' %w", req.URL.Host, err)
 		}
 
 		_, err = svc.sqs.SendMessage(context.TODO(), &sqs.SendMessageInput{
-			QueueUrl:          qurl.QueueUrl,
+			QueueUrl:          &queueUrl,
 			MessageAttributes: attributes,
 			MessageBody:       body,
 		})
@@ -303,29 +359,7 @@ func (svc twClient) Do(req *http.Request) (*http.Response, error) {
 			Body:       ioutil.NopCloser(bytes.NewReader([]byte{})),
 		}
 	} else if scheme == "sns" {
-		isJson := false
-
-		attributes := map[string]snstypes.MessageAttributeValue{
-			"twirp.path": {DataType: aws.String("String"), StringValue: &path},
-		}
-		for k, v := range req.URL.Query() {
-			attributes[k] = snstypes.MessageAttributeValue{DataType: aws.String("String"), StringValue: aws.String(v[0])}
-		}
-		for k, v := range basicHeaders {
-			attributes[k] = snstypes.MessageAttributeValue{DataType: aws.String("String"), StringValue: aws.String(v)}
-			if strings.ToLower(k) == "content-type" {
-				isJson = strings.Contains(v, "application/json")
-			}
-		}
-
-		var body *string
-		if isJson {
-			body = &lambdaRequest.Body
-		} else {
-			attributes["Content-Transfer-Encoding"] = snstypes.MessageAttributeValue{DataType: aws.String("String"), StringValue: aws.String("base64")}
-			uEnc := base64.URLEncoding.EncodeToString([]byte(lambdaRequest.Body))
-			body = &uEnc
-		}
+		body, attributes := lambdaToSns(req, lambdaRequest)
 
 		_, err = svc.sns.Publish(context.TODO(), &sns.PublishInput{
 			TopicArn:          aws.String(arn),
