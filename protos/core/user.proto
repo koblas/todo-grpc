@@ -39,7 +39,7 @@ message SecureValue {
   // opaque value that key encrypted
   string data_key = 2;
   // encrypted value
-  string value = 3;
+  string data_value = 3;
 }
 
 // Used for ForgotPassword / Registration events
@@ -55,7 +55,7 @@ message UserSecurityEvent {
 message UserChangeEvent {
   // Since some changes (e.g. password) cannot be seen in the serialized version
   User current = 1;
-  User orig = 2;
+  User original = 2;
 }
 
 message UserSettingGroup { map<string, string> values = 1; }

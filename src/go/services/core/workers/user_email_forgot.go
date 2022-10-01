@@ -23,7 +23,7 @@ type userEmailForgot struct {
 func NewUserEmailForgot(config WorkerConfig) genpb.TwirpServer {
 	svc := &userEmailForgot{WorkerConfig: config}
 
-	return genpb.NewUserEventServiceServer(svc)
+	return genpb.NewUserEventbusServer(svc)
 }
 
 func (cfg *userEmailForgot) UserChange(ctx context.Context, msg *genpb.UserChangeEvent) (*genpb.EventbusEmpty, error) {

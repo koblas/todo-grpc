@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/koblas/grpc-todo/pkg/awsutil"
-	"github.com/koblas/grpc-todo/pkg/eventbus/aws"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/services/core/todo"
 	"github.com/koblas/grpc-todo/twpb/core"
@@ -19,10 +18,10 @@ func main() {
 	}
 
 	// eventbus := core.NewTodoEventbusProtobufClient(ssmConfig.EventArn, awsutil.NewTwirpCallLambda())
-	producer, err := aws.NewAwsProducer(ssmConfig.EventArn)
-	if err != nil {
-		log.With(zap.Error(err)).Fatal("failed to create producer")
-	}
+	producer := core.NewTodoEventbusJSONClient(
+		ssmConfig.EventArn,
+		awsutil.NewTwirpCallLambda(),
+	)
 
 	opts := []todo.Option{
 		todo.WithProducer(producer),

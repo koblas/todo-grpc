@@ -78,3 +78,8 @@ service SendEmailService {
       returns (EmailOkResponse) {}
   rpc InviteUserMessage(EmailInviteUserParam) returns (EmailOkResponse) {}
 }
+
+service SendEmailEvents {
+  // The notification channel
+  rpc NotifySent(EmailSentEvent) returns (EmailOkResponse) {}
+}

@@ -21,7 +21,7 @@ func main() {
 
 	redis := redisutil.NewTwirpRedis(util.Getenv("REDIS_ADDR", "redis:6379"))
 
-	producer := core.NewUserEventServiceJSONClient(
+	producer := core.NewUserEventbusJSONClient(
 		"topic://user-events",
 		redis,
 	)

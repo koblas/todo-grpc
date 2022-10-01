@@ -2,21 +2,16 @@ syntax = "proto3";
 package core.eventbus;
 option go_package = "./;core";
 
+import "core/user.proto";
 import "core/todo.proto";
 
 message EventbusEmpty {}
 
-// This is the basis of inheritance for SNS publishing
-message BaseEvent {
-  string idemponcyId = 1;
-  string action = 2;
+service UserEventbus {
+  rpc UserChange(core.user.UserChangeEvent) returns (EventbusEmpty);
+  rpc UserSecurity(core.user.UserSecurityEvent) returns (EventbusEmpty);
 }
 
-message TodoEvent {
-  string idemponcyId = 1;
-  string action = 2;
-  core.todo.TodoObject current = 3;
-  core.todo.TodoObject previous = 4;
+service TodoEventbus {
+  rpc TodoChange(core.todo.TodoChangeEvent) returns (EventbusEmpty);
 }
-
-service TodoEventbus { rpc Message(TodoEvent) returns (EventbusEmpty); }

@@ -21,6 +21,12 @@ message TodoObject {
   string task = 3;
 }
 
+message TodoChangeEvent {
+  string idemponcyId = 1;
+  core.todo.TodoObject current = 3;
+  core.todo.TodoObject original = 4;
+}
+
 message TodoResponse { repeated TodoObject todos = 1; }
 
 message TodoDeleteResponse { string message = 1; }

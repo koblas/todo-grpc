@@ -23,7 +23,7 @@ type userEmailChanged struct {
 func NewUserEmailChanged(config WorkerConfig) genpb.TwirpServer {
 	svc := &userEmailChanged{WorkerConfig: config}
 
-	return genpb.NewUserEventServiceServer(svc)
+	return genpb.NewUserEventbusServer(svc)
 }
 
 func (cfg *userEmailChanged) UserChange(ctx context.Context, msg *genpb.UserChangeEvent) (*genpb.EventbusEmpty, error) {

@@ -45,15 +45,15 @@ func NewTodoServer(store websocket.ConnectionStore, wsEndpoint string) core.Todo
 	}
 }
 
-func (svc *TodoServer) Message(ctx context.Context, event *core.TodoEvent) (*core.EventbusEmpty, error) {
+func (svc *TodoServer) TodoChange(ctx context.Context, event *core.TodoChangeEvent) (*core.EventbusEmpty, error) {
 	log := logger.FromContext(ctx)
 	log.Info("received todo event")
 
 	userId := ""
 	if event.Current != nil {
 		userId = event.Current.UserId
-	} else if event.Previous != nil {
-		userId = event.Previous.UserId
+	} else if event.Original != nil {
+		userId = event.Original.UserId
 	} else {
 		return nil, errors.New("no user found")
 	}
@@ -66,15 +66,15 @@ func (svc *TodoServer) Message(ctx context.Context, event *core.TodoEvent) (*cor
 	var obj *core.TodoObject
 	if event.Current != nil {
 		obj = event.Current
-	} else if event.Previous != nil {
-		obj = event.Previous
+	} else if event.Original != nil {
+		obj = event.Original
 	} else {
 		return nil, errors.New("missing object")
 	}
 	data, err := json.Marshal(SocketMessage{
 		Topic:    "todo",
 		ObjectId: obj.Id,
-		Action:   event.Action,
+		// Action:   event.Action,
 		Body: publicapi.TodoObject{
 			Id:   obj.Id,
 			Task: obj.Task,

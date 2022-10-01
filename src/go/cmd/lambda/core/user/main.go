@@ -17,7 +17,7 @@ func main() {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
-	producer := core.NewUserEventServiceJSONClient(
+	producer := core.NewUserEventbusJSONClient(
 		ssmConfig.EventArn,
 		awsutil.NewTwirpCallLambda(),
 	)

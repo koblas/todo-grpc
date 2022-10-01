@@ -23,7 +23,7 @@ func (UserId) Prefix() string { return "U" }
 // Server represents the gRPC server
 type UserServer struct {
 	users  UserStore
-	pubsub core.UserEventService
+	pubsub core.UserEventbus
 	kms    key_manager.Encoder
 }
 
@@ -48,7 +48,7 @@ func WithUserStore(store UserStore) Option {
 	}
 }
 
-func WithProducer(bus core.UserEventService) Option {
+func WithProducer(bus core.UserEventbus) Option {
 	return func(cfg *UserServer) {
 		cfg.pubsub = bus
 	}
