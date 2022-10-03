@@ -1,5 +1,26 @@
 # grpc-todo
 
+This project was originally conceived as a way to test gRPC and TypeScript it has since
+morphed into a tour-de-force of how to build a application framework that builds a 
+micro services AWS lambda framework. 
+
+## USeful
+
+https://www.obytes.com/blog/go-serverless-part-4-realtime-interactive-and-secure-applications-with-aws-websocket-api-gateway
+
+## Detailed History
+
+* TypeScript gRPC / Docker
+*  
+
+## Components
+
+
+
+---
+## Original README that needs to be cleaned up 
+
+
 This is designed to show how to do basic gRPC between a web browser and
 a server. It uses envoy as the proxy to convert from GRPC-WEB or JSON to GRPC.
 

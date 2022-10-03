@@ -1,17 +1,18 @@
 version: "3.9"
 services:
-  envoy:
-    build:
-      context: envoy
-    ports:
-      - 8080:8080
-      - 9901:9901
-    depends_on:
-      - public-todo
-      - public-auth
-      - api-extauth
-    networks:
-      - envoymesh
+  # envoy:
+  #   build:
+  #     context: envoy
+  #   ports:
+  #     - 8080:8080
+  #     - 9901:9901
+  #   depends_on:
+  #     - public-todo
+  #     - public-auth
+  #     - api-extauth
+  #   networks:
+  #     - dmz
+  #     - frontend
 
   #
   #  Endpoints that are proxied through Envoy
@@ -20,40 +21,38 @@ services:
     image: public-todo
     build:
       context: src/go
-      dockerfile: cmd/publicapi/todo/Dockerfile
+      dockerfile: cmd/compose/publicapi/todo/Dockerfile
     ports:
       - 14001:14586
     networks:
       - backend
-      - envoymesh
-    env_file:
-      dev-variables.env
+      - dmz
+    env_file: dev-variables.env
+
   public-auth:
     image: public-auth
     build:
       context: src/go
-      dockerfile: cmd/publicapi/auth/Dockerfile
+      dockerfile: cmd/compose/publicapi/auth/Dockerfile
     ports:
       - 14002:14586
     networks:
-      - envoymesh
+      - dmz
       - backend
-    env_file:
-      dev-variables.env
+    env_file: dev-variables.env
   #
   # The JWT Cookie validator for Envoy
   #
-  api-extauth:
-    image: api-extauth
-    build:
-      context: src/go
-      dockerfile: cmd/middleware/extauth/Dockerfile
-    ports:
-      - 14010:14586
-    networks:
-      - envoymesh
-    env_file:
-      dev-variables.env
+  # api-extauth:
+  #   image: api-extauth
+  #   build:
+  #     context: src/go
+  #     dockerfile: cmd/compose/middleware/extauth/Dockerfile
+  #   ports:
+  #     - 14010:14586
+  #   networks:
+  #     - dmz
+  #   env_file: dev-variables.env
 
   #
   #  Backend services
@@ -62,9 +61,19 @@ services:
     image: core-user
     build:
       context: src/go
-      dockerfile: cmd/core/user/Dockerfile
+      dockerfile: cmd/compose/core/user/Dockerfile
     ports:
       - 13001:14586
+    networks:
+      - backend
+
+  core-todo:
+    image: core-todo
+    build:
+      context: src/go
+      dockerfile: cmd/compose/core/todo/Dockerfile
+    ports:
+      - 13005:14586
     networks:
       - backend
 
@@ -72,7 +81,7 @@ services:
     image: core-oauth-user
     build:
       context: src/go
-      dockerfile: cmd/core/oauth_user/Dockerfile
+      dockerfile: cmd/compose/core/oauth_user/Dockerfile
     ports:
       - 13002:14586
     networks:
@@ -80,32 +89,33 @@ services:
     environment:
       - GOOGLE_SECRET
       - GOOGLE_CLIENT_ID
-    env_file:
-      dev-variables.env
+    env_file: dev-variables.env
 
   core-workers:
     image: core-workers
     build:
       context: src/go
-      dockerfile: cmd/core/workers/Dockerfile
-    env_file:
-      dev-variables.env
+      dockerfile: cmd/compose/core/workers/Dockerfile
+    env_file: dev-variables.env
     networks:
       - backend
+    depends_on:
+      - redis
 
   core-send-email:
     image: core-send-email
     build:
       context: src/go
-      dockerfile: cmd/core/send_email/Dockerfile
+      dockerfile: cmd/compose/core/send_email/Dockerfile
     environment:
-      - SMTP_HOST
+      - SMTP_ADDR
       - SMTP_USERNAME
       - SMTP_PASSWORD
-    env_file:
-      dev-variables.env
+    env_file: dev-variables.env
     networks:
       - backend
+    depends_on:
+      - redis
 
   redis:
     image: redis
@@ -123,15 +133,27 @@ services:
       context: ts-client-react
     ports:
       - 8081:80
-    depends_on:
-      - envoy
+    links:
+      - "public-auth:public-auth"
+      - "public-todo:public-todo"
+      # links:
+      # - "envoy:backend"
+      # depends_on:
+      # - envoy
+    networks:
+      - frontend
+      - dmz
 
 networks:
   #
   #  Services that Envoy talks to
   #
-  envoymesh: {}
+  dmz: {}
   #
   #  Backend services
   #
   backend: {}
+  #
+  #  Backend services
+  #
+  frontend: {}
