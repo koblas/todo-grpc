@@ -1,12 +1,15 @@
 package todo
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/koblas/grpc-todo/pkg/awsutil"
+	"github.com/koblas/grpc-todo/pkg/confmgr"
+	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
+	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/pkg/store/websocket"
 	"github.com/koblas/grpc-todo/twpb/core"
+	"go.uber.org/zap"
 )
 
 type SsmConfig struct {
@@ -18,10 +21,12 @@ type SsmConfig struct {
 var lambdaHandler awsutil.TwirpHttpSqsHandler
 
 func init() {
-	var ssmConfig SsmConfig
+	mgr := manager.NewManager()
+	log := mgr.Logger()
 
-	if err := awsutil.LoadSsmConfig("/common/", &ssmConfig); err != nil {
-		log.Fatal(err.Error())
+	var ssmConfig SsmConfig
+	if err := confmgr.Parse(&ssmConfig, aws.NewLoaderSsm("/common/")); err != nil {
+		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
 	store := websocket.NewUserDynamoStore(websocket.WithDynamoTable(ssmConfig.ConnDb))

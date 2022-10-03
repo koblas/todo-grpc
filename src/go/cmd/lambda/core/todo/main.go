@@ -2,6 +2,8 @@ package main
 
 import (
 	"github.com/koblas/grpc-todo/pkg/awsutil"
+	"github.com/koblas/grpc-todo/pkg/confmgr"
+	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/services/core/todo"
 	"github.com/koblas/grpc-todo/twpb/core"
@@ -13,7 +15,7 @@ func main() {
 	log := mgr.Logger()
 
 	var ssmConfig todo.SsmConfig
-	if err := awsutil.LoadSsmConfig("/common/", &ssmConfig); err != nil {
+	if err := confmgr.Parse(&ssmConfig, aws.NewLoaderSsm("/common/")); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 

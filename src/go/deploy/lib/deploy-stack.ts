@@ -203,7 +203,7 @@ export class WebsocketHandler extends Construct {
 
     const lambda = new GoFunction(this, "handler", {
       functionName: "public-websocket",
-      entry: path.join(__dirname, "..", "..", "lambda", "publicapi", "websocket"),
+      entry: path.join(__dirname, "..", "..", "cmd", "lambda", "publicapi", "websocket"),
       environment: {
         CONN_DB: db.tableName,
       },
@@ -306,7 +306,7 @@ export class CoreTodo extends Construct {
 
     const lambda = new GoFunction(this, "handler", {
       functionName: "core-todo",
-      entry: path.join(__dirname, "..", "..", "lambda", "core", "todo"),
+      entry: path.join(__dirname, "..", "..", "cmd", "lambda", "core", "todo"),
       ...LAMBDA_DEFAULTS,
     });
 
@@ -328,7 +328,7 @@ export class CoreUser extends Construct {
 
     const lambda = new GoFunction(this, "handler", {
       functionName: "core-user",
-      entry: path.join(__dirname, "..", "..", "lambda", "core", "user"),
+      entry: path.join(__dirname, "..", "..", "cmd", "lambda", "core", "user"),
       ...LAMBDA_DEFAULTS,
     });
 
@@ -344,7 +344,7 @@ export class CoreOauthUser extends Construct {
 
     const lambda = new GoFunction(this, "handler", {
       functionName: "core-oauth-user",
-      entry: path.join(__dirname, "..", "..", "lambda", "core", "oauth_user"),
+      entry: path.join(__dirname, "..", "..", "cmd", "lambda", "core", "oauth_user"),
       ...LAMBDA_DEFAULTS,
     });
 
@@ -375,7 +375,7 @@ export class CoreSendEmailQueue extends Construct {
 
     const lambda = new GoFunction(this, "handler", {
       functionName: "core-send-email",
-      entry: path.join(__dirname, "..", "..", "lambda", "core", "send_email"),
+      entry: path.join(__dirname, "..", "..", "cmd", "lambda", "core", "send_email"),
       ...LAMBDA_DEFAULTS,
     });
 
@@ -393,7 +393,7 @@ export class PublicAuth extends Construct {
 
     const lambda = new GoFunction(this, "handler", {
       functionName: "public-auth",
-      entry: path.join(__dirname, "..", "..", "lambda", "publicapi", "auth"),
+      entry: path.join(__dirname, "..", "..", "cmd", "lambda", "publicapi", "auth"),
       ...LAMBDA_DEFAULTS,
     });
 
@@ -420,7 +420,7 @@ export class PublicTodo extends Construct {
 
     const lambda = new GoFunction(this, "handler", {
       functionName: "public-todo",
-      entry: path.join(__dirname, "..", "..", "lambda", "publicapi", "todo"),
+      entry: path.join(__dirname, "..", "..", "cmd", "lambda", "publicapi", "todo"),
       ...LAMBDA_DEFAULTS,
     });
 
@@ -454,7 +454,7 @@ export class WebsocketTodo extends Construct {
 
     const lambda = new GoFunction(this, "handler", {
       functionName: "websocket-todo",
-      entry: path.join(__dirname, "..", "..", "lambda", "websocket", "todo"),
+      entry: path.join(__dirname, "..", "..", "cmd", "lambda", "websocket", "todo"),
       environment: {
         CONN_DB: db.tableName,
         WS_ENDPOINT: wsstage.callbackUrl,
@@ -575,7 +575,7 @@ export class QueueWorker extends Construct {
 
     const lambda = new GoFunction(this, "handler", {
       functionName: `worker-${id}`,
-      entry: path.join(__dirname, "..", "..", "lambda", "core", "workers"),
+      entry: path.join(__dirname, "..", "..", "cmd", "lambda", "core", "workers"),
       environment: env,
       ...LAMBDA_DEFAULTS,
     });

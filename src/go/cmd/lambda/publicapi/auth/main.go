@@ -5,6 +5,8 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
+	"github.com/koblas/grpc-todo/pkg/confmgr"
+	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/services/publicapi/auth"
 	"github.com/koblas/grpc-todo/twpb/core"
@@ -16,10 +18,9 @@ func main() {
 	mgr := manager.NewManager()
 	log := mgr.Logger()
 
-	ssmConfig := &auth.SsmConfig{}
-	err := awsutil.LoadSsmConfig("/common/", ssmConfig)
-	if err != nil {
-		log.With(zap.Error(err)).Fatal("Unable to load configuration")
+	ssmConfig := auth.SsmConfig{}
+	if err := confmgr.Parse(&ssmConfig, aws.NewLoaderSsm("/common/")); err != nil {
+		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
 	// Connect to the user service

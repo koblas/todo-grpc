@@ -3,7 +3,7 @@ package main
 import (
 	"net/http"
 
-	"github.com/koblas/grpc-todo/pkg/awsutil"
+	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/pkg/util"
 	"github.com/koblas/grpc-todo/services/publicapi/todo"
@@ -17,8 +17,8 @@ func main() {
 	log := mgr.Logger()
 
 	var ssmConfig todo.SsmConfig
-	if err := awsutil.LoadEnvConfig("/common/", &ssmConfig); err != nil {
-		log.With(zap.Error(err)).Fatal("unable to load configuration")
+	if err := confmgr.Parse(&ssmConfig); err != nil {
+		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
 	opts := []todo.Option{

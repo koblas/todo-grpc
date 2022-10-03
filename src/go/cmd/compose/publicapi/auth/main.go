@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v8"
-	"github.com/koblas/grpc-todo/pkg/awsutil"
+	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/pkg/util"
 	"github.com/koblas/grpc-todo/services/publicapi/auth"
@@ -18,10 +18,9 @@ func main() {
 	mgr := manager.NewManager()
 	log := mgr.Logger()
 
-	ssmConfig := &auth.SsmConfig{}
-	err := awsutil.LoadEnvConfig("/common/", ssmConfig)
-	if err != nil {
-		log.With(zap.Error(err)).Fatal("Unable to load configuration")
+	ssmConfig := auth.SsmConfig{}
+	if err := confmgr.Parse(&ssmConfig); err != nil {
+		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
 	opts := []auth.Option{
@@ -52,7 +51,7 @@ func main() {
 		opts = append(opts, auth.WithAttemptService(auth.NewAttemptCounter("publicapi:authentication", rdb)))
 	}
 
-	api := publicapi.NewAuthenticationServiceServer(auth.NewAuthenticationServer(*ssmConfig, opts...))
+	api := publicapi.NewAuthenticationServiceServer(auth.NewAuthenticationServer(ssmConfig, opts...))
 
 	mgr.Start(api)
 }

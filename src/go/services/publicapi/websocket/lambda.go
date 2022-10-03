@@ -2,11 +2,13 @@ package websocket
 
 import (
 	"context"
-	"log"
 
 	"github.com/aws/aws-lambda-go/events"
-	"github.com/koblas/grpc-todo/pkg/awsutil"
+	"github.com/koblas/grpc-todo/pkg/confmgr"
+	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
 	"github.com/koblas/grpc-todo/pkg/logger"
+	"github.com/koblas/grpc-todo/pkg/manager"
+	"go.uber.org/zap"
 )
 
 type SsmConfig struct {
@@ -19,18 +21,18 @@ type lambdaHandlerType func(ctx context.Context, req events.APIGatewayWebsocketP
 var lambdaHandler lambdaHandlerType
 
 func init() {
+	mgr := manager.NewManager()
+	log := mgr.Logger()
+
 	var ssmConfig SsmConfig
-
-	if err := awsutil.LoadSsmConfig("/common/", &ssmConfig); err != nil {
-		log.Fatal(err.Error())
+	if err := confmgr.Parse(&ssmConfig, aws.NewLoaderSsm("/common/")); err != nil {
+		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
-
-	linfo := logger.NewZap(logger.LevelInfo)
 
 	handler := NewWebsocketHandler(ssmConfig)
 
 	lambdaHandler = func(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
-		log := linfo.With("requestId", req.RequestContext.RequestID).
+		log = log.With("requestId", req.RequestContext.RequestID).
 			With("connectionId", req.RequestContext.ConnectionID).
 			With("routeKey", req.RequestContext.RouteKey)
 

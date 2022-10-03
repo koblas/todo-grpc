@@ -1,6 +1,6 @@
 // Package ssmconfig is a utility for loading configuration values from AWS SSM (Parameter
 // Store) directly into a struct.
-package awsutil
+package confmgr
 
 import (
 	"context"

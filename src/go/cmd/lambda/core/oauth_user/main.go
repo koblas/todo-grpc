@@ -2,6 +2,8 @@ package main
 
 import (
 	"github.com/koblas/grpc-todo/pkg/awsutil"
+	"github.com/koblas/grpc-todo/pkg/confmgr"
+	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	ouser "github.com/koblas/grpc-todo/services/core/oauth_user"
 	"github.com/koblas/grpc-todo/twpb/core"
@@ -14,13 +16,11 @@ func main() {
 
 	ssmConfig := ouser.SsmConfig{}
 	oauthConfig := ouser.OauthConfig{}
-	err := awsutil.LoadSsmConfig("/common/", ssmConfig)
-	if err != nil {
-		log.With(zap.Error(err)).Fatal("Unable to load configuration")
+	if err := confmgr.Parse(&ssmConfig, aws.NewLoaderSsm("/common/")); err != nil {
+		log.With(zap.Error(err)).Fatal("failed to load general configuration")
 	}
-	err = awsutil.LoadSsmConfig("/oauth/", oauthConfig)
-	if err != nil {
-		log.With(zap.Error(err)).Fatal("Unable to load oauth configuration")
+	if err := confmgr.Parse(&oauthConfig, aws.NewLoaderSsm("/oauth/")); err != nil {
+		log.With(zap.Error(err)).Fatal("failed to load oauth configuration")
 	}
 
 	opts := []ouser.Option{

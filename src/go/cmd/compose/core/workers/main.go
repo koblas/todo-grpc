@@ -1,12 +1,13 @@
 package main
 
 import (
-	"github.com/koblas/grpc-todo/pkg/awsutil"
+	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/pkg/redisutil"
 	"github.com/koblas/grpc-todo/pkg/util"
 	"github.com/koblas/grpc-todo/services/core/workers"
 	"github.com/koblas/grpc-todo/twpb/core"
+	"go.uber.org/zap"
 )
 
 func main() {
@@ -14,9 +15,8 @@ func main() {
 	log := mgr.Logger()
 
 	ssmConfig := workers.SsmConfig{}
-	err := awsutil.LoadEnvConfig("/common/", &ssmConfig)
-	if err != nil {
-		log.Fatal(err.Error())
+	if err := confmgr.Parse(&ssmConfig); err != nil {
+		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
 	// var builder workers.SqsConsumerBuilder

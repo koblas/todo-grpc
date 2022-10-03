@@ -3,12 +3,13 @@ package main
 import (
 	"net/http"
 
-	"github.com/koblas/grpc-todo/pkg/awsutil"
+	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/pkg/redisutil"
 	"github.com/koblas/grpc-todo/pkg/util"
 	"github.com/koblas/grpc-todo/services/core/send_email"
 	"github.com/koblas/grpc-todo/twpb/core"
+	"go.uber.org/zap"
 )
 
 func main() {
@@ -16,8 +17,8 @@ func main() {
 	log := mgr.Logger()
 
 	ssmConfig := send_email.SsmConfig{}
-	if err := awsutil.LoadEnvConfig("/common/", &ssmConfig); err != nil {
-		log.Fatal(err.Error())
+	if err := confmgr.Parse(&ssmConfig); err != nil {
+		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
 	redis := redisutil.NewTwirpRedis(util.Getenv("REDIS_ADDR", "redis:6379"))
