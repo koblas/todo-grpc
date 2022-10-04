@@ -1,0 +1,7 @@
+{
+    "user-events": "user-events",
+    "todo-events": "todo-events",
+    "send-email": "send-email",
+    "send-email-events": "send-email-complete",
+    "websocket-broadcast": "websocket-broadcast"
+}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 	"net/http"
+	"os"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -42,7 +43,7 @@ func (mgr *Manager) Start(api http.Handler) {
 func (mgr *Manager) StartWithContext(ctx context.Context, api http.Handler) {
 	mgr.log.Info("starting service")
 
-	if util.Getenv("LAMBDA_TASK_ROOT", "") != "" {
+	if isLambda() {
 		lambda.StartWithContext(ctx, awsutil.HandleApiLambda(ctx, api))
 	} else {
 		server := &http.Server{
@@ -62,7 +63,7 @@ func (mgr *Manager) StartConsumer(handler awsutil.TwirpHttpSqsHandler) {
 }
 
 func (mgr *Manager) StartConsumerWithContext(ctx context.Context, handler awsutil.TwirpHttpSqsHandler) {
-	if util.Getenv("LAMBDA_TASK_ROOT", "") != "" {
+	if isLambda() {
 		lambda.StartWithContext(ctx, handler)
 	} else {
 		// A little funky in that we're assuming this never returns until all messages are consumed
@@ -78,4 +79,10 @@ func withHeaders(base http.Handler) http.Handler {
 
 		base.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+func isLambda() bool {
+	_, found := os.LookupEnv("LAMBDA_TASK_ROOT")
+
+	return found
 }

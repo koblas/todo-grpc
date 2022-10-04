@@ -38,6 +38,10 @@ func (ldr *jsonLoader) Loader(conf interface{}, specs []*ConfigSpec) ([]*ConfigS
 	if ldr.reader == nil {
 		var err error
 		reader, err = os.Open(ldr.path)
+		if os.IsNotExist(err) {
+			// Ignore unable to open
+			return specs, nil
+		}
 		if err != nil {
 			return specs, err
 		}

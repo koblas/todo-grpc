@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/google/uuid"
 	wsocket "github.com/gorilla/websocket"
+	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/eventbus"
@@ -127,11 +129,11 @@ func main() {
 	log := mgr.Logger()
 
 	ssmConfig := websocket.SsmConfig{}
-	if err := confmgr.Parse(&ssmConfig); err != nil {
+	if err := confmgr.Parse(&ssmConfig, confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
-	consumer := redisbus.NewConsumer(mgr.Context(), ssmConfig.RedisAddr, "websocket-broadcast")
+	consumer := redisbus.NewConsumer(mgr.Context(), ssmConfig.RedisAddr, ssmConfig.WebsocketBroadcast)
 
 	handler := socketHandler{
 		api: websocket.NewWebsocketHandler(

@@ -3,8 +3,10 @@ package main
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/apigatewaymanagementapi"
+	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/eventbus"
@@ -34,11 +36,11 @@ func main() {
 	log := mgr.Logger()
 
 	ssmConfig := todo.SsmConfig{}
-	if err := confmgr.Parse(&ssmConfig); err != nil {
+	if err := confmgr.Parse(&ssmConfig, confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
-	producer := redisbus.NewProducer(ssmConfig.RedisAddr, "websocket-broadcast")
+	producer := redisbus.NewProducer(ssmConfig.RedisAddr, ssmConfig.WebsocketBroadcast)
 
 	s := todo.NewTodoChangeServer(
 		todo.WithStore(websocket.NewRedisStore(ssmConfig.RedisAddr)),
@@ -49,5 +51,5 @@ func main() {
 
 	redis := redisutil.NewTwirpRedis(ssmConfig.RedisAddr)
 
-	mgr.StartConsumer(redis.TopicConsumer(mgr.Context(), "todo-events", mux))
+	mgr.StartConsumer(redis.TopicConsumer(mgr.Context(), ssmConfig.TodoEventsTopic, mux))
 }

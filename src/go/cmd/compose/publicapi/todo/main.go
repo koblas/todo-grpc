@@ -2,10 +2,11 @@ package main
 
 import (
 	"net/http"
+	"strings"
 
+	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/manager"
-	"github.com/koblas/grpc-todo/pkg/util"
 	"github.com/koblas/grpc-todo/services/publicapi/todo"
 	"github.com/koblas/grpc-todo/twpb/core"
 	"github.com/koblas/grpc-todo/twpb/publicapi"
@@ -17,14 +18,14 @@ func main() {
 	log := mgr.Logger()
 
 	var ssmConfig todo.SsmConfig
-	if err := confmgr.Parse(&ssmConfig); err != nil {
+	if err := confmgr.Parse(&ssmConfig, confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
 	opts := []todo.Option{
 		todo.WithTodoService(
 			core.NewTodoServiceProtobufClient(
-				"http://"+util.Getenv("TODO_SERVICE_ADDR", ":13005"),
+				"http://"+ssmConfig.TodoServiceAddr,
 				&http.Client{},
 			),
 		),

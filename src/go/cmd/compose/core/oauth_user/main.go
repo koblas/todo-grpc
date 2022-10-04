@@ -5,7 +5,6 @@ import (
 
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/manager"
-	"github.com/koblas/grpc-todo/pkg/util"
 	ouser "github.com/koblas/grpc-todo/services/core/oauth_user"
 	"github.com/koblas/grpc-todo/twpb/core"
 	"go.uber.org/zap"
@@ -27,7 +26,7 @@ func main() {
 	opts := []ouser.Option{
 		ouser.WithUserService(
 			core.NewUserServiceProtobufClient(
-				"http://"+util.Getenv("USER_SERVICE_ADDR", ":13001"),
+				"http://"+ssmConfig.UserServiceAddr,
 				&http.Client{},
 			),
 		),
