@@ -5,19 +5,21 @@
 :80 :443 {
 	encode gzip
 
-	# handle /api/* {
 	handle_path /api/v1/auth/* {
-		# uri replace_prefix /api/v1/auth /twirp/api.auth.AuthenticationService
-		# rewrite /api/v1/auth /twirp/api.auth.AuthenticationService
 		rewrite * /twirp/api.auth.AuthenticationService{path}
 		reverse_proxy public-auth:14586
 	}
 
 	handle_path /api/v1/todo/* {
-		# uri replace_prefix /api/v1/todo /twirp/api.todo.TodoService
-		# rewrite /api/v1/todo /twirp/api.todo.TodoService
 		rewrite * /twirp/api.todo.TodoService{path}
 		reverse_proxy public-todo:14586
+	}
+
+	handle_path /wsapi/* {
+		reverse_proxy public-websocket:14586
+	}
+	handle_path /wsapi {
+		reverse_proxy public-websocket:14586
 	}
 
 	handle {

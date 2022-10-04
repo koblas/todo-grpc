@@ -6,7 +6,7 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/satori/go.uuid v1.2.0
 	go.uber.org/zap v1.19.1
-	golang.org/x/net v0.0.0-20211112202133-69e39bad7dc2
+	golang.org/x/net v0.0.0-20221002022538-bcab6841153b
 	google.golang.org/genproto v0.0.0-20211102202547-e9cf271f7f2c
 	google.golang.org/grpc v1.42.0
 	google.golang.org/protobuf v1.27.1
@@ -59,6 +59,7 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/uuid v1.3.0 // indirect
+	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/imdario/mergo v0.3.7 // indirect
 	github.com/jaswdr/faker v1.8.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
@@ -89,7 +90,7 @@ require (
 	go.uber.org/multierr v1.6.0 // indirect
 	golang.org/x/crypto v0.0.0-20211215153901-e495a2d5b3d3 // indirect
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8 // indirect
-	golang.org/x/sys v0.0.0-20210806184541-e5e7981a1069 // indirect
+	golang.org/x/sys v0.0.0-20220728004956-3c1f35247d10 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/tools v0.1.5 // indirect
 	google.golang.org/appengine v1.6.6 // indirect

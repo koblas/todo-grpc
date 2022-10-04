@@ -23,8 +23,23 @@ type ChangeMessage struct {
 	Original   proto.Message
 }
 
+// SimpleMessage is just a basic building block message, but gets the job done
+type SimpleMessage struct {
+	ID         string
+	Attributes map[string]string
+	Body       string
+}
+
 type Producer interface {
 	Enqueue(ctx context.Context, msg *Message) error
+}
+
+type SimpleProducer interface {
+	Write(ctx context.Context, msg *SimpleMessage) error
+}
+
+type SimpleConsumer interface {
+	Next() (SimpleMessage, error)
 }
 
 type Consumer struct {

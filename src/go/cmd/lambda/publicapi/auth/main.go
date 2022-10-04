@@ -43,7 +43,7 @@ func main() {
 		opts = append(opts, auth.WithAttemptService(auth.NewAttemptCounter("publicapi:authentication", rdb)))
 	}
 
-	api := publicapi.NewAuthenticationServiceServer(auth.NewAuthenticationServer(*ssmConfig, opts...))
+	api := publicapi.NewAuthenticationServiceServer(auth.NewAuthenticationServer(ssmConfig, opts...))
 
 	mgr.Start(api)
 }

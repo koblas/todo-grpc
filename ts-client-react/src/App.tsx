@@ -13,7 +13,22 @@ import { useTodos } from "./hooks/todo";
 import { useAuth } from "./hooks/auth";
 import { WebsocketProvider } from "./rpc/websocket";
 
-export const WS_URL = process.env.WS_URL ?? "";
+function buildWebsocketUrl(): string {
+  const base = process.env.WS_URL ?? "";
+
+  if (base === "") {
+    return "";
+  }
+  if (base.startsWith("ws")) {
+    return base;
+  }
+
+  const loc = window.location;
+
+  return new URL(base, (loc.protocol === "https:" ? "wss://" : "ws://") + loc.host + loc.pathname).toString();
+}
+
+const WS_URL = buildWebsocketUrl();
 
 function ReloadState() {
   const { token } = useAuth();
@@ -60,7 +75,7 @@ export default function App() {
     <ChakraProvider>
       <CSSReset />
       <NetworkContextProvider>
-        <WebsocketProvider>
+        <WebsocketProvider url={WS_URL}>
           <>
             <ReloadState />
             <BrowserRouter>

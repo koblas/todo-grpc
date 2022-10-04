@@ -23,8 +23,9 @@ start:
 
 
 build-lambda:
+	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/publicapi-auth ./cmd/lambda/publicapi/websocket/main.go
 	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/publicapi-auth ./cmd/lambda/publicapi/auth/main.go
-	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/publicapi-todo ./cmd/lambda/websocket/todo/main.go
+	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/websocket-todo ./cmd/lambda/websocket/todo/main.go
 	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/core-todo ./cmd/lambda/core/todo/main.go
 	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/core-user ./cmd/lambda/core/user/main.go
 	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/core-oauth-user ./cmd/lambda/core/oauth_user/main.go
@@ -32,8 +33,10 @@ build-lambda:
 	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/core-workers ./cmd/lambda/core/workers/main.go
 
 build-compose:
+	go build -o build/publicapi-websocket ./cmd/compose/publicapi/websocket/main.go
 	go build -o build/publicapi-auth ./cmd/compose/publicapi/auth/main.go
 	go build -o build/publicapi-todo ./cmd/compose/publicapi/todo/main.go
+	go build -o build/websocket-todo ./cmd/compose/websocket/todo/main.go
 	go build -o build/core-todo ./cmd/compose/core/todo/main.go
 	go build -o build/core-user ./cmd/compose/core/user/main.go
 	go build -o build/core-oauth-user ./cmd/compose/core/oauth_user/main.go

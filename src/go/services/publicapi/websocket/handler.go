@@ -24,16 +24,29 @@ type WebsocketHandler struct {
 	store    websocket.ConnectionStore
 }
 
-func NewWebsocketHandler(config SsmConfig) *WebsocketHandler {
+type Option func(*WebsocketHandler)
+
+func WithStore(store websocket.ConnectionStore) Option {
+	return func(conf *WebsocketHandler) {
+		conf.store = store
+	}
+}
+
+func NewWebsocketHandler(config SsmConfig, opts ...Option) *WebsocketHandler {
 	maker, err := tokenmanager.NewJWTMaker(config.JwtSecret)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return &WebsocketHandler{
+	conf := WebsocketHandler{
 		jwtMaker: maker,
-		store:    websocket.NewUserDynamoStore(websocket.WithDynamoTable(config.ConnDb)),
 	}
+
+	for _, opt := range opts {
+		opt(&conf)
+	}
+
+	return &conf
 }
 
 func (svc *WebsocketHandler) isAuthenticated(req events.APIGatewayWebsocketProxyRequest) (string, error) {
@@ -54,9 +67,8 @@ func (svc *WebsocketHandler) isAuthenticated(req events.APIGatewayWebsocketProxy
 func (svc *WebsocketHandler) HandleRequest(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 	log := logger.FromContext(ctx).With("eventType", req.RequestContext.EventType)
 
-	log.Info("Handling request")
-
 	if req.RequestContext.EventType == "CONNECT" {
+		log.Info("Connect event")
 		userId, err := svc.isAuthenticated(req)
 		if err != nil {
 			log.With("error", err).Info("Authentication error")
@@ -80,7 +92,7 @@ func (svc *WebsocketHandler) HandleRequest(ctx context.Context, req events.APIGa
 		}
 		// return responseBad, nil
 	} else {
-		log.With("eventType", req.RequestContext.EventType).Error("Unknown event type")
+		log.Error("Unknown event type")
 		return responseBad, nil
 	}
 

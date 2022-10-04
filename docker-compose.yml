@@ -40,6 +40,21 @@ services:
       - dmz
       - backend
     env_file: dev-variables.env
+
+  public-websocket:
+    image: public-websocket
+    build:
+      context: src/go
+      dockerfile: cmd/compose/publicapi/websocket/Dockerfile
+    ports:
+      - 14003:14586
+    depends_on:
+      - redis
+    networks:
+      - dmz
+      - backend
+    env_file: dev-variables.env
+
   #
   # The JWT Cookie validator for Envoy
   #
@@ -111,6 +126,17 @@ services:
       - SMTP_ADDR
       - SMTP_USERNAME
       - SMTP_PASSWORD
+    env_file: dev-variables.env
+    networks:
+      - backend
+    depends_on:
+      - redis
+
+  websocket-todo:
+    image: websocket-todo
+    build:
+      context: src/go
+      dockerfile: cmd/compose/websocket/todo/Dockerfile
     env_file: dev-variables.env
     networks:
       - backend

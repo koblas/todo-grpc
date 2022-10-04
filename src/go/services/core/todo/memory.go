@@ -31,18 +31,21 @@ func (store *memoryTodo) DeleteOne(user_id string, id string) (*Todo, error) {
 	}
 
 	replace := []Todo{}
-	var match *Todo
-	for _, todo := range todos {
+	matchIdx := -1
+	for idx, todo := range todos {
 		if todo.ID == id {
-			match = &todo
+			matchIdx = idx
 			continue
 		}
 		replace = append(replace, todo)
 	}
+	if matchIdx == -1 {
+		return nil, nil
+	}
 
 	store.todos[user_id] = replace
 
-	return match, nil
+	return &todos[matchIdx], nil
 }
 
 func (store *memoryTodo) Create(todo Todo) (*Todo, error) {

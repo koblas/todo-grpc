@@ -2,7 +2,6 @@ package aws
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
@@ -45,7 +44,6 @@ func NewLoaderSsm(path string, opts ...Option) *Provider {
 	}
 
 	if p.Client == nil {
-		fmt.Println("BUIDLING CLINT")
 		cfg, err := config.LoadDefaultConfig(p.Context)
 		if err != nil {
 			panic("configuration error, " + err.Error())

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/apigatewaymanagementapi"
 	"github.com/aws/aws-sdk-go/aws"
 	smithy "github.com/aws/smithy-go"
@@ -17,7 +16,7 @@ import (
 
 type TodoServer struct {
 	store  websocket.ConnectionStore
-	client *apigatewaymanagementapi.Client
+	client PostToConnectionAPI
 }
 
 type SocketMessage struct {
@@ -27,22 +26,32 @@ type SocketMessage struct {
 	Body     interface{} `json:"body"`
 }
 
-func NewTodoServer(store websocket.ConnectionStore, wsEndpoint string) core.TodoEventbus {
-	cfg, err := config.LoadDefaultConfig(context.TODO())
-	if err != nil {
-		panic(err)
+type PostToConnectionAPI interface {
+	PostToConnection(ctx context.Context, params *apigatewaymanagementapi.PostToConnectionInput, optFns ...func(*apigatewaymanagementapi.Options)) (*apigatewaymanagementapi.PostToConnectionOutput, error)
+}
+
+type Option func(*TodoServer)
+
+func WithStore(store websocket.ConnectionStore) Option {
+	return func(conf *TodoServer) {
+		conf.store = store
 	}
-	if wsEndpoint == "" {
-		panic(errors.New("no endpoint URL provided"))
+}
+
+func WithClient(client PostToConnectionAPI) Option {
+	return func(conf *TodoServer) {
+		conf.client = client
 	}
-	endpointResolver := func(o *apigatewaymanagementapi.Options) {
-		o.EndpointResolver = apigatewaymanagementapi.EndpointResolverFromURL(wsEndpoint)
+}
+
+func NewTodoChangeServer(opts ...Option) core.TodoEventbus {
+	svr := TodoServer{}
+
+	for _, opt := range opts {
+		opt(&svr)
 	}
 
-	return &TodoServer{
-		store:  store,
-		client: apigatewaymanagementapi.NewFromConfig(cfg, endpointResolver),
-	}
+	return &svr
 }
 
 func (svc *TodoServer) TodoChange(ctx context.Context, event *core.TodoChangeEvent) (*core.EventbusEmpty, error) {
@@ -56,6 +65,12 @@ func (svc *TodoServer) TodoChange(ctx context.Context, event *core.TodoChangeEve
 		userId = event.Original.UserId
 	} else {
 		return nil, errors.New("no user found")
+	}
+	action := "create"
+	if event.Current == nil {
+		action = "delete"
+	} else if event.Original != nil {
+		action = "update"
 	}
 
 	conns, err := svc.store.ForUser(userId)
@@ -74,7 +89,7 @@ func (svc *TodoServer) TodoChange(ctx context.Context, event *core.TodoChangeEve
 	data, err := json.Marshal(SocketMessage{
 		Topic:    "todo",
 		ObjectId: obj.Id,
-		// Action:   event.Action,
+		Action:   action,
 		Body: publicapi.TodoObject{
 			Id:   obj.Id,
 			Task: obj.Task,

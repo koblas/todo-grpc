@@ -7,7 +7,22 @@ import { WebSocketHook } from "react-use-websocket/dist/lib/types";
 import { useAuth } from "../hooks/auth";
 import { Json } from "../types/json";
 
-const WS_URL = process.env.WS_URL ?? "";
+// function buildWebsocketUrl(): string {
+//   const base = process.env.WS_URL ?? "";
+
+//   if (base === "") {
+//     return "";
+//   }
+//   if (base.startsWith("ws")) {
+//     return base;
+//   }
+
+//   const loc = window.location;
+
+//   return new URL((loc.protocol === "https:" ? "wss://" : "ws://") + loc.host + loc.pathname, base).toString();
+// }
+
+// const WS_URL = buildWebsocketUrl();
 
 type ListenerFunc<E = Json> = (event: E) => void;
 type ListenerSelector<E = Json> = { topic: string | null; handler: (event: E) => void };
@@ -38,7 +53,7 @@ const createStore = () =>
 
 const useStore = createStore();
 
-export function WebsocketProvider({ children }: { children: JSX.Element }): JSX.Element | null {
+export function WebsocketProvider({ children, url }: { url: string; children: JSX.Element }): JSX.Element | null {
   const { token } = useAuth();
   const [pingTimer, setPingTimer] = useState<null | NodeJS.Timer>(null);
   const [heartbeatTimer, setHeartbeatTimer] = useState<null | NodeJS.Timer>(null);
@@ -46,7 +61,7 @@ export function WebsocketProvider({ children }: { children: JSX.Element }): JSX.
   const store = useStore();
 
   const { lastJsonMessage, sendJsonMessage, readyState } = useWebSocket(
-    WS_URL,
+    url,
     {
       queryParams: { t: token ?? "" },
       shouldReconnect: () => !!token,
