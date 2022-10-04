@@ -116,7 +116,7 @@ func HandleSqsLambda(handler http.Handler) TwirpHttpSqsHandler {
 
 			w := httptest.NewRecorder()
 
-			handler.ServeHTTP(w, req)
+			handler.ServeHTTP(w, req.WithContext(ctx))
 
 			res := w.Result()
 			if res.StatusCode != http.StatusOK {
