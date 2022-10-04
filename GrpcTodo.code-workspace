@@ -5,8 +5,8 @@
       "name": "Proto Decls"
     },
     {
-      "path": "go-server",
-      "name": "Go Server"
+      "path": "./src/go",
+      "name": "Go Source"
     },
     {
       "path": "go-client",
@@ -17,7 +17,7 @@
       "name": "TypeScript Server"
     },
     {
-      "path": "ts-client-react",
+      "path": "./ts-client-react",
       "name": "TypeScript React Client"
     },
     {
@@ -29,7 +29,7 @@
       "name": "JavaScript Vue Client"
     },
     {
-      "path": "envoy"
+      "path": "envoy",
       "name": "Envoy Server"
     }
   ]
