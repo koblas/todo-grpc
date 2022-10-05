@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "start": "BASE_URL=http://localhost:8080 parcel serve public/index.html",
+    "start": "BASE_URL=http://localhost:8081/api parcel serve public/index.html",
     "prod": "BASE_URL=https://api.iqvine.com WS_URL=wss://wsapi.iqvine.com/ parcel serve public/index.html",
     "build": "mkdir -p dist && rm -f dist/* && BASE_URL=/api WS_URL=/wsapi parcel build public/index.html",
     "build-old": "mkdir -p dist && rm -f dist/* && BASE_URL=https://api.iqvine.com WS_URL=wss://wsapi.iqvine.com/ parcel build public/index.html",

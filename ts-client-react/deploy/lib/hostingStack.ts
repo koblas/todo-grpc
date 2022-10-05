@@ -1,6 +1,11 @@
 import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
 
+/*
+ ** Useful resource -
+ **  https://idanlupinsky.com/blog/static-site-deployment-using-aws-cloudfront-and-the-cdk/
+ */
+
 export interface StackProps extends cdk.StackProps {
   readonly indexDoc: string;
   readonly errorDoc?: string;
@@ -64,8 +69,8 @@ export class HostingStack extends Construct {
   }
 
   getS3Bucket(config: StackProps, isForCloudFront: boolean = true) {
+    /*
     const bucket = new cdk.aws_s3.Bucket(this, "WebsiteBucket", {
-      // bucketName:
       websiteIndexDocument: config.indexDoc,
       websiteErrorDocument: config.errorDoc,
       publicReadAccess: true,
@@ -77,6 +82,15 @@ export class HostingStack extends Construct {
           }
         : {}),
       removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+    */
+    const bucket = new cdk.aws_s3.Bucket(this, "WebsiteBucket", {
+      publicReadAccess: false,
+      blockPublicAccess: cdk.aws_s3.BlockPublicAccess.BLOCK_ALL,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      accessControl: cdk.aws_s3.BucketAccessControl.PRIVATE,
+      objectOwnership: cdk.aws_s3.ObjectOwnership.BUCKET_OWNER_ENFORCED,
+      encryption: cdk.aws_s3.BucketEncryption.S3_MANAGED,
     });
 
     if (this.globalProps.ipFilter === true && isForCloudFront === false) {
@@ -120,43 +134,114 @@ export class HostingStack extends Construct {
    */
   private getCFConfig(
     websiteBucket: cdk.aws_s3.Bucket,
-    config: any,
-    accessIdentity: cdk.aws_cloudfront.OriginAccessIdentity,
+    config: HostedZoneProps,
     cert: cdk.aws_certificatemanager.DnsValidatedCertificate,
+    accessIdentity: cdk.aws_cloudfront.OriginAccessIdentity,
     domainNames: string[],
-  ) {
-    const cfConfig: cdk.aws_cloudfront.CloudFrontWebDistributionProps = {
-      priceClass: cdk.aws_cloudfront.PriceClass.PRICE_CLASS_100,
-
-      originConfigs: [
-        {
-          s3OriginSource: {
-            s3BucketSource: websiteBucket,
-            originAccessIdentity: accessIdentity,
+    additionalBehaviors: Record<string, cdk.aws_cloudfront.BehaviorOptions> | undefined,
+  ): cdk.aws_cloudfront.DistributionProps {
+    // certificate: cdk.aws_cloudfront.ViewerCertificate.fromAcmCertificate(cert, {
+    //   sslMethod: cdk.aws_cloudfront.SSLMethod.SNI,
+    //   securityPolicy: cdk.aws_cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
+    //   aliases: domainNames,
+    // }),
+    const responseHeaderPolicy = new cdk.aws_cloudfront.ResponseHeadersPolicy(
+      this,
+      "SecurityHeadersResponseHeaderPolicy",
+      {
+        comment: "Security headers response header policy",
+        securityHeadersBehavior: {
+          contentSecurityPolicy: {
+            override: true,
+            contentSecurityPolicy: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+              "style-src 'self' 'unsafe-inline'",
+              "img-src * 'unsafe-inline' data:",
+            ].join(";"),
           },
-          behaviors: config.cfBehaviors ? config.cfBehaviors : [{ isDefaultBehavior: true, compress: true }],
+          strictTransportSecurity: {
+            override: true,
+            accessControlMaxAge: cdk.Duration.days(2 * 365),
+            includeSubdomains: true,
+            preload: true,
+          },
+          contentTypeOptions: {
+            override: true,
+          },
+          referrerPolicy: {
+            override: true,
+            referrerPolicy: cdk.aws_cloudfront.HeadersReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN,
+          },
+          xssProtection: {
+            override: true,
+            protection: true,
+            modeBlock: true,
+          },
+          frameOptions: {
+            override: true,
+            frameOption: cdk.aws_cloudfront.HeadersFrameOption.DENY,
+          },
         },
-      ],
+      },
+    );
+
+    const rewriteFunction = new cdk.aws_cloudfront.Function(this, "Function", {
+      code: cdk.aws_cloudfront.FunctionCode.fromInline(`
+          function handler(event) {
+            var request = event.request;
+        
+            if (request.uri.endsWith('/')) {
+                request.uri += 'index.html';
+            }
+        
+            return request;
+        }
+      `),
+    });
+
+    const cfConfig: cdk.aws_cloudfront.DistributionProps = {
+      domainNames: domainNames,
+      certificate: cert,
+      priceClass: cdk.aws_cloudfront.PriceClass.PRICE_CLASS_100,
+      defaultRootObject: "",
+
+      defaultBehavior: {
+        origin: new cdk.aws_cloudfront_origins.S3Origin(websiteBucket, {
+          originAccessIdentity: accessIdentity,
+        }),
+        // originRequestPolicy: cdk.aws_cloudfront.OriginRequestPolicy.CORS_S3_ORIGIN,
+        allowedMethods: cdk.aws_cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+        viewerProtocolPolicy: cdk.aws_cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        responseHeadersPolicy: responseHeaderPolicy,
+        functionAssociations: [
+          {
+            function: rewriteFunction,
+            eventType: cdk.aws_cloudfront.FunctionEventType.VIEWER_REQUEST,
+          },
+        ],
+
+        // responseHeadersPolicy: cdk.aws_cloudfront.ResponseHeadersPolicy.CORS_ALLOW_ALL_ORIGINS_AND_SECURITY_HEADERS,
+      },
+
+      additionalBehaviors: additionalBehaviors,
 
       // We need to redirect all unknown routes back to index.html for angular routing to work
-      errorConfigurations: [
+      errorResponses: [
         {
-          errorCode: 403,
+          httpStatus: 403,
           responsePagePath: config.errorDoc ? `/${config.errorDoc}` : `/${config.indexDoc}`,
-          responseCode: 200,
+          responseHttpStatus: 200,
         },
         {
-          errorCode: 404,
+          httpStatus: 404,
           responsePagePath: config.errorDoc ? `/${config.errorDoc}` : `/${config.indexDoc}`,
-          responseCode: 200,
+          responseHttpStatus: 200,
         },
       ],
 
-      viewerCertificate: cdk.aws_cloudfront.ViewerCertificate.fromAcmCertificate(cert, {
-        sslMethod: cdk.aws_cloudfront.SSLMethod.SNI,
-        securityPolicy: cdk.aws_cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
-        aliases: domainNames,
-      }),
+      minimumProtocolVersion: cdk.aws_cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
+      sslSupportMethod: cdk.aws_cloudfront.SSLMethod.SNI,
     };
 
     // if (typeof config.certificateARN !== "undefined" && typeof config.cfAliases !== "undefined") {
@@ -182,8 +267,11 @@ export class HostingStack extends Construct {
     return cfConfig;
   }
 
-  public createSiteFromHostedZone(config: HostedZoneProps) {
-    const websiteBucket = this.getS3Bucket(config, true);
+  public createSiteFromHostedZone(
+    config: HostedZoneProps & { readonly additional?: Record<string, cdk.aws_cloudfront.BehaviorOptions> },
+  ) {
+    // const websiteBucket = this.getS3Bucket(config, true);
+    const websiteBucket = this.getS3Bucket(config, false);
 
     // const zone = cdk.aws_route53.HostedZone.fromLookup(this, "HostedZone", { domainName: config.zoneName });
     const domainName = config.subdomain ? `${config.subdomain}.${config.zoneName}` : config.zoneName;
@@ -198,10 +286,20 @@ export class HostingStack extends Construct {
       comment: `${websiteBucket.bucketName}-access-identity`,
     });
 
-    const distribution = new cdk.aws_cloudfront.CloudFrontWebDistribution(
+    websiteBucket.addToResourcePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        actions: ["s3:GetObject"],
+        resources: [websiteBucket.arnForObjects("*")],
+        principals: [
+          new cdk.aws_iam.CanonicalUserPrincipal(accessIdentity.cloudFrontOriginAccessIdentityS3CanonicalUserId),
+        ],
+      }),
+    );
+
+    const distribution = new cdk.aws_cloudfront.Distribution(
       this,
       "cloudfrontDistribution",
-      this.getCFConfig(websiteBucket, config, accessIdentity, certificate, [domainName]),
+      this.getCFConfig(websiteBucket, config, certificate, accessIdentity, [domainName], config.additional),
     );
 
     new cdk.aws_s3_deployment.BucketDeployment(this, "BucketDeployment", {
