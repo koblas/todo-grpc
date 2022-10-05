@@ -64,7 +64,7 @@ func (s AuthenticationServer) Authenticate(ctx context.Context, params *publicap
 
 		log.With("error", err).Info("Password mismatch")
 
-		return nil, twirp.InvalidArgumentError("email", "Bad email or password").WithMeta("email", "empty_field")
+		return nil, twirp.InvalidArgumentError("email", "Bad email or password").WithMeta("email", "bad_email_password")
 	} else {
 		s.attempts.Reset(ctx, "login", attemptsKey)
 	}

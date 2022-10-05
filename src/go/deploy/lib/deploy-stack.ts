@@ -73,6 +73,24 @@ export class DeployStack extends cdk.Stack {
       hostname: config.wshostname,
     });
 
+    new cdk.CfnOutput(this, `apigw-export-apiId`, {
+      exportName: `apigw-apiId`,
+      value: apigw.apigw.apiId,
+    });
+    new cdk.CfnOutput(this, `apigw-export-endpoint`, {
+      exportName: `apigw-endpoint`,
+      value: apigw.apigw.apiEndpoint,
+    });
+
+    new cdk.CfnOutput(this, `wsapi-export-apiId`, {
+      exportName: `wsapi-apiId`,
+      value: apiws.wsapi.apiId,
+    });
+    new cdk.CfnOutput(this, `wsapi-export-endpoint`, {
+      exportName: `wsapi-endpoint`,
+      value: apiws.wsapi.apiEndpoint,
+    });
+
     //
     new cdk.aws_ssm.StringParameter(this, "bus_entity_arn", {
       tier: cdk.aws_ssm.ParameterTier.STANDARD,
@@ -122,7 +140,7 @@ export class DeployStack extends cdk.Stack {
       hostedZone,
       domainName: initialDns,
       subjectAlternativeNames: [baseDns, ...rest],
-      region: "us-east-1",
+      region: this.region,
       validation: cdk.aws_certificatemanager.CertificateValidation.fromDns(hostedZone),
     });
 
@@ -411,6 +429,11 @@ export class PublicAuth extends Construct {
       methods: [HttpMethod.POST],
       integration: integration,
     });
+    apigw.addRoutes({
+      path: "/api/v1/auth/{proxy+}",
+      methods: [HttpMethod.POST],
+      integration: integration,
+    });
   }
 }
 
@@ -435,6 +458,11 @@ export class PublicTodo extends Construct {
 
     apigw.addRoutes({
       path: "/v1/todo/{proxy+}",
+      methods: [HttpMethod.POST],
+      integration: integration,
+    });
+    apigw.addRoutes({
+      path: "/api/v1/todo/{proxy+}",
       methods: [HttpMethod.POST],
       integration: integration,
     });
