@@ -11,28 +11,14 @@ import {
   WebSocketApi,
   WebSocketStage,
 } from "@aws-cdk/aws-apigatewayv2-alpha";
-import {
-  HttpLambdaIntegration,
-  WebSocketLambdaIntegration,
-  WebSocketMockIntegration,
-} from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
+import { HttpLambdaIntegration, WebSocketLambdaIntegration } from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
 import { LambdaToDynamoDB } from "@aws-solutions-constructs/aws-lambda-dynamodb";
 import { LambdaToSns } from "@aws-solutions-constructs/aws-lambda-sns";
 import { Construct } from "constructs";
 import { SqsToLambda } from "@aws-solutions-constructs/aws-sqs-lambda";
 import { SubscriptionFilter } from "aws-cdk-lib/aws-sns";
-import { GoFunction, GoFunctionProps } from "@aws-cdk/aws-lambda-go-alpha";
-import { isPositiveInteger } from "aws-cdk-lib/aws-stepfunctions";
+import { goFunction } from "./utils";
 // import * as sqs from 'aws-cdk-lib/aws-sqs';
-
-const LAMBDA_DEFAULTS: Partial<GoFunctionProps> = {
-  logRetention: cdk.Duration.days(3).toDays(),
-  insightsVersion: cdk.aws_lambda.LambdaInsightsVersion.VERSION_1_0_119_0,
-  architecture: cdk.aws_lambda.Architecture.ARM_64,
-  bundling: {
-    // goBuildFlags: ['-ldflags "-s -w" -tags lambda.norpc'],
-  },
-};
 
 export class DeployStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -219,13 +205,10 @@ export class WebsocketHandler extends Construct {
       timeToLiveAttribute: "delete_at",
     });
 
-    const lambda = new GoFunction(this, "handler", {
-      functionName: "public-websocket",
-      entry: path.join(__dirname, "..", "..", "cmd", "lambda", "publicapi", "websocket"),
+    const lambda = goFunction(this, "publicapi-websocket", ["publicapi", "websocket"], {
       environment: {
         CONN_DB: db.tableName,
       },
-      ...LAMBDA_DEFAULTS,
     });
 
     wireLambda(this, lambda, { parameters: ["/common/*"], dynamo: db });
@@ -322,11 +305,7 @@ export class CoreTodo extends Construct {
       sortKey: { name: "sk", type: cdk.aws_dynamodb.AttributeType.STRING },
     });
 
-    const lambda = new GoFunction(this, "handler", {
-      functionName: "core-todo",
-      entry: path.join(__dirname, "..", "..", "cmd", "lambda", "core", "todo"),
-      ...LAMBDA_DEFAULTS,
-    });
+    const lambda = goFunction(this, "core-todo", ["core", "todo"]);
 
     wireLambda(this, lambda, { eventbus, parameters: ["/common/*"], dynamo: db });
   }
@@ -344,11 +323,7 @@ export class CoreUser extends Construct {
       partitionKey: { name: "pk", type: cdk.aws_dynamodb.AttributeType.STRING },
     });
 
-    const lambda = new GoFunction(this, "handler", {
-      functionName: "core-user",
-      entry: path.join(__dirname, "..", "..", "cmd", "lambda", "core", "user"),
-      ...LAMBDA_DEFAULTS,
-    });
+    const lambda = goFunction(this, "core-user", ["core", "user"]);
 
     wireLambda(this, lambda, { eventbus, parameters: ["/common/*"], dynamo: db });
   }
@@ -360,11 +335,7 @@ export class CoreOauthUser extends Construct {
 
     const { eventbus } = props;
 
-    const lambda = new GoFunction(this, "handler", {
-      functionName: "core-oauth-user",
-      entry: path.join(__dirname, "..", "..", "cmd", "lambda", "core", "oauth_user"),
-      ...LAMBDA_DEFAULTS,
-    });
+    const lambda = goFunction(this, "core-oauth_user", ["core", "oauth_user"]);
 
     wireLambda(this, lambda, { parameters: ["/common/*", "/oauth/*"], eventbus });
   }
@@ -391,11 +362,7 @@ export class CoreSendEmailQueue extends Construct {
   constructor(scope: Construct, id: string, { eventbus }: { eventbus: cdk.aws_sns.Topic }) {
     super(scope, id);
 
-    const lambda = new GoFunction(this, "handler", {
-      functionName: "core-send-email",
-      entry: path.join(__dirname, "..", "..", "cmd", "lambda", "core", "send_email"),
-      ...LAMBDA_DEFAULTS,
-    });
+    const lambda = goFunction(this, "core-send_email", ["core", "send_email"]);
 
     new QueueLambda(this, "core-send-email", {
       eventbus,
@@ -409,11 +376,7 @@ export class PublicAuth extends Construct {
   constructor(scope: Construct, id: string, { eventbus, apigw }: { eventbus: cdk.aws_sns.Topic; apigw: HttpApi }) {
     super(scope, id);
 
-    const lambda = new GoFunction(this, "handler", {
-      functionName: "public-auth",
-      entry: path.join(__dirname, "..", "..", "cmd", "lambda", "publicapi", "auth"),
-      ...LAMBDA_DEFAULTS,
-    });
+    const lambda = goFunction(this, "publicapi-auth", ["publicapi", "auth"]);
 
     wireLambda(this, lambda, { eventbus, parameters: ["/common/*"] });
 
@@ -441,11 +404,7 @@ export class PublicTodo extends Construct {
   constructor(scope: Construct, id: string, { eventbus, apigw }: { eventbus: cdk.aws_sns.Topic; apigw: HttpApi }) {
     super(scope, id);
 
-    const lambda = new GoFunction(this, "handler", {
-      functionName: "public-todo",
-      entry: path.join(__dirname, "..", "..", "cmd", "lambda", "publicapi", "todo"),
-      ...LAMBDA_DEFAULTS,
-    });
+    const lambda = goFunction(this, "publicapi-todo", ["publicapi", "todo"]);
 
     wireLambda(this, lambda, { eventbus, parameters: ["/common/*"] });
 
@@ -480,14 +439,11 @@ export class WebsocketTodo extends Construct {
 
     const db = cdk.aws_dynamodb.Table.fromTableName(this, "conns", "ws-connection");
 
-    const lambda = new GoFunction(this, "handler", {
-      functionName: "websocket-todo",
-      entry: path.join(__dirname, "..", "..", "cmd", "lambda", "websocket", "todo"),
+    const lambda = goFunction(this, "websocket-todo", ["websocket", "todo"], {
       environment: {
         CONN_DB: db.tableName,
         WS_ENDPOINT: wsstage.callbackUrl,
       },
-      ...LAMBDA_DEFAULTS,
     });
 
     wsstage.grantManagementApiAccess(lambda);
@@ -514,7 +470,7 @@ export class WebsocketTodo extends Construct {
         rawMessageDelivery: true,
         filterPolicy: {
           "twirp.path": SubscriptionFilter.stringFilter({
-            allowlist: ["/twirp/core.eventbus.TodoEventbus/Message"],
+            allowlist: ["/twirp/core.eventbus.TodoEventbus/TodoChange"],
           }),
         },
       }),
@@ -601,11 +557,8 @@ export class QueueWorker extends Construct {
   ) {
     super(scope, id);
 
-    const lambda = new GoFunction(this, "handler", {
-      functionName: `worker-${id}`,
-      entry: path.join(__dirname, "..", "..", "cmd", "lambda", "core", "workers"),
+    const lambda = goFunction(this, `core-workers-${id}`, ["core", "workers"], {
       environment: env,
-      ...LAMBDA_DEFAULTS,
     });
 
     const worker = new QueueLambda(this, id, {

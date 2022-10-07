@@ -44,6 +44,8 @@ func (h *socketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
+	log.Info("websocket connection created")
+
 	queryString := map[string]string{}
 	for key, value := range r.URL.Query() {
 		queryString[key] = value[0]
@@ -57,12 +59,11 @@ func (h *socketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		QueryStringParameters: queryString,
 	})
 	if err != nil || wsRes.StatusCode != http.StatusOK {
-		log.With(zap.Error(err)).Error("failed to connect")
+		log.With(zap.Error(err)).Info("failed to connect")
 		return
 	}
-	h.connections[connectionID] = conn
-	defer delete(h.connections, connectionID)
 
+	// Let's make sure we register the cleanup handling
 	defer func() {
 		_, err := h.api.HandleRequest(r.Context(), events.APIGatewayWebsocketProxyRequest{
 			RequestContext: events.APIGatewayWebsocketProxyRequestContext{
@@ -76,11 +77,14 @@ func (h *socketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
+	h.connections[connectionID] = conn
+	defer delete(h.connections, connectionID)
+
 	for {
 		messageType, p, err := conn.ReadMessage()
 		if err != nil {
 			if messageType != wsocket.CloseMessage {
-				log.With(zap.Error(err)).Error("ReadMessage failed")
+				log.With(zap.Error(err)).Info("ReadMessage failed")
 			}
 			break
 		}
@@ -94,7 +98,7 @@ func (h *socketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			Body:                  string(p),
 		})
 		if err != nil {
-			log.With(zap.Error(err)).Error("failed to send message")
+			log.With(zap.Error(err)).Error("failed to receive message")
 		}
 	}
 

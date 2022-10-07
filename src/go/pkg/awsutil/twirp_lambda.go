@@ -158,8 +158,6 @@ func NewTwirpCallLambda() TwClient {
 }
 
 func lambdaToSqs(req *http.Request, lambdaRequest events.APIGatewayV2HTTPRequest) (*string, map[string]sqstypes.MessageAttributeValue) {
-	path := req.URL.Path
-
 	isJson := false
 
 	basicHeaders := map[string]string{}
@@ -167,6 +165,14 @@ func lambdaToSqs(req *http.Request, lambdaRequest events.APIGatewayV2HTTPRequest
 		basicHeaders[k] = strings.Join(v, ",")
 	}
 
+	path := ""
+	if lambdaRequest.RequestContext.HTTP.Path != "" {
+		path = lambdaRequest.RequestContext.HTTP.Path
+	} else if lambdaRequest.RawPath != "" {
+		path = lambdaRequest.RawPath
+	} else if req.URL.Path != "" {
+		path = req.URL.Path
+	}
 	attributes := map[string]sqstypes.MessageAttributeValue{
 		"twirp.path": {DataType: aws.String("String"), StringValue: &path},
 	}
@@ -281,10 +287,12 @@ func (svc twClient) Do(req *http.Request) (*http.Response, error) {
 	}
 
 	log := logger.FromContext(req.Context()).With(
-		"host", req.URL.Host,
-		"arn", arn,
-		"rpcMethod", path,
-		"scheme", scheme,
+		zap.Any("twirp_do", map[string]string{
+			"scheme": scheme,
+			"method": path,
+			"host":   req.URL.Host,
+			"arn":    arn,
+		}),
 	)
 	log.Info("BEGIN: calling twirp service")
 	start := time.Now()
@@ -360,6 +368,8 @@ func (svc twClient) Do(req *http.Request) (*http.Response, error) {
 		}
 	} else if scheme == "sns" {
 		body, attributes := lambdaToSns(req, lambdaRequest)
+
+		log.With(zap.Any("snsattr", attributes)).Info("SNS Publish")
 
 		_, err = svc.sns.Publish(context.TODO(), &sns.PublishInput{
 			TopicArn:          aws.String(arn),

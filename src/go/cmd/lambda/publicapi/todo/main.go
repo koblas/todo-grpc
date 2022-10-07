@@ -1,4 +1,4 @@
-package todo
+package main
 
 import (
 	"github.com/koblas/grpc-todo/pkg/awsutil"
