@@ -158,6 +158,7 @@ export class HostingStack extends Construct {
               "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
               "style-src 'self' 'unsafe-inline'",
               "img-src * 'unsafe-inline' data:",
+              "connect-src 'self' wss: ws:;",
             ].join(";"),
           },
           strictTransportSecurity: {

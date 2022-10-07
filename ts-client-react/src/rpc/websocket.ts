@@ -63,7 +63,8 @@ export function WebsocketProvider({ children, url }: { url: string; children: JS
   const { lastJsonMessage, sendJsonMessage, readyState } = useWebSocket(
     url,
     {
-      queryParams: { t: token ?? "" },
+      // queryParams: { t: token ?? "" },
+      // queryParams: {},
       shouldReconnect: () => !!token,
       reconnectAttempts: 10,
       reconnectInterval: 10000,
@@ -75,9 +76,10 @@ export function WebsocketProvider({ children, url }: { url: string; children: JS
 
   useEffect(() => {
     if (readyState === ReadyState.OPEN) {
+      sendJsonMessage({ action: "authorization", token });
       sendJsonMessage({ action: "cursor", position: pos.current.value });
     }
-  }, [pos.current.value, sendJsonMessage, readyState]);
+  }, [pos.current.value, sendJsonMessage, readyState, token]);
 
   useEffect(() => {
     function clearTimers() {

@@ -3,7 +3,7 @@ import { RpcOptions } from "../errors";
 import { handleJsonError } from "./json_helpers";
 
 // https://fny9c2xm3b.execute-api.us-east-1.amazonaws.com/v1/auth.AuthenticationService/Authenticate
-export const BASE_URL = process.env.BASE_URL ?? "http://localhost:8080";
+export const BASE_URL = process.env.BASE_URL ?? "/api";
 
 export class FetchError extends Error {
   public body: Json;

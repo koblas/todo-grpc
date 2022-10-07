@@ -83,3 +83,11 @@ cd /tmp/grpc-web && sudo make install-plugin
 rm -rf /tmp/grpc-web
 cd -
 ```
+
+
+### Running on AWS Lambda
+
+Create the following SSM Values
+
+* /common/jwt_secret -- 32 characters
+

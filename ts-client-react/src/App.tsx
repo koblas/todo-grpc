@@ -14,7 +14,7 @@ import { useAuth } from "./hooks/auth";
 import { WebsocketProvider } from "./rpc/websocket";
 
 function buildWebsocketUrl(): string {
-  const base = process.env.WS_URL ?? "";
+  const base = process.env.WS_URL ?? "/wsapi";
 
   if (base === "") {
     return "";

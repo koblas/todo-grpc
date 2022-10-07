@@ -1,7 +1,5 @@
 import * as cdk from "aws-cdk-lib";
-import { Aws } from "aws-cdk-lib";
 import {
-  CloudFrontAllowedMethods,
   OriginRequestCookieBehavior,
   OriginRequestHeaderBehavior,
   OriginRequestPolicy,
@@ -35,24 +33,21 @@ export class Site extends cdk.Stack {
     });
 
     const apiDomain = cdk.Fn.select(1, cdk.Fn.split("://", apiEndpoint));
-    const wsDomain = cdk.Fn.select(1, cdk.Fn.split("://", wsEndpoint));
+    const wsDomain = "wsapi.iqvine.com" ?? cdk.Fn.select(1, cdk.Fn.split("://", wsEndpoint));
 
-    // const rewriteFunction = new cdk.aws_cloudfront.Function(this, "Function", {
-    //   code: cdk.aws_cloudfront.FunctionCode.fromInline(`
-    //       function handler(event) {
-    //         var request = event.request;
+    const rewriteFunction = new cdk.aws_cloudfront.Function(this, "Function", {
+      code: cdk.aws_cloudfront.FunctionCode.fromInline(`
+          var re = /^\\/(api|wsapi)(\\/|$)/gm
 
-    //         if (request.uri.startsWith('/api')) {
-    //             request.uri = request.uri.substring(4)
-    //         }
-    //         if (request.uri.startsWith('/wsapi')) {
-    //             request.uri = request.uri.substring(6)
-    //         }
+          function handler(event) {
+            var request = event.request;
 
-    //         return request;
-    //     }
-    //   `),
-    // });
+            request.uri = request.uri.replace(re, "/");
+
+            return request;
+        }
+      `),
+    });
 
     new HostingStack(this, "app-spa", props ?? {}).createSiteFromHostedZone({
       indexDoc: "index.html",
@@ -85,12 +80,12 @@ export class Site extends cdk.Stack {
           cachePolicy: cdk.aws_cloudfront.CachePolicy.CACHING_DISABLED,
           viewerProtocolPolicy: cdk.aws_cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           responseHeadersPolicy: cdk.aws_cloudfront.ResponseHeadersPolicy.CORS_ALLOW_ALL_ORIGINS_AND_SECURITY_HEADERS,
-          // functionAssociations: [
-          //   {
-          //     function: rewriteFunction,
-          //     eventType: cdk.aws_cloudfront.FunctionEventType.VIEWER_REQUEST,
-          //   },
-          // ],
+          functionAssociations: [
+            {
+              function: rewriteFunction,
+              eventType: cdk.aws_cloudfront.FunctionEventType.VIEWER_REQUEST,
+            },
+          ],
         },
       },
     });

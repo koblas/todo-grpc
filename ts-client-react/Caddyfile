@@ -10,7 +10,7 @@
   handle @cors_preflight {
     header Access-Control-Allow-Origin "*"
     header Access-Control-Allow-Methods "GET,POST,PUT,PATCH,DELETE"
-    header Access-Control-Allow-Headers "Content-Type,Authorization"
+    header Access-Control-Allow-Headers "Content-Type,Authorization,Connection,Upgrade,Sec-WebSocket-Extensions,Sec-WebSocket-Version,Sec-WebSocket-Protocol,Sec-WebSocket-Key"
     header Vary "Access-Control-Request-Headers"
     header Access-Control-Max-Age "3600"
     header Access-Control-Allow-Credentials "true"
@@ -20,7 +20,7 @@
 
 #  handle @cors {
     header Access-Control-Allow-Origin "*"
-    header Access-Control-Allow-Headers "Content-Type,Authorization"
+    header Access-Control-Allow-Headers "Content-Type,Authorization,Connection,Upgrade,Sec-WebSocket-Extensions,Sec-WebSocket-Version,Sec-WebSocket-Protocol,Sec-WebSocket-Key"
     # header Vary "Access-Control-Request-Headers"
     # header Access-Control-Max-Age "3600"
     header Access-Control-Allow-Credentials "true"

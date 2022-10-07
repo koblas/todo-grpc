@@ -7,7 +7,6 @@ export function HomePage() {
   const { pathname } = useLocation();
   const { isAuthenticated } = useAuth();
 
-  console.log("IN HOME", isAuthenticated);
   useEffect(() => {
     if (isAuthenticated) {
       navigate("/todo");
