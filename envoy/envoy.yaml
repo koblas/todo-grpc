@@ -30,18 +30,20 @@ static_resources:
             - name: local_service
               domains: ["*"]
               routes:
-              - match: { prefix: "/auth" }
+              - match: { prefix: "/api/v1/auth" }
                 route: 
+                  prefix_rewrite: "/twirp/api.auth.AuthenticationService"
                   cluster: auth_service
                   timeout: 0s
                   max_stream_duration:
                     grpc_timeout_header_max: 0s
-                typed_per_filter_config:
-                  envoy.filters.http.ext_authz:
-                    "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
-                    disabled: true
-              - match: { prefix: "/" }
+                # typed_per_filter_config:
+                #   envoy.filters.http.ext_authz:
+                #     "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
+                #     disabled: true
+              - match: { prefix: "/api/v1/todo" }
                 route:
+                  prefix_rewrite: "/twirp/api.todo.TodoService"
                   cluster: todo_service
                   timeout: 0s
                   max_stream_duration:
@@ -57,31 +59,36 @@ static_resources:
 
           http_filters:
           - name: envoy.filters.http.cors
-          - name: envoy.filters.http.ext_authz
             typed_config:
-              "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthz
-              transport_api_version: V3
-              grpc_service:
-                envoy_grpc:
-                  cluster_name: ext-authz
-                timeout: 0.5s
-              with_request_body:
-                max_request_bytes: 1024
-                allow_partial_message: true
-                pack_as_bytes: true
-          - name: envoy.filters.http.grpc_json_transcoder
-            typed_config:
-              "@type": type.googleapis.com/envoy.extensions.filters.http.grpc_json_transcoder.v3.GrpcJsonTranscoder
-              proto_descriptor: "./common.pb"
-              services: ["todo.TodoService", "auth.AuthenticationService"]
-              convert_grpc_status: true
-              print_options:
-                add_whitespace: true
-                always_print_primitive_fields: true
-                always_print_enums_as_ints: false
-                preserve_proto_field_names: false
-          - name: envoy.filters.http.grpc_web
+              "@type": type.googleapis.com/envoy.extensions.filters.http.cors.v3.Cors
+          # - name: envoy.filters.http.ext_authz
+          #   typed_config:
+          #     "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthz
+          #     transport_api_version: V3
+          #     grpc_service:
+          #       envoy_grpc:
+          #         cluster_name: ext-authz
+          #       timeout: 0.5s
+          #     with_request_body:
+          #       max_request_bytes: 1024
+          #       allow_partial_message: true
+          #       pack_as_bytes: true
+          # - name: envoy.filters.http.grpc_json_transcoder
+          #   typed_config:
+          #     "@type": type.googleapis.com/envoy.extensions.filters.http.grpc_json_transcoder.v3.GrpcJsonTranscoder
+          #     proto_descriptor: "./common.pb"
+          #     services: ["todo.TodoService", "auth.AuthenticationService"]
+          #     convert_grpc_status: true
+          #     print_options:
+          #       add_whitespace: true
+          #       always_print_primitive_fields: true
+          #       always_print_enums_as_ints: false
+          #       preserve_proto_field_names: false
+          # - name: envoy.filters.http.grpc_web
           - name: envoy.filters.http.router
+            typed_config: 
+              "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+
 
 
 
@@ -142,36 +149,36 @@ static_resources:
                   address: public-auth
                   port_value: 14586
 
-  - name: ext-authz
-    connect_timeout: 0.25s
-    type: strict_dns
-    http2_protocol_options: {}
-    lb_policy: round_robin
-    health_checks:
-      timeout: 1s
-      interval: 10s
-      unhealthy_threshold: 2
-      healthy_threshold: 2
-      grpc_health_check: {}
-    typed_extension_protocol_options:
-      envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
-        "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
-        explicit_http_config:
-          http2_protocol_options: {}
-    load_assignment:
-      cluster_name: ext-authz
-      endpoints:
-      - lb_endpoints:
-        - endpoint:
-            address:
-              socket_address:
-                address: api-extauth
-                port_value: 14586
-        - endpoint:
-            address:
-              socket_address:
-                address: 0.0.0.0
-                port_value: 14010
+  # - name: ext-authz
+  #   connect_timeout: 0.25s
+  #   type: strict_dns
+  #   http2_protocol_options: {}
+  #   lb_policy: round_robin
+  #   health_checks:
+  #     timeout: 1s
+  #     interval: 10s
+  #     unhealthy_threshold: 2
+  #     healthy_threshold: 2
+  #     grpc_health_check: {}
+  #   typed_extension_protocol_options:
+  #     envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
+  #       "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
+  #       explicit_http_config:
+  #         http2_protocol_options: {}
+  #   load_assignment:
+  #     cluster_name: ext-authz
+  #     endpoints:
+  #     - lb_endpoints:
+  #       - endpoint:
+  #           address:
+  #             socket_address:
+  #               address: api-extauth
+  #               port_value: 14586
+  #       - endpoint:
+  #           address:
+  #             socket_address:
+  #               address: 0.0.0.0
+  #               port_value: 14010
 
     # This timeout controls the initial TCP handshake timeout - not the timeout for the
     # entire request.
