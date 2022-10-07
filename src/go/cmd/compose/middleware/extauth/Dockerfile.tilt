@@ -6,4 +6,4 @@ RUN go mod download
 COPY . .
 
 EXPOSE 14586
-CMD ["./tilt-scripts/start.sh", "go", "run", "cmd/middleware/extauth/main.go"]
+CMD ["./tilt-scripts/start.sh", "go", "run", "./cmd/middleware/extauth/main.go"]
