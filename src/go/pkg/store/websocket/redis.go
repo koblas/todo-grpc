@@ -1,10 +1,12 @@
 package websocket
 
 import (
+	"context"
 	"strings"
 	"time"
 
-	"github.com/go-redis/redis"
+	"github.com/go-redis/redis/v8"
+	"github.com/koblas/grpc-todo/pkg/redisutil"
 )
 
 type redisStore struct {
@@ -15,38 +17,31 @@ const KEY_PREFIX = "store:websocket-connections:"
 const LIFETIME = time.Minute * 15
 
 func NewRedisStore(redisAddr string) *redisStore {
-	rdb := redis.NewClient(&redis.Options{
-		Addr:        redisAddr,
-		Password:    "",                     // no password set
-		DB:          0,                      // use default DB
-		DialTimeout: time.Millisecond * 200, // either it happens or it doesn't
-	})
-
 	return &redisStore{
-		rdb: rdb,
+		rdb: redisutil.NewClient(redisAddr),
 	}
 }
 
-func (store *redisStore) Create(userId string, connectionId string) error {
-	_, err := store.rdb.Set(KEY_PREFIX+connectionId, userId, LIFETIME).Result()
+func (store *redisStore) Create(ctx context.Context, userId string, connectionId string) error {
+	_, err := store.rdb.Set(ctx, KEY_PREFIX+connectionId, userId, LIFETIME).Result()
 
 	return err
 }
 
-func (store *redisStore) Delete(connectionId string) error {
-	_, err := store.rdb.Del(KEY_PREFIX + connectionId).Result()
+func (store *redisStore) Delete(ctx context.Context, connectionId string) error {
+	_, err := store.rdb.Del(ctx, KEY_PREFIX+connectionId).Result()
 
 	return err
 }
 
-func (store *redisStore) ForUser(userId string) ([]string, error) {
+func (store *redisStore) ForUser(ctx context.Context, userId string) ([]string, error) {
 	conns := []string{}
 
 	for pos, newPos := uint64(0), uint64(1); newPos != 0; pos = newPos {
 		var err error
 		var res []string
 
-		res, newPos, err = store.rdb.Scan(pos, KEY_PREFIX+"*", 100).Result()
+		res, newPos, err = store.rdb.Scan(ctx, pos, KEY_PREFIX+"*", 100).Result()
 		if err != nil {
 			return conns, err
 		}
@@ -55,7 +50,7 @@ func (store *redisStore) ForUser(userId string) ([]string, error) {
 			continue
 		}
 
-		values, err := store.rdb.MGet(res...).Result()
+		values, err := store.rdb.MGet(ctx, res...).Result()
 		if err != nil {
 			return conns, err
 		}
@@ -70,8 +65,8 @@ func (store *redisStore) ForUser(userId string) ([]string, error) {
 	return conns, nil
 }
 
-func (store *redisStore) Heartbeat(connectionId string) error {
-	_, err := store.rdb.Expire(KEY_PREFIX+connectionId, LIFETIME).Result()
+func (store *redisStore) Heartbeat(ctx context.Context, connectionId string) error {
+	_, err := store.rdb.Expire(ctx, KEY_PREFIX+connectionId, LIFETIME).Result()
 
 	return err
 }

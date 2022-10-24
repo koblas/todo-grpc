@@ -14,6 +14,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jaswdr/faker"
 	"github.com/koblas/grpc-todo/services/core/user"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
@@ -93,10 +94,7 @@ func (suite *DynamoBasicSuite) TearDownSuite() {
 		TableName: aws.String(suite.tableName),
 	})
 
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-
+	assert.NoError(suite.T(), err)
 	require.NoError(suite.T(), err, "Unable to tear down table")
 }
 
@@ -105,7 +103,8 @@ func (suite *DynamoBasicSuite) createUser(t *testing.T) user.User {
 		ID:    uuid.NewString(),
 		Email: faker.New().Internet().Email(),
 	}
-	err := suite.store.CreateUser(user)
+
+	err := suite.store.CreateUser(context.TODO(), user)
 	require.NoError(t, err, "Create user error")
 
 	time.Sleep(time.Millisecond * 1000)
@@ -120,11 +119,11 @@ func (suite *DynamoBasicSuite) TestByEmail() {
 	// give the secondary index a chance to catchup
 	// time.Sleep(2 * time.Second)
 
-	u1, err := suite.store.GetByEmail("bad-email")
+	u1, err := suite.store.GetByEmail(context.TODO(), "bad-email")
 	require.NoError(t, err, "bad email failed")
 	require.Nil(t, u1, "bad email - got user")
 
-	u2, err := suite.store.GetByEmail(user.Email)
+	u2, err := suite.store.GetByEmail(context.TODO(), user.Email)
 	require.NoError(t, err, "good email failed")
 	require.NotNil(t, u2, "good email - user not found")
 	require.Equal(t, u2.ID, user.ID, "IDs should match")
@@ -134,11 +133,11 @@ func (suite *DynamoBasicSuite) TestById() {
 	t := suite.T()
 	user := suite.createUser(t)
 
-	u1, err := suite.store.GetById("bad-id")
+	u1, err := suite.store.GetById(context.TODO(), "bad-id")
 	require.NoError(t, err, "bad-id returned error")
 	require.Nil(t, u1, "bad-id returned object")
 
-	u2, err := suite.store.GetById(user.ID)
+	u2, err := suite.store.GetById(context.TODO(), user.ID)
 	require.NoError(t, err, "good-id returned error")
 	require.NotNil(t, u2, "good-id not found")
 	require.Equal(t, u2.ID, user.ID, "IDs should match")
@@ -150,10 +149,10 @@ func (suite *DynamoBasicSuite) TestUpdateUser() {
 
 	u0.Status = user.UserStatus(uuid.NewString())
 
-	err := suite.store.UpdateUser(&u0)
+	err := suite.store.UpdateUser(context.TODO(), &u0)
 	require.NoError(t, err, "update user 1")
 
-	u, err := suite.store.GetById(u0.ID)
+	u, err := suite.store.GetById(context.TODO(), u0.ID)
 	require.NoError(t, err, "get by ID success")
 	require.NotNil(t, u, "record found")
 
@@ -169,20 +168,20 @@ func (suite *DynamoBasicSuite) TestUpdateEmail() {
 
 	u0.Email = faker.New().Internet().Email()
 
-	err := suite.store.UpdateUser(&u0)
+	err := suite.store.UpdateUser(context.TODO(), &u0)
 	require.NoError(t, err, "update user 1")
 
-	u, err := suite.store.GetById(u0.ID)
+	u, err := suite.store.GetById(context.TODO(), u0.ID)
 	require.NoError(t, err, "get by ID success")
 	require.NotNil(t, u, "record found")
 	require.Equal(t, u.ID, u0.ID, "IDs should match")
 
-	u, err = suite.store.GetByEmail(u0.Email)
+	u, err = suite.store.GetByEmail(context.TODO(), u0.Email)
 	require.NoError(t, err, "get by Email success")
 	require.NotNil(t, u, "record found")
 	require.Equal(t, u.ID, u0.ID, "IDs should match")
 
-	u, err = suite.store.GetByEmail(oldEmail)
+	u, err = suite.store.GetByEmail(context.TODO(), oldEmail)
 	require.NoError(t, err, "get by oldEmail success")
 	require.Nil(t, u, "record not found")
 }
@@ -194,6 +193,6 @@ func (suite *DynamoBasicSuite) TestUpdateDupEmail() {
 
 	u1.Email = u0.Email
 
-	err := suite.store.UpdateUser(&u1)
+	err := suite.store.UpdateUser(context.TODO(), &u1)
 	require.Error(t, err, "Update duplicate email")
 }

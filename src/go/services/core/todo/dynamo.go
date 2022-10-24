@@ -64,8 +64,8 @@ func NewTodoDynamoStore(opts ...DynamoOption) TodoStore {
 	return &state
 }
 
-func (store *dynamoStore) FindByUser(user_id string) ([]Todo, error) {
-	out, err := store.client.Query(context.TODO(), &dynamodb.QueryInput{
+func (store *dynamoStore) FindByUser(ctx context.Context, user_id string) ([]Todo, error) {
+	out, err := store.client.Query(ctx, &dynamodb.QueryInput{
 		TableName:              store.table,
 		KeyConditionExpression: aws.String("pk = :hashKey"),
 		ExpressionAttributeValues: map[string]types.AttributeValue{
@@ -93,8 +93,8 @@ func (store *dynamoStore) FindByUser(user_id string) ([]Todo, error) {
 	return todos, nil
 }
 
-func (store *dynamoStore) DeleteOne(user_id string, id string) (*Todo, error) {
-	item, err := store.client.GetItem(context.TODO(), &dynamodb.GetItemInput{
+func (store *dynamoStore) DeleteOne(ctx context.Context, user_id string, id string) (*Todo, error) {
+	item, err := store.client.GetItem(ctx, &dynamodb.GetItemInput{
 		TableName: store.table,
 		Key: map[string]types.AttributeValue{
 			"pk": &types.AttributeValueMemberS{Value: user_id},
@@ -112,7 +112,7 @@ func (store *dynamoStore) DeleteOne(user_id string, id string) (*Todo, error) {
 		return nil, err
 	}
 
-	_, err = store.client.DeleteItem(context.TODO(), &dynamodb.DeleteItemInput{
+	_, err = store.client.DeleteItem(ctx, &dynamodb.DeleteItemInput{
 		TableName: store.table,
 		Key: map[string]types.AttributeValue{
 			"pk": &types.AttributeValueMemberS{Value: user_id},
@@ -123,7 +123,7 @@ func (store *dynamoStore) DeleteOne(user_id string, id string) (*Todo, error) {
 	return &todo, err
 }
 
-func (store *dynamoStore) Create(todo Todo) (*Todo, error) {
+func (store *dynamoStore) Create(ctx context.Context, todo Todo) (*Todo, error) {
 	av, err := attributevalue.MarshalMap(dynamoTodo{
 		Todo: todo,
 		Pk:   todo.UserId,
@@ -133,7 +133,7 @@ func (store *dynamoStore) Create(todo Todo) (*Todo, error) {
 		return nil, err
 	}
 
-	_, err = store.client.PutItem(context.TODO(), &dynamodb.PutItemInput{
+	_, err = store.client.PutItem(ctx, &dynamodb.PutItemInput{
 		TableName: store.table,
 		Item:      av,
 	})

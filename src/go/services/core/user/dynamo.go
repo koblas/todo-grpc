@@ -86,8 +86,8 @@ func (store *dynamoStore) buildEmailKey(email string) *types.AttributeValueMembe
 	return &types.AttributeValueMemberS{Value: "userEmail#" + strings.ToLower(email)}
 }
 
-func (store *dynamoStore) GetById(id string) (*User, error) {
-	out, err := store.client.GetItem(context.TODO(), &dynamodb.GetItemInput{
+func (store *dynamoStore) GetById(ctx context.Context, id string) (*User, error) {
+	out, err := store.client.GetItem(ctx, &dynamodb.GetItemInput{
 		TableName: store.table,
 		Key: map[string]types.AttributeValue{
 			"pk": store.buildIdKey(id),
@@ -107,9 +107,7 @@ func (store *dynamoStore) GetById(id string) (*User, error) {
 	return &user, nil
 }
 
-func (store *dynamoStore) GetByEmail(email string) (*User, error) {
-	ctx := context.TODO()
-
+func (store *dynamoStore) GetByEmail(ctx context.Context, email string) (*User, error) {
 	out, err := store.client.GetItem(ctx, &dynamodb.GetItemInput{
 		TableName: store.table,
 		Key: map[string]types.AttributeValue{
@@ -126,10 +124,10 @@ func (store *dynamoStore) GetByEmail(email string) (*User, error) {
 		return nil, err
 	}
 
-	return store.GetById(user.UserId)
+	return store.GetById(ctx, user.UserId)
 }
 
-func (store *dynamoStore) CreateUser(user User) error {
+func (store *dynamoStore) CreateUser(ctx context.Context, user User) error {
 	av, err := attributevalue.MarshalMap(dynamoUser{
 		Pk:      store.buildIdKey(user.ID).Value,
 		EmailLc: strings.ToLower(user.Email),
@@ -139,7 +137,7 @@ func (store *dynamoStore) CreateUser(user User) error {
 		return err
 	}
 
-	_, err = store.client.TransactWriteItems(context.TODO(), &dynamodb.TransactWriteItemsInput{
+	_, err = store.client.TransactWriteItems(ctx, &dynamodb.TransactWriteItemsInput{
 		TransactItems: []types.TransactWriteItem{
 			{
 				Put: &types.Put{
@@ -162,8 +160,8 @@ func (store *dynamoStore) CreateUser(user User) error {
 	return err
 }
 
-func (store *dynamoStore) UpdateUser(user *User) error {
-	old, err := store.GetById(user.ID)
+func (store *dynamoStore) UpdateUser(ctx context.Context, user *User) error {
+	old, err := store.GetById(ctx, user.ID)
 
 	if err != nil {
 		return err
@@ -208,14 +206,14 @@ func (store *dynamoStore) UpdateUser(user *User) error {
 		)
 	}
 
-	_, err = store.client.TransactWriteItems(context.TODO(), &dynamodb.TransactWriteItemsInput{
+	_, err = store.client.TransactWriteItems(ctx, &dynamodb.TransactWriteItemsInput{
 		TransactItems: transact,
 	})
 
 	return err
 }
 
-func (store *dynamoStore) AuthUpsert(provider, provider_id string, auth UserAuth) error {
+func (store *dynamoStore) AuthUpsert(ctx context.Context, provider, provider_id string, auth UserAuth) error {
 	if provider == "" || provider_id == "" {
 		return twirp.InvalidArgumentError("provider", "provider or provider_id is empty")
 	}
@@ -237,7 +235,7 @@ func (store *dynamoStore) AuthUpsert(provider, provider_id string, auth UserAuth
 		},
 	}
 
-	out, err := store.client.BatchWriteItem(context.TODO(), &dynamodb.BatchWriteItemInput{
+	out, err := store.client.BatchWriteItem(ctx, &dynamodb.BatchWriteItemInput{
 		RequestItems: request,
 	})
 
@@ -248,11 +246,11 @@ func (store *dynamoStore) AuthUpsert(provider, provider_id string, auth UserAuth
 	return err
 }
 
-func (store *dynamoStore) AuthGet(provider, provider_id string) (*UserAuth, error) {
+func (store *dynamoStore) AuthGet(ctx context.Context, provider, provider_id string) (*UserAuth, error) {
 	if provider == "" || provider_id == "" {
 		return nil, twirp.InvalidArgumentError("provider", "provider or provider_id is empty")
 	}
-	out, err := store.client.GetItem(context.TODO(), &dynamodb.GetItemInput{
+	out, err := store.client.GetItem(ctx, &dynamodb.GetItemInput{
 		TableName: store.table,
 		Key: map[string]types.AttributeValue{
 			"pk": store.buildAuthKey(provider, provider_id),
@@ -272,11 +270,11 @@ func (store *dynamoStore) AuthGet(provider, provider_id string) (*UserAuth, erro
 	return &obj, nil
 }
 
-func (store *dynamoStore) AuthDelete(provider, provider_id string, auth UserAuth) error {
+func (store *dynamoStore) AuthDelete(ctx context.Context, provider, provider_id string, auth UserAuth) error {
 	if provider == "" || provider_id == "" {
 		return twirp.InvalidArgumentError("provider", "provider or provider_id is empty")
 	}
-	_, err := store.client.DeleteItem(context.TODO(), &dynamodb.DeleteItemInput{
+	_, err := store.client.DeleteItem(ctx, &dynamodb.DeleteItemInput{
 		TableName: store.table,
 		Key: map[string]types.AttributeValue{
 			"pk": store.buildAuthKey(provider, provider_id),

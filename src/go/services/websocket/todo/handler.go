@@ -73,7 +73,7 @@ func (svc *TodoServer) TodoChange(ctx context.Context, event *core.TodoChangeEve
 		action = "update"
 	}
 
-	conns, err := svc.store.ForUser(userId)
+	conns, err := svc.store.ForUser(ctx, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +115,7 @@ func (svc *TodoServer) TodoChange(ctx context.Context, event *core.TodoChangeEve
 				if ae.ErrorCode() == "GoneException" {
 					log.With("connectionId", connection).Info("Connect is Gone - deleting")
 					// Connection is no longer present it should be removed
-					if err = svc.store.Delete(connection); err != nil {
+					if err = svc.store.Delete(ctx, connection); err != nil {
 						log.With("error", err).Info("Unable to delete connection")
 					}
 				} else {

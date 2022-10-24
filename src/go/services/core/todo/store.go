@@ -1,5 +1,7 @@
 package todo
 
+import "context"
+
 type Todo struct {
 	ID     string `dynamodbav:"id"`
 	UserId string `dynamodbav:"user_id"`
@@ -7,7 +9,7 @@ type Todo struct {
 }
 
 type TodoStore interface {
-	FindByUser(user_id string) ([]Todo, error)
-	DeleteOne(user_id string, id string) (*Todo, error)
-	Create(todo Todo) (*Todo, error)
+	FindByUser(ctx context.Context, user_id string) ([]Todo, error)
+	DeleteOne(ctx context.Context, user_id string, id string) (*Todo, error)
+	Create(ctx context.Context, todo Todo) (*Todo, error)
 }

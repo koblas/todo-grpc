@@ -1,5 +1,7 @@
 package user
 
+import "context"
+
 type memoryStore struct {
 	database []User
 	auth     map[string]UserAuth
@@ -12,7 +14,7 @@ func NewUserMemoryStore() UserStore {
 	}
 }
 
-func (store *memoryStore) GetById(id string) (*User, error) {
+func (store *memoryStore) GetById(ctx context.Context, id string) (*User, error) {
 	for _, u := range store.database {
 		if u.ID == id {
 			return &u, nil
@@ -22,7 +24,7 @@ func (store *memoryStore) GetById(id string) (*User, error) {
 	return nil, nil
 }
 
-func (store *memoryStore) GetByEmail(email string) (*User, error) {
+func (store *memoryStore) GetByEmail(ctx context.Context, email string) (*User, error) {
 	for _, u := range store.database {
 		if u.Email == email {
 			return &u, nil
@@ -32,13 +34,13 @@ func (store *memoryStore) GetByEmail(email string) (*User, error) {
 	return nil, nil
 }
 
-func (store *memoryStore) CreateUser(user User) error {
+func (store *memoryStore) CreateUser(ctx context.Context, user User) error {
 	store.database = append(store.database, user)
 
 	return nil
 }
 
-func (store *memoryStore) UpdateUser(user *User) error {
+func (store *memoryStore) UpdateUser(ctx context.Context, user *User) error {
 	for idx, u := range store.database {
 		if u.ID == user.ID {
 			store.database[idx] = *user
@@ -53,7 +55,7 @@ func (store *memoryStore) buildAuthKey(provider, provider_id string) string {
 	return provider + "#" + provider_id
 }
 
-func (store *memoryStore) AuthGet(provider, provider_id string) (*UserAuth, error) {
+func (store *memoryStore) AuthGet(ctx context.Context, provider, provider_id string) (*UserAuth, error) {
 	auth, found := store.auth[store.buildAuthKey(provider, provider_id)]
 
 	if !found {
@@ -62,13 +64,13 @@ func (store *memoryStore) AuthGet(provider, provider_id string) (*UserAuth, erro
 	return &auth, nil
 }
 
-func (store *memoryStore) AuthUpsert(provider, provider_id string, auth UserAuth) error {
+func (store *memoryStore) AuthUpsert(ctx context.Context, provider, provider_id string, auth UserAuth) error {
 	store.auth[store.buildAuthKey(provider, provider_id)] = auth
 
 	return nil
 }
 
-func (store *memoryStore) AuthDelete(provider, provider_id string, auth UserAuth) error {
+func (store *memoryStore) AuthDelete(ctx context.Context, provider, provider_id string, auth UserAuth) error {
 	delete(store.auth, store.buildAuthKey(provider, provider_id))
 
 	return nil

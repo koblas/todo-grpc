@@ -2,7 +2,6 @@ package workers
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -79,7 +78,6 @@ func GetHandler(config SsmConfig, opts ...Option) http.HandlerFunc {
 			return
 		}
 
-		fmt.Println("IN worker handlers")
 		for _, handler := range handlers {
 			if !strings.HasPrefix(req.URL.Path, handler.PathPrefix()) {
 				continue

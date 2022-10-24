@@ -43,7 +43,7 @@ func (svc *TodoServer) AddTodo(ctx context.Context, newTodo *core.TodoAddParams)
 	log := logger.FromContext(ctx)
 	log.Info("creating todo event")
 
-	task, err := svc.todos.Create(Todo{
+	task, err := svc.todos.Create(ctx, Todo{
 		ID:     xid.New().String(),
 		Task:   newTodo.Task,
 		UserId: newTodo.UserId,
@@ -69,7 +69,7 @@ func (svc *TodoServer) AddTodo(ctx context.Context, newTodo *core.TodoAddParams)
 }
 
 func (svc *TodoServer) GetTodos(ctx context.Context, find *core.TodoGetParams) (*core.TodoResponse, error) {
-	out, err := svc.todos.FindByUser(find.UserId)
+	out, err := svc.todos.FindByUser(ctx, find.UserId)
 
 	if err != nil {
 		return nil, twirp.InternalErrorWith(err)
@@ -90,7 +90,7 @@ func (svc *TodoServer) DeleteTodo(ctx context.Context, params *core.TodoDeletePa
 	log := logger.FromContext(ctx)
 	log.Info("delete todo event")
 
-	todo, err := svc.todos.DeleteOne(params.UserId, params.Id)
+	todo, err := svc.todos.DeleteOne(ctx, params.UserId, params.Id)
 
 	if err != nil {
 		return nil, twirp.InternalErrorWith(err)

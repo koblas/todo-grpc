@@ -1,6 +1,8 @@
 package todo
 
 import (
+	"context"
+
 	"github.com/google/uuid"
 )
 
@@ -16,7 +18,7 @@ func NewTodoMemoryStore() *memoryTodo {
 	}
 }
 
-func (store *memoryTodo) FindByUser(user_id string) ([]Todo, error) {
+func (store *memoryTodo) FindByUser(ctx context.Context, user_id string) ([]Todo, error) {
 	if todos, found := store.todos[user_id]; found {
 		return todos, nil
 	}
@@ -24,7 +26,7 @@ func (store *memoryTodo) FindByUser(user_id string) ([]Todo, error) {
 	return []Todo{}, nil
 }
 
-func (store *memoryTodo) DeleteOne(user_id string, id string) (*Todo, error) {
+func (store *memoryTodo) DeleteOne(ctx context.Context, user_id string, id string) (*Todo, error) {
 	todos, found := store.todos[user_id]
 	if !found {
 		return &Todo{}, nil
@@ -48,7 +50,7 @@ func (store *memoryTodo) DeleteOne(user_id string, id string) (*Todo, error) {
 	return &todos[matchIdx], nil
 }
 
-func (store *memoryTodo) Create(todo Todo) (*Todo, error) {
+func (store *memoryTodo) Create(ctx context.Context, todo Todo) (*Todo, error) {
 	todos, found := store.todos[todo.UserId]
 	if !found {
 		todos = []Todo{}

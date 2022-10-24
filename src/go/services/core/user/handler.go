@@ -74,13 +74,13 @@ func (s *UserServer) FindBy(ctx context.Context, params *genpb.FindParam) (*genp
 	var auth *UserAuth
 	var err error
 	if params.Email != "" {
-		user, err = s.users.GetByEmail(params.Email)
+		user, err = s.users.GetByEmail(ctx, params.Email)
 	} else if params.UserId != "" {
-		user, err = s.users.GetById(params.UserId)
+		user, err = s.users.GetById(ctx, params.UserId)
 	} else if params.Auth.Provider != "" && params.Auth.ProviderId != "" {
-		auth, err = s.users.AuthGet(params.Auth.Provider, params.Auth.ProviderId)
+		auth, err = s.users.AuthGet(ctx, params.Auth.Provider, params.Auth.ProviderId)
 		if auth != nil {
-			user, err = s.users.GetById(auth.UserID)
+			user, err = s.users.GetById(ctx, auth.UserID)
 		}
 	} else {
 		return nil, twirp.NotFoundError("no query provided")
@@ -109,7 +109,7 @@ func (s *UserServer) Create(ctx context.Context, params *genpb.CreateParam) (*ge
 	}
 
 	log.With("email", params.Email).Info("Checking for duplicate")
-	if u, err := s.users.GetByEmail(params.Email); err != nil {
+	if u, err := s.users.GetByEmail(ctx, params.Email); err != nil {
 		return nil, twirp.InternalErrorWith(err)
 	} else if u != nil {
 		return nil, twirp.AlreadyExists.Error("Email address not found")
@@ -160,10 +160,10 @@ func (s *UserServer) Create(ctx context.Context, params *genpb.CreateParam) (*ge
 
 	log.With("userId", user.ID, "email", user.Email).Info("Saving user to store")
 
-	if err := s.users.CreateUser(user); err != nil {
+	if err := s.users.CreateUser(ctx, user); err != nil {
 		return nil, err
 	}
-	if err := s.users.AuthUpsert("email", strings.ToLower(user.Email), auth); err != nil {
+	if err := s.users.AuthUpsert(ctx, "email", strings.ToLower(user.Email), auth); err != nil {
 		return nil, err
 	}
 
@@ -204,7 +204,7 @@ func (s *UserServer) Update(ctx context.Context, params *genpb.UpdateParam) (*ge
 	log := logger.FromContext(ctx).With("userId", params.UserId)
 	log.Info("User Update")
 
-	orig, err := s.users.GetById(params.UserId)
+	orig, err := s.users.GetById(ctx, params.UserId)
 	if err != nil {
 		return nil, twirp.InternalErrorWith(err)
 	}
@@ -214,7 +214,7 @@ func (s *UserServer) Update(ctx context.Context, params *genpb.UpdateParam) (*ge
 	}
 	// Some basic validation
 	if len(params.PasswordNew) != 0 || len(params.Password) != 0 {
-		auth, err := s.users.AuthGet("email", strings.ToLower(orig.Email))
+		auth, err := s.users.AuthGet(ctx, "email", strings.ToLower(orig.Email))
 		if err != nil {
 			return nil, twirp.InternalErrorWith(err)
 		}
@@ -255,25 +255,25 @@ func (s *UserServer) Update(ctx context.Context, params *genpb.UpdateParam) (*ge
 			Password: pass,
 		}
 		// Hmm... This is a good case where they both shouldn't be updated at the same time
-		if err := s.users.AuthUpsert("email", strings.ToLower(updated.Email), auth); err != nil {
+		if err := s.users.AuthUpsert(ctx, "email", strings.ToLower(updated.Email), auth); err != nil {
 			return nil, twirp.InternalErrorWith(err)
 		}
 	}
 
-	s.users.UpdateUser(&updated)
+	s.users.UpdateUser(ctx, &updated)
 
 	// If the email changed, so move the password to the new authentication
 	if updated.Email != orig.Email {
-		oldAuth, err := s.users.AuthGet("email", strings.ToLower(orig.Email))
+		oldAuth, err := s.users.AuthGet(ctx, "email", strings.ToLower(orig.Email))
 		if err != nil {
 			log.With("email", orig.Email, "error", err).Error("unable to get old authentication")
 		} else if oldAuth != nil {
-			err = s.users.AuthUpsert("email", strings.ToLower(updated.Email), *oldAuth)
+			err = s.users.AuthUpsert(ctx, "email", strings.ToLower(updated.Email), *oldAuth)
 			if err != nil {
 				// this is "bad"
 				log.With("email", orig.Email, "error", err).Error("unable to delete old authentication")
 			} else {
-				err = s.users.AuthDelete("email", strings.ToLower(orig.Email), *oldAuth)
+				err = s.users.AuthDelete(ctx, "email", strings.ToLower(orig.Email), *oldAuth)
 				if err != nil {
 					log.With("email", orig.Email, "error", err).Error("unable to delete old authentication")
 				}
@@ -304,7 +304,7 @@ func (s *UserServer) ComparePassword(ctx context.Context, params *genpb.Authenti
 	log := logger.FromContext(ctx).With("email", params.Email)
 	log.Info("check password")
 
-	auth, err := s.users.AuthGet("email", strings.ToLower(params.Email))
+	auth, err := s.users.AuthGet(ctx, "email", strings.ToLower(params.Email))
 	if err != nil {
 		return nil, twirp.InternalErrorWith(err)
 	}
@@ -323,7 +323,7 @@ func (s *UserServer) ComparePassword(ctx context.Context, params *genpb.Authenti
 }
 
 func (s *UserServer) GetSettings(ctx context.Context, params *genpb.UserIdParam) (*genpb.UserSettings, error) {
-	user, err := s.users.GetById(params.UserId)
+	user, err := s.users.GetById(ctx, params.UserId)
 
 	if err != nil {
 		return nil, twirp.InternalErrorWith(err)
@@ -338,7 +338,7 @@ func (s *UserServer) GetSettings(ctx context.Context, params *genpb.UserIdParam)
 
 func (s *UserServer) SetSettings(ctx context.Context, params *genpb.UserSettingsUpdate) (*genpb.UserSettings, error) {
 	log := logger.FromContext(ctx)
-	orig, err := s.users.GetById(params.UserId)
+	orig, err := s.users.GetById(ctx, params.UserId)
 
 	if err != nil {
 		return nil, twirp.InternalErrorWith(err)
@@ -362,7 +362,7 @@ func (s *UserServer) SetSettings(ctx context.Context, params *genpb.UserSettings
 		}
 	}
 
-	s.users.UpdateUser(&updated)
+	s.users.UpdateUser(ctx, &updated)
 	if _, err := s.pubsub.UserChange(ctx, &genpb.UserChangeEvent{
 		Current:  s.toProtoUser(&updated),
 		Original: s.toProtoUser(orig),
@@ -377,7 +377,7 @@ func (s *UserServer) getUserByVerification(ctx context.Context, params *genpb.Ve
 	log := logger.FromContext(ctx).With("userId", params.UserId)
 	log.Info("getUserByVerification BEGIN")
 
-	auth, err := s.users.AuthGet("forgot", params.UserId)
+	auth, err := s.users.AuthGet(ctx, "forgot", params.UserId)
 	if err != nil {
 		return nil, twirp.InternalErrorWith(err)
 	}
@@ -408,7 +408,7 @@ func (s *UserServer) VerificationVerify(ctx context.Context, params *genpb.Verif
 	log := logger.FromContext(ctx).With("userId", params.UserId)
 	log.Info("Verification email")
 
-	user, err := s.users.GetById(params.UserId)
+	user, err := s.users.GetById(ctx, params.UserId)
 	if err != nil {
 		return nil, err
 	}
@@ -436,7 +436,7 @@ func (s *UserServer) VerificationVerify(ctx context.Context, params *genpb.Verif
 	update.VerifiedEmails = append(update.VerifiedEmails, user.Email)
 	// You could be "REGISTERED" or "INVITED"
 	update.Status = UserStatus_ACTIVE
-	s.users.UpdateUser(&update)
+	s.users.UpdateUser(ctx, &update)
 
 	if _, err := s.pubsub.UserChange(ctx, &genpb.UserChangeEvent{
 		Current:  s.toProtoUser(&update),
@@ -456,7 +456,7 @@ func (s *UserServer) ForgotVerify(ctx context.Context, params *genpb.Verificatio
 	if err != nil {
 		return nil, err
 	}
-	user, err := s.users.GetById(auth.UserID)
+	user, err := s.users.GetById(ctx, auth.UserID)
 	if err != nil {
 		return nil, err
 	}
@@ -475,7 +475,7 @@ func (s *UserServer) ForgotUpdate(ctx context.Context, params *genpb.Verificatio
 	if err != nil {
 		return nil, err
 	}
-	user, err := s.users.GetById(auth.UserID)
+	user, err := s.users.GetById(ctx, auth.UserID)
 	if err != nil {
 		return nil, err
 	}
@@ -495,10 +495,10 @@ func (s *UserServer) ForgotUpdate(ctx context.Context, params *genpb.Verificatio
 			UserID:   user.ID,
 			Password: pass,
 		}
-		if err := s.users.AuthUpsert("email", strings.ToLower(user.Email), auth); err != nil {
+		if err := s.users.AuthUpsert(ctx, "email", strings.ToLower(user.Email), auth); err != nil {
 			return nil, twirp.InternalErrorWith(err)
 		}
-		err = s.users.AuthDelete("forgot", user.ID, UserAuth{
+		err = s.users.AuthDelete(ctx, "forgot", user.ID, UserAuth{
 			UserID: user.ID,
 		})
 		if err != nil {
@@ -509,7 +509,7 @@ func (s *UserServer) ForgotUpdate(ctx context.Context, params *genpb.Verificatio
 	// You could be "REGISTERED" or "INVITED"
 	if user.Status != UserStatus_ACTIVE {
 		update.Status = UserStatus_ACTIVE
-		err := s.users.UpdateUser(&update)
+		err := s.users.UpdateUser(ctx, &update)
 		if err != nil {
 			return nil, twirp.InternalErrorWith(err)
 		}
@@ -540,7 +540,7 @@ func (s *UserServer) ForgotSend(ctx context.Context, params *genpb.FindParam) (*
 	if params.Email == "" {
 		return nil, twirp.InvalidArgument.Error("Must provide email")
 	}
-	user, err := s.users.GetByEmail(params.Email)
+	user, err := s.users.GetByEmail(ctx, params.Email)
 	if err != nil {
 		return nil, twirp.InternalErrorWith(err)
 	}
@@ -554,7 +554,7 @@ func (s *UserServer) ForgotSend(ctx context.Context, params *genpb.FindParam) (*
 	if err != nil {
 		return nil, twirp.InternalErrorWith(err)
 	}
-	err = s.users.AuthUpsert("forgot", user.ID, UserAuth{
+	err = s.users.AuthUpsert(ctx, "forgot", user.ID, UserAuth{
 		UserID:    user.ID,
 		Password:  vToken,
 		ExpiresAt: &vExpires,
@@ -585,7 +585,7 @@ func (s *UserServer) AuthAssociate(ctx context.Context, params *genpb.AuthAssoci
 		UserID: params.UserId,
 	}
 
-	if err := s.users.AuthUpsert(params.Auth.Provider, params.Auth.ProviderId, auth); err != nil {
+	if err := s.users.AuthUpsert(ctx, params.Auth.Provider, params.Auth.ProviderId, auth); err != nil {
 		return nil, err
 	}
 

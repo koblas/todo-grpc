@@ -65,7 +65,7 @@ func NewUserDynamoStore(opts ...DynamoOption) ConnectionStore {
 	return &state
 }
 
-func (store *dynamoStore) Create(userId string, connectionId string) error {
+func (store *dynamoStore) Create(ctx context.Context, userId string, connectionId string) error {
 	expires := time.Now().Add(2 * time.Hour)
 
 	byUser, err := attributevalue.MarshalMap(dynamoConnection{
@@ -85,7 +85,7 @@ func (store *dynamoStore) Create(userId string, connectionId string) error {
 		return err
 	}
 
-	_, err = store.client.BatchWriteItem(context.TODO(), &dynamodb.BatchWriteItemInput{
+	_, err = store.client.BatchWriteItem(ctx, &dynamodb.BatchWriteItemInput{
 		RequestItems: map[string][]types.WriteRequest{
 			*store.table: {
 				{
@@ -108,8 +108,8 @@ func (store *dynamoStore) Create(userId string, connectionId string) error {
 /**
  * Heartbeat will update the expires on the DynamoDB table such that they don't go away
  */
-func (store *dynamoStore) Heartbeat(connectionId string) error {
-	out, err := store.client.Query(context.TODO(), &dynamodb.QueryInput{
+func (store *dynamoStore) Heartbeat(ctx context.Context, connectionId string) error {
+	out, err := store.client.Query(ctx, &dynamodb.QueryInput{
 		TableName:              store.table,
 		KeyConditionExpression: aws.String("pk = :hashKey"),
 		ExpressionAttributeValues: map[string]types.AttributeValue{
@@ -147,7 +147,7 @@ func (store *dynamoStore) Heartbeat(connectionId string) error {
 		return err
 	}
 
-	_, err = store.client.BatchWriteItem(context.TODO(), &dynamodb.BatchWriteItemInput{
+	_, err = store.client.BatchWriteItem(ctx, &dynamodb.BatchWriteItemInput{
 		RequestItems: map[string][]types.WriteRequest{
 			*store.table: {
 				{
@@ -167,8 +167,8 @@ func (store *dynamoStore) Heartbeat(connectionId string) error {
 	return err
 }
 
-func (store *dynamoStore) Delete(connectionId string) error {
-	out, err := store.client.Query(context.TODO(), &dynamodb.QueryInput{
+func (store *dynamoStore) Delete(ctx context.Context, connectionId string) error {
+	out, err := store.client.Query(ctx, &dynamodb.QueryInput{
 		TableName:              store.table,
 		KeyConditionExpression: aws.String("pk = :hashKey"),
 		ExpressionAttributeValues: map[string]types.AttributeValue{
@@ -185,7 +185,7 @@ func (store *dynamoStore) Delete(connectionId string) error {
 		return err
 	}
 
-	_, err = store.client.BatchWriteItem(context.TODO(), &dynamodb.BatchWriteItemInput{
+	_, err = store.client.BatchWriteItem(ctx, &dynamodb.BatchWriteItemInput{
 		RequestItems: map[string][]types.WriteRequest{
 			*store.table: {
 				{
@@ -211,8 +211,8 @@ func (store *dynamoStore) Delete(connectionId string) error {
 	return err
 }
 
-func (store *dynamoStore) ForUser(user_id string) ([]string, error) {
-	out, err := store.client.Query(context.TODO(), &dynamodb.QueryInput{
+func (store *dynamoStore) ForUser(ctx context.Context, user_id string) ([]string, error) {
+	out, err := store.client.Query(ctx, &dynamodb.QueryInput{
 		TableName:              store.table,
 		KeyConditionExpression: aws.String("pk = :hashKey"),
 		ExpressionAttributeValues: map[string]types.AttributeValue{

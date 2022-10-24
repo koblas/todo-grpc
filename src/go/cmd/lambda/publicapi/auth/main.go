@@ -1,13 +1,11 @@
 package main
 
 import (
-	"time"
-
-	"github.com/go-redis/redis/v8"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
 	"github.com/koblas/grpc-todo/pkg/manager"
+	"github.com/koblas/grpc-todo/pkg/redisutil"
 	"github.com/koblas/grpc-todo/services/publicapi/auth"
 	"github.com/koblas/grpc-todo/twpb/core"
 	"github.com/koblas/grpc-todo/twpb/publicapi"
@@ -29,17 +27,10 @@ func main() {
 		auth.WithOAuthClient(core.NewAuthUserServiceJSONClient("lambda://core-oauth-user", awsutil.NewTwirpCallLambda())),
 	}
 
+	rdb := redisutil.NewClient(ssmConfig.RedisAddr)
 	// Connect to redis
-	if ssmConfig.RedisAddr != "" {
+	if rdb != nil {
 		log.With("address", ssmConfig.RedisAddr).Info("Redis Address")
-		// TODO - re-enable this
-		rdb := redis.NewClient(&redis.Options{
-			Addr:        ssmConfig.RedisAddr,
-			Password:    "",                     // no password set
-			DB:          0,                      // use default DB
-			DialTimeout: time.Millisecond * 200, // either it happens or it doesn't
-		})
-
 		opts = append(opts, auth.WithAttemptService(auth.NewAttemptCounter("publicapi:authentication", rdb)))
 	}
 

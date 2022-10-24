@@ -173,14 +173,7 @@ func (svc *client) openRedisTopicConsumer(name string) (*redisqueue.Consumer, er
 }
 
 func (svc *client) openRedis() error {
-	rdb := redis.NewClient(&redis.Options{
-		Addr:        svc.redisAddr,
-		Password:    "",                     // no password set
-		DB:          0,                      // use default DB
-		DialTimeout: time.Millisecond * 200, // either it happens or it doesn't
-	})
-
-	svc.redis = rdb
+	svc.redis = NewClient(svc.redisAddr)
 
 	return nil
 }

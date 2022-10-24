@@ -213,12 +213,12 @@ func lambdaToSns(req *http.Request, lambdaRequest events.APIGatewayV2HTTPRequest
 	return body, attributes
 }
 
-func (svc twClient) lookupSqs(queueName string) (string, error) {
+func (svc twClient) lookupSqs(ctx context.Context, queueName string) (string, error) {
 	if qurl, found := svc.sqsCache[queueName]; found {
 		return qurl, nil
 	}
 
-	qurl, err := svc.sqs.GetQueueUrl(context.TODO(), &sqs.GetQueueUrlInput{
+	qurl, err := svc.sqs.GetQueueUrl(ctx, &sqs.GetQueueUrlInput{
 		QueueName: &queueName,
 	})
 
@@ -316,7 +316,7 @@ func (svc twClient) Do(req *http.Request) (*http.Response, error) {
 		if arn != "" {
 			functionName = arn
 		}
-		output, err := svc.lambda.Invoke(context.TODO(), &lambda.InvokeInput{
+		output, err := svc.lambda.Invoke(req.Context(), &lambda.InvokeInput{
 			FunctionName: aws.String(functionName),
 			Payload:      payload,
 		})
@@ -345,12 +345,12 @@ func (svc twClient) Do(req *http.Request) (*http.Response, error) {
 
 		body, attributes := lambdaToSqs(req, lambdaRequest)
 
-		queueUrl, err := svc.lookupSqs(req.URL.Host)
+		queueUrl, err := svc.lookupSqs(req.Context(), req.URL.Host)
 		if err != nil {
 			return nil, fmt.Errorf("unable to get queue url='%s' %w", req.URL.Host, err)
 		}
 
-		_, err = svc.sqs.SendMessage(context.TODO(), &sqs.SendMessageInput{
+		_, err = svc.sqs.SendMessage(req.Context(), &sqs.SendMessageInput{
 			QueueUrl:          &queueUrl,
 			MessageAttributes: attributes,
 			MessageBody:       body,
@@ -371,7 +371,7 @@ func (svc twClient) Do(req *http.Request) (*http.Response, error) {
 
 		log.With(zap.Any("snsattr", attributes)).Info("SNS Publish")
 
-		_, err = svc.sns.Publish(context.TODO(), &sns.PublishInput{
+		_, err = svc.sns.Publish(req.Context(), &sns.PublishInput{
 			TopicArn:          aws.String(arn),
 			MessageAttributes: attributes,
 			Message:           body,

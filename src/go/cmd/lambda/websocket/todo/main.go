@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -27,7 +26,7 @@ func main() {
 
 	store := websocket.NewUserDynamoStore(websocket.WithDynamoTable(ssmConfig.ConnDb))
 
-	cfg, err := config.LoadDefaultConfig(context.TODO())
+	cfg, err := config.LoadDefaultConfig(mgr.Context())
 	if err != nil {
 		log.With(zap.Error(err)).Fatal("unable to connect to aws")
 	}

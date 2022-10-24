@@ -1,12 +1,14 @@
 package websocket
 
+import "context"
+
 type ConnectionStore interface {
 	// Assoicate this userId and connectionId pair
-	Create(userId string, connectionId string) error
+	Create(ctx context.Context, userId string, connectionId string) error
 	// Note this connection is no longer use
-	Delete(connectionId string) error
+	Delete(ctx context.Context, connectionId string) error
 	// Return the list of connections for a given user
-	ForUser(userId string) ([]string, error)
+	ForUser(ctx context.Context, userId string) ([]string, error)
 	// Refresh any aging timers
-	Heartbeat(connectionId string) error
+	Heartbeat(ctx context.Context, connectionId string) error
 }

@@ -56,7 +56,7 @@ func NewWebsocketHandler(config SsmConfig, opts ...Option) *WebsocketHandler {
 	return &conf
 }
 
-func (svc *WebsocketHandler) isAuthenticated(log logger.Logger, req events.APIGatewayWebsocketProxyRequest) (string, error) {
+func (svc *WebsocketHandler) isAuthenticated(ctx context.Context, log logger.Logger, req events.APIGatewayWebsocketProxyRequest) (string, error) {
 	token := req.QueryStringParameters["t"]
 	if token == "" {
 		if len(req.Body) == 0 {
@@ -89,7 +89,7 @@ func (svc *WebsocketHandler) isAuthenticated(log logger.Logger, req events.APIGa
 		return "", ErrorInvalidToken
 	}
 
-	if err := svc.store.Create(payload.UserId, req.RequestContext.ConnectionID); err != nil {
+	if err := svc.store.Create(ctx, payload.UserId, req.RequestContext.ConnectionID); err != nil {
 		log.With("error", err).Info("DB Create failed")
 		return "", err
 	}
@@ -102,25 +102,25 @@ func (svc *WebsocketHandler) HandleRequest(ctx context.Context, req events.APIGa
 
 	if req.RequestContext.EventType == "CONNECT" {
 		log.Info("Connect event")
-		_, err := svc.isAuthenticated(log, req)
+		_, err := svc.isAuthenticated(ctx, log, req)
 		if err != nil && err != ErrorMissingAuthentication {
 			log.With("error", err).Info("Authentication error")
 			return responseBadAuth, nil
 		}
 	} else if req.RequestContext.EventType == "DISCONNECT" {
 		log.Info("Disconnect event")
-		if err := svc.store.Delete(req.RequestContext.ConnectionID); err != nil {
+		if err := svc.store.Delete(ctx, req.RequestContext.ConnectionID); err != nil {
 			log.With("error", err).Info("DB Delete failed")
 			return responseBad, err
 		}
 	} else if req.RequestContext.EventType == "MESSAGE" {
 		log.Info("Message event")
 
-		userId, err := svc.isAuthenticated(log, req)
+		userId, err := svc.isAuthenticated(ctx, log, req)
 		if err == ErrorMissingAuthentication {
 			// Missing Authentication implies we're already authenticated and we need to update
 			// the DB that the connection is alive
-			if err := svc.store.Heartbeat(req.RequestContext.ConnectionID); err != nil {
+			if err := svc.store.Heartbeat(ctx, req.RequestContext.ConnectionID); err != nil {
 				log.With("error", err).Info("DB heartbeat failed")
 				return responseBad, err
 			}

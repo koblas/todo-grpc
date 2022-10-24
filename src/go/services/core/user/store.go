@@ -1,6 +1,7 @@
 package user
 
 import (
+	"context"
 	"time"
 )
 
@@ -33,12 +34,12 @@ type UserAuth struct {
 }
 
 type UserStore interface {
-	GetById(id string) (*User, error)
-	GetByEmail(email string) (*User, error)
-	CreateUser(user User) error
-	UpdateUser(user *User) error
+	GetById(ctx context.Context, id string) (*User, error)
+	GetByEmail(ctx context.Context, email string) (*User, error)
+	CreateUser(ctx context.Context, user User) error
+	UpdateUser(ctx context.Context, user *User) error
 
-	AuthGet(provider, provider_id string) (*UserAuth, error)
-	AuthUpsert(provider, provider_id string, auth UserAuth) error
-	AuthDelete(provider, provider_id string, auth UserAuth) error
+	AuthGet(ctx context.Context, provider, provider_id string) (*UserAuth, error)
+	AuthUpsert(ctx context.Context, provider, provider_id string, auth UserAuth) error
+	AuthDelete(ctx context.Context, provider, provider_id string, auth UserAuth) error
 }
