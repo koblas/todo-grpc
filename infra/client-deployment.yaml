@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    name: client
+  name: client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: client
+  template:
+    metadata:
+      labels:
+        network/dmz: "true"
+        network/frontend: "true"
+        name: client
+    spec:
+      containers:
+        - image: todo-grpc/ts-client-react
+          imagePullPolicy: IfNotPresent
+          name: client
+          ports:
+            - containerPort: 80
+      restartPolicy: Always

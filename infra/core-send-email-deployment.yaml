@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    name: core-send-email
+  name: core-send-email
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: core-send-email
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        network/backend: "true"
+        name: core-send-email
+    spec:
+      containers:
+        - env:
+            - name: EMAILSERVICE_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  key: EMAILSERVICE_ADDR
+                  name: dev-variables-env
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: JWT_SECRET
+                  name: common-secrets
+            - name: OAUTH_USER_SERVICE_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  key: OAUTH_USER_SERVICE_ADDR
+                  name: dev-variables-env
+            - name: REDIS_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  key: REDIS_ADDR
+                  name: dev-variables-env
+            - name: SMTP_ADDR
+              value: zen.heyx.com
+            - name: SMTP_PASSWORD
+              value: Not4me
+            - name: SMTP_USERNAME
+              value: koblas
+            - name: TODO_SERVICE_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  key: TODO_SERVICE_ADDR
+                  name: dev-variables-env
+            - name: URL_BASE_UI
+              valueFrom:
+                configMapKeyRef:
+                  key: URL_BASE_UI
+                  name: dev-variables-env
+            - name: USER_SERVICE_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  key: USER_SERVICE_ADDR
+                  name: dev-variables-env
+          image: todo-grpc/core-send-email
+          imagePullPolicy: IfNotPresent
+          name: core-send-email
+      restartPolicy: Always

@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    name: core-todo
+  name: core-todo
+spec:
+  ports:
+    - port: 14586
+  selector:
+    name: core-todo

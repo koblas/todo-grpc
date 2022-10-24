@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    name: core-todo
+  name: core-todo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: core-todo
+  template:
+    metadata:
+      labels:
+        network/backend: "true"
+        name: core-todo
+    spec:
+      containers:
+        - image: todo-grpc/core-todo
+          imagePullPolicy: IfNotPresent
+          name: core-todo
+          ports:
+            - containerPort: 14586
+      restartPolicy: Always

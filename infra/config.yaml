@@ -1,0 +1,12 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: config
+data:
+  POSTGRES_HOST: "pg-svc" 
+  BUNDLE_PATH: "vendor/bundle" 
+
+  dynamo-ws-table: |
+      xxxx
+  dynamo-user-table: |
+      xxxx

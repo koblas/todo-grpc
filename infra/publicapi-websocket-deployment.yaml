@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    name: publicapi-websocket
+  name: publicapi-websocket
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: publicapi-websocket
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        network/backend: "true"
+        network/dmz: "true"
+        name: publicapi-websocket
+    spec:
+      containers:
+        - env:
+            - name: EMAILSERVICE_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  key: EMAILSERVICE_ADDR
+                  name: dev-variables-env
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: JWT_SECRET
+                  name: common-secrets
+            - name: OAUTH_USER_SERVICE_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  key: OAUTH_USER_SERVICE_ADDR
+                  name: dev-variables-env
+            - name: REDIS_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  key: REDIS_ADDR
+                  name: dev-variables-env
+            - name: TODO_SERVICE_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  key: TODO_SERVICE_ADDR
+                  name: dev-variables-env
+            - name: URL_BASE_UI
+              valueFrom:
+                configMapKeyRef:
+                  key: URL_BASE_UI
+                  name: dev-variables-env
+            - name: USER_SERVICE_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  key: USER_SERVICE_ADDR
+                  name: dev-variables-env
+          image: todo-grpc/publicapi-websocket
+          imagePullPolicy: IfNotPresent
+          name: publicapi-websocket
+          ports:
+            - containerPort: 14586
+      restartPolicy: Always

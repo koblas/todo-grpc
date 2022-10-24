@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    name: core-oauth-user
+  name: core-oauth-user
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: core-oauth-user
+  template:
+    metadata:
+      labels:
+        network/backend: "true"
+        name: core-oauth-user
+    spec:
+      containers:
+        - env:
+            - name: EMAILSERVICE_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  key: EMAILSERVICE_ADDR
+                  name: dev-variables-env
+            - name: GOOGLE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  key: GOOGLE_CLIENT_ID
+                  name: common-secrets
+            - name: GOOGLE_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: GOOGLE_SECRET
+                  name: common-secrets
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: JWT_SECRET
+                  name: common-secrets
+            - name: OAUTH_USER_SERVICE_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  key: OAUTH_USER_SERVICE_ADDR
+                  name: dev-variables-env
+            - name: REDIS_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  key: REDIS_ADDR
+                  name: dev-variables-env
+            - name: TODO_SERVICE_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  key: TODO_SERVICE_ADDR
+                  name: dev-variables-env
+            - name: URL_BASE_UI
+              valueFrom:
+                configMapKeyRef:
+                  key: URL_BASE_UI
+                  name: dev-variables-env
+            - name: USER_SERVICE_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  key: USER_SERVICE_ADDR
+                  name: dev-variables-env
+          image: todo-grpc/core-oauth-user
+          imagePullPolicy: IfNotPresent
+          name: core-oauth-user
+          ports:
+            - containerPort: 14586
+      restartPolicy: Always

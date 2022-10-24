@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    name: publicapi-websocket
+  name: publicapi-websocket
+spec:
+  selector:
+    name: publicapi-websocket
+  ports:
+    - port: 14586

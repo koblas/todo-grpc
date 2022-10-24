@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dynamodb
+  labels:
+    component: dynamodb
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      component: dynamodb
+  template:
+    metadata:
+      labels:
+        component: dynamodb
+    spec:
+      containers:
+        - image: amazon/dynamodb-local
+          name: dynamodb-local
+          ports:
+            - containerPort: 8000
+          args: ["-Djava.library.path=./DynamoDBLocal_lib", "-jar","DynamoDBLocal.jar","-inMemory"]
+      # initContainers:
+        # - name: wait-dynamodb
+        #   image: busybox
+        #   command: ['sh', '-c', "until nslookup dynamodb; do echo waiting for dynamodb; sleep 2; done"]
+        # - name: init-dynamodb
+        #   image: amazon/aws-cli
+        #   env:
+        #   - name: AWS_ACCESS_KEY_ID
+        #     value: unicorn
+        #   - name: AWS_SECRET_ACCESS_KEY
+        #     value: unicorn
+        #   - name: AWS_DEFAULT_REGION
+        #     value: unicorn
+        #   args: [
+        #     "dynamodb", "create-table",
+        #     "--endpoint-url", "http://dynamodb:8000",
+        #     "--table-name", "ws-connection",
+        #     "--attribute-definitions", "AttributeName=pk,AttributeType=S","AttributeName=sk,AttributeType=S",
+        #     "--key-schema", "AttributeName=pk,KeyType=HASH","AttributeName=sk,KeyType=RANGE",
+        #     "--region","us-west-2",
+        #   ]
+        #   working_dir: /home/dynamodb.local
+        #   volumes:
+        #     - ./schema:/home/dynamodblocal
+      restartPolicy: Always
