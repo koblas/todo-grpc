@@ -9,7 +9,7 @@ RUN apk add --no-cache python3-dev g++ gcc make musl-dev
 
 # Better caching of package.json
 ADD package.json /tmp/package.json
-RUN cd /tmp && npm install --legacy-peer-deps
+RUN cd /tmp && npm install 
 RUN mkdir -p /app && cp -a /tmp/node_modules /app/
 
 # Bring in everything now
@@ -18,4 +18,4 @@ COPY . .
 EXPOSE 80
 
 # Define entrypoint and default parameters
-CMD ["npx", "parcel", "public/index.html"]
+CMD ["npx", "parcel", "-p", "80", "public/index.html"]
