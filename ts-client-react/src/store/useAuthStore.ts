@@ -6,19 +6,25 @@ function newTokenStore() {
 
   const tokenStore = storageFactory(() => localStorage);
 
+  function get(): string | null {
+    return tokenStore.getItem(TOKEN) ?? null;
+  }
+
   return {
-    get(): string | null {
-      return tokenStore.getItem(TOKEN) ?? null;
-    },
+    get,
     clear(): void {
       tokenStore.clear();
     },
-    set(value?: string | null): void {
+    set(value?: string | null): boolean {
+      if (value === get()) {
+        return false;
+      }
       if (value === undefined || value === null) {
         tokenStore.removeItem(TOKEN);
       } else {
         tokenStore.setItem(TOKEN, value);
       }
+      return true;
     },
   };
 }
@@ -34,7 +40,8 @@ export interface AuthState {
 export const useAuthStore = create<AuthState>((set) => ({
   token: tokenStore.get(),
   setToken: (token: string | null) => {
-    tokenStore.set(token);
-    set((state) => ({ ...state, token }));
+    if (tokenStore.set(token)) {
+      set((state) => ({ ...state, token }));
+    }
   },
 }));
