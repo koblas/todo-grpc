@@ -1,8 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "react-query";
+import { z } from "zod";
 import { User } from "../../rpc/user";
 import { useAuth } from "../auth";
 import { newFetchClient } from "../../rpc/utils";
 import { Json } from "../../types/json";
+
+const UserNetwork = z.object({
+  user: User,
+});
 
 export function useUser() {
   const { token } = useAuth();
@@ -23,12 +28,17 @@ export function useUser() {
     unknown
   >("user", (data) => client.POST("/v1/user/update_user", data as unknown as Json), {
     onSuccess(data) {
-      queryClient.setQueryData("user", data);
+      const parsed = UserNetwork.safeParse(data);
+      if (parsed.success) {
+        queryClient.setQueryData("user", parsed.data);
+      }
     },
   });
 
+  const parsed = UserNetwork.safeParse(result.data);
+
   return {
-    user: (result?.data?.user as User) ?? null,
+    user: parsed.success ? parsed.data.user : null,
     isLoading: result.isLoading,
     isError: result.isError,
     mutations: {

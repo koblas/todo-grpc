@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from "react";
 
-import { ChakraProvider, CSSReset, Flex, useToast } from "@chakra-ui/react";
+import { ChakraProvider, CSSReset, Flex, Spinner, useToast } from "@chakra-ui/react";
 import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "react-query";
 
@@ -10,10 +10,10 @@ import { TodoPage } from "./pages/TodoPage";
 import { HomePage } from "./pages/HomePage";
 import { NetworkContextProvider } from "./hooks/network";
 import Sidebar from "./components/Sidebar";
-import { useTodos } from "./hooks/todo";
 import { useAuth } from "./hooks/auth";
 import { WebsocketProvider } from "./rpc/websocket";
 import { FetchError } from "./rpc/utils";
+import { useTodoListener } from "./hooks/data/todo";
 
 function buildWebsocketUrl(): string {
   const base = process.env.WS_URL ?? "/wsapi";
@@ -31,24 +31,6 @@ function buildWebsocketUrl(): string {
 }
 
 const WS_URL = buildWebsocketUrl();
-
-function ReloadState() {
-  const { token } = useAuth();
-  // const pos = useRef<{ value: string | null }>({ value: null });
-  const { mutations } = useTodos();
-  const [loadTodos] = mutations.useLoadTodos();
-  const [clearTodos] = mutations.useClearTodos();
-
-  useEffect(() => {
-    if (token) {
-      loadTodos({});
-    } else {
-      clearTodos();
-    }
-  }, [token]);
-
-  return null;
-}
 
 function SiteLayout() {
   return (
@@ -70,6 +52,20 @@ function Site() {
       </Route>
     </Routes>
   );
+}
+
+function ClearOnLogout({ queryClient }: { queryClient: QueryClient }) {
+  const { token } = useAuth();
+
+  useEffect(() => {
+    if (!token) {
+      queryClient.clear();
+    }
+  }, [token, queryClient]);
+
+  useTodoListener(queryClient);
+
+  return null;
 }
 
 export default function App() {
@@ -105,15 +101,15 @@ export default function App() {
       <QueryClientProvider client={queryClient}>
         <NetworkContextProvider>
           <WebsocketProvider url={WS_URL}>
-            <>
-              <ReloadState />
+            <React.Suspense fallback={<Spinner />}>
+              <ClearOnLogout queryClient={queryClient} />
               <BrowserRouter>
                 <Routes>
                   <Route path="/auth/*" element={<AuthPages />} />
                   <Route path="*" element={<Site />} />
                 </Routes>
               </BrowserRouter>
-            </>
+            </React.Suspense>
           </WebsocketProvider>
         </NetworkContextProvider>
       </QueryClientProvider>

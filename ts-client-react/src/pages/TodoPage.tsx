@@ -1,31 +1,30 @@
 import React from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
-import { Heading, Box, Text, CloseButton, Grid, Flex, Input, Button } from "@chakra-ui/react";
-import { useTodos } from "../hooks/todo";
-import { TodoItem } from "../rpc/todo";
+import { Heading, Box, Text, CloseButton, Grid, Flex, Input, Button, Spinner } from "@chakra-ui/react";
+import { useTodos } from "../hooks/data/todo";
+import { TodoItemType, TodoListType } from "../rpc/todo";
 import { useAuth } from "../hooks/auth";
 
 type FormFields = {
   text: string;
 };
 
-function Item({ todo }: { todo: TodoItem }) {
+function Item({ todo }: { todo: TodoItemType }) {
   const { mutations } = useTodos();
-  const [deleteTodo] = mutations.useDeleteTodo();
   const { task, id } = todo;
 
   return (
     <Box w={2 / 6} border="1px" borderColor="gray.200" margin="1" padding="2">
       <Flex justifyContent="space-between" alignItems="baseline">
         <Text>{task}</Text>
-        <CloseButton size="sm" color="red.500" onClick={() => deleteTodo({ id })} />
+        <CloseButton size="sm" color="red.500" onClick={() => mutations.deleteTodo.mutate({ id })} />
       </Flex>
     </Box>
   );
 }
 
-function List({ todos }: { todos: TodoItem[] }) {
+function List({ todos }: TodoListType) {
   return (
     <Grid justifyItems="center">
       {todos.map((todo) => (
@@ -35,9 +34,8 @@ function List({ todos }: { todos: TodoItem[] }) {
   );
 }
 
-export function TodoPage() {
-  const { mutations, todos } = useTodos();
-  const [addTodo] = mutations.useAddTodo();
+export function TodoDetail() {
+  const { todos, mutations } = useTodos();
   const { register, handleSubmit, setValue } = useForm<FormFields>();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
@@ -48,7 +46,7 @@ export function TodoPage() {
   }
 
   function onSubmit(data: FormFields) {
-    addTodo({ task: data.text });
+    mutations.addTodo.mutate({ task: data.text });
     setValue("text", "");
   }
 
@@ -72,6 +70,24 @@ export function TodoPage() {
       <Box p="5" bgColor="white">
         <List todos={todos} />
       </Box>
+    </Box>
+  );
+}
+
+export function TodoPage() {
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+
+  if (!isAuthenticated) {
+    navigate("/auth/login");
+    return null;
+  }
+
+  return (
+    <Box w="100%" p="8" bgColor="gray.100">
+      <React.Suspense fallback={<Spinner />}>
+        <TodoDetail />
+      </React.Suspense>
     </Box>
   );
 }
