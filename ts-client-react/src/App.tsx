@@ -1,8 +1,9 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 
-import { ChakraProvider, CSSReset, Flex } from "@chakra-ui/react";
-
+import { ChakraProvider, CSSReset, Flex, useToast } from "@chakra-ui/react";
 import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "react-query";
+
 import { AuthPages } from "./pages/auth";
 import { SettingsPage } from "./pages/settings";
 import { TodoPage } from "./pages/TodoPage";
@@ -12,6 +13,7 @@ import Sidebar from "./components/Sidebar";
 import { useTodos } from "./hooks/todo";
 import { useAuth } from "./hooks/auth";
 import { WebsocketProvider } from "./rpc/websocket";
+import { FetchError } from "./rpc/utils";
 
 function buildWebsocketUrl(): string {
   const base = process.env.WS_URL ?? "/wsapi";
@@ -71,22 +73,50 @@ function Site() {
 }
 
 export default function App() {
+  const toast = useToast();
+
+  const queryClient = useMemo(() => {
+    function onError(error: unknown) {
+      if (error instanceof FetchError && error.getInfo().code !== "invalid_argument") {
+        toast({
+          title: "Network error",
+          status: "error",
+          isClosable: true,
+        });
+      }
+    }
+
+    return new QueryClient({
+      defaultOptions: {
+        queries: {
+          suspense: true,
+          onError,
+        },
+        mutations: {
+          onError,
+        },
+      },
+    });
+  }, [toast]);
+
   return (
     <ChakraProvider>
       <CSSReset />
-      <NetworkContextProvider>
-        <WebsocketProvider url={WS_URL}>
-          <>
-            <ReloadState />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/auth/*" element={<AuthPages />} />
-                <Route path="*" element={<Site />} />
-              </Routes>
-            </BrowserRouter>
-          </>
-        </WebsocketProvider>
-      </NetworkContextProvider>
+      <QueryClientProvider client={queryClient}>
+        <NetworkContextProvider>
+          <WebsocketProvider url={WS_URL}>
+            <>
+              <ReloadState />
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/auth/*" element={<AuthPages />} />
+                  <Route path="*" element={<Site />} />
+                </Routes>
+              </BrowserRouter>
+            </>
+          </WebsocketProvider>
+        </NetworkContextProvider>
+      </QueryClientProvider>
     </ChakraProvider>
   );
 }

@@ -18,6 +18,31 @@ export class FetchError extends Error {
   toString(): string {
     return `super().toString() ${JSON.stringify(this.body)}`;
   }
+
+  getInfo(): { code?: string; argument?: string; msg?: string } {
+    if (!this.body) {
+      return {
+        code: "unknown",
+      };
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { code, msg, meta } = this.body as any;
+
+    if (!code) {
+      return {
+        code: "unknown",
+      };
+    }
+
+    let argument: string | undefined;
+
+    if (typeof meta === "object" && meta !== null && typeof meta.argument === "string") {
+      argument = meta.argument;
+    }
+
+    return { code, argument, msg };
+  }
 }
 
 export type FetchHandlers = Record<

@@ -38,7 +38,7 @@ export default function NavItem({
           <Flex alignItems="left">
             {avatar && <Avatar src={avatar} size="sm" w="20px" h="20px" color={active ? "#82AAAD" : "gray.500"} />}
             {icon && <Icon as={icon} fontSize="xl" color={active ? "#82AAAD" : "gray.500"} />}
-            <Text as="p" ml={5} align="left" display={expanded ? "flex" : "none"}>
+            <Text as="div" ml={5} align="left" display={expanded ? "flex" : "none"}>
               {children}
             </Text>
           </Flex>

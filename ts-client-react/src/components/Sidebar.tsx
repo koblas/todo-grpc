@@ -1,19 +1,25 @@
 import React, { useState } from "react";
-import { Flex, IconButton, Divider, Heading, Box, Button, Icon } from "@chakra-ui/react";
+import { Flex, IconButton, Divider, Box, Button, Icon, Spinner } from "@chakra-ui/react";
 import {
-  FiMenu,
-  FiHome,
-  FiCalendar,
-  FiUser,
-  FiDollarSign,
-  FiBriefcase,
-  FiSettings,
-  FiChevronLeft,
-  FiLogOut,
-} from "react-icons/fi";
-import { IoPawOutline } from "react-icons/io5";
+  BsGear,
+  BsCalendar,
+  BsPerson,
+  BsHouseDoor,
+  BsBoxArrowRight,
+  BsCurrencyDollar,
+  BsBriefcase,
+  BsList,
+  BsChevronLeft,
+} from "react-icons/bs";
 import { useNavigate, useLocation } from "react-router";
 import NavItem from "./NavItem";
+import { useUser } from "../hooks/data/user";
+
+function Username() {
+  const { user } = useUser();
+
+  return <span>{user.name}</span>;
+}
 
 // https://github.com/bjcarlson42/chakra-left-responsive-navbar
 
@@ -34,16 +40,16 @@ export default function Sidebar() {
           <IconButton
             background="none"
             aria-label="Toggle sidebar"
-            mt={5}
+            mt={4}
             _hover={{ background: "none" }}
-            icon={<FiMenu />}
+            icon={<BsList />}
             onClick={() => {
               setExpanded(!isExpanded);
             }}
           />
           <NavItem
             expanded={isExpanded}
-            icon={FiHome}
+            icon={BsHouseDoor}
             active={pathname === "/todo"}
             onClick={() => {
               navigate("/todo");
@@ -53,7 +59,7 @@ export default function Sidebar() {
           </NavItem>
           <NavItem
             expanded={isExpanded}
-            icon={FiCalendar}
+            icon={BsCalendar}
             active={pathname === "/calendar"}
             onClick={() => {
               navigate("/calendar");
@@ -61,16 +67,13 @@ export default function Sidebar() {
           >
             Calendar
           </NavItem>
-          <NavItem expanded={isExpanded} icon={FiUser}>
+          <NavItem expanded={isExpanded} icon={BsPerson}>
             Clients
           </NavItem>
-          <NavItem expanded={isExpanded} icon={IoPawOutline}>
-            Animals
-          </NavItem>
-          <NavItem expanded={isExpanded} icon={FiDollarSign}>
+          <NavItem expanded={isExpanded} icon={BsCurrencyDollar}>
             Stocks
           </NavItem>
-          <NavItem expanded={isExpanded} icon={FiBriefcase}>
+          <NavItem expanded={isExpanded} icon={BsBriefcase}>
             Reports
           </NavItem>
         </Flex>
@@ -78,11 +81,13 @@ export default function Sidebar() {
         <Flex flexDir="column" w="100%" alignItems={isExpanded ? "flex-start" : "center"}>
           <Divider display={isExpanded ? "flex" : "none"} />
           <NavItem expanded={isExpanded} avatar="avatar-1.jpg">
-            Sylwia Weller
+            <React.Suspense fallback={<Spinner />}>
+              <Username />
+            </React.Suspense>
           </NavItem>
           <NavItem
             expanded={isExpanded}
-            icon={FiSettings}
+            icon={BsGear}
             active={pathname.startsWith("/settings")}
             onClick={() => {
               navigate("/settings/");
@@ -92,7 +97,7 @@ export default function Sidebar() {
           </NavItem>
           <NavItem
             expanded={isExpanded}
-            icon={FiLogOut}
+            icon={BsBoxArrowRight}
             onClick={() => {
               navigate("/auth/logout");
             }}
@@ -157,7 +162,7 @@ export default function Sidebar() {
             }}
           >
             <Box as="span" display="inline-block" flexShrink={0} lineHeight="1">
-              <Icon as={FiChevronLeft} strokeWidth="1" color="rgb(107, 119, 140)" w={6} h={6} />
+              <Icon as={BsChevronLeft} strokeWidth="1" color="rgb(107, 119, 140)" w={6} h={6} />
             </Box>
             <Box position="absolute" left="-8px" right="-12px" bottom="-8px" top="-8px" />
           </Button>
