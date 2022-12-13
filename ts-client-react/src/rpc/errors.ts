@@ -9,13 +9,13 @@ export interface RpcError {
 
 export const RpcStop: unique symbol = Symbol("rpc_stop");
 
-export interface RpcOptions<T> {
+export interface RpcOptions<T, TVar = unknown> {
   /// Called when a request starts
   onBegin?: () => void | typeof RpcStop;
   /// Always called regardless of error or completed
   onFinished?: () => void | typeof RpcStop;
   /// Called whith the successful response payload
-  onCompleted?: (data: T) => void | typeof RpcStop;
+  onCompleted?: (data: T, variables: TVar) => void | typeof RpcStop;
   /// Called for any error
   onError?: (error: RpcError) => void | typeof RpcStop;
   /// Called for a field validation error

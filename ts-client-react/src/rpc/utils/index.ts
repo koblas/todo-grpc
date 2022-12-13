@@ -94,7 +94,7 @@ const baseHeaders = {
 
 export function newFetchClient(config?: { token?: string | null; base?: string | null; handlers?: FetchHandlers }): {
   fetch: typeof fetch;
-  POST<T = Json>(url: string, body: Json): Promise<T>;
+  POST<T = unknown>(url: string, body: Json): Promise<T>;
   GET<T = Json>(url: string): Promise<T>;
   DELETE<T = Json>(url: string): Promise<T>;
 } {

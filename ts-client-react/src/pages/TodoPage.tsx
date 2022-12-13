@@ -75,14 +75,6 @@ export function TodoDetail() {
 }
 
 export function TodoPage() {
-  const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
-
-  if (!isAuthenticated) {
-    navigate("/auth/login");
-    return null;
-  }
-
   return (
     <Box w="100%" p="8" bgColor="gray.100">
       <React.Suspense fallback={<Spinner />}>

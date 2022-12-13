@@ -6,6 +6,10 @@ import { useAuth } from "../auth";
 import { newFetchClient } from "../../rpc/utils";
 import { Json } from "../../types/json";
 import { useWebsocketUpdates } from "../../rpc/websocket";
+import { buildCallbacksTyped } from "../../rpc/utils/helper";
+
+type AddTodoParam = Pick<TodoItemType, "task">;
+type DeleteTodoParam = Pick<TodoItemType, "id">;
 
 function cacheAddTodo(queryClient: QueryClient, item: TodoItemType) {
   queryClient.setQueriesData("todos", (old: TodoListType | undefined) => {
@@ -32,50 +36,30 @@ export function useTodos() {
   const client = newFetchClient({ token });
   const queryClient = useQueryClient();
 
-  const result = useQuery(
+  const result = useQuery("todos", () => client.POST("/v1/todo/get_todos", {}), {
+    staleTime: 300_000,
+    enabled: !!token,
+  });
+
+  const addTodo = useMutation<TodoItemType, unknown, AddTodoParam, unknown>(
     "todos",
-    () =>
-      client.POST("/v1/todo/get_todos", {
-        enabled: !!token,
-      }),
-    {
-      staleTime: 300_000,
-    },
+    (data) => client.POST<TodoItemType>("/v1/todo/add_todo", data as unknown as Json),
+    buildCallbacksTyped(queryClient, TodoItem, {
+      onCompleted(data) {
+        cacheAddTodo(queryClient, data);
+      },
+    }),
   );
 
-  const addTodo = useMutation<
-    Json,
-    unknown,
-    {
-      task?: string;
-    },
-    unknown
-  >("todos", (data) => client.POST("/v1/todo/add_todo", data as unknown as Json), {
-    onSuccess(data) {
-      const parsed = TodoItem.safeParse(data);
-
-      if (parsed.success) {
-        cacheAddTodo(queryClient, parsed.data);
-      }
-    },
-  });
-
-  const deleteTodo = useMutation<
-    Json,
-    unknown,
-    {
-      id: string;
-    },
-    unknown
-  >("todos", (data) => client.POST("/v1/todo/delete_todo", data as unknown as Json), {
-    onSuccess(data, variables) {
-      const parsed = z.object({}).safeParse(data);
-
-      if (parsed.success) {
+  const deleteTodo = useMutation<Json, unknown, DeleteTodoParam, unknown>(
+    "todos",
+    (data) => client.POST<Json>("/v1/todo/delete_todo", data),
+    buildCallbacksTyped<z.ZodUnknown, unknown, unknown, DeleteTodoParam>(queryClient, z.unknown(), {
+      onCompleted(data, variables) {
         cacheDeleteTodo(queryClient, variables.id);
-      }
-    },
-  });
+      },
+    }),
+  );
 
   const parsed = TodoList.safeParse(result.data);
 

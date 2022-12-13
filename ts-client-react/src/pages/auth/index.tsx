@@ -38,8 +38,8 @@ function AuthPagesActions() {
       <Route path="/logout" element={<AuthLogoutPage />} />
       <Route path="/oauth/:provider" element={<OAuthPage />} />
       <Route path="/recover/send" element={<AuthRecoverSendPage />} />
-      <Route path="/email/confirm/:userId/:token" element={<AuthEmailConfirmPage />} />
       <Route path="/recover/verify/:userId/:token" element={<AuthRecoveryResetPage />} />
+      <Route path="/email/confirm/:userId/:token" element={<AuthEmailConfirmPage />} />
       <Route path="/*" element={<NotFoundPage />} />
     </Routes>
   );

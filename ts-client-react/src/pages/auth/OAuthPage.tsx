@@ -6,17 +6,16 @@ import AuthWrapper from "./AuthWrapper";
 
 export default function OAuthPage() {
   const auth = useAuth();
-  const location = useLocation();
   const navigate = useNavigate();
+  const [success, setSuccess] = useState(true);
   const [loading, setLoading] = useState(true);
-  const [success, setSuccess] = useState(false);
-  // const [lError, setLError] = useState<string>("");
   const { provider } = useParams<{ provider: string }>();
   const [oauthLogin, { loading: loadingLogin }] = auth.mutations.useOauthLogin();
   const [oauthRedirect, { loading: loadingRedirect }] = auth.mutations.useOauthRedirect();
 
   const redirectUrl = `${window.location.origin}/auth/oauth/${provider}`;
-  const search = new URLSearchParams(location.search);
+  const { search: queryString } = useLocation();
+  const search = new URLSearchParams(queryString);
   const code = search.get("code");
   const state = search.get("state") ?? "";
 
@@ -25,15 +24,23 @@ export default function OAuthPage() {
   }
 
   useEffect(() => {
+    // FIXME -- `next` parameter triggers a google error with redirects, so not implemented
+    const query = new URLSearchParams(search);
+    // const next = query.get("next") ?? "";
+
+    // const nextQuery = next ? `?next=${encodeURIComponent(next)}` : "";
+    const nextQuery = "";
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    const redirect_url = `${window.location.origin}/auth/oauth/${provider}${nextQuery}`;
     // No code, redice to the OAuth provider
     if (!code) {
-      const returnUrl = `${window.location.origin}/auth/oauth/${provider}`;
-
       oauthRedirect(
-        { provider, returnUrl },
+        { provider, redirect_url },
         {
           onCompleted({ url }) {
-            window.location.href = url;
+            setInterval(() => {
+              window.location.href = url;
+            }, 0);
           },
           onError() {
             setLoading(false);
@@ -45,14 +52,15 @@ export default function OAuthPage() {
     }
 
     oauthLogin(
-      { provider, code, redirectUrl, state },
+      { provider, code, redirect_url, state },
       {
         onCompleted(data) {
-          setSuccess(true);
-
-          if (!data?.created) {
-            // TODO - should be "next"
-            navigate("/", { replace: true });
+          if (data.created) {
+            // TODO -- If created we should flag this as a new user
+            // For now we just have a lame message
+            setSuccess(true);
+          } else {
+            navigate(query.get("next") ?? "/", { replace: true });
           }
         },
         onFinished() {

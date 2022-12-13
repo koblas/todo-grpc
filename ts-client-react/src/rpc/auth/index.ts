@@ -1,23 +1,25 @@
+import { z } from "zod";
 import { RpcOptions } from "../errors";
 
-export interface AuthOk {}
+export const AuthOkResponse = z.object({});
 
-export interface AuthToken {
-  access_token: string;
-}
+export const AuthTokenResponse = z.object({
+  access_token: z.string(),
+});
 
-export interface LoginSuccess {
-  token: AuthToken;
-}
+export const LoginRegisterResponse = z.object({
+  created: z.boolean(),
+  token: AuthTokenResponse,
+});
 
-export interface LoginRegisterSuccess {
-  created: boolean;
-  token: AuthToken;
-}
+export const OauthLoginUrlResponse = z.object({
+  url: z.string(),
+});
 
-export interface OauthLoginUrl {
-  url: string;
-}
+export type LoginRegisterSuccess = z.infer<typeof LoginRegisterResponse>;
+export type OauthLoginUrl = z.infer<typeof OauthLoginUrlResponse>;
+export type AuthToken = z.infer<typeof AuthTokenResponse>;
+export type AuthOk = z.infer<typeof AuthOkResponse>;
 
 export interface AuthService {
   register(

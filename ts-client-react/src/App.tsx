@@ -14,6 +14,7 @@ import { useAuth } from "./hooks/auth";
 import { WebsocketProvider } from "./rpc/websocket";
 import { FetchError } from "./rpc/utils";
 import { useTodoListener } from "./hooks/data/todo";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function buildWebsocketUrl(): string {
   const base = process.env.WS_URL ?? "/wsapi";
@@ -46,8 +47,22 @@ function Site() {
     <Routes>
       <Route path="/" element={<SiteLayout />}>
         <Route index element={<HomePage />} />
-        <Route path="settings/*" element={<SettingsPage />} />
-        <Route path="todo/*" element={<TodoPage />} />
+        <Route
+          path="settings/*"
+          element={
+            <ProtectedRoute>
+              <SettingsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="todo/*"
+          element={
+            <ProtectedRoute>
+              <TodoPage />
+            </ProtectedRoute>
+          }
+        />
         <Route path="*" element={<HomePage />} />
       </Route>
     </Routes>
@@ -73,10 +88,17 @@ export default function App() {
 
   const queryClient = useMemo(() => {
     function onError(error: unknown) {
+      console.log("IN TOP LEVEL ERROR");
       if (error instanceof FetchError && error.getInfo().code !== "invalid_argument") {
         toast({
           title: "Network error",
           status: "error",
+          isClosable: true,
+        });
+      } else if (!(error instanceof FetchError) || error.code !== 400) {
+        toast({
+          status: "error",
+          title: "An unexpected error occured",
           isClosable: true,
         });
       }

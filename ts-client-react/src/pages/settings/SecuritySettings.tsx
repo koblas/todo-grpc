@@ -13,8 +13,8 @@ const INPUT_STYLE = {
 };
 
 type FormFields = {
-  oldPassword: string;
-  newPassword: string;
+  password: string;
+  passwordNew: string;
   passwordAgain: string;
 };
 
@@ -33,6 +33,10 @@ export function SecuritySettings() {
   });
 
   function onSubmit(data: FormFields) {
+    if (data.passwordAgain !== data.passwordNew) {
+      setError("passwordNew", { message: "Password doesn't match retryped" });
+      return;
+    }
     setSubmitting(true);
     mutations.updateUser.mutate(data, {
       onSettled() {
@@ -71,11 +75,11 @@ export function SecuritySettings() {
             </Box>
 
             <Box pt="5">
-              <FormControl isInvalid={!!errors.oldPassword}>
+              <FormControl isInvalid={!!errors.password}>
                 <FormLabel>Old Password</FormLabel>
                 <Flex>
                   <PasswordInput
-                    {...register("oldPassword", {
+                    {...register("password", {
                       required: {
                         value: true,
                         message: "Old password is required",
@@ -84,16 +88,16 @@ export function SecuritySettings() {
                     {...INPUT_STYLE}
                   />
                 </Flex>
-                <FormErrorMessage>{errors.oldPassword?.message}</FormErrorMessage>
+                <FormErrorMessage>{errors.password?.message}</FormErrorMessage>
               </FormControl>
             </Box>
 
             <Box pt="5">
-              <FormControl isInvalid={!!errors.newPassword}>
+              <FormControl isInvalid={!!errors.passwordNew}>
                 <FormLabel>New Password</FormLabel>
                 <Flex>
                   <PasswordInput
-                    {...register("newPassword", {
+                    {...register("passwordNew", {
                       required: {
                         value: true,
                         message: "Password is required",
@@ -106,7 +110,7 @@ export function SecuritySettings() {
                     {...INPUT_STYLE}
                   />
                 </Flex>
-                <FormErrorMessage>{errors.newPassword?.message}</FormErrorMessage>
+                <FormErrorMessage>{errors.passwordNew?.message}</FormErrorMessage>
               </FormControl>
             </Box>
 

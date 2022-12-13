@@ -1,12 +1,21 @@
-import { useState } from "react";
-import { newAuthClient } from "../rpc/auth/factory";
-import { useNetworkContextErrors } from "./network";
-import { RpcMutation, RpcOptions, RpcError } from "../rpc/errors";
-import { randomString } from "../util/randomeString";
-import { AuthToken, LoginRegisterSuccess, OauthLoginUrl } from "../rpc/auth";
-import { useAuthStore } from "../store/useAuthStore";
+import { z } from "zod";
+import { useMutation, useQueryClient } from "react-query";
 
-const authClient = newAuthClient("json");
+import { RpcMutation, RpcOptions } from "../rpc/errors";
+import {
+  LoginRegisterResponse,
+  AuthOk,
+  AuthToken,
+  LoginRegisterSuccess,
+  OauthLoginUrl,
+  AuthOkResponse,
+  AuthTokenResponse,
+  OauthLoginUrlResponse,
+} from "../rpc/auth";
+import { useAuthStore } from "../store/useAuthStore";
+import { newFetchClient } from "../rpc/utils";
+import { buildCallbacksTyped } from "../rpc/utils/helper";
+import { Json } from "../types/json";
 
 export type LoginParams = {
   email: string;
@@ -36,257 +45,188 @@ export type RegisterParams = {
 
 export type OauthUrlParams = {
   provider: string;
-  returnUrl: string;
+  redirect_url: string;
 };
 
 export type OauthAssociateParms = {
   provider: string;
-  redirectUrl: string;
+  redirect_url: string;
   code: string;
   state: string;
 };
 
 export function useAuth() {
   const { token, setToken } = useAuthStore((s) => s);
-  const addHandler = useNetworkContextErrors();
+  const queryClient = useQueryClient();
+  const client = newFetchClient();
 
   return {
     token,
     subscribe: useAuthStore.subscribe,
     isAuthenticated: !!token,
+
     mutations: {
       useRegister(): RpcMutation<RegisterParams, LoginRegisterSuccess> {
-        const [data, setData] = useState<LoginRegisterSuccess | undefined>();
-        const [loading, setLoading] = useState(false);
-        const [error, setError] = useState<RpcError | undefined>(undefined);
+        // const mutation = useMutation<z.infer<typeof RegisterResponse>, unknown, RegisterParams>(
+        const mutation = useMutation(
+          (data: RegisterParams) => client.POST<LoginRegisterSuccess>("/v1/auth/register", data),
+          {},
+        );
 
-        const func = (params: RegisterParams, options?: RpcOptions<LoginRegisterSuccess>) => {
-          setLoading(true);
-          authClient.register(
-            params,
-            addHandler(
+        function action(data: RegisterParams, handlers?: RpcOptions<z.infer<typeof LoginRegisterResponse>>) {
+          mutation.mutate(
+            data,
+            buildCallbacksTyped(
+              queryClient,
+              LoginRegisterResponse,
               {
-                onCompleted(input) {
-                  setData(input);
-                  setToken(input.token.access_token);
-                },
-                onError(err: RpcError) {
-                  setError(err);
-                },
-                onFinished() {
-                  setLoading(false);
+                onCompleted(result) {
+                  setToken(result.token.access_token);
                 },
               },
-              options,
+              handlers,
             ),
           );
-        };
+        }
 
-        return [func, { data, loading, error }];
+        return [action, { loading: mutation.isLoading }];
       },
-      useEmailConfirm(): RpcMutation<RecoverVerifyParams, void> {
-        const [loading, setLoading] = useState(false);
-        const [error, setError] = useState<RpcError | undefined>(undefined);
+      useEmailConfirm(): RpcMutation<RecoverVerifyParams, AuthOk> {
+        const mutation = useMutation<AuthOk, unknown, RecoverVerifyParams>(
+          (data: RecoverVerifyParams) => client.POST("/v1/auth/verify_email", data as Json),
+          {},
+        );
 
-        const func = (params: RecoverVerifyParams, options?: RpcOptions<void>) => {
-          setLoading(true);
-          authClient.verifyEmail(
-            params,
-            addHandler(
-              {
-                onError(err: RpcError) {
-                  setError(err);
-                },
-                onFinished() {
-                  setLoading(false);
-                },
-              },
-              options,
-            ),
-          );
-        };
+        // function action(data: RecoverVerifyParams, handlers?: RpcOptions<z.infer<typeof AuthOkResponse>>) {
+        function action(data: RecoverVerifyParams, handlers?: RpcOptions<AuthOk>) {
+          mutation.mutate(data, buildCallbacksTyped(queryClient, AuthOkResponse, handlers));
+        }
 
-        return [func, { data: undefined, loading, error }];
+        return [action, { loading: mutation.isLoading }];
       },
+
       useLogin(): RpcMutation<LoginParams, AuthToken> {
-        const [data, setData] = useState<AuthToken | undefined>();
-        const [loading, setLoading] = useState(false);
-        const [error, setError] = useState<RpcError | undefined>(undefined);
+        const mutation = useMutation<AuthToken, unknown, LoginParams>(
+          (data: LoginParams) => client.POST("/v1/auth/authenticate", data as Json),
+          {},
+        );
 
-        const func = (params: LoginParams, options?: RpcOptions<AuthToken>) => {
-          setLoading(true);
-          authClient.authenticate(
-            params,
-            addHandler(
+        // function action(data: RecoverVerifyParams, handlers?: RpcOptions<z.infer<typeof AuthOkResponse>>) {
+        function action(data: LoginParams, handlers?: RpcOptions<AuthToken>) {
+          mutation.mutate(
+            data,
+            buildCallbacksTyped(
+              queryClient,
+              AuthTokenResponse,
               {
-                onError(err: RpcError) {
-                  setError(err);
-                },
-                onFinished() {
-                  setLoading(false);
-                },
-                onCompleted: (input) => {
-                  setData(input);
-                  setToken(input.access_token);
+                onCompleted(result) {
+                  setToken(result.access_token);
                 },
               },
-              options,
+              handlers,
             ),
           );
-        };
+        }
 
-        return [func, { data, loading, error }];
+        return [action, { loading: mutation.isLoading }];
       },
       useRecoverSend(): RpcMutation<RecoverSendParams, void> {
-        const [loading, setLoading] = useState(false);
-        const [error, setError] = useState<RpcError | undefined>(undefined);
+        const mutation = useMutation<void, unknown, RecoverSendParams>(
+          (data: RecoverSendParams) => client.POST("/v1/auth/recover_send", data as Json),
+          {},
+        );
 
-        const func = (params: RecoverSendParams, options?: RpcOptions<void>) => {
-          setLoading(true);
-          authClient.recoverSend(
-            params,
-            addHandler(
-              {
-                onError(err: RpcError) {
-                  setError(err);
-                },
-                onFinished() {
-                  setLoading(false);
-                },
-              },
-              options,
-            ),
-          );
-        };
+        // function action(data: RecoverVerifyParams, handlers?: RpcOptions<z.infer<typeof AuthOkResponse>>) {
+        function action(data: RecoverSendParams, handlers?: RpcOptions<void>) {
+          mutation.mutate(data, buildCallbacksTyped(queryClient, AuthOkResponse, handlers));
+        }
 
-        return [func, { data: undefined, loading, error }];
+        return [action, { loading: mutation.isLoading }];
       },
       useRecoveryVerify(): RpcMutation<RecoverVerifyParams, void> {
-        const [loading, setLoading] = useState(false);
-        const [error, setError] = useState<RpcError | undefined>(undefined);
+        const mutation = useMutation<void, unknown, RecoverVerifyParams>(
+          (data: RecoverVerifyParams) => client.POST("/v1/auth/recover_verify", data as Json),
+          {},
+        );
 
-        const func = (params: RecoverVerifyParams, options?: RpcOptions<void>) => {
-          setLoading(true);
-          authClient.recoverVerify(
-            params,
-            addHandler(
-              {
-                onError(err: RpcError) {
-                  setError(err);
-                },
-                onFinished() {
-                  setLoading(false);
-                },
-              },
-              options,
-            ),
-          );
-        };
+        // function action(data: RecoverVerifyParams, handlers?: RpcOptions<z.infer<typeof AuthOkResponse>>) {
+        function action(data: RecoverVerifyParams, handlers?: RpcOptions<void>) {
+          mutation.mutate(data, buildCallbacksTyped(queryClient, AuthOkResponse, handlers));
+        }
 
-        return [func, { data: undefined, loading, error }];
+        return [action, { loading: mutation.isLoading }];
       },
       useRecoveryUpdate(): RpcMutation<RecoverUpdateParams, AuthToken> {
-        const [data, setData] = useState<AuthToken | undefined>();
-        const [loading, setLoading] = useState(false);
-        const [error, setError] = useState<RpcError | undefined>(undefined);
+        const mutation = useMutation<AuthToken, unknown, RecoverUpdateParams>(
+          (data: RecoverUpdateParams) => client.POST("/v1/auth/recover_update", data as Json),
+          {},
+        );
 
-        const func = (params: RecoverUpdateParams, options?: RpcOptions<AuthToken>) => {
-          setLoading(true);
-          authClient.recoverUpdate(
-            params,
-            addHandler(
+        // function action(data: RecoverVerifyParams, handlers?: RpcOptions<z.infer<typeof AuthOkResponse>>) {
+        function action(data: RecoverUpdateParams, handlers?: RpcOptions<AuthToken>) {
+          mutation.mutate(
+            data,
+            buildCallbacksTyped(
+              queryClient,
+              AuthTokenResponse,
               {
-                onCompleted: (input) => {
-                  setData(input);
-                  setToken(input.access_token);
-                },
-                onError(err: RpcError) {
-                  setError(err);
-                },
-                onFinished() {
-                  setLoading(false);
+                onCompleted(result) {
+                  setToken(result.access_token);
                 },
               },
-              options,
+              handlers,
             ),
           );
-        };
+        }
 
-        return [func, { data, loading, error }];
+        return [action, { loading: mutation.isLoading }];
       },
+
       useLogout() {
         return (options?: RpcOptions<void>) => {
           setToken(null);
 
-          options?.onCompleted?.();
+          options?.onCompleted?.(undefined, undefined);
         };
       },
 
-      // OAuth Functionality
-      useOauthRedirect(): RpcMutation<OauthUrlParams, { url: string }> {
-        const [data, setData] = useState<OauthLoginUrl>({ url: "" });
-        const [loading, setLoading] = useState(false);
-        const [error, setError] = useState<RpcError | undefined>(undefined);
+      useOauthRedirect(): RpcMutation<OauthUrlParams, OauthLoginUrl> {
+        const mutation = useMutation<OauthLoginUrl, unknown, OauthUrlParams>((data: OauthUrlParams) =>
+          client.POST<OauthLoginUrl>("/v1/auth/oauth_url", data),
+        );
 
-        const func = (params: OauthUrlParams, options?: RpcOptions<OauthLoginUrl>) => {
-          const st = randomString(20);
+        // function action(data: RecoverVerifyParams, handlers?: RpcOptions<z.infer<typeof AuthOkResponse>>) {
+        function action(data: OauthUrlParams, handlers?: RpcOptions<OauthLoginUrl>) {
+          mutation.mutate(data, buildCallbacksTyped(queryClient, OauthLoginUrlResponse, handlers));
+        }
 
-          authClient.oauthRedirect(
-            {
-              provider: params.provider,
-              redirectUrl: params.returnUrl,
-              state: st,
-            },
-            addHandler(
-              {
-                onCompleted: (dvalue) => {
-                  setData(dvalue);
-                },
-                onError(err: RpcError) {
-                  setError(err);
-                },
-                onFinished() {
-                  setLoading(false);
-                },
-              },
-              options,
-            ),
-          );
-        };
-
-        return [func, { data, loading, error }];
+        return [action, { loading: mutation.isLoading }];
       },
 
       useOauthLogin(): RpcMutation<OauthAssociateParms, LoginRegisterSuccess> {
-        const [data, setData] = useState<LoginRegisterSuccess | undefined>();
-        const [loading, setLoading] = useState(false);
-        const [error, setError] = useState<RpcError | undefined>(undefined);
+        const mutation = useMutation<LoginRegisterSuccess, unknown, OauthAssociateParms>(
+          (data: OauthAssociateParms) => client.POST("/v1/auth/oauth_login", data as Json),
+          {},
+        );
 
-        const func = (
-          params: { provider: string; code: string; state: string; redirectUrl: string },
-          options?: RpcOptions<LoginRegisterSuccess>,
-        ) => {
-          authClient.oauthLogin(
-            params,
-            addHandler(
+        // function action(data: RecoverVerifyParams, handlers?: RpcOptions<z.infer<typeof AuthOkResponse>>) {
+        function action(data: OauthAssociateParms, handlers?: RpcOptions<LoginRegisterSuccess>) {
+          mutation.mutate(
+            data,
+            buildCallbacksTyped(
+              queryClient,
+              LoginRegisterResponse,
               {
-                onCompleted: (input) => {
-                  setData(data);
-                  setToken(input.token.access_token);
-                },
-                onError(err: RpcError) {
-                  setError(err);
-                },
-                onFinished() {
-                  setLoading(false);
+                onCompleted(result) {
+                  setToken(result.token.access_token);
                 },
               },
-              options,
+              handlers,
             ),
           );
-        };
+        }
 
-        return [func, { data, loading, error }];
+        return [action, { loading: mutation.isLoading }];
       },
     },
   };

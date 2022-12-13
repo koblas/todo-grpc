@@ -63,7 +63,9 @@ export default function AuthLoginPage() {
   }
 
   function onOauthButton(provider: string) {
-    navigate(`/auth/oauth/${provider}`);
+    const query = new URLSearchParams(search);
+
+    navigate(`/auth/oauth/${provider}?next=${encodeURIComponent(query.get("next") ?? "")}`);
   }
 
   return (
