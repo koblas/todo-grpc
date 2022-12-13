@@ -86,7 +86,8 @@ export default function App() {
   const toast = useToast();
 
   const queryClient = useMemo(() => {
-    function onError(error: unknown) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    function onError(error: any) {
       console.log("IN TOP LEVEL ERROR", error);
       if (error instanceof FetchError) {
         const { code } = error.getInfo();
@@ -99,8 +100,15 @@ export default function App() {
           });
         }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } else if ((error as any).code !== 400) {
+      } else if (error.code !== 400) {
         // We ignore 400 on the assumption that it shouldn't happen
+
+        // This is react-query throwing a CancelError
+        const isCancelledError = error && Object.hasOwn(error, "silent");
+        if (isCancelledError) {
+          return;
+        }
+
         toast({
           status: "error",
           title: "An unexpected error occured",

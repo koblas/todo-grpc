@@ -1,6 +1,4 @@
 import { Json } from "../../types/json";
-import { RpcOptions } from "../errors";
-import { handleJsonError } from "./json_helpers";
 
 // https://fny9c2xm3b.execute-api.us-east-1.amazonaws.com/v1/auth.AuthenticationService/Authenticate
 export const BASE_URL = process.env.BASE_URL ?? "/api";
@@ -159,30 +157,6 @@ export function newFetchClient(config?: { token?: string | null; base?: string |
       });
 
       return response.json();
-    },
-  };
-}
-
-/**
- * newFetchPOST is a standard wrapper around newFetchClient that
- * handles the error cases without a lot of DRY violations.
- */
-export function newFetchPOST(opts?: Parameters<typeof newFetchClient>[0]) {
-  const client = newFetchClient(opts);
-
-  return {
-    call<T, R = T>(url: string, params: Json, options: RpcOptions<R>, xform?: (input: T) => R) {
-      client
-        .POST<T>(url, params)
-        .then((data) => {
-          options.onCompleted?.(xform ? xform(data) : (data as unknown as R));
-        })
-        .catch((err) => {
-          handleJsonError(err, options);
-        })
-        .finally(() => {
-          options.onFinished?.();
-        });
     },
   };
 }
