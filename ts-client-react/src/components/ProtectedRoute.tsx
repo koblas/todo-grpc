@@ -19,6 +19,7 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
         },
       );
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
 
   // eslint-disable-next-line react/jsx-no-useless-fragment

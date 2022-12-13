@@ -5,7 +5,7 @@ import { Text, Heading, FormControl, FormLabel, Button, Flex, Box, useToast, For
 import { useForm } from "react-hook-form";
 import { useUser } from "../../hooks/data/user";
 import { FetchError } from "../../rpc/utils";
-import PasswordInput from "../../components/PasswordInput";
+import { PasswordInput } from "../../components/PasswordInput";
 
 const INPUT_STYLE = {
   bg: "white",

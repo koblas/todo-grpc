@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { RpcOptions } from "../errors";
+import { RpcOptions } from "./errors";
 
 export const AuthOkResponse = z.object({});
 

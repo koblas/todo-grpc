@@ -8,7 +8,6 @@ import { AuthPages } from "./pages/auth";
 import { SettingsPage } from "./pages/settings";
 import { TodoPage } from "./pages/TodoPage";
 import { HomePage } from "./pages/HomePage";
-import { NetworkContextProvider } from "./hooks/network";
 import Sidebar from "./components/Sidebar";
 import { useAuth } from "./hooks/auth";
 import { WebsocketProvider } from "./rpc/websocket";
@@ -88,14 +87,20 @@ export default function App() {
 
   const queryClient = useMemo(() => {
     function onError(error: unknown) {
-      console.log("IN TOP LEVEL ERROR");
-      if (error instanceof FetchError && error.getInfo().code !== "invalid_argument") {
-        toast({
-          title: "Network error",
-          status: "error",
-          isClosable: true,
-        });
-      } else if (!(error instanceof FetchError) || error.code !== 400) {
+      console.log("IN TOP LEVEL ERROR", error);
+      if (error instanceof FetchError) {
+        const { code } = error.getInfo();
+
+        if (code !== "invalid_argument" && code !== "unauthenticated") {
+          toast({
+            title: "Network error",
+            status: "error",
+            isClosable: true,
+          });
+        }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } else if ((error as any).code !== 400) {
+        // We ignore 400 on the assumption that it shouldn't happen
         toast({
           status: "error",
           title: "An unexpected error occured",
@@ -121,19 +126,17 @@ export default function App() {
     <ChakraProvider>
       <CSSReset />
       <QueryClientProvider client={queryClient}>
-        <NetworkContextProvider>
-          <WebsocketProvider url={WS_URL}>
-            <React.Suspense fallback={<Spinner />}>
-              <ClearOnLogout queryClient={queryClient} />
-              <BrowserRouter>
-                <Routes>
-                  <Route path="/auth/*" element={<AuthPages />} />
-                  <Route path="*" element={<Site />} />
-                </Routes>
-              </BrowserRouter>
-            </React.Suspense>
-          </WebsocketProvider>
-        </NetworkContextProvider>
+        <WebsocketProvider url={WS_URL}>
+          <React.Suspense fallback={<Spinner />}>
+            <ClearOnLogout queryClient={queryClient} />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/auth/*" element={<AuthPages />} />
+                <Route path="*" element={<Site />} />
+              </Routes>
+            </BrowserRouter>
+          </React.Suspense>
+        </WebsocketProvider>
       </QueryClientProvider>
     </ChakraProvider>
   );

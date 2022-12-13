@@ -1,15 +1,15 @@
 // https://dribbble.com/shots/15186840-Setting-page-example
 
 import React, { useState } from "react";
-import { Text, Heading, FormControl, FormLabel, Button, Flex, Box, useToast, FormErrorMessage } from "@chakra-ui/react";
+import { Text, Heading, Button, Flex, Box, useToast } from "@chakra-ui/react";
 import { useForm } from "react-hook-form";
 import { useUser } from "../../hooks/data/user";
 import { FetchError } from "../../rpc/utils";
 
-const INPUT_STYLE = {
-  bg: "white",
-  borderColor: "gray.400",
-};
+// const INPUT_STYLE = {
+//   bg: "white",
+//   borderColor: "gray.400",
+// };
 
 type FormFields = {
   oldPassword: string;
@@ -23,10 +23,10 @@ export function NotificationSettings() {
 
   const [isSubmitting, setSubmitting] = useState(false);
   const {
-    register,
+    // register,
     handleSubmit,
     setError,
-    formState: { errors },
+    // formState: { errors },
   } = useForm<FormFields>({
     defaultValues: {},
   });

@@ -1,17 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Link as RouterLink, useParams } from "react-router-dom";
 import { Text, Flex, Heading, Link, Stack, Box, Alert, Spinner } from "@chakra-ui/react";
-import { useForm } from "react-hook-form";
 import { useAuth } from "../../hooks/auth";
 import { assert } from "../../util/assert";
 
 export function AuthEmailConfirmPage() {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    setError,
-  } = useForm();
   const { userId, token } = useParams<{ userId: string; token: string }>();
   const auth = useAuth();
   const [verified, setVerified] = useState(false);
@@ -31,6 +24,7 @@ export function AuthEmailConfirmPage() {
         },
       },
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, token]);
 
   return (

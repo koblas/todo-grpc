@@ -91,8 +91,6 @@ export function useTodoListener(queryClient: QueryClient) {
 
   useEffect(() => {
     addListener("todo", (event: z.infer<typeof TodoEvent>) => {
-      // console.log("GOT TODO EVENT", event);
-
       if (event.action === "delete") {
         cacheDeleteTodo(queryClient, event.object_id);
       } else if (event.action === "create" && event.body !== null) {
@@ -101,5 +99,6 @@ export function useTodoListener(queryClient: QueryClient) {
         console.log("UNKNOWN TODO EVENT", event);
       }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 }
