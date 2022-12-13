@@ -80,7 +80,7 @@ message AuthInfo {
   string provider_id = 2;
 }
 
-message FindParam {
+message UserFindParam {
   // Find by email address
   string email = 1;
   // Find by GUID
@@ -108,21 +108,21 @@ message AuthAssociateParam {
   AuthInfo auth = 2;
 }
 
-message CreateParam {
+message UserCreateParam {
   string email = 1;
   string password = 2;
   string name = 3;
   UserStatus status = 4;
 }
 
-message UpdateParam {
+message UserUpdateParam {
   string user_id = 1;
-  repeated string email = 2;
-  repeated string password = 3;
-  repeated string password_new = 4;
-  repeated string name = 5;
-  repeated UserStatus status = 6;
-  repeated UserSettings settings = 7;
+  optional string email = 2;
+  optional string password = 3;
+  optional string password_new = 4;
+  optional string name = 5;
+  optional UserStatus status = 6;
+  optional UserSettings settings = 7;
 }
 
 message VerificationParam {
@@ -137,10 +137,10 @@ message VerificationParam {
 message UserIdParam { string user_id = 1; }
 
 service UserService {
-  rpc FindBy(FindParam) returns (User) {}
+  rpc FindBy(UserFindParam) returns (User) {}
 
-  rpc Create(CreateParam) returns (User) {}
-  rpc Update(UpdateParam) returns (User) {}
+  rpc Create(UserCreateParam) returns (User) {}
+  rpc Update(UserUpdateParam) returns (User) {}
 
   rpc ComparePassword(AuthenticateParam) returns (UserIdParam) {}
   rpc AuthAssociate(AuthAssociateParam) returns (UserIdParam) {}
@@ -152,7 +152,7 @@ service UserService {
   rpc VerificationVerify(VerificationParam) returns (User) {}
 
   // Forgot password flow
-  rpc ForgotSend(FindParam) returns (User) {}
+  rpc ForgotSend(UserFindParam) returns (User) {}
   rpc ForgotVerify(VerificationParam) returns (User) {}
   rpc ForgotUpdate(VerificationParam) returns (User) {}
 }

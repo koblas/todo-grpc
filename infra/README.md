@@ -19,6 +19,7 @@ minikube addons enable ingress
 ### Secrets
 
 ```
+kubectl apply -f infra/dev-variables-env-configmap.yaml
 kubectl delete secret common-secrets --ignore-not-found
 kubectl create secret generic common-secrets --from-env-file=../.env
 ```

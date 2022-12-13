@@ -16,7 +16,13 @@ spec:
         name: core-user
     spec:
       containers:
-        - image: todo-grpc/core-user
+        - env:
+            - name: DYNAMO_STORE_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  key: DYNAMO_STORE_ADDR
+                  name: dev-variables-env
+          image: todo-grpc/core-user
           imagePullPolicy: IfNotPresent
           name: core-user
           ports:

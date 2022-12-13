@@ -1,4 +1,4 @@
-go_common = ['./pkg', './twpb', './services', './cmd/compose/shared_config', './go.sum', './go.mod', './tilt-scripts']
+go_common = ['./pkg', './twpb', './cmd/compose/shared_config', './go.sum', './go.mod', './tilt-scripts']
 
 def go_docker(name, path):
   docker_build('todo-grpc/' + name, './src/go', 
@@ -31,6 +31,10 @@ k8s_resource('publicapi-auth', labels=['public'])
 go_docker('publicapi-todo', 'publicapi/todo')
 k8s_yaml(['./infra/publicapi-todo-deployment.yaml', './infra/publicapi-todo-service.yaml'])
 k8s_resource('publicapi-todo', labels=['public'])
+
+go_docker('publicapi-user', 'publicapi/user')
+k8s_yaml(['./infra/publicapi-user-deployment.yaml', './infra/publicapi-user-service.yaml'])
+k8s_resource('publicapi-user', labels=['public'])
 
 go_docker('publicapi-websocket', 'publicapi/websocket')
 k8s_yaml(['./infra/publicapi-websocket-deployment.yaml', './infra/publicapi-websocket-service.yaml'])

@@ -9,7 +9,7 @@ PROTO_DIR=.
 # git clone https://github.com/googleapis/googleapis
 GOOGLEAPIS_DIR=../../googleapis/googleapis
 
-all: clean gen
+all: clean go-grpc
 
 clean:
 	rm -f $(GO_GRPC)/*.pb.go 
