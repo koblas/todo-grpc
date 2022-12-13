@@ -1,8 +1,6 @@
 package user
 
 import (
-	"encoding/base64"
-
 	genpb "github.com/koblas/grpc-todo/twpb/core"
 )
 
@@ -47,17 +45,4 @@ func (s *UserServer) toProtoSettings(user *User) *genpb.UserSettings {
 		UserId:   user.ID,
 		Settings: output,
 	}
-}
-
-func (s *UserServer) toProtoToken(token string) (*genpb.SecureValue, error) {
-	svalue, err := s.kms.Encode([]byte(token))
-	if err != nil {
-		return nil, err
-	}
-	return &genpb.SecureValue{
-		KeyUri:    svalue.KmsUri,
-		DataKey:   base64.RawStdEncoding.EncodeToString(svalue.DataKey),
-		DataValue: base64.RawStdEncoding.EncodeToString(svalue.Data),
-	}, nil
-
 }

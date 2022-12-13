@@ -120,7 +120,7 @@ func (svc *OauthUserServer) UpsertUser(ctx context.Context, params *genpb.AuthUs
 		return nil, twirp.InternalError("Unable to get ID from provider")
 	}
 
-	user, err := svc.user.FindBy(ctx, &genpb.FindParam{
+	user, err := svc.user.FindBy(ctx, &genpb.UserFindParam{
 		Auth: &genpb.AuthInfo{
 			Provider:   params.Oauth.Provider,
 			ProviderId: info.Id,
@@ -142,7 +142,7 @@ func (svc *OauthUserServer) UpsertUser(ctx context.Context, params *genpb.AuthUs
 		return nil, twirp.InvalidArgumentError("email", "provider didn't send email address")
 	}
 
-	user, err = svc.user.FindBy(ctx, &genpb.FindParam{Email: info.Email})
+	user, err = svc.user.FindBy(ctx, &genpb.UserFindParam{Email: info.Email})
 	if err != nil {
 		if e, ok := err.(twirp.Error); !ok || e.Code() != twirp.NotFound {
 			log.With("error", err).Info("Failed to lookup user")
@@ -153,7 +153,7 @@ func (svc *OauthUserServer) UpsertUser(ctx context.Context, params *genpb.AuthUs
 	if user == nil || user.Id == "" {
 		log.With("email", info.Email).Info("Creating new user")
 		created = true
-		user, err = svc.user.Create(ctx, &genpb.CreateParam{
+		user, err = svc.user.Create(ctx, &genpb.UserCreateParam{
 			Email: info.Email,
 			Name:  info.Name,
 			// TODO - create as "ACTIVE" since we "know" the email is good

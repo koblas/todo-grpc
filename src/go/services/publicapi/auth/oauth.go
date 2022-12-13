@@ -29,7 +29,7 @@ func (s AuthenticationServer) OauthLogin(ctx context.Context, params *publicapi.
 		return nil, err
 	}
 
-	user, err := s.userClient.FindBy(ctx, &core.FindParam{
+	user, err := s.userClient.FindBy(ctx, &core.UserFindParam{
 		UserId: result.UserId,
 	})
 	if err != nil {

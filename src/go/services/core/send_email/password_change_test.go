@@ -5,29 +5,9 @@ import (
 	"testing"
 
 	"github.com/jaswdr/faker"
-	email "github.com/koblas/grpc-todo/services/core/send_email"
 	genpb "github.com/koblas/grpc-todo/twpb/core"
 	"github.com/stretchr/testify/require"
 )
-
-type stubSender struct {
-	subject string
-	body    string
-}
-
-func (svc *stubSender) SendEmail(ctx context.Context, sender, to, subject, html string) (string, error) {
-	svc.subject = subject
-	svc.body = html
-
-	return "", nil
-}
-
-func buildTestService() (genpb.SendEmailService, *stubSender) {
-	senderData := &stubSender{}
-	svc := email.NewSendEmailServer(bus, senderData)
-
-	return svc, senderData
-}
 
 func TestPasswordChange(t *testing.T) {
 	faker := faker.New()

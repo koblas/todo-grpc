@@ -106,6 +106,7 @@ export class DeployStack extends cdk.Stack {
     new CoreTodo(this, "core-todo", { eventbus });
     new CoreOauthUser(this, "core-oauth-user", { eventbus });
     // new CoreSendEmail(this, "core-send-email", { eventbus });
+    new PublicUser(this, "public-user", { eventbus, apigw: apigw.apigw });
     new PublicAuth(this, "public-auth", { eventbus, apigw: apigw.apigw });
     new PublicTodo(this, "public-todo", { eventbus, apigw: apigw.apigw });
     new CreateWorkers(this, "workers", { eventbus });
@@ -378,12 +379,40 @@ export class PublicAuth extends Construct {
 
     const lambda = goFunction(this, "publicapi-auth", ["publicapi", "auth"]);
 
-    wireLambda(this, lambda, { eventbus, parameters: ["/common/*"] });
+    wireLambda(this, lambda, { parameters: ["/common/*"] });
 
     const integration = new HttpLambdaIntegration("integration", lambda, {
       payloadFormatVersion: PayloadFormatVersion.VERSION_2_0,
       parameterMapping: new ParameterMapping().overwritePath(
         MappingValue.custom("/twirp/api.auth.AuthenticationService/$request.path.proxy"),
+      ),
+    });
+
+    apigw.addRoutes({
+      path: "/v1/user/{proxy+}",
+      methods: [HttpMethod.POST],
+      integration: integration,
+    });
+    apigw.addRoutes({
+      path: "/api/v1/user/{proxy+}",
+      methods: [HttpMethod.POST],
+      integration: integration,
+    });
+  }
+}
+
+export class PublicUser extends Construct {
+  constructor(scope: Construct, id: string, { eventbus, apigw }: { eventbus: cdk.aws_sns.Topic; apigw: HttpApi }) {
+    super(scope, id);
+
+    const lambda = goFunction(this, "publicapi-user", ["publicapi", "user"]);
+
+    wireLambda(this, lambda, { eventbus, parameters: ["/common/*"] });
+
+    const integration = new HttpLambdaIntegration("integration", lambda, {
+      payloadFormatVersion: PayloadFormatVersion.VERSION_2_0,
+      parameterMapping: new ParameterMapping().overwritePath(
+        MappingValue.custom("/twirp/api.auth.UserService/$request.path.proxy"),
       ),
     });
 

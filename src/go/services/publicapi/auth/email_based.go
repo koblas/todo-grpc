@@ -80,7 +80,7 @@ func (s AuthenticationServer) Register(ctx context.Context, params *publicapi.Re
 		return nil, twirp.InvalidArgumentError("password", "password too short").WithMeta("password", "Password must be 8 characters")
 	}
 
-	user, err := s.userClient.Create(ctx, &core.CreateParam{
+	user, err := s.userClient.Create(ctx, &core.UserCreateParam{
 		Status:   core.UserStatus_REGISTERED,
 		Email:    params.Email,
 		Password: params.Password,
@@ -128,14 +128,14 @@ func (s AuthenticationServer) RecoverSend(ctx context.Context, params *publicapi
 	email := strings.TrimSpace(params.Email)
 
 	attemptsKey := util.GetMD5Hash(email)
-	if count, err := s.attempts.GetTries(ctx, "forgot", attemptsKey); count >= MAX_LOGIN_ATTEMPS {
+	if count, err := s.attempts.GetTries(ctx, "forgotX", attemptsKey); count >= MAX_LOGIN_ATTEMPS {
 		log.Info("Too many attemps")
 		return nil, twirp.InvalidArgumentError("email", "Too many attemps").WithMeta("email", "Too many attemps")
 	} else if err != nil {
 		log.With("error", err).Error("RecoverSend/redis unable to fetch attempts keys")
 	}
 
-	user, err := s.userClient.ForgotSend(ctx, &core.FindParam{
+	user, err := s.userClient.ForgotSend(ctx, &core.UserFindParam{
 		Email: params.Email,
 	})
 	if err != nil {

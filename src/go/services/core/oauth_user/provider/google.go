@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/koblas/grpc-todo/pkg/logger"
+	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
@@ -24,6 +25,8 @@ func init() {
 }
 
 func (svc googleProvider) BuildRedirect(ctx context.Context, redirectURI string, state string) string {
+	log := logger.FromContext(ctx)
+	log.With(zap.String("redirectURI", redirectURI)).Info("google - Building redirect")
 	// logger := svc.logger.WithField("method", "googleProvider.BuildRedirect")
 	config := &oauth2.Config{
 		ClientID:     svc.config.ClientId,

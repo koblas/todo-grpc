@@ -4,6 +4,7 @@ package user
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -12,12 +13,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/twitchtv/twirp"
+	"go.uber.org/zap"
 )
 
 type dynamoStore struct {
-	client *dynamodb.Client
-	table  *string
+	client      *dynamodb.Client
+	table       *string
+	tableExists bool
 }
 
 type dynamoUser struct {
@@ -76,6 +80,51 @@ func NewUserDynamoStore(opts ...DynamoOption) UserStore {
 	return &state
 }
 
+var resourceNotFound = new(types.ResourceNotFoundException)
+
+func (store *dynamoStore) checkCreateTable(ctx context.Context) error {
+	if store.tableExists {
+		return nil
+	}
+	_, err := store.client.DescribeTable(ctx, &dynamodb.DescribeTableInput{
+		TableName: store.table,
+	})
+	if err == nil {
+		store.tableExists = true
+		return nil
+	}
+
+	log := logger.FromContext(ctx)
+	log.With(zap.Error(err)).Error("DescribeTable failed")
+
+	if !errors.As(err, &resourceNotFound) {
+		return err
+	}
+
+	_, err = store.client.CreateTable(ctx, &dynamodb.CreateTableInput{
+		TableName:   store.table,
+		BillingMode: types.BillingModePayPerRequest,
+		KeySchema: []types.KeySchemaElement{
+			{
+				AttributeName: aws.String("pk"),
+				KeyType:       types.KeyTypeHash,
+			},
+		},
+		AttributeDefinitions: []types.AttributeDefinition{
+			{
+				AttributeName: aws.String("pk"),
+				AttributeType: types.ScalarAttributeTypeS,
+			},
+		},
+	})
+
+	if err != nil {
+		log.With(zap.Error(err)).Error("CreateTable failed")
+	}
+
+	return err
+}
+
 func (store *dynamoStore) buildAuthKey(provider, provider_id string) *types.AttributeValueMemberS {
 	return &types.AttributeValueMemberS{Value: "auth#" + provider + "#" + provider_id}
 }
@@ -87,6 +136,9 @@ func (store *dynamoStore) buildEmailKey(email string) *types.AttributeValueMembe
 }
 
 func (store *dynamoStore) GetById(ctx context.Context, id string) (*User, error) {
+	if err := store.checkCreateTable(ctx); err != nil {
+		return nil, err
+	}
 	out, err := store.client.GetItem(ctx, &dynamodb.GetItemInput{
 		TableName: store.table,
 		Key: map[string]types.AttributeValue{
@@ -108,6 +160,9 @@ func (store *dynamoStore) GetById(ctx context.Context, id string) (*User, error)
 }
 
 func (store *dynamoStore) GetByEmail(ctx context.Context, email string) (*User, error) {
+	if err := store.checkCreateTable(ctx); err != nil {
+		return nil, err
+	}
 	out, err := store.client.GetItem(ctx, &dynamodb.GetItemInput{
 		TableName: store.table,
 		Key: map[string]types.AttributeValue{
@@ -128,6 +183,9 @@ func (store *dynamoStore) GetByEmail(ctx context.Context, email string) (*User, 
 }
 
 func (store *dynamoStore) CreateUser(ctx context.Context, user User) error {
+	if err := store.checkCreateTable(ctx); err != nil {
+		return err
+	}
 	av, err := attributevalue.MarshalMap(dynamoUser{
 		Pk:      store.buildIdKey(user.ID).Value,
 		EmailLc: strings.ToLower(user.Email),
@@ -161,6 +219,9 @@ func (store *dynamoStore) CreateUser(ctx context.Context, user User) error {
 }
 
 func (store *dynamoStore) UpdateUser(ctx context.Context, user *User) error {
+	if err := store.checkCreateTable(ctx); err != nil {
+		return err
+	}
 	old, err := store.GetById(ctx, user.ID)
 
 	if err != nil {
@@ -214,6 +275,9 @@ func (store *dynamoStore) UpdateUser(ctx context.Context, user *User) error {
 }
 
 func (store *dynamoStore) AuthUpsert(ctx context.Context, provider, provider_id string, auth UserAuth) error {
+	if err := store.checkCreateTable(ctx); err != nil {
+		return err
+	}
 	if provider == "" || provider_id == "" {
 		return twirp.InvalidArgumentError("provider", "provider or provider_id is empty")
 	}
@@ -247,6 +311,9 @@ func (store *dynamoStore) AuthUpsert(ctx context.Context, provider, provider_id 
 }
 
 func (store *dynamoStore) AuthGet(ctx context.Context, provider, provider_id string) (*UserAuth, error) {
+	if err := store.checkCreateTable(ctx); err != nil {
+		return nil, err
+	}
 	if provider == "" || provider_id == "" {
 		return nil, twirp.InvalidArgumentError("provider", "provider or provider_id is empty")
 	}
@@ -271,6 +338,9 @@ func (store *dynamoStore) AuthGet(ctx context.Context, provider, provider_id str
 }
 
 func (store *dynamoStore) AuthDelete(ctx context.Context, provider, provider_id string, auth UserAuth) error {
+	if err := store.checkCreateTable(ctx); err != nil {
+		return err
+	}
 	if provider == "" || provider_id == "" {
 		return twirp.InvalidArgumentError("provider", "provider or provider_id is empty")
 	}
