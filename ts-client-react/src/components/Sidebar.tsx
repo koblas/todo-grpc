@@ -60,12 +60,12 @@ export default function Sidebar() {
           <NavItem
             expanded={isExpanded}
             icon={BsCalendar}
-            active={pathname === "/calendar"}
+            active={pathname === "/upload"}
             onClick={() => {
-              navigate("/calendar");
+              navigate("/upload");
             }}
           >
-            Calendar
+            Upload
           </NavItem>
           <NavItem expanded={isExpanded} icon={BsPerson}>
             Clients

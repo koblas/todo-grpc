@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from "react-query";
 import { AuthPages } from "./pages/auth";
 import { SettingsPage } from "./pages/settings";
 import { TodoPage } from "./pages/TodoPage";
+import { UploadPage } from "./pages/UploadPage";
 import { HomePage } from "./pages/HomePage";
 import Sidebar from "./components/Sidebar";
 import { useAuth } from "./hooks/auth";
@@ -59,6 +60,14 @@ function Site() {
           element={
             <ProtectedRoute>
               <TodoPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="upload/*"
+          element={
+            <ProtectedRoute>
+              <UploadPage />
             </ProtectedRoute>
           }
         />
