@@ -32,6 +32,14 @@ go_docker('publicapi-todo', 'publicapi/todo')
 k8s_yaml(['./infra/publicapi-todo-deployment.yaml', './infra/publicapi-todo-service.yaml'])
 k8s_resource('publicapi-todo', labels=['public'])
 
+go_docker('publicapi-file', 'publicapi/file')
+k8s_yaml(['./infra/publicapi-file-deployment.yaml', './infra/publicapi-file-service.yaml'])
+k8s_resource('publicapi-file', labels=['public'])
+
+go_docker('publicapi-fileput', 'publicapi/fileput')
+k8s_yaml(['./infra/publicapi-fileput-deployment.yaml', './infra/publicapi-fileput-service.yaml'])
+k8s_resource('publicapi-fileput', labels=['public'])
+
 go_docker('publicapi-user', 'publicapi/user')
 k8s_yaml(['./infra/publicapi-user-deployment.yaml', './infra/publicapi-user-service.yaml'])
 k8s_resource('publicapi-user', labels=['public'])
@@ -55,6 +63,10 @@ k8s_resource('core-todo', labels=['backend'])
 go_docker('core-user', 'core/user')
 k8s_yaml(['./infra/core-user-deployment.yaml', './infra/core-user-service.yaml'])
 k8s_resource('core-user', labels=['backend'])
+
+go_docker('core-file', 'core/file')
+k8s_yaml(['./infra/core-file-deployment.yaml', './infra/core-file-service.yaml'])
+k8s_resource('core-file', labels=['backend'])
 
 go_docker('websocket-todo', 'websocket/todo')
 k8s_yaml(['./infra/core-websocket-todo-deployment.yaml'])

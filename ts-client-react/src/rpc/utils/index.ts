@@ -85,14 +85,28 @@ const fetchHandlers: FetchHandlers = {
   },
 };
 
-const baseHeaders = {
+const BASE_HEADERS = new Headers({
   Accept: "application/json",
   "Content-Type": "application/json",
-};
+});
+
+function buildHeaders(hdrs?: Record<string, string>) {
+  const h = new Headers(BASE_HEADERS);
+
+  if (!hdrs) {
+    return h;
+  }
+
+  Object.entries(hdrs).forEach(([k, v]) => h.set(k, v));
+
+  return h;
+}
 
 export function newFetchClient(config?: { token?: string | null; base?: string | null; handlers?: FetchHandlers }): {
   fetch: typeof fetch;
   POST<T = unknown>(url: string, body: Json): Promise<T>;
+  PUT_FILE<T = unknown>(url: string, file: File): Promise<T>;
+  POST_FILE<T = unknown>(url: string, file: File): Promise<T>;
   GET<T = Json>(url: string): Promise<T>;
   DELETE<T = Json>(url: string): Promise<T>;
 } {
@@ -124,36 +138,56 @@ export function newFetchClient(config?: { token?: string | null; base?: string |
 
   return {
     fetch,
-    async POST<T = Json>(url: string, body: Json): Promise<T> {
+    async POST<T>(url: string, body: Json): Promise<T> {
       const response = await fetchCommon(url, {
         method: "POST",
         body: JSON.stringify(body),
-        headers: {
-          ...baseHeaders,
-          ...(config?.token ? { Authorization: `Bearer ${config?.token}` } : {}),
-        },
+        headers: buildHeaders(config?.token ? { Authorization: `Bearer ${config?.token}` } : {}),
       });
 
       return response.json();
     },
-    async GET<T = Json>(url: string): Promise<T> {
+    async POST_FILE<T>(url: string, file: File): Promise<T> {
+      const fileHdrs = {
+        "Content-Type": file.type,
+        "Content-Length": String(file.size),
+      };
+      const response = await fetchCommon(url, {
+        method: "POST",
+        body: file,
+        headers: buildHeaders(config?.token ? { Authorization: `Bearer ${config?.token}`, ...fileHdrs } : fileHdrs),
+      });
+
+      return response.json();
+    },
+    async PUT_FILE<T>(url: string, file: File): Promise<T> {
+      const fileHdrs = {
+        "Content-Type": file.type,
+        "Content-Length": String(file.size),
+      };
+      const response = await fetchCommon(url, {
+        method: "PUT",
+        body: file,
+        headers: buildHeaders(config?.token ? { Authorization: `Bearer ${config?.token}`, ...fileHdrs } : fileHdrs),
+      });
+
+      if (response.headers.get("content-type")?.includes("json")) {
+        return response.json();
+      }
+      return response.text() as T;
+    },
+    async GET<T>(url: string): Promise<T> {
       const response = await fetchCommon(url, {
         method: "GET",
-        headers: {
-          ...baseHeaders,
-          ...(config?.token ? { Authorization: `Bearer ${config?.token}` } : {}),
-        },
+        headers: buildHeaders(config?.token ? { Authorization: `Bearer ${config?.token}` } : {}),
       });
 
       return response.json();
     },
-    async DELETE<T = Json>(url: string): Promise<T> {
+    async DELETE<T>(url: string): Promise<T> {
       const response = await fetchCommon(url, {
         method: "DELETE",
-        headers: {
-          ...baseHeaders,
-          ...(config?.token ? { Authorization: `Bearer ${config?.token}` } : {}),
-        },
+        headers: buildHeaders(config?.token ? { Authorization: `Bearer ${config?.token}` } : {}),
       });
 
       return response.json();

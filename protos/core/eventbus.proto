@@ -4,6 +4,7 @@ option go_package = "./;core";
 
 import "core/user.proto";
 import "core/todo.proto";
+import "core/file.proto";
 
 message EventbusEmpty {}
 
@@ -14,4 +15,8 @@ service UserEventbus {
 
 service TodoEventbus {
   rpc TodoChange(core.todo.TodoChangeEvent) returns (EventbusEmpty);
+}
+
+service FileEventbus {
+  rpc FileUploaded(core.file.FileUploadEvent) returns (EventbusEmpty);
 }

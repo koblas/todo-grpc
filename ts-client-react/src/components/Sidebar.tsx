@@ -18,7 +18,7 @@ import { useUser } from "../hooks/data/user";
 function Username() {
   const { user } = useUser();
 
-  return <span>{user.name}</span>;
+  return <span>{user ? user.name : "Unknown"}</span>;
 }
 
 // https://github.com/bjcarlson42/chakra-left-responsive-navbar

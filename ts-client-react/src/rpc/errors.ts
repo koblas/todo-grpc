@@ -31,5 +31,16 @@ export interface RpcResult<T> {
   data?: T;
   error?: RpcError;
 }
+export type RpcState = {
+  isError: boolean;
+  isIdle: boolean;
+  isLoading: boolean;
+  isSuccess: boolean;
+};
 
 export type RpcMutation<P, R> = [mutator: (params: P, options?: RpcOptions<R>) => void, state: RpcResult<R>];
+export type RpcMutationNew<P, R> = [
+  mutator: (params: P, options?: RpcOptions<R>) => void,
+  state: RpcState,
+  // state: RpcResult<R>
+];

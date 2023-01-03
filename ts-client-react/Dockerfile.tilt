@@ -14,6 +14,8 @@ RUN mkdir -p /app && cp -a /tmp/node_modules /app/
 
 # Bring in everything now
 COPY . .
+RUN rm -f .proxyrc.json
+
 
 EXPOSE 80
 

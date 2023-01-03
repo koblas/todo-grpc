@@ -4,7 +4,7 @@ import { User, UserType } from "../../rpc/user";
 import { useAuth } from "../auth";
 import { newFetchClient } from "../../rpc/utils";
 import { Json } from "../../types/json";
-import { buildCallbacksTyped } from "../../rpc/utils/helper";
+import { buildCallbacksTyped, buildCallbacksTypedQuery } from "../../rpc/utils/helper";
 
 const UserNetwork = z.object({
   user: User,
@@ -22,6 +22,7 @@ export function useUser() {
 
   const result = useQuery("user", () => client.POST("/v1/user/get_user", {}), {
     staleTime: 300_000,
+    ...buildCallbacksTypedQuery(queryClient, UserNetwork, {}),
   });
 
   const updateUser = useMutation<Json, unknown, UpdateUserParam, unknown>(

@@ -1,6 +1,7 @@
 import React, { useCallback } from "react";
 import { Heading, Box, Spinner, Flex } from "@chakra-ui/react";
 import { useDropzone } from "react-dropzone";
+import { useUploadFile } from "../hooks/data/file";
 
 const focusedStyle = {
   borderColor: "#2196f3",
@@ -19,8 +20,39 @@ const dragStyle = {
 };
 
 function Dropzone() {
-  const onDrop = useCallback((acceptedFiles) => {
-    // Do something with the files
+  const { useUploadSend, useUploadUrl } = useUploadFile();
+
+  const [uploaderUrl] = useUploadUrl();
+  const [uploaderFile] = useUploadSend();
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    if (acceptedFiles.length !== 0) {
+      uploaderUrl(
+        { type: "xyzzy" },
+        {
+          onCompleted(data) {
+            console.log("UPLOAD URL SUCCESS", data.url);
+            uploaderFile(
+              {
+                url: data.url,
+                file: acceptedFiles[0],
+              },
+              {
+                onCompleted(data2) {
+                  console.log("UPLOAD SUCCESS", data2.id);
+                },
+                onError(err) {
+                  console.log("UPLOAD FAILED", err);
+                },
+              },
+            );
+          },
+          onError(err) {
+            console.log("UPLOAD FAILED", err);
+          },
+        },
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const { acceptedFiles, getRootProps, getInputProps, isDragActive, isFocused, isDragAccept, isDragReject } =
@@ -28,8 +60,8 @@ function Dropzone() {
   // const { acceptedFiles, getRootProps, getInputProps } = useDropzone();
 
   const files = acceptedFiles.map((file) => (
-    <li key={file.path}>
-      {file.path} - {file.size} bytes
+    <li key={file.name}>
+      {file.name} - {file.size} bytes
     </li>
   ));
 

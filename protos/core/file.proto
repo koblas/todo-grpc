@@ -1,0 +1,46 @@
+syntax = "proto3";
+package core.file;
+
+option go_package = "./;core";
+
+// Upload URL RPC
+message FileUploadUrlParams {
+  string user_id = 1;
+  string type = 2;
+}
+message FileUploadUrlResponse { string url = 1; }
+
+message FileVerifyUrlParams { string url = 1; }
+message FileVerifyUrlResponse {
+  string user_id = 1;
+  string type = 2;
+}
+
+message FilePutParams {
+  string path = 1;
+  string query = 2;
+  string contentType = 3;
+  bytes data = 4;
+}
+message FilePutResponse { string path = 1; }
+
+message FileGetParams { string path = 1; }
+message FileGetResponse { bytes data = 1; }
+
+message FileUploadEvent {
+  string idemponcyId = 1;
+
+  optional string user_id = 2; // Which user uploaded this file
+  string file_type = 3; // what "kind" of file is this, this is not content-type
+  optional string content_type = 4; // content-type provided by the user
+  string url = 5;                   // path to where the file is
+}
+
+service FileService {
+  rpc upload_url(FileUploadUrlParams) returns (FileUploadUrlResponse);
+  rpc verify_url(FileVerifyUrlParams) returns (FileVerifyUrlResponse);
+
+  // If we don't have S3 or otherwise
+  rpc put(FilePutParams) returns (FilePutResponse);
+  rpc get(FileGetParams) returns (FileGetResponse);
+}

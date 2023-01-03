@@ -55,6 +55,42 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
+  name: client-ingress-file
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /twirp/api.file.FileService/$1
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /api/v1/file/(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: publicapi-file
+                port:
+                  number: 14586
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: client-ingress-fileput
+  # annotations:
+    # nginx.ingress.kubernetes.io/rewrite-target: /twirp/api.file.FileService/$1
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /api/v1/fileput/(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: publicapi-fileput
+                port:
+                  number: 14586
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
   name: client-ingress-user
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /twirp/api.user.UserService/$1

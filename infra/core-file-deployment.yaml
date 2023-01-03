@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    name: core-file
+  name: core-file
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: core-file
+  template:
+    metadata:
+      labels:
+        network/backend: "true"
+        name: core-file
+    spec:
+      containers:
+        - env:
+            - name: REDIS_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  key: REDIS_ADDR
+                  name: dev-variables-env
+          image: todo-grpc/core-file
+          imagePullPolicy: IfNotPresent
+          name: core-file
+          ports:
+            - containerPort: 14586
+      restartPolicy: Always

@@ -1,0 +1,12 @@
+syntax = "proto3";
+package api.file;
+
+option go_package = "./;publicapi";
+
+// Upload URL RPC
+message UploadUrlParams { string type = 1; }
+message UploadUrlResponse { string url = 1; }
+
+service FileService {
+  rpc upload_url(UploadUrlParams) returns (UploadUrlResponse);
+}
