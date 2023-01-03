@@ -3294,7 +3294,7 @@ func (s *userServiceServer) serveForgotUpdateProtobuf(ctx context.Context, resp 
 }
 
 func (s *userServiceServer) ServiceDescriptor() ([]byte, int) {
-	return twirpFileDescriptor4, 0
+	return twirpFileDescriptor5, 0
 }
 
 func (s *userServiceServer) ProtocGenTwirpVersion() string {
@@ -3308,7 +3308,7 @@ func (s *userServiceServer) PathPrefix() string {
 	return baseServicePath(s.pathPrefix, "core.user", "UserService")
 }
 
-var twirpFileDescriptor4 = []byte{
+var twirpFileDescriptor5 = []byte{
 	// 1253 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x57, 0xcf, 0x73, 0xda, 0xc6,
 	0x17, 0x47, 0xfc, 0x10, 0xf0, 0x14, 0x1b, 0xbc, 0x71, 0x62, 0x42, 0xbe, 0x1e, 0x7b, 0xf4, 0x9d,

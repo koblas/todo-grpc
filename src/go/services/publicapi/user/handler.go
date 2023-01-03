@@ -1,13 +1,10 @@
 package user
 
 import (
-	"fmt"
+	"errors"
 	"log"
-	"net/http"
-	"strings"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/tokenmanager"
 	"github.com/koblas/grpc-todo/twpb/core"
@@ -51,32 +48,7 @@ func NewUserServer(config SsmConfig, opts ...Option) *UserServer {
 }
 
 func (svc *UserServer) getUserId(ctx context.Context) (string, error) {
-	headers, ok := ctx.Value(awsutil.HeaderCtxKey).(http.Header)
-	if !ok {
-		if ctx.Value(awsutil.HeaderCtxKey) != nil {
-			log.Println("Headers are present")
-		}
-		return "", fmt.Errorf("headers not in context")
-	}
-
-	value := headers.Get("authorization")
-	if value == "" {
-		return "", fmt.Errorf("no authorization header")
-	}
-	parts := strings.Split(value, " ")
-	if len(parts) != 2 || parts[0] != "Bearer" {
-		return "", fmt.Errorf("bad format")
-	}
-
-	payload, err := svc.jwtMaker.VerifyToken(parts[1])
-	if err != nil {
-		return "", err
-	}
-	if payload.UserId == "" {
-		return "", fmt.Errorf("no user_id")
-	}
-
-	return payload.UserId, nil
+	return tokenmanager.UserIdFromContext(ctx, svc.jwtMaker)
 }
 
 // SayHello generates response to a Ping request
@@ -98,6 +70,12 @@ func (svc *UserServer) GetUser(ctx context.Context, _ *publicapi.UserGetParams) 
 
 	if err != nil {
 		log.With(zap.Error(err)).Info("lookup failed")
+		var twerr twirp.Error
+		if errors.As(err, &twerr) {
+			if twerr.Code() == twirp.NotFound {
+				return nil, twirp.NotFoundError("lookup failed")
+			}
+		}
 		return nil, twirp.InternalErrorWith(err)
 	}
 

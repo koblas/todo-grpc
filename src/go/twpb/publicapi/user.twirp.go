@@ -793,7 +793,7 @@ func (s *userServiceServer) serveUpdateUserProtobuf(ctx context.Context, resp ht
 }
 
 func (s *userServiceServer) ServiceDescriptor() ([]byte, int) {
-	return twirpFileDescriptor2, 0
+	return twirpFileDescriptor3, 0
 }
 
 func (s *userServiceServer) ProtocGenTwirpVersion() string {
@@ -807,7 +807,7 @@ func (s *userServiceServer) PathPrefix() string {
 	return baseServicePath(s.pathPrefix, "api.user", "UserService")
 }
 
-var twirpFileDescriptor2 = []byte{
+var twirpFileDescriptor3 = []byte{
 	// 323 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x51, 0x4f, 0x4f, 0xfa, 0x40,
 	0x10, 0xfd, 0x6d, 0x29, 0xfc, 0xca, 0x94, 0x3f, 0x66, 0x43, 0xa4, 0x72, 0xd1, 0xf4, 0x60, 0x3c,

@@ -389,12 +389,12 @@ export class PublicAuth extends Construct {
     });
 
     apigw.addRoutes({
-      path: "/v1/user/{proxy+}",
+      path: "/v1/auth/{proxy+}",
       methods: [HttpMethod.POST],
       integration: integration,
     });
     apigw.addRoutes({
-      path: "/api/v1/user/{proxy+}",
+      path: "/api/v1/auth/{proxy+}",
       methods: [HttpMethod.POST],
       integration: integration,
     });
@@ -412,17 +412,17 @@ export class PublicUser extends Construct {
     const integration = new HttpLambdaIntegration("integration", lambda, {
       payloadFormatVersion: PayloadFormatVersion.VERSION_2_0,
       parameterMapping: new ParameterMapping().overwritePath(
-        MappingValue.custom("/twirp/api.auth.UserService/$request.path.proxy"),
+        MappingValue.custom("/twirp/api.user.UserService/$request.path.proxy"),
       ),
     });
 
     apigw.addRoutes({
-      path: "/v1/auth/{proxy+}",
+      path: "/v1/user/{proxy+}",
       methods: [HttpMethod.POST],
       integration: integration,
     });
     apigw.addRoutes({
-      path: "/api/v1/auth/{proxy+}",
+      path: "/api/v1/user/{proxy+}",
       methods: [HttpMethod.POST],
       integration: integration,
     });

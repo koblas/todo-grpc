@@ -1,0 +1,36 @@
+package main
+
+import (
+	"net/http"
+	"strings"
+
+	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
+	"github.com/koblas/grpc-todo/pkg/confmgr"
+	"github.com/koblas/grpc-todo/pkg/manager"
+	"github.com/koblas/grpc-todo/services/publicapi/fileput"
+	"github.com/koblas/grpc-todo/twpb/core"
+	"go.uber.org/zap"
+)
+
+func main() {
+	mgr := manager.NewManager()
+	log := mgr.Logger()
+
+	config := fileput.Config{}
+	if err := confmgr.Parse(&config, confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
+		log.With(zap.Error(err)).Fatal("failed to load configuration")
+	}
+
+	opts := []fileput.Option{
+		fileput.WithFileService(
+			core.NewFileServiceProtobufClient(
+				"http://"+config.FileServiceAddr,
+				&http.Client{},
+			),
+		),
+	}
+
+	api := fileput.NewFilePutServer(config, opts...)
+
+	mgr.Start(api)
+}

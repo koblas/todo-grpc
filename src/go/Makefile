@@ -39,10 +39,13 @@ build-compose:
 	go build -o build/publicapi-auth ./cmd/compose/publicapi/auth/main.go
 	go build -o build/publicapi-todo ./cmd/compose/publicapi/todo/main.go
 	go build -o build/publicapi-user ./cmd/compose/publicapi/user/main.go
+	go build -o build/publicapi-file ./cmd/compose/publicapi/file/main.go
+	go build -o build/publicapi-fileput ./cmd/compose/publicapi/fileput/main.go
 	go build -o build/publicapi-websocket ./cmd/compose/publicapi/websocket/main.go
 	go build -o build/websocket-todo ./cmd/compose/websocket/todo/main.go
 	go build -o build/core-todo ./cmd/compose/core/todo/main.go
 	go build -o build/core-user ./cmd/compose/core/user/main.go
+	go build -o build/core-file ./cmd/compose/core/file/main.go
 	go build -o build/core-oauth-user ./cmd/compose/core/oauth_user/main.go
 	go build -o build/core-send-email ./cmd/compose/core/send_email/main.go
 	go build -o build/core-workers ./cmd/compose/core/workers/main.go
