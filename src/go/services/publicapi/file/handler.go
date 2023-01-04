@@ -27,7 +27,7 @@ func WithFileService(client core.FileService) Option {
 	}
 }
 
-func NewFileServer(config SsmConfig, opts ...Option) *FileServer {
+func NewFileServer(config Config, opts ...Option) *FileServer {
 	maker, err := tokenmanager.NewJWTMaker(config.JwtSecret)
 	if err != nil {
 		log.Fatal(err)

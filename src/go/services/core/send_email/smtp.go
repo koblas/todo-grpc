@@ -18,7 +18,7 @@ type smtpService struct {
 }
 
 // NewService construct a default email service
-func NewSmtpService(config SsmConfig) Sender {
+func NewSmtpService(config Config) Sender {
 	parts := strings.Split(config.SmtpAddr, ":")
 	host := parts[0]
 	port := 587

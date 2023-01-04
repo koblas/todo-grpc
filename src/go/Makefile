@@ -28,9 +28,11 @@ build-lambda:
 	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/publicapi-websocket ./cmd/lambda/publicapi/websocket/main.go
 	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/publicapi-auth ./cmd/lambda/publicapi/auth/main.go
 	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/publicapi-user ./cmd/lambda/publicapi/user/main.go
+	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/publicapi-file ./cmd/lambda/publicapi/file/main.go
 	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/websocket-todo ./cmd/lambda/websocket/todo/main.go
 	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/core-todo ./cmd/lambda/core/todo/main.go
 	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/core-user ./cmd/lambda/core/user/main.go
+	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/core-file ./cmd/lambda/core/file/main.go
 	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/core-oauth-user ./cmd/lambda/core/oauth_user/main.go
 	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/core-send-email ./cmd/lambda/core/send_email/main.go
 	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/core-workers ./cmd/lambda/core/workers/main.go

@@ -19,12 +19,12 @@ func main() {
 	mgr := manager.NewManager()
 	log := mgr.Logger()
 
-	ssmConfig := todo.SsmConfig{}
-	if err := confmgr.Parse(&ssmConfig, aws.NewLoaderSsm("/common/")); err != nil {
+	conf := todo.Config{}
+	if err := confmgr.Parse(&conf, aws.NewLoaderSsm("/common/")); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
-	store := websocket.NewUserDynamoStore(websocket.WithDynamoTable(ssmConfig.ConnDb))
+	store := websocket.NewUserDynamoStore(websocket.WithDynamoTable(conf.ConnDb))
 
 	cfg, err := config.LoadDefaultConfig(mgr.Context())
 	if err != nil {
@@ -32,7 +32,7 @@ func main() {
 	}
 
 	endpointResolver := func(o *apigatewaymanagementapi.Options) {
-		o.EndpointResolver = apigatewaymanagementapi.EndpointResolverFromURL(ssmConfig.WsEndpoint)
+		o.EndpointResolver = apigatewaymanagementapi.EndpointResolverFromURL(conf.WsEndpoint)
 	}
 	client := apigatewaymanagementapi.NewFromConfig(cfg, endpointResolver)
 

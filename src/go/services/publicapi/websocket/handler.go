@@ -39,7 +39,7 @@ func WithStore(store websocket.ConnectionStore) Option {
 	}
 }
 
-func NewWebsocketHandler(config SsmConfig, opts ...Option) *WebsocketHandler {
+func NewWebsocketHandler(config Config, opts ...Option) *WebsocketHandler {
 	maker, err := tokenmanager.NewJWTMaker(config.JwtSecret)
 	if err != nil {
 		log.Fatal(err)

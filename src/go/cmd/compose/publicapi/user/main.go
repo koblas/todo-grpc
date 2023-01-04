@@ -17,21 +17,21 @@ func main() {
 	mgr := manager.NewManager()
 	log := mgr.Logger()
 
-	var ssmConfig user.SsmConfig
-	if err := confmgr.Parse(&ssmConfig, confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
+	var config user.Config
+	if err := confmgr.Parse(&config, confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
 	opts := []user.Option{
 		user.WithUserService(
 			core.NewUserServiceProtobufClient(
-				"http://"+ssmConfig.UserServiceAddr,
+				"http://"+config.UserServiceAddr,
 				&http.Client{},
 			),
 		),
 	}
 
-	api := publicapi.NewUserServiceServer(user.NewUserServer(ssmConfig, opts...))
+	api := publicapi.NewUserServiceServer(user.NewUserServer(config, opts...))
 
 	mgr.Start(api)
 }

@@ -17,21 +17,21 @@ func main() {
 	mgr := manager.NewManager()
 	log := mgr.Logger()
 
-	var ssmConfig file.SsmConfig
-	if err := confmgr.Parse(&ssmConfig, confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
+	var config file.Config
+	if err := confmgr.Parse(&config, confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
 	opts := []file.Option{
 		file.WithFileService(
 			core.NewFileServiceProtobufClient(
-				"http://"+ssmConfig.FileServiceAddr,
+				"http://"+config.FileServiceAddr,
 				&http.Client{},
 			),
 		),
 	}
 
-	api := publicapi.NewFileServiceServer(file.NewFileServer(ssmConfig, opts...))
+	api := publicapi.NewFileServiceServer(file.NewFileServer(config, opts...))
 
 	mgr.Start(api)
 }

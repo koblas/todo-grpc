@@ -16,17 +16,17 @@ func main() {
 	mgr := manager.NewManager()
 	log := mgr.Logger()
 
-	ssmConfig := send_email.SsmConfig{}
-	if err := confmgr.Parse(&ssmConfig, aws.NewLoaderSsm("/common/")); err != nil {
+	config := send_email.Config{}
+	if err := confmgr.Parse(&config, aws.NewLoaderSsm("/common/")); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
 	producer := core.NewSendEmailEventsProtobufClient(
-		ssmConfig.EventArn,
+		config.EventArn,
 		awsutil.NewTwirpCallLambda(),
 	)
 
-	s := send_email.NewSendEmailServer(producer, send_email.NewSmtpService(ssmConfig))
+	s := send_email.NewSendEmailServer(producer, send_email.NewSmtpService(config))
 	mux := http.NewServeMux()
 	mux.Handle(core.SendEmailServicePathPrefix, core.NewSendEmailServiceServer(s))
 

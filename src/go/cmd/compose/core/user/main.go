@@ -51,15 +51,15 @@ func main() {
 	mgr := manager.NewManager()
 	log := mgr.Logger()
 
-	var ssmConfig user.SsmConfig
-	if err := confmgr.Parse(&ssmConfig, confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
+	var config user.Config
+	if err := confmgr.Parse(&config, confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
-	redis := redisutil.NewTwirpRedis(ssmConfig.RedisAddr)
+	redis := redisutil.NewTwirpRedis(config.RedisAddr)
 
 	producer := core.NewUserEventbusJSONClient(
-		"topic://"+ssmConfig.UserEventTopic,
+		"topic://"+config.UserEventTopic,
 		redis,
 	)
 
@@ -67,18 +67,18 @@ func main() {
 		user.WithProducer(producer),
 	}
 
-	if ssmConfig.DynamoStore == "" || ssmConfig.DynamoStore == "false" {
+	if config.DynamoStore == "" || config.DynamoStore == "false" {
 		log.Info("Starting up with Memory store")
 		opts = append(opts, user.WithUserStore(user.NewUserMemoryStore()))
 	} else {
 		log.With(
-			zap.String("dynamoAddr", ssmConfig.DynamoStore),
+			zap.String("dynamoAddr", config.DynamoStore),
 		).Info("Starting up with DynamoDB store")
 		opts = append(opts,
 			user.WithUserStore(
 				user.NewUserDynamoStore(
 					user.WithDynamoClient(
-						dynamoClient(ssmConfig.DynamoStore),
+						dynamoClient(config.DynamoStore),
 					),
 				),
 			),

@@ -18,16 +18,16 @@ func main() {
 	mgr := manager.NewManager()
 	log := mgr.Logger()
 
-	ssmConfig := websocket.SsmConfig{}
-	if err := confmgr.Parse(&ssmConfig, aws.NewLoaderSsm("/common/")); err != nil {
+	config := websocket.Config{}
+	if err := confmgr.Parse(&config, aws.NewLoaderSsm("/common/")); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
 	handler := websocket.NewWebsocketHandler(
-		ssmConfig,
+		config,
 		websocket.WithStore(
 			store.NewUserDynamoStore(
-				store.WithDynamoTable(ssmConfig.ConnDb),
+				store.WithDynamoTable(config.ConnDb),
 			),
 		),
 	)

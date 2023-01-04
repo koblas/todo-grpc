@@ -16,14 +16,14 @@ func main() {
 	mgr := manager.NewManager()
 	log := mgr.Logger()
 
-	var ssmConfig todo.SsmConfig
-	if err := confmgr.Parse(&ssmConfig, confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
+	var config todo.Config
+	if err := confmgr.Parse(&config, confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
-	redis := redisutil.NewTwirpRedis(ssmConfig.RedisAddr)
+	redis := redisutil.NewTwirpRedis(config.RedisAddr)
 	eventbus := core.NewTodoEventbusJSONClient(
-		"topic://"+ssmConfig.TodoEvents,
+		"topic://"+config.TodoEvents,
 		redis,
 	)
 

@@ -17,21 +17,21 @@ func main() {
 	mgr := manager.NewManager()
 	log := mgr.Logger()
 
-	var ssmConfig todo.SsmConfig
-	if err := confmgr.Parse(&ssmConfig, confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
+	var config todo.Config
+	if err := confmgr.Parse(&config, confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
 	opts := []todo.Option{
 		todo.WithTodoService(
 			core.NewTodoServiceProtobufClient(
-				"http://"+ssmConfig.TodoServiceAddr,
+				"http://"+config.TodoServiceAddr,
 				&http.Client{},
 			),
 		),
 	}
 
-	api := publicapi.NewTodoServiceServer(todo.NewTodoServer(ssmConfig, opts...))
+	api := publicapi.NewTodoServiceServer(todo.NewTodoServer(config, opts...))
 
 	mgr.Start(api)
 }

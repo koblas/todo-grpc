@@ -44,7 +44,7 @@ func WithAttemptService(client AttemptService) Option {
 	}
 }
 
-func NewAuthenticationServer(config SsmConfig, opts ...Option) AuthenticationServer {
+func NewAuthenticationServer(config Config, opts ...Option) AuthenticationServer {
 	maker, err := tokenmanager.NewJWTMaker(config.JwtSecret)
 	if err != nil {
 		log.Fatal(err)

@@ -1,10 +1,6 @@
 package file
 
 import (
-	"crypto/sha1"
-	"encoding/base64"
-
-	"github.com/google/uuid"
 	"github.com/koblas/grpc-todo/pkg/key_manager"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/twpb/core"
@@ -19,7 +15,6 @@ type FileServer struct {
 	files  FileStore
 	pubsub core.FileEventbus
 	kms    key_manager.Encoder
-	secret string
 }
 
 type Option func(*FileServer)
@@ -38,8 +33,7 @@ func WithProducer(bus core.FileEventbus) Option {
 
 func NewFileServer(opts ...Option) *FileServer {
 	svr := FileServer{
-		kms:    key_manager.NewSecureClear(),
-		secret: uuid.NewString(),
+		kms: key_manager.NewSecureClear(),
 	}
 
 	for _, opt := range opts {
@@ -47,13 +41,6 @@ func NewFileServer(opts ...Option) *FileServer {
 	}
 
 	return &svr
-}
-
-func (s *FileServer) computeSig(path string) string {
-	hasher := sha1.New()
-	hasher.Write([]byte(s.secret))
-	hasher.Write([]byte(path))
-	return base64.RawURLEncoding.EncodeToString(hasher.Sum(nil))
 }
 
 func (s *FileServer) UploadUrl(ctx context.Context, params *genpb.FileUploadUrlParams) (*genpb.FileUploadUrlResponse, error) {
@@ -67,7 +54,7 @@ func (s *FileServer) UploadUrl(ctx context.Context, params *genpb.FileUploadUrlP
 	}
 
 	return &genpb.FileUploadUrlResponse{
-		Url: result + "?sig=" + s.computeSig(result),
+		Url: result,
 	}, nil
 }
 
@@ -91,12 +78,7 @@ func (s *FileServer) VerifyUrl(ctx context.Context, params *genpb.FileVerifyUrlP
 func (s *FileServer) Put(ctx context.Context, params *genpb.FilePutParams) (*genpb.FilePutResponse, error) {
 	log := logger.FromContext(ctx).With(zap.String("method", "Put"))
 
-	if params.Query != "sig="+s.computeSig(params.Path) {
-		log.With(zap.String("query", params.Query)).Info("signature failed")
-		return nil, twirp.InvalidArgumentError("sig", "signature invalid")
-	}
-
-	name, entry, err := s.files.StoreFile(ctx, params.Path, params.Data)
+	name, entry, err := s.files.StoreFile(ctx, params.Path, params.Query, params.Data)
 	if err != nil {
 		log.With(zap.Error(err)).Error("StoreFile failed")
 		return nil, twirp.InternalErrorWith(err)

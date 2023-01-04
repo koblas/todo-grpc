@@ -16,8 +16,8 @@ func main() {
 	mgr := manager.NewManager()
 	log := mgr.Logger()
 
-	ssmConfig := auth.SsmConfig{}
-	if err := confmgr.Parse(&ssmConfig, aws.NewLoaderSsm("/common/")); err != nil {
+	config := auth.Config{}
+	if err := confmgr.Parse(&config, aws.NewLoaderSsm("/common/")); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
@@ -27,14 +27,14 @@ func main() {
 		auth.WithOAuthClient(core.NewAuthUserServiceJSONClient("lambda://core-oauth-user", awsutil.NewTwirpCallLambda())),
 	}
 
-	rdb := redisutil.NewClient(ssmConfig.RedisAddr)
+	rdb := redisutil.NewClient(config.RedisAddr)
 	// Connect to redis
 	if rdb != nil {
-		log.With("address", ssmConfig.RedisAddr).Info("Redis Address")
+		log.With("address", config.RedisAddr).Info("Redis Address")
 		opts = append(opts, auth.WithAttemptService(auth.NewAttemptCounter("publicapi:authentication", rdb)))
 	}
 
-	api := publicapi.NewAuthenticationServiceServer(auth.NewAuthenticationServer(ssmConfig, opts...))
+	api := publicapi.NewAuthenticationServiceServer(auth.NewAuthenticationServer(config, opts...))
 
 	mgr.Start(api)
 }

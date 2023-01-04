@@ -30,7 +30,7 @@ func WithUserService(client core.UserService) Option {
 	}
 }
 
-func NewUserServer(config SsmConfig, opts ...Option) *UserServer {
+func NewUserServer(config Config, opts ...Option) *UserServer {
 	maker, err := tokenmanager.NewJWTMaker(config.JwtSecret)
 	if err != nil {
 		log.Fatal(err)

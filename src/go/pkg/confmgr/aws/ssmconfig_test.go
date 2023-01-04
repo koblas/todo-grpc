@@ -75,7 +75,7 @@ func TestBaseCase(t *testing.T) {
 	).Parse(&s)
 
 	if err != nil {
-		t.Errorf("LoadSsmConfig() unexpected error: %q", err.Error())
+		t.Errorf("LoadConfig() unexpected error: %q", err.Error())
 	}
 
 	names := make([]string, len(mc.calledWithInput.Names))
@@ -95,7 +95,7 @@ func TestBaseCase(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(names, expectedNames) {
-		t.Errorf("LoadSsmConfig() unexpected input names: have %v, want %v", names, expectedNames)
+		t.Errorf("LoadConfig() unexpected input names: have %v, want %v", names, expectedNames)
 	}
 
 	assert.Equal(t, "string1", s.S1)
@@ -110,7 +110,7 @@ func TestBaseCase(t *testing.T) {
 	assert.Equal(t, 42.42, s.F642)
 
 	if s.Invalid != "" {
-		t.Errorf("LoadSsmConfig() Missing unexpected value: want %q, have %q", "", s.Invalid)
+		t.Errorf("LoadConfig() Missing unexpected value: want %q, have %q", "", s.Invalid)
 	}
 }
 

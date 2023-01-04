@@ -14,9 +14,9 @@ func main() {
 	mgr := manager.NewManager()
 	log := mgr.Logger()
 
-	ssmConfig := ouser.SsmConfig{}
+	config := ouser.Config{}
 	oauthConfig := ouser.OauthConfig{}
-	if err := confmgr.Parse(&ssmConfig, aws.NewLoaderSsm("/common/")); err != nil {
+	if err := confmgr.Parse(&config, aws.NewLoaderSsm("/common/")); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load general configuration")
 	}
 	if err := confmgr.Parse(&oauthConfig, aws.NewLoaderSsm("/oauth/")); err != nil {
@@ -28,7 +28,7 @@ func main() {
 		ouser.WithSecretManager(oauthConfig),
 	}
 
-	api := core.NewAuthUserServiceServer(ouser.NewOauthUserServer(ssmConfig, opts...))
+	api := core.NewAuthUserServiceServer(ouser.NewOauthUserServer(config, opts...))
 
 	mgr.Start(api)
 }

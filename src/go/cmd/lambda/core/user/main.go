@@ -14,13 +14,13 @@ func main() {
 	mgr := manager.NewManager()
 	log := mgr.Logger()
 
-	var ssmConfig user.SsmConfig
-	if err := confmgr.Parse(&ssmConfig, aws.NewLoaderSsm("/common/")); err != nil {
+	var config user.Config
+	if err := confmgr.Parse(&config, aws.NewLoaderSsm("/common/")); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
 	producer := core.NewUserEventbusJSONClient(
-		ssmConfig.EventArn,
+		config.EventArn,
 		awsutil.NewTwirpCallLambda(),
 	)
 

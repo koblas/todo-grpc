@@ -1,6 +1,6 @@
 package send_email
 
-type SsmConfig struct {
+type Config struct {
 	EventArn       string `ssm:"bus_entity_arn" environment:"BUS_ENTITY_ARN"`
 	SmtpAddr       string `ssm:"smtp/addr" environment:"SMTP_ADDR"`
 	SmtpUser       string `ssm:"smtp/username" environment:"SMTP_USERNAME"`

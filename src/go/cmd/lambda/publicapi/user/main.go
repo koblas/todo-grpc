@@ -15,8 +15,8 @@ func main() {
 	mgr := manager.NewManager()
 	log := mgr.Logger()
 
-	var ssmConfig user.SsmConfig
-	if err := confmgr.Parse(&ssmConfig, aws.NewLoaderSsm("/common/")); err != nil {
+	var config user.Config
+	if err := confmgr.Parse(&config, aws.NewLoaderSsm("/common/")); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
@@ -24,7 +24,7 @@ func main() {
 		user.WithUserService(core.NewUserServiceJSONClient("lambda://core-user", awsutil.NewTwirpCallLambda())),
 	}
 
-	api := publicapi.NewUserServiceServer(user.NewUserServer(ssmConfig, opts...))
+	api := publicapi.NewUserServiceServer(user.NewUserServer(config, opts...))
 
 	mgr.Start(api)
 }

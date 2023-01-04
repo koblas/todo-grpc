@@ -15,8 +15,8 @@ func main() {
 	mgr := manager.NewManager()
 	log := mgr.Logger()
 
-	var ssmConfig todo.SsmConfig
-	if err := confmgr.Parse(&ssmConfig, aws.NewLoaderSsm("/common/")); err != nil {
+	var config todo.Config
+	if err := confmgr.Parse(&config, aws.NewLoaderSsm("/common/")); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
@@ -24,7 +24,7 @@ func main() {
 		todo.WithTodoService(core.NewTodoServiceJSONClient("lambda://core-todo", awsutil.NewTwirpCallLambda())),
 	}
 
-	api := publicapi.NewTodoServiceServer(todo.NewTodoServer(ssmConfig, opts...))
+	api := publicapi.NewTodoServiceServer(todo.NewTodoServer(config, opts...))
 
 	mgr.Start(api)
 }

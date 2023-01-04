@@ -19,6 +19,6 @@ type FileInfo struct {
 type FileStore interface {
 	CreateUploadUrl(ctx context.Context, userId, fileType string) (string, error)
 	LookupUploadUrl(ctx context.Context, url string) (*FileInfo, error)
-	StoreFile(ctx context.Context, url string, bytes []byte) (string, *FileInfo, error)
+	StoreFile(ctx context.Context, path, query string, bytes []byte) (string, *FileInfo, error)
 	GetFile(ctx context.Context, path string) ([]byte, error)
 }

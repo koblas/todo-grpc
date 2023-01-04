@@ -132,17 +132,17 @@ func main() {
 	mgr := manager.NewManager()
 	log := mgr.Logger()
 
-	ssmConfig := websocket.SsmConfig{}
-	if err := confmgr.Parse(&ssmConfig, confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
+	config := websocket.Config{}
+	if err := confmgr.Parse(&config, confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
-	consumer := redisbus.NewConsumer(mgr.Context(), ssmConfig.RedisAddr, ssmConfig.WebsocketBroadcast)
+	consumer := redisbus.NewConsumer(mgr.Context(), config.RedisAddr, config.WebsocketBroadcast)
 
 	handler := socketHandler{
 		api: websocket.NewWebsocketHandler(
-			ssmConfig,
-			websocket.WithStore(wstore.NewRedisStore(ssmConfig.RedisAddr)),
+			config,
+			websocket.WithStore(wstore.NewRedisStore(config.RedisAddr)),
 		),
 		consumer:    consumer,
 		connections: map[string]*wsocket.Conn{},

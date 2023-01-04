@@ -35,21 +35,21 @@ func main() {
 	mgr := manager.NewManager()
 	log := mgr.Logger()
 
-	ssmConfig := todo.SsmConfig{}
-	if err := confmgr.Parse(&ssmConfig, confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
+	config := todo.Config{}
+	if err := confmgr.Parse(&config, confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
-	producer := redisbus.NewProducer(ssmConfig.RedisAddr, ssmConfig.WebsocketBroadcast)
+	producer := redisbus.NewProducer(config.RedisAddr, config.WebsocketBroadcast)
 
 	s := todo.NewTodoChangeServer(
-		todo.WithStore(websocket.NewRedisStore(ssmConfig.RedisAddr)),
+		todo.WithStore(websocket.NewRedisStore(config.RedisAddr)),
 		todo.WithClient(redisPublish{producer}),
 	)
 	mux := http.NewServeMux()
 	mux.Handle(core.TodoEventbusPathPrefix, core.NewTodoEventbusServer(s))
 
-	redis := redisutil.NewTwirpRedis(ssmConfig.RedisAddr)
+	redis := redisutil.NewTwirpRedis(config.RedisAddr)
 
-	mgr.StartConsumer(redis.TopicConsumer(mgr.Context(), ssmConfig.TodoEventsTopic, mux))
+	mgr.StartConsumer(redis.TopicConsumer(mgr.Context(), config.TodoEventsTopic, mux))
 }

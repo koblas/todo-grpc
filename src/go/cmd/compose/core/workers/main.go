@@ -16,22 +16,22 @@ func main() {
 	mgr := manager.NewManager()
 	log := mgr.Logger()
 
-	ssmConfig := workers.SsmConfig{}
-	if err := confmgr.Parse(&ssmConfig, confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
+	config := workers.Config{}
+	if err := confmgr.Parse(&config, confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
 	// var builder workers.SqsConsumerBuilder
-	redis := redisutil.NewTwirpRedis(ssmConfig.RedisAddr)
+	redis := redisutil.NewTwirpRedis(config.RedisAddr)
 
 	opts := []workers.Option{
 		workers.WithSendEmail(
 			core.NewSendEmailServiceProtobufClient(
-				"queue://"+ssmConfig.SendEmail,
+				"queue://"+config.SendEmail,
 				redis,
 			),
 		),
 	}
 
-	mgr.StartConsumer(redis.TopicConsumer(mgr.Context(), ssmConfig.UserEventsTopic, workers.GetHandler(ssmConfig, opts...)))
+	mgr.StartConsumer(redis.TopicConsumer(mgr.Context(), config.UserEventsTopic, workers.GetHandler(config, opts...)))
 }

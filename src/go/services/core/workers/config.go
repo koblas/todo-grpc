@@ -1,6 +1,6 @@
 package workers
 
-type SsmConfig struct {
+type Config struct {
 	UrlBase         string `ssm:"url_base" environment:"URL_BASE_UI"`
 	UserEventsTopic string `json:"user-events"`
 	SendEmail       string `json:"send-email"`

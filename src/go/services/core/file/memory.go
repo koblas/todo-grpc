@@ -2,6 +2,8 @@ package file
 
 import (
 	"context"
+	"crypto/sha1"
+	"encoding/base64"
 	"errors"
 	"time"
 
@@ -9,6 +11,7 @@ import (
 )
 
 var ErrorLookupNotFound = errors.New("not found")
+var ErrorSignatureMismatch = errors.New("signature mismatch")
 
 const (
 	MEMORY_NEW = iota
@@ -21,14 +24,23 @@ type memoryStore struct {
 	fileInfo map[string]*FileInfo
 	files    FileByteStore
 	prefix   string
+	secret   string
 }
 
 func NewFileMemoryStore(prefix string) FileStore {
 	return &memoryStore{
+		secret:   uuid.NewString(),
 		prefix:   prefix,
 		fileInfo: map[string]*FileInfo{},
 		files:    FileByteStore{},
 	}
+}
+
+func (store *memoryStore) computeSig(path string) string {
+	hasher := sha1.New()
+	hasher.Write([]byte(store.secret))
+	hasher.Write([]byte(path))
+	return base64.RawURLEncoding.EncodeToString(hasher.Sum(nil))
 }
 
 func (store *memoryStore) CreateUploadUrl(ctx context.Context, userId, fileType string) (string, error) {
@@ -44,7 +56,8 @@ func (store *memoryStore) CreateUploadUrl(ctx context.Context, userId, fileType 
 	}
 
 	store.fileInfo[entry.Url] = &entry
-	return entry.Url, nil
+	query := "?sig=" + store.computeSig(entry.Url)
+	return entry.Url + query, nil
 }
 
 func (store *memoryStore) LookupUploadUrl(ctx context.Context, url string) (*FileInfo, error) {
@@ -57,7 +70,10 @@ func (store *memoryStore) LookupUploadUrl(ctx context.Context, url string) (*Fil
 	return entry, nil
 }
 
-func (store *memoryStore) StoreFile(ctx context.Context, url string, bytes []byte) (string, *FileInfo, error) {
+func (store *memoryStore) StoreFile(ctx context.Context, url, query string, bytes []byte) (string, *FileInfo, error) {
+	if query != store.computeSig(url) {
+		return "", nil, ErrorSignatureMismatch
+	}
 	entry, found := store.fileInfo[url]
 	if !found {
 		return "", nil, ErrorLookupNotFound

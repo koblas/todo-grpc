@@ -18,32 +18,32 @@ func main() {
 	mgr := manager.NewManager()
 	log := mgr.Logger()
 
-	ssmConfig := auth.SsmConfig{}
-	if err := confmgr.Parse(&ssmConfig, confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
+	config := auth.Config{}
+	if err := confmgr.Parse(&config, confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
 	opts := []auth.Option{
 		auth.WithUserClient(
 			core.NewUserServiceProtobufClient(
-				"http://"+ssmConfig.UserServiceAddr,
+				"http://"+config.UserServiceAddr,
 				&http.Client{},
 			),
 		),
 		auth.WithOAuthClient(
 			core.NewAuthUserServiceProtobufClient(
-				"http://"+ssmConfig.OauthUserServiceAddr,
+				"http://"+config.OauthUserServiceAddr,
 				&http.Client{},
 			),
 		),
 	}
 
-	rdb := redisutil.NewClient(ssmConfig.RedisAddr)
+	rdb := redisutil.NewClient(config.RedisAddr)
 	if rdb != nil {
 		opts = append(opts, auth.WithAttemptService(auth.NewAttemptCounter("publicapi:authentication", rdb)))
 	}
 
-	api := publicapi.NewAuthenticationServiceServer(auth.NewAuthenticationServer(ssmConfig, opts...))
+	api := publicapi.NewAuthenticationServiceServer(auth.NewAuthenticationServer(config, opts...))
 
 	mgr.Start(api)
 }

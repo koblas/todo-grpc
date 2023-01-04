@@ -1,6 +1,6 @@
 package websocket
 
-type SsmConfig struct {
+type Config struct {
 	JwtSecret string `ssm:"jwt_secret" environment:"JWT_SECRET" validate:"min=32"`
 	// Used by the lambda version
 	ConnDb string `environment:"CONN_DB"`

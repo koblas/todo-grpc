@@ -23,7 +23,7 @@ type Worker struct {
 // Some generic handling of definition
 
 type WorkerConfig struct {
-	config      SsmConfig
+	config      Config
 	onlyHandler string
 	sendEmail   genpb.SendEmailService
 }
@@ -42,7 +42,7 @@ func WithSendEmail(sender genpb.SendEmailService) Option {
 	}
 }
 
-func buildServiceConfig(config SsmConfig, opts ...Option) WorkerConfig {
+func buildServiceConfig(config Config, opts ...Option) WorkerConfig {
 	cfg := WorkerConfig{
 		config: config,
 	}
@@ -56,7 +56,7 @@ func buildServiceConfig(config SsmConfig, opts ...Option) WorkerConfig {
 
 var workers = []Worker{}
 
-func GetHandler(config SsmConfig, opts ...Option) http.HandlerFunc {
+func GetHandler(config Config, opts ...Option) http.HandlerFunc {
 	handlers := []core.TwirpServer{}
 
 	cfg := buildServiceConfig(config, opts...)

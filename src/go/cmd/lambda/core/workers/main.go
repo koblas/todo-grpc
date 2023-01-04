@@ -22,8 +22,8 @@ func main() {
 	mgr := manager.NewManager()
 	log := mgr.Logger().With("SQS_HANDLER", mode)
 
-	ssmConfig := workers.SsmConfig{}
-	if err := confmgr.Parse(&ssmConfig, aws.NewLoaderSsm("/common/")); err != nil {
+	config := workers.Config{}
+	if err := confmgr.Parse(&config, aws.NewLoaderSsm("/common/")); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
@@ -51,7 +51,7 @@ func main() {
 	}
 
 	/*
-		handler := builder(ssmConfig, opts...)
+		handler := builder(config, opts...)
 
 		sender := awsbus.NewAwsSqsConsumer(handler)
 		if err != nil {
@@ -60,5 +60,5 @@ func main() {
 
 		mgr.StartConsumer(sender.AddMessagesLambda)
 	*/
-	mgr.StartConsumer(awsutil.HandleSqsLambda(workers.GetHandler(ssmConfig, opts...)))
+	mgr.StartConsumer(awsutil.HandleSqsLambda(workers.GetHandler(config, opts...)))
 }

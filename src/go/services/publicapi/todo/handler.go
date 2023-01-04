@@ -30,7 +30,7 @@ func WithTodoService(client core.TodoService) Option {
 	}
 }
 
-func NewTodoServer(config SsmConfig, opts ...Option) *TodoServer {
+func NewTodoServer(config Config, opts ...Option) *TodoServer {
 	maker, err := tokenmanager.NewJWTMaker(config.JwtSecret)
 	if err != nil {
 		log.Fatal(err)

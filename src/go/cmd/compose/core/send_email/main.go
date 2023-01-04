@@ -17,19 +17,19 @@ func main() {
 	mgr := manager.NewManager()
 	log := mgr.Logger()
 
-	ssmConfig := send_email.SsmConfig{}
-	if err := confmgr.Parse(&ssmConfig, confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
+	config := send_email.Config{}
+	if err := confmgr.Parse(&config, confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
-	redis := redisutil.NewTwirpRedis(ssmConfig.RedisAddr)
+	redis := redisutil.NewTwirpRedis(config.RedisAddr)
 
 	producer := core.NewSendEmailEventsProtobufClient(
-		"topic://"+ssmConfig.EmailSentTopic,
+		"topic://"+config.EmailSentTopic,
 		redis,
 	)
 
-	s := send_email.NewSendEmailServer(producer, send_email.NewSmtpService(ssmConfig))
+	s := send_email.NewSendEmailServer(producer, send_email.NewSmtpService(config))
 	mux := http.NewServeMux()
 	mux.Handle(core.SendEmailServicePathPrefix, core.NewSendEmailServiceServer(s))
 

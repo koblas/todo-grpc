@@ -14,9 +14,9 @@ func main() {
 	mgr := manager.NewManager()
 	log := mgr.Logger()
 
-	ssmConfig := ouser.SsmConfig{}
+	config := ouser.Config{}
 	oauthConfig := ouser.OauthConfig{}
-	if err := confmgr.Parse(&ssmConfig); err != nil {
+	if err := confmgr.Parse(&config); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 	if err := confmgr.Parse(&oauthConfig); err != nil {
@@ -26,14 +26,14 @@ func main() {
 	opts := []ouser.Option{
 		ouser.WithUserService(
 			core.NewUserServiceProtobufClient(
-				"http://"+ssmConfig.UserServiceAddr,
+				"http://"+config.UserServiceAddr,
 				&http.Client{},
 			),
 		),
 		ouser.WithSecretManager(oauthConfig),
 	}
 
-	api := core.NewAuthUserServiceServer(ouser.NewOauthUserServer(ssmConfig, opts...))
+	api := core.NewAuthUserServiceServer(ouser.NewOauthUserServer(config, opts...))
 
 	mgr.Start(api)
 }
