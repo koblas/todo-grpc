@@ -11,7 +11,7 @@ func decodeSecure(log logger.Logger, value *corepb.SecureValue) (string, error) 
 	if err != nil {
 		log.Fatal("Unable to get key manager")
 	}
-	token, err := protoutil.DecodeSecure(decoder, value)
+	token, err := protoutil.SecureValueDecode(decoder, value)
 	if err != nil {
 		return "", err
 	}

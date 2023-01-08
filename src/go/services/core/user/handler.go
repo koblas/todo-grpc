@@ -179,7 +179,7 @@ func (s *UserServer) Create(ctx context.Context, params *corepb.UserCreateParam)
 		log.With(zap.Error(err)).Info("user entity publish failed")
 	}
 	if secret != "" {
-		token, err := protoutil.EncodeSecure(s.kms, secret)
+		token, err := protoutil.SecureValueEncode(s.kms, secret)
 		if err != nil {
 			log.With(zap.Error(err)).Info("unable to create token")
 		} else {
@@ -579,7 +579,7 @@ func (s *UserServer) ForgotSend(ctx context.Context, params *corepb.UserFindPara
 	// if err := s.publishUser(ctx, ENTITY_USER, user, &update); err != nil {
 	// 	log.With(zap.Error(err)).Info("Publish failed")
 	// }
-	if token, err := protoutil.EncodeSecure(s.kms, secret); err != nil {
+	if token, err := protoutil.SecureValueEncode(s.kms, secret); err != nil {
 		log.With(zap.Error(err)).Info("failed to encrypt token")
 	} else if _, err := s.pubsub.UserSecurity(ctx, &corepb.UserSecurityEvent{
 		Action: corepb.UserSecurity_USER_FORGOT_REQUEST,

@@ -47,7 +47,7 @@ func main() {
 		user.WithClient(redisPublish{producer}),
 	)
 	mux := http.NewServeMux()
-	mux.Handle(corepb.TodoEventbusPathPrefix, corepb.NewUserEventbusServer(s))
+	mux.Handle(corepb.UserEventbusPathPrefix, corepb.NewUserEventbusServer(s))
 
 	redis := redisutil.NewTwirpRedis(config.RedisAddr)
 

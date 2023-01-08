@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigatewaymanagementapi"
 	"github.com/aws/aws-sdk-go/aws"
 	smithy "github.com/aws/smithy-go"
-	"github.com/koblas/grpc-todo/gen/apipb"
 	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/logger"
+	"github.com/koblas/grpc-todo/pkg/protoutil"
 	"github.com/koblas/grpc-todo/pkg/store/websocket"
 )
 
@@ -56,7 +56,7 @@ func NewUserChangeServer(opts ...Option) corepb.UserEventbus {
 
 func (svc *UserServer) UserChange(ctx context.Context, event *corepb.UserChangeEvent) (*corepb.EventbusEmpty, error) {
 	log := logger.FromContext(ctx)
-	log.Info("received todo event")
+	log.Info("received user event")
 
 	userId := ""
 	if event.Current != nil {
@@ -73,25 +73,21 @@ func (svc *UserServer) UserChange(ctx context.Context, event *corepb.UserChangeE
 
 	obj := event.Current
 	action := "update"
-	if event.Current != nil {
-		action = "delete"
+	if event.Current == nil {
 		obj = event.Original
+		action = "delete"
 	} else if event.Original == nil {
 		action = "create"
-	} else {
+	}
+
+	if obj == nil {
 		return nil, errors.New("missing object")
 	}
 	data, err := json.Marshal(SocketMessage{
 		Topic:    "user",
 		ObjectId: obj.Id,
 		Action:   action,
-		// TODO -- this is shared between publicapi/user/handler/marshalUser()
-		Body: apipb.User{
-			Id:        obj.Id,
-			Email:     obj.Email,
-			Name:      obj.Name,
-			AvatarUrl: obj.AvatarUrl,
-		},
+		Body:     protoutil.UserCoreToApi(obj),
 	})
 
 	if err != nil {

@@ -4,6 +4,6 @@ type Config struct {
 	ConnDb             string `environment:"CONN_DB"`
 	WsEndpoint         string `environment:"WS_ENDPOINT"`
 	RedisAddr          string `environment:"REDIS_ADDR"`
-	WebsocketBroadcast string `json:"websocket-broadcast"`
+	WebsocketBroadcast string `json:"websocket-broadcast" validate:"required"`
 	UserEventsTopic    string `json:"user-events"`
 }

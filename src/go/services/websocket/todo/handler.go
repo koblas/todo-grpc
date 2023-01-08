@@ -66,24 +66,22 @@ func (svc *TodoServer) TodoChange(ctx context.Context, event *corepb.TodoChangeE
 	} else {
 		return nil, errors.New("no user found")
 	}
-	action := "create"
-	if event.Current == nil {
-		action = "delete"
-	} else if event.Original != nil {
-		action = "update"
-	}
 
 	conns, err := svc.store.ForUser(ctx, userId)
 	if err != nil {
 		return nil, err
 	}
 
-	var obj *corepb.TodoObject
-	if event.Current != nil {
-		obj = event.Current
-	} else if event.Original != nil {
+	obj := event.Current
+	action := "update"
+	if event.Current == nil {
 		obj = event.Original
-	} else {
+		action = "delete"
+	} else if event.Original == nil {
+		action = "create"
+	}
+
+	if obj == nil {
 		return nil, errors.New("missing object")
 	}
 	data, err := json.Marshal(SocketMessage{

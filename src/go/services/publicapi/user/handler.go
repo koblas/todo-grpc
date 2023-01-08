@@ -8,6 +8,7 @@ import (
 	"github.com/koblas/grpc-todo/gen/apipb"
 	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/logger"
+	"github.com/koblas/grpc-todo/pkg/protoutil"
 	"github.com/koblas/grpc-todo/pkg/tokenmanager"
 	"github.com/twitchtv/twirp"
 	"go.uber.org/zap"
@@ -132,17 +133,7 @@ func (svc *UserServer) UpdateUser(ctx context.Context, update *apipb.UserUpdateP
 }
 
 func marshalUser(user *corepb.User) *apipb.UserResponse {
-	if user == nil {
-		return &apipb.UserResponse{}
-	}
-
-	// TODO - shared with websocket serialization
 	return &apipb.UserResponse{
-		User: &apipb.User{
-			Id:        user.Id,
-			Email:     user.Email,
-			Name:      user.Name,
-			AvatarUrl: user.AvatarUrl,
-		},
+		User: protoutil.UserCoreToApi(user),
 	}
 }

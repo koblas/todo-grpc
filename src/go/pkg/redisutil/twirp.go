@@ -241,7 +241,6 @@ func (svc *client) Do(req *http.Request) (*http.Response, error) {
 	return &res, nil
 }
 
-//
 func buildRequestFromPayload(host string, payloadString string) (http.Request, error) {
 	// fmt.Println("=== payload === ")
 	// fmt.Println(payloadString)
@@ -275,7 +274,6 @@ func buildRequestFromPayload(host string, payloadString string) (http.Request, e
 	return req, nil
 }
 
-//
 func (svc *client) TopicConsumer(_ context.Context, topicName string, handler http.Handler) awsutil.TwirpHttpSqsHandler {
 	return func(ctx context.Context, request events.SQSEvent) (events.SQSEventResponse, error) {
 		log := logger.FromContext(ctx).With(zap.String("topic", topicName))
@@ -307,7 +305,7 @@ func (svc *client) TopicConsumer(_ context.Context, topicName string, handler ht
 			res := w.Result()
 			if res.StatusCode != http.StatusOK {
 				buf, _ := io.ReadAll(io.LimitReader(res.Body, 1024))
-				log.With("statusCode", res.StatusCode).With("statusMsg", string(buf)).Info("SQS Message error")
+				log.With("statusCode", res.StatusCode).With("statusMsg", string(buf)).Info("Redis Consumer error")
 			}
 
 			return nil
@@ -361,7 +359,7 @@ func (svc *client) QueueConsumer(ctx context.Context, queueName string, handler 
 			res := w.Result()
 			if res.StatusCode != http.StatusOK {
 				buf, _ := io.ReadAll(io.LimitReader(res.Body, 1024))
-				log.With("statusCode", res.StatusCode).With("statusMsg", string(buf)).Info("SQS Message error")
+				log.With("statusCode", res.StatusCode).With("statusMsg", string(buf)).Info("Redis Queue consumer error")
 			}
 
 			if err := delivery.Ack(); err != nil {

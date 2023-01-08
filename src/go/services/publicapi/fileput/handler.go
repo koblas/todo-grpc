@@ -36,11 +36,13 @@ func NewFilePutServer(config Config, opts ...Option) *FilePutServer {
 
 func (svc *FilePutServer) ServeHTTP(writer http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
-	log := logger.FromContext(ctx)
-	log.Info("FILE PUT BEGIN")
+	log := logger.FromContext(ctx).With(
+		zap.String("method", req.Method),
+		zap.String("urlPath", req.URL.Path),
+	)
 
 	if req.Method != "PUT" {
-		log.With(zap.String("method", req.Method)).Info("Invalid method sent")
+		log.Info("Invalid method sent")
 		writer.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
@@ -50,7 +52,6 @@ func (svc *FilePutServer) ServeHTTP(writer http.ResponseWriter, req *http.Reques
 	contentLength := req.Header.Get("content-length")
 
 	log.With(
-		zap.String("urlPath", url.Path),
 		zap.String("contentType", contentType),
 		zap.String("contentLength", contentLength),
 	).Info("Upload Info")

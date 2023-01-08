@@ -8,7 +8,7 @@ import (
 	"github.com/koblas/grpc-todo/pkg/key_manager"
 )
 
-func EncodeSecure(encoder key_manager.Encoder, token string) (*corepb.SecureValue, error) {
+func SecureValueEncode(encoder key_manager.Encoder, token string) (*corepb.SecureValue, error) {
 	svalue, err := encoder.Encode([]byte(token))
 	if err != nil {
 		return nil, err
@@ -21,7 +21,7 @@ func EncodeSecure(encoder key_manager.Encoder, token string) (*corepb.SecureValu
 
 }
 
-func DecodeSecure(decoder key_manager.Decoder, value *corepb.SecureValue) (string, error) {
+func SecureValueDecode(decoder key_manager.Decoder, value *corepb.SecureValue) (string, error) {
 	dataKey, err := base64.RawStdEncoding.DecodeString(value.DataKey)
 	if err != nil {
 		return "", err
