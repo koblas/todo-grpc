@@ -16,31 +16,49 @@ message FileVerifyUrlResponse {
   string type = 2;
 }
 
-message FilePutParams {
+message FileUploadParams {
   string path = 1;
   string query = 2;
   string contentType = 3;
   bytes data = 4;
 }
+message FilePutParams {
+  string user_id = 1;
+  string file_type = 2;
+  string suffix = 3;
+  bytes data = 4;
+}
+message FileUploadResponse { string path = 1; }
 message FilePutResponse { string path = 1; }
 
 message FileGetParams { string path = 1; }
 message FileGetResponse { bytes data = 1; }
 
-message FileUploadEvent {
-  string idemponcyId = 1;
-
+message FileUploadInfo {
   optional string user_id = 2; // Which user uploaded this file
   string file_type = 3; // what "kind" of file is this, this is not content-type
   optional string content_type = 4; // content-type provided by the user
   string url = 5;                   // path to where the file is
 }
 
+message FileUploadEvent {
+  string idemponcyId = 1;
+
+  FileUploadInfo info = 2;
+}
+
+message FileCompleteEvent {
+  string idemponcyId = 1;
+
+  optional string errorMessage = 2; // Was here an error uploading this file
+  optional FileUploadInfo info = 3;
+}
+
 service FileService {
   rpc upload_url(FileUploadUrlParams) returns (FileUploadUrlResponse);
   rpc verify_url(FileVerifyUrlParams) returns (FileVerifyUrlResponse);
 
-  // If we don't have S3 or otherwise
-  rpc put(FilePutParams) returns (FilePutResponse);
-  rpc get(FileGetParams) returns (FileGetResponse);
+  rpc upload(FileUploadParams) returns (FileUploadResponse); // Store file
+  rpc put(FilePutParams) returns (FilePutResponse);          // Store file
+  rpc get(FileGetParams) returns (FileGetResponse);          // Read File
 }

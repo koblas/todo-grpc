@@ -19,4 +19,5 @@ service TodoEventbus {
 
 service FileEventbus {
   rpc FileUploaded(core.file.FileUploadEvent) returns (EventbusEmpty);
+  rpc FileComplete(core.file.FileCompleteEvent) returns (EventbusEmpty);
 }

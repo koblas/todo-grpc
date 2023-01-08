@@ -30,6 +30,7 @@ message User {
   google.protobuf.Timestamp created_at = 6;
   bool has_tfa = 7;
   bool email_is_verified = 8;
+  optional string avatar_url = 9;
 }
 
 message SecureValue {
@@ -123,6 +124,7 @@ message UserUpdateParam {
   optional string name = 5;
   optional UserStatus status = 6;
   optional UserSettings settings = 7;
+  optional string avatar_url = 8;
 }
 
 message VerificationParam {
