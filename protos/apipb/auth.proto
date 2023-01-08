@@ -1,10 +1,10 @@
 syntax = "proto3";
 
-package api.auth;
+package apipb.auth;
 
 import "google/api/annotations.proto";
 
-option go_package = "./;publicapi";
+option go_package = "./;apipb";
 
 message RegisterParams {
   // Required

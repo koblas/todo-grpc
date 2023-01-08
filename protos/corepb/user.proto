@@ -2,9 +2,9 @@ syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
 
-package core.user;
+package corepb.user;
 
-option go_package = "./;core";
+option go_package = "./;corepb";
 
 enum UserStatus {
   REGISTERED = 0;

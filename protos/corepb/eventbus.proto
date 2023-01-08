@@ -1,23 +1,23 @@
 syntax = "proto3";
-package core.eventbus;
-option go_package = "./;core";
+package corepb.eventbus;
+option go_package = "./;corepb";
 
-import "core/user.proto";
-import "core/todo.proto";
-import "core/file.proto";
+import "corepb/user.proto";
+import "corepb/todo.proto";
+import "corepb/file.proto";
 
 message EventbusEmpty {}
 
 service UserEventbus {
-  rpc UserChange(core.user.UserChangeEvent) returns (EventbusEmpty);
-  rpc UserSecurity(core.user.UserSecurityEvent) returns (EventbusEmpty);
+  rpc UserChange(corepb.user.UserChangeEvent) returns (EventbusEmpty);
+  rpc UserSecurity(corepb.user.UserSecurityEvent) returns (EventbusEmpty);
 }
 
 service TodoEventbus {
-  rpc TodoChange(core.todo.TodoChangeEvent) returns (EventbusEmpty);
+  rpc TodoChange(corepb.todo.TodoChangeEvent) returns (EventbusEmpty);
 }
 
 service FileEventbus {
-  rpc FileUploaded(core.file.FileUploadEvent) returns (EventbusEmpty);
-  rpc FileComplete(core.file.FileCompleteEvent) returns (EventbusEmpty);
+  rpc FileUploaded(corepb.file.FileUploadEvent) returns (EventbusEmpty);
+  rpc FileComplete(corepb.file.FileCompleteEvent) returns (EventbusEmpty);
 }

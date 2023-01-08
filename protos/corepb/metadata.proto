@@ -1,14 +1,12 @@
 syntax = "proto3";
 
-package core;
+package corepb;
 
-option go_package = "./;core";
+option go_package = "./;corepb";
 
 message MetadataEntry {
-    string key = 1;
-    string value = 2;
+  string key = 1;
+  string value = 2;
 }
 
-message Metadata {
-    repeated MetadataEntry metadata = 1;
-}
+message Metadata { repeated MetadataEntry metadata = 1; }

@@ -1,7 +1,7 @@
 syntax = "proto3";
-package api.file;
+package apipb.file;
 
-option go_package = "./;publicapi";
+option go_package = "./;apipb";
 
 // Upload URL RPC
 message UploadUrlParams { string type = 1; }

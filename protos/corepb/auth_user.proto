@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package core.auth;
+package corepb.auth;
 
-option go_package = "./;core";
+option go_package = "./;corepb";
 
 message Empty {}
 

@@ -1,7 +1,7 @@
 syntax = "proto3";
-package api.user;
+package apipb.user;
 
-option go_package = "./;publicapi";
+option go_package = "./;apipb";
 
 message UserGetParams {}
 

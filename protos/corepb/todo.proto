@@ -1,7 +1,7 @@
 syntax = "proto3";
-package core.todo;
+package corepb.todo;
 
-option go_package = "./;core";
+option go_package = "./;corepb";
 
 message TodoGetParams { string user_id = 1; }
 
@@ -23,8 +23,8 @@ message TodoObject {
 
 message TodoChangeEvent {
   string idemponcyId = 1;
-  core.todo.TodoObject current = 3;
-  core.todo.TodoObject original = 4;
+  corepb.todo.TodoObject current = 3;
+  corepb.todo.TodoObject original = 4;
 }
 
 message TodoResponse { repeated TodoObject todos = 1; }

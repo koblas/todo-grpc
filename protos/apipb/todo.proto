@@ -1,7 +1,7 @@
 syntax = "proto3";
-package api.todo;
+package apipb.todo;
 
-option go_package = "./;publicapi";
+option go_package = "./;apipb";
 
 message TodoGetParams {}
 

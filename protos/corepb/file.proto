@@ -1,7 +1,7 @@
 syntax = "proto3";
-package core.file;
+package corepb.file;
 
-option go_package = "./;core";
+option go_package = "./;corepb";
 
 // Upload URL RPC
 message FileUploadUrlParams {
