@@ -1,14 +1,12 @@
 package user
 
-import (
-	genpb "github.com/koblas/grpc-todo/twpb/core"
-)
+import "github.com/koblas/grpc-todo/gen/corepb"
 
 const ENTITY_USER = "entity:user"
 const ENTITY_SETTINGS = "entity:user_settings"
 const ENTITY_SECURITY = "event:user_security"
 
-func (s *UserServer) toProtoUser(user *User) *genpb.User {
+func (s *UserServer) toProtoUser(user *User) *corepb.User {
 	if user == nil {
 		return nil
 	}
@@ -18,7 +16,7 @@ func (s *UserServer) toProtoUser(user *User) *genpb.User {
 		isVerified = isVerified || (v == user.Email)
 	}
 
-	return &genpb.User{
+	return &corepb.User{
 		Id:              user.ID,
 		Name:            user.Name,
 		Email:           user.Email,
@@ -28,21 +26,21 @@ func (s *UserServer) toProtoUser(user *User) *genpb.User {
 	}
 }
 
-func (s *UserServer) toProtoSettings(user *User) *genpb.UserSettings {
+func (s *UserServer) toProtoSettings(user *User) *corepb.UserSettings {
 	if user == nil {
 		return nil
 	}
 
-	output := map[string]*genpb.UserSettingGroup{}
+	output := map[string]*corepb.UserSettingGroup{}
 	for key, value := range user.Settings {
-		subgroup := genpb.UserSettingGroup{}
+		subgroup := corepb.UserSettingGroup{}
 		output[key] = &subgroup
 		for subkey, subvalue := range value {
 			subgroup.Values[subkey] = subvalue
 		}
 	}
 
-	return &genpb.UserSettings{
+	return &corepb.UserSettings{
 		UserId:   user.ID,
 		Settings: output,
 	}

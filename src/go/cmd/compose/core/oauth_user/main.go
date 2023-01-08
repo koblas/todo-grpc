@@ -3,10 +3,10 @@ package main
 import (
 	"net/http"
 
+	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	ouser "github.com/koblas/grpc-todo/services/core/oauth_user"
-	"github.com/koblas/grpc-todo/twpb/core"
 	"go.uber.org/zap"
 )
 
@@ -25,7 +25,7 @@ func main() {
 
 	opts := []ouser.Option{
 		ouser.WithUserService(
-			core.NewUserServiceProtobufClient(
+			corepb.NewUserServiceProtobufClient(
 				"http://"+config.UserServiceAddr,
 				&http.Client{},
 			),
@@ -33,7 +33,7 @@ func main() {
 		ouser.WithSecretManager(oauthConfig),
 	}
 
-	api := core.NewAuthUserServiceServer(ouser.NewOauthUserServer(config, opts...))
+	api := corepb.NewAuthUserServiceServer(ouser.NewOauthUserServer(config, opts...))
 
 	mgr.Start(api)
 }

@@ -3,12 +3,12 @@ package main
 import (
 	"net/http"
 
+	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/services/core/send_email"
-	"github.com/koblas/grpc-todo/twpb/core"
 	"go.uber.org/zap"
 )
 
@@ -21,14 +21,14 @@ func main() {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
-	producer := core.NewSendEmailEventsProtobufClient(
+	producer := corepb.NewSendEmailEventsProtobufClient(
 		config.EventArn,
 		awsutil.NewTwirpCallLambda(),
 	)
 
 	s := send_email.NewSendEmailServer(producer, send_email.NewSmtpService(config))
 	mux := http.NewServeMux()
-	mux.Handle(core.SendEmailServicePathPrefix, core.NewSendEmailServiceServer(s))
+	mux.Handle(corepb.SendEmailServicePathPrefix, corepb.NewSendEmailServiceServer(s))
 
 	mgr.StartConsumer(awsutil.HandleSqsLambda(mux))
 }

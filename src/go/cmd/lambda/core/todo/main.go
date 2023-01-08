@@ -1,12 +1,12 @@
 package main
 
 import (
+	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/services/core/todo"
-	"github.com/koblas/grpc-todo/twpb/core"
 	"go.uber.org/zap"
 )
 
@@ -19,8 +19,8 @@ func main() {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
-	// eventbus := core.NewTodoEventbusProtobufClient(config.EventArn, awsutil.NewTwirpCallLambda())
-	producer := core.NewTodoEventbusJSONClient(
+	// eventbus := corepb.NewTodoEventbusProtobufClient(config.EventArn, awsutil.NewTwirpCallLambda())
+	producer := corepb.NewTodoEventbusJSONClient(
 		config.EventArn,
 		awsutil.NewTwirpCallLambda(),
 	)
@@ -30,7 +30,7 @@ func main() {
 		todo.WithTodoStore(todo.NewTodoDynamoStore()),
 	}
 
-	api := core.NewTodoServiceServer(todo.NewTodoServer(opts...))
+	api := corepb.NewTodoServiceServer(todo.NewTodoServer(opts...))
 
 	mgr.Start(api)
 }

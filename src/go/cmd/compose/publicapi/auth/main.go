@@ -5,12 +5,12 @@ import (
 	"strings"
 
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
+	"github.com/koblas/grpc-todo/gen/apipb"
+	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/pkg/redisutil"
 	"github.com/koblas/grpc-todo/services/publicapi/auth"
-	"github.com/koblas/grpc-todo/twpb/core"
-	"github.com/koblas/grpc-todo/twpb/publicapi"
 	"go.uber.org/zap"
 )
 
@@ -25,13 +25,13 @@ func main() {
 
 	opts := []auth.Option{
 		auth.WithUserClient(
-			core.NewUserServiceProtobufClient(
+			corepb.NewUserServiceProtobufClient(
 				"http://"+config.UserServiceAddr,
 				&http.Client{},
 			),
 		),
 		auth.WithOAuthClient(
-			core.NewAuthUserServiceProtobufClient(
+			corepb.NewAuthUserServiceProtobufClient(
 				"http://"+config.OauthUserServiceAddr,
 				&http.Client{},
 			),
@@ -43,7 +43,7 @@ func main() {
 		opts = append(opts, auth.WithAttemptService(auth.NewAttemptCounter("publicapi:authentication", rdb)))
 	}
 
-	api := publicapi.NewAuthenticationServiceServer(auth.NewAuthenticationServer(config, opts...))
+	api := apipb.NewAuthenticationServiceServer(auth.NewAuthenticationServer(config, opts...))
 
 	mgr.Start(api)
 }

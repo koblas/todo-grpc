@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/apigatewaymanagementapi"
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
+	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/eventbus"
@@ -15,7 +16,6 @@ import (
 	"github.com/koblas/grpc-todo/pkg/redisutil"
 	"github.com/koblas/grpc-todo/pkg/store/websocket"
 	"github.com/koblas/grpc-todo/services/websocket/todo"
-	"github.com/koblas/grpc-todo/twpb/core"
 	"go.uber.org/zap"
 )
 
@@ -47,7 +47,7 @@ func main() {
 		todo.WithClient(redisPublish{producer}),
 	)
 	mux := http.NewServeMux()
-	mux.Handle(core.TodoEventbusPathPrefix, core.NewTodoEventbusServer(s))
+	mux.Handle(corepb.TodoEventbusPathPrefix, corepb.NewTodoEventbusServer(s))
 
 	redis := redisutil.NewTwirpRedis(config.RedisAddr)
 

@@ -1,12 +1,12 @@
 package main
 
 import (
+	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/services/core/file"
-	"github.com/koblas/grpc-todo/twpb/core"
 	"go.uber.org/zap"
 )
 
@@ -19,7 +19,7 @@ func main() {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
-	producer := core.NewFileEventbusJSONClient(
+	producer := corepb.NewFileEventbusJSONClient(
 		config.EventArn,
 		awsutil.NewTwirpCallLambda(),
 	)
@@ -29,7 +29,7 @@ func main() {
 		file.WithFileStore(file.NewFileS3Store(config.S3Bucket, config.S3Prefix)),
 	}
 
-	api := core.NewFileServiceServer(file.NewFileServer(opts...))
+	api := corepb.NewFileServiceServer(file.NewFileServer(opts...))
 
 	mgr.Start(api)
 }

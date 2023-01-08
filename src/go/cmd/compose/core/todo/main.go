@@ -4,11 +4,11 @@ import (
 	"strings"
 
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
+	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/pkg/redisutil"
 	"github.com/koblas/grpc-todo/services/core/todo"
-	"github.com/koblas/grpc-todo/twpb/core"
 	"go.uber.org/zap"
 )
 
@@ -22,7 +22,7 @@ func main() {
 	}
 
 	redis := redisutil.NewTwirpRedis(config.RedisAddr)
-	eventbus := core.NewTodoEventbusJSONClient(
+	eventbus := corepb.NewTodoEventbusJSONClient(
 		"topic://"+config.TodoEvents,
 		redis,
 	)
@@ -32,7 +32,7 @@ func main() {
 		todo.WithTodoStore(todo.NewTodoMemoryStore()),
 	}
 
-	api := core.NewTodoServiceServer(todo.NewTodoServer(opts...))
+	api := corepb.NewTodoServiceServer(todo.NewTodoServer(opts...))
 
 	mgr.Start(api)
 }

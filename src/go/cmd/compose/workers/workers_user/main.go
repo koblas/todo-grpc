@@ -4,11 +4,11 @@ import (
 	"strings"
 
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
+	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/pkg/redisutil"
 	"github.com/koblas/grpc-todo/services/workers/workers_user"
-	"github.com/koblas/grpc-todo/twpb/core"
 	"go.uber.org/zap"
 )
 
@@ -26,7 +26,7 @@ func main() {
 
 	opts := []workers_user.Option{
 		workers_user.WithSendEmail(
-			core.NewSendEmailServiceProtobufClient(
+			corepb.NewSendEmailServiceProtobufClient(
 				"queue://"+config.SendEmail,
 				redis,
 			),

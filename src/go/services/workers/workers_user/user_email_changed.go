@@ -3,8 +3,8 @@ package workers_user
 import (
 	"context"
 
+	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/logger"
-	genpb "github.com/koblas/grpc-todo/twpb/core"
 	"go.uber.org/zap"
 )
 
@@ -20,28 +20,28 @@ type userEmailChanged struct {
 	WorkerConfig
 }
 
-func NewUserEmailChanged(config WorkerConfig) genpb.TwirpServer {
+func NewUserEmailChanged(config WorkerConfig) corepb.TwirpServer {
 	svc := &userEmailChanged{WorkerConfig: config}
 
-	return genpb.NewUserEventbusServer(svc)
+	return corepb.NewUserEventbusServer(svc)
 }
 
-func (cfg *userEmailChanged) UserChange(ctx context.Context, msg *genpb.UserChangeEvent) (*genpb.EventbusEmpty, error) {
-	return &genpb.EventbusEmpty{}, nil
+func (cfg *userEmailChanged) UserChange(ctx context.Context, msg *corepb.UserChangeEvent) (*corepb.EventbusEmpty, error) {
+	return &corepb.EventbusEmpty{}, nil
 }
 
-func (cfg *userEmailChanged) UserSecurity(ctx context.Context, msg *genpb.UserSecurityEvent) (*genpb.EventbusEmpty, error) {
+func (cfg *userEmailChanged) UserSecurity(ctx context.Context, msg *corepb.UserSecurityEvent) (*corepb.EventbusEmpty, error) {
 	log := logger.FromContext(ctx).With(zap.Int32("action", int32(msg.Action))).With(zap.String("email", msg.User.Email))
 
 	log.Info("processing message")
-	if msg.Action != genpb.UserSecurity_USER_PASSWORD_CHANGE {
-		return &genpb.EventbusEmpty{}, nil
+	if msg.Action != corepb.UserSecurity_USER_PASSWORD_CHANGE {
+		return &corepb.EventbusEmpty{}, nil
 	}
 	user := msg.User
 
-	params := genpb.EmailPasswordChangeParam{
+	params := corepb.EmailPasswordChangeParam{
 		AppInfo: buildAppInfo(cfg.config),
-		Recipient: &genpb.EmailUser{
+		Recipient: &corepb.EmailUser{
 			UserId: user.Id,
 			Name:   user.Name,
 			Email:  user.Email,
@@ -55,5 +55,5 @@ func (cfg *userEmailChanged) UserSecurity(ctx context.Context, msg *genpb.UserSe
 		return nil, err
 	}
 
-	return &genpb.EventbusEmpty{}, nil
+	return &corepb.EventbusEmpty{}, nil
 }

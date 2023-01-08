@@ -4,9 +4,9 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/key_manager"
 	"github.com/koblas/grpc-todo/pkg/logger"
-	genpb "github.com/koblas/grpc-todo/twpb/core"
 	"github.com/twitchtv/twirp"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
@@ -15,11 +15,11 @@ import (
 // Server represents the gRPC server
 type FileServer struct {
 	files  FileStore
-	pubsub genpb.FileEventbus
+	pubsub corepb.FileEventbus
 	kms    key_manager.Encoder
 }
 
-var _ genpb.FileService = (*FileServer)(nil)
+var _ corepb.FileService = (*FileServer)(nil)
 
 type Option func(*FileServer)
 
@@ -29,7 +29,7 @@ func WithFileStore(store FileStore) Option {
 	}
 }
 
-func WithProducer(bus genpb.FileEventbus) Option {
+func WithProducer(bus corepb.FileEventbus) Option {
 	return func(cfg *FileServer) {
 		cfg.pubsub = bus
 	}
@@ -47,7 +47,7 @@ func NewFileServer(opts ...Option) *FileServer {
 	return &svr
 }
 
-func (s *FileServer) UploadUrl(ctx context.Context, params *genpb.FileUploadUrlParams) (*genpb.FileUploadUrlResponse, error) {
+func (s *FileServer) UploadUrl(ctx context.Context, params *corepb.FileUploadUrlParams) (*corepb.FileUploadUrlResponse, error) {
 	if params.UserId == "" {
 		return nil, twirp.InvalidArgumentError("userId", "missing")
 	}
@@ -60,12 +60,12 @@ func (s *FileServer) UploadUrl(ctx context.Context, params *genpb.FileUploadUrlP
 		return nil, twirp.InternalErrorWith(err)
 	}
 
-	return &genpb.FileUploadUrlResponse{
+	return &corepb.FileUploadUrlResponse{
 		Url: result,
 	}, nil
 }
 
-func (s *FileServer) VerifyUrl(ctx context.Context, params *genpb.FileVerifyUrlParams) (*genpb.FileVerifyUrlResponse, error) {
+func (s *FileServer) VerifyUrl(ctx context.Context, params *corepb.FileVerifyUrlParams) (*corepb.FileVerifyUrlResponse, error) {
 	log := logger.FromContext(ctx)
 
 	result, err := s.files.LookupUploadUrl(ctx, params.Url)
@@ -74,7 +74,7 @@ func (s *FileServer) VerifyUrl(ctx context.Context, params *genpb.FileVerifyUrlP
 		return nil, twirp.InternalErrorWith(err)
 	}
 
-	return &genpb.FileVerifyUrlResponse{
+	return &corepb.FileVerifyUrlResponse{
 		Type:   result.FileType,
 		UserId: result.UserId,
 	}, nil
@@ -82,7 +82,7 @@ func (s *FileServer) VerifyUrl(ctx context.Context, params *genpb.FileVerifyUrlP
 
 // Put - write non-authenticated bytes to a persistent store and triggers a notification.
 // If we have S3 (or similar) then this is not needed
-func (s *FileServer) Upload(ctx context.Context, params *genpb.FileUploadParams) (*genpb.FileUploadResponse, error) {
+func (s *FileServer) Upload(ctx context.Context, params *corepb.FileUploadParams) (*corepb.FileUploadResponse, error) {
 	log := logger.FromContext(ctx).With(zap.String("method", "Upload"))
 
 	if err := s.files.VerifyUploadUrl(ctx, params.Path, params.Query); err != nil {
@@ -100,21 +100,21 @@ func (s *FileServer) Upload(ctx context.Context, params *genpb.FileUploadParams)
 	}
 	log.With(zap.String("path", params.Path)).Info("Accepted file")
 
-	s.pubsub.FileUploaded(ctx, &genpb.FileUploadEvent{
+	s.pubsub.FileUploaded(ctx, &corepb.FileUploadEvent{
 		IdemponcyId: entry.Id,
-		Info: &genpb.FileUploadInfo{
+		Info: &corepb.FileUploadInfo{
 			UserId:   &entry.UserId,
 			FileType: entry.FileType + ":upload",
 			Url:      entry.InternalUrl,
 		},
 	})
 
-	return &genpb.FileUploadResponse{
+	return &corepb.FileUploadResponse{
 		Path: params.Path,
 	}, nil
 }
 
-func (s *FileServer) Put(ctx context.Context, params *genpb.FilePutParams) (*genpb.FilePutResponse, error) {
+func (s *FileServer) Put(ctx context.Context, params *corepb.FilePutParams) (*corepb.FilePutResponse, error) {
 	log := logger.FromContext(ctx).With(zap.String("method", "Put"))
 
 	path := strings.Join([]string{
@@ -128,12 +128,12 @@ func (s *FileServer) Put(ctx context.Context, params *genpb.FilePutParams) (*gen
 		log.With(zap.Error(err)).Error("StoreFile failed")
 	}
 
-	return &genpb.FilePutResponse{
+	return &corepb.FilePutResponse{
 		Path: url,
 	}, nil
 }
 
-func (s *FileServer) Get(ctx context.Context, params *genpb.FileGetParams) (*genpb.FileGetResponse, error) {
+func (s *FileServer) Get(ctx context.Context, params *corepb.FileGetParams) (*corepb.FileGetResponse, error) {
 	log := logger.FromContext(ctx).With(
 		zap.String("method", "Get"),
 		zap.String("path", params.Path),
@@ -149,7 +149,7 @@ func (s *FileServer) Get(ctx context.Context, params *genpb.FileGetParams) (*gen
 		return nil, twirp.InternalErrorWith(err)
 	}
 
-	return &genpb.FileGetResponse{
+	return &corepb.FileGetResponse{
 		Data: bytes,
 	}, nil
 }

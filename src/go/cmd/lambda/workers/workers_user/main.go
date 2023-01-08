@@ -4,12 +4,12 @@ import (
 	"log"
 	"os"
 
+	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	workers "github.com/koblas/grpc-todo/services/workers/workers_user"
-	"github.com/koblas/grpc-todo/twpb/core"
 	"go.uber.org/zap"
 )
 
@@ -43,7 +43,7 @@ func main() {
 	opts := []workers.Option{
 		workers.WithOnly(mode),
 		workers.WithSendEmail(
-			core.NewSendEmailServiceProtobufClient(
+			corepb.NewSendEmailServiceProtobufClient(
 				"sqs://send-email",
 				awsutil.NewTwirpCallLambda(),
 			),

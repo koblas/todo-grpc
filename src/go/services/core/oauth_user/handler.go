@@ -4,12 +4,12 @@ import (
 	"log"
 	"time"
 
+	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/key_manager"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/tokenmanager"
 	"github.com/koblas/grpc-todo/pkg/util"
 	oauth_provider "github.com/koblas/grpc-todo/services/core/oauth_user/provider"
-	genpb "github.com/koblas/grpc-todo/twpb/core"
 	"github.com/twitchtv/twirp"
 	"golang.org/x/net/context"
 )
@@ -17,14 +17,14 @@ import (
 // Server represents the gRPC server
 type OauthUserServer struct {
 	kms      key_manager.Encoder
-	user     genpb.UserService
+	user     corepb.UserService
 	jwtMaker tokenmanager.Maker
 	smanager oauth_provider.SecretManager
 }
 
 type Option func(*OauthUserServer)
 
-func WithUserService(client genpb.UserService) Option {
+func WithUserService(client corepb.UserService) Option {
 	return func(cfg *OauthUserServer) {
 		cfg.user = client
 	}
@@ -58,7 +58,7 @@ func NewOauthUserServer(config Config, opts ...Option) *OauthUserServer {
 	return &svr
 }
 
-func (svc *OauthUserServer) GetAuthURL(ctx context.Context, params *genpb.AuthOAuthGetUrlParams) (*genpb.AuthUserGetUrlResult, error) {
+func (svc *OauthUserServer) GetAuthURL(ctx context.Context, params *corepb.AuthOAuthGetUrlParams) (*corepb.AuthUserGetUrlResult, error) {
 	log := logger.FromContext(ctx).With("provider", params.Provider)
 	log.Info("Calling GetAuthURL")
 	oprovider, err := oauth_provider.GetOAuthProvider(params.GetProvider(), svc.smanager, log)
@@ -82,10 +82,10 @@ func (svc *OauthUserServer) GetAuthURL(ctx context.Context, params *genpb.AuthOA
 
 	url := oprovider.BuildRedirect(ctx, params.RedirectUrl, state)
 
-	return &genpb.AuthUserGetUrlResult{Url: url}, nil
+	return &corepb.AuthUserGetUrlResult{Url: url}, nil
 }
 
-func (svc *OauthUserServer) UpsertUser(ctx context.Context, params *genpb.AuthUserUpsertParams) (*genpb.AuthUserUpsertResult, error) {
+func (svc *OauthUserServer) UpsertUser(ctx context.Context, params *corepb.AuthUserUpsertParams) (*corepb.AuthUserUpsertResult, error) {
 	log := logger.FromContext(ctx).With("provider", params.Oauth.Provider)
 	log.Info("Calling UpsertUser")
 	oprovider, err := oauth_provider.GetOAuthProvider(params.Oauth.Provider, svc.smanager, log)
@@ -120,8 +120,8 @@ func (svc *OauthUserServer) UpsertUser(ctx context.Context, params *genpb.AuthUs
 		return nil, twirp.InternalError("Unable to get ID from provider")
 	}
 
-	user, err := svc.user.FindBy(ctx, &genpb.UserFindParam{
-		Auth: &genpb.AuthInfo{
+	user, err := svc.user.FindBy(ctx, &corepb.UserFindParam{
+		Auth: &corepb.AuthInfo{
 			Provider:   params.Oauth.Provider,
 			ProviderId: info.Id,
 		},
@@ -134,7 +134,7 @@ func (svc *OauthUserServer) UpsertUser(ctx context.Context, params *genpb.AuthUs
 	}
 
 	if user != nil {
-		return &genpb.AuthUserUpsertResult{UserId: user.Id, Created: false}, nil
+		return &corepb.AuthUserUpsertResult{UserId: user.Id, Created: false}, nil
 	}
 
 	if info.Email == "" {
@@ -142,7 +142,7 @@ func (svc *OauthUserServer) UpsertUser(ctx context.Context, params *genpb.AuthUs
 		return nil, twirp.InvalidArgumentError("email", "provider didn't send email address")
 	}
 
-	user, err = svc.user.FindBy(ctx, &genpb.UserFindParam{Email: info.Email})
+	user, err = svc.user.FindBy(ctx, &corepb.UserFindParam{Email: info.Email})
 	if err != nil {
 		if e, ok := err.(twirp.Error); !ok || e.Code() != twirp.NotFound {
 			log.With("error", err).Info("Failed to lookup user")
@@ -153,7 +153,7 @@ func (svc *OauthUserServer) UpsertUser(ctx context.Context, params *genpb.AuthUs
 	if user == nil || user.Id == "" {
 		log.With("email", info.Email).Info("Creating new user")
 		created = true
-		user, err = svc.user.Create(ctx, &genpb.UserCreateParam{
+		user, err = svc.user.Create(ctx, &corepb.UserCreateParam{
 			Email: info.Email,
 			Name:  info.Name,
 			// TODO - create as "ACTIVE" since we "know" the email is good
@@ -169,9 +169,9 @@ func (svc *OauthUserServer) UpsertUser(ctx context.Context, params *genpb.AuthUs
 
 	// Now associate the OAuth token and the UserId
 	// TODO - save the token!
-	_, err = svc.user.AuthAssociate(ctx, &genpb.AuthAssociateParam{
+	_, err = svc.user.AuthAssociate(ctx, &corepb.AuthAssociateParam{
 		UserId: user.Id,
-		Auth: &genpb.AuthInfo{
+		Auth: &corepb.AuthInfo{
 			Provider:   params.Oauth.Provider,
 			ProviderId: info.Id,
 		},
@@ -181,13 +181,13 @@ func (svc *OauthUserServer) UpsertUser(ctx context.Context, params *genpb.AuthUs
 		return nil, twirp.InternalErrorWith(err)
 	}
 
-	return &genpb.AuthUserUpsertResult{UserId: user.Id, Created: created}, nil
+	return &corepb.AuthUserUpsertResult{UserId: user.Id, Created: created}, nil
 }
 
-func (s *OauthUserServer) ListAssociations(ctx context.Context, params *genpb.AuthUserGetParams) (*genpb.AuthUserListAssoicationsResponse, error) {
-	return &genpb.AuthUserListAssoicationsResponse{}, nil
+func (s *OauthUserServer) ListAssociations(ctx context.Context, params *corepb.AuthUserGetParams) (*corepb.AuthUserListAssoicationsResponse, error) {
+	return &corepb.AuthUserListAssoicationsResponse{}, nil
 }
 
-func (s *OauthUserServer) RemoveAssociation(ctx context.Context, params *genpb.AuthUserGetParams) (*genpb.Empty, error) {
-	return &genpb.Empty{}, nil
+func (s *OauthUserServer) RemoveAssociation(ctx context.Context, params *corepb.AuthUserGetParams) (*corepb.Empty, error) {
+	return &corepb.Empty{}, nil
 }

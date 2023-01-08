@@ -3,8 +3,8 @@ package workers_user
 import (
 	"context"
 
+	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/logger"
-	twcore "github.com/koblas/grpc-todo/twpb/core"
 	"go.uber.org/zap"
 )
 
@@ -20,32 +20,32 @@ type userEmailForgot struct {
 	WorkerConfig
 }
 
-func NewUserEmailForgot(config WorkerConfig) twcore.TwirpServer {
+func NewUserEmailForgot(config WorkerConfig) corepb.TwirpServer {
 	svc := &userEmailForgot{WorkerConfig: config}
 
-	return twcore.NewUserEventbusServer(svc)
+	return corepb.NewUserEventbusServer(svc)
 }
 
-func (cfg *userEmailForgot) UserChange(ctx context.Context, msg *twcore.UserChangeEvent) (*twcore.EventbusEmpty, error) {
-	return &twcore.EventbusEmpty{}, nil
+func (cfg *userEmailForgot) UserChange(ctx context.Context, msg *corepb.UserChangeEvent) (*corepb.EventbusEmpty, error) {
+	return &corepb.EventbusEmpty{}, nil
 }
 
-func (cfg *userEmailForgot) UserSecurity(ctx context.Context, msg *twcore.UserSecurityEvent) (*twcore.EventbusEmpty, error) {
+func (cfg *userEmailForgot) UserSecurity(ctx context.Context, msg *corepb.UserSecurityEvent) (*corepb.EventbusEmpty, error) {
 	log := logger.FromContext(ctx).With(zap.Int32("action", int32(msg.Action))).With(zap.String("email", msg.User.Email))
 
 	log.Info("processing message")
-	if msg.Action != twcore.UserSecurity_USER_FORGOT_REQUEST {
-		return &twcore.EventbusEmpty{}, nil
+	if msg.Action != corepb.UserSecurity_USER_FORGOT_REQUEST {
+		return &corepb.EventbusEmpty{}, nil
 	}
 
 	tokenValue, err := decodeSecure(log, msg.Token)
 	if err != nil {
-		return &twcore.EventbusEmpty{}, err
+		return &corepb.EventbusEmpty{}, err
 	}
 
-	params := twcore.EmailPasswordRecoveryParam{
+	params := corepb.EmailPasswordRecoveryParam{
 		AppInfo: buildAppInfo(cfg.config),
-		Recipient: &twcore.EmailUser{
+		Recipient: &corepb.EmailUser{
 			UserId: msg.User.Id,
 			Name:   msg.User.Name,
 			Email:  msg.User.Email,
@@ -60,5 +60,5 @@ func (cfg *userEmailForgot) UserSecurity(ctx context.Context, msg *twcore.UserSe
 		return nil, err
 	}
 
-	return &twcore.EventbusEmpty{}, err
+	return &corepb.EventbusEmpty{}, err
 }

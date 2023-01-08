@@ -5,10 +5,10 @@ import (
 	"strings"
 
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
+	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/services/publicapi/fileput"
-	"github.com/koblas/grpc-todo/twpb/core"
 	"go.uber.org/zap"
 )
 
@@ -23,7 +23,7 @@ func main() {
 
 	opts := []fileput.Option{
 		fileput.WithFileService(
-			core.NewFileServiceProtobufClient(
+			corepb.NewFileServiceProtobufClient(
 				"http://"+config.FileServiceAddr,
 				&http.Client{},
 			),

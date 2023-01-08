@@ -8,10 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigatewaymanagementapi"
 	"github.com/aws/aws-sdk-go/aws"
 	smithy "github.com/aws/smithy-go"
+	"github.com/koblas/grpc-todo/gen/apipb"
+	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/store/websocket"
-	"github.com/koblas/grpc-todo/twpb/core"
-	"github.com/koblas/grpc-todo/twpb/publicapi"
 )
 
 type UserServer struct {
@@ -44,7 +44,7 @@ func WithClient(client PostToConnectionAPI) Option {
 	}
 }
 
-func NewUserChangeServer(opts ...Option) core.UserEventbus {
+func NewUserChangeServer(opts ...Option) corepb.UserEventbus {
 	svr := UserServer{}
 
 	for _, opt := range opts {
@@ -54,7 +54,7 @@ func NewUserChangeServer(opts ...Option) core.UserEventbus {
 	return &svr
 }
 
-func (svc *UserServer) UserChange(ctx context.Context, event *core.UserChangeEvent) (*core.EventbusEmpty, error) {
+func (svc *UserServer) UserChange(ctx context.Context, event *corepb.UserChangeEvent) (*corepb.EventbusEmpty, error) {
 	log := logger.FromContext(ctx)
 	log.Info("received todo event")
 
@@ -86,7 +86,7 @@ func (svc *UserServer) UserChange(ctx context.Context, event *core.UserChangeEve
 		ObjectId: obj.Id,
 		Action:   action,
 		// TODO -- this is shared between publicapi/user/handler/marshalUser()
-		Body: publicapi.User{
+		Body: apipb.User{
 			Id:        obj.Id,
 			Email:     obj.Email,
 			Name:      obj.Name,
@@ -127,9 +127,9 @@ func (svc *UserServer) UserChange(ctx context.Context, event *core.UserChangeEve
 
 	log.With("count", len(conns)).Info("Found connections")
 
-	return &core.EventbusEmpty{}, nil
+	return &corepb.EventbusEmpty{}, nil
 }
 
-func (svc *UserServer) UserSecurity(ctx context.Context, event *core.UserSecurityEvent) (*core.EventbusEmpty, error) {
-	return &core.EventbusEmpty{}, nil
+func (svc *UserServer) UserSecurity(ctx context.Context, event *corepb.UserSecurityEvent) (*corepb.EventbusEmpty, error) {
+	return &corepb.EventbusEmpty{}, nil
 }

@@ -3,8 +3,8 @@ package workers_user
 import (
 	"context"
 
+	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/logger"
-	genpb "github.com/koblas/grpc-todo/twpb/core"
 	"go.uber.org/zap"
 )
 
@@ -20,22 +20,22 @@ type userEmailInvite struct {
 	WorkerConfig
 }
 
-func NewUserEmailInvite(config WorkerConfig) genpb.TwirpServer {
+func NewUserEmailInvite(config WorkerConfig) corepb.TwirpServer {
 	svc := &userEmailInvite{WorkerConfig: config}
 
-	return genpb.NewUserEventbusServer(svc)
+	return corepb.NewUserEventbusServer(svc)
 }
 
-func (cfg *userEmailInvite) UserChange(ctx context.Context, msg *genpb.UserChangeEvent) (*genpb.EventbusEmpty, error) {
-	return &genpb.EventbusEmpty{}, nil
+func (cfg *userEmailInvite) UserChange(ctx context.Context, msg *corepb.UserChangeEvent) (*corepb.EventbusEmpty, error) {
+	return &corepb.EventbusEmpty{}, nil
 }
 
-func (cfg *userEmailInvite) UserSecurity(ctx context.Context, msg *genpb.UserSecurityEvent) (*genpb.EventbusEmpty, error) {
+func (cfg *userEmailInvite) UserSecurity(ctx context.Context, msg *corepb.UserSecurityEvent) (*corepb.EventbusEmpty, error) {
 	log := logger.FromContext(ctx).With(zap.Int32("action", int32(msg.Action))).With(zap.String("email", msg.User.Email))
 
 	log.Info("processing message")
-	if msg.Action != genpb.UserSecurity_USER_INVITE_TOKEN {
-		return &genpb.EventbusEmpty{}, nil
+	if msg.Action != corepb.UserSecurity_USER_INVITE_TOKEN {
+		return &corepb.EventbusEmpty{}, nil
 	}
 
 	tokenValue, err := decodeSecure(log, msg.Token)
@@ -43,14 +43,14 @@ func (cfg *userEmailInvite) UserSecurity(ctx context.Context, msg *genpb.UserSec
 		return nil, err
 	}
 
-	params := genpb.EmailInviteUserParam{
+	params := corepb.EmailInviteUserParam{
 		AppInfo: buildAppInfo(cfg.config),
-		Sender: &genpb.EmailUser{
+		Sender: &corepb.EmailUser{
 			UserId: msg.Sender.Id,
 			Name:   msg.Sender.Name,
 			Email:  msg.Sender.Email,
 		},
-		Recipient: &genpb.EmailUser{
+		Recipient: &corepb.EmailUser{
 			UserId: msg.User.Id,
 			Name:   msg.User.Name,
 			Email:  msg.User.Email,
@@ -65,5 +65,5 @@ func (cfg *userEmailInvite) UserSecurity(ctx context.Context, msg *genpb.UserSec
 		return nil, err
 	}
 
-	return &genpb.EventbusEmpty{}, nil
+	return &corepb.EventbusEmpty{}, nil
 }

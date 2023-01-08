@@ -3,8 +3,8 @@ package workers_user
 import (
 	"context"
 
+	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/logger"
-	genpb "github.com/koblas/grpc-todo/twpb/core"
 	"go.uber.org/zap"
 )
 
@@ -20,22 +20,22 @@ type userEmailConfirm struct {
 	WorkerConfig
 }
 
-func NewUserEmailConfirm(config WorkerConfig) genpb.TwirpServer {
+func NewUserEmailConfirm(config WorkerConfig) corepb.TwirpServer {
 	svc := &userEmailConfirm{WorkerConfig: config}
 
-	return genpb.NewUserEventbusServer(svc)
+	return corepb.NewUserEventbusServer(svc)
 }
 
-func (cfg *userEmailConfirm) UserChange(ctx context.Context, msg *genpb.UserChangeEvent) (*genpb.EventbusEmpty, error) {
-	return &genpb.EventbusEmpty{}, nil
+func (cfg *userEmailConfirm) UserChange(ctx context.Context, msg *corepb.UserChangeEvent) (*corepb.EventbusEmpty, error) {
+	return &corepb.EventbusEmpty{}, nil
 }
 
-func (cfg *userEmailConfirm) UserSecurity(ctx context.Context, msg *genpb.UserSecurityEvent) (*genpb.EventbusEmpty, error) {
+func (cfg *userEmailConfirm) UserSecurity(ctx context.Context, msg *corepb.UserSecurityEvent) (*corepb.EventbusEmpty, error) {
 	log := logger.FromContext(ctx).With(zap.Int32("action", int32(msg.Action))).With(zap.String("email", msg.User.Email))
 
 	log.Info("processing message")
-	if msg.Action != genpb.UserSecurity_USER_REGISTER_TOKEN {
-		return &genpb.EventbusEmpty{}, nil
+	if msg.Action != corepb.UserSecurity_USER_REGISTER_TOKEN {
+		return &corepb.EventbusEmpty{}, nil
 	}
 
 	tokenValue, err := decodeSecure(log, msg.Token)
@@ -45,9 +45,9 @@ func (cfg *userEmailConfirm) UserSecurity(ctx context.Context, msg *genpb.UserSe
 
 	log = log.With("email", msg.User.Email)
 
-	params := genpb.EmailRegisterParam{
+	params := corepb.EmailRegisterParam{
 		AppInfo: buildAppInfo(cfg.config),
-		Recipient: &genpb.EmailUser{
+		Recipient: &corepb.EmailUser{
 			UserId: msg.User.Id,
 			Name:   msg.User.Name,
 			Email:  msg.User.Email,
@@ -62,5 +62,5 @@ func (cfg *userEmailConfirm) UserSecurity(ctx context.Context, msg *genpb.UserSe
 		return nil, err
 	}
 
-	return &genpb.EventbusEmpty{}, err
+	return &corepb.EventbusEmpty{}, err
 }

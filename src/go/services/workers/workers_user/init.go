@@ -7,12 +7,11 @@ import (
 	"net/http/httptest"
 	"strings"
 
+	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/logger"
-	"github.com/koblas/grpc-todo/twpb/core"
-	genpb "github.com/koblas/grpc-todo/twpb/core"
 )
 
-type SqsConsumerBuilder func(WorkerConfig) genpb.TwirpServer
+type SqsConsumerBuilder func(WorkerConfig) corepb.TwirpServer
 
 type Worker struct {
 	Stream    string
@@ -25,7 +24,7 @@ type Worker struct {
 type WorkerConfig struct {
 	config      Config
 	onlyHandler string
-	sendEmail   genpb.SendEmailService
+	sendEmail   corepb.SendEmailService
 }
 
 type Option func(*WorkerConfig)
@@ -36,7 +35,7 @@ func WithOnly(item string) Option {
 	}
 }
 
-func WithSendEmail(sender genpb.SendEmailService) Option {
+func WithSendEmail(sender corepb.SendEmailService) Option {
 	return func(cfg *WorkerConfig) {
 		cfg.sendEmail = sender
 	}
@@ -57,7 +56,7 @@ func buildServiceConfig(config Config, opts ...Option) WorkerConfig {
 var workers = []Worker{}
 
 func GetHandler(config Config, opts ...Option) http.HandlerFunc {
-	handlers := []core.TwirpServer{}
+	handlers := []corepb.TwirpServer{}
 
 	cfg := buildServiceConfig(config, opts...)
 

@@ -4,16 +4,16 @@ import (
 	"encoding/base64"
 	"errors"
 
+	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/key_manager"
-	twcore "github.com/koblas/grpc-todo/twpb/core"
 )
 
-func EncodeSecure(encoder key_manager.Encoder, token string) (*twcore.SecureValue, error) {
+func EncodeSecure(encoder key_manager.Encoder, token string) (*corepb.SecureValue, error) {
 	svalue, err := encoder.Encode([]byte(token))
 	if err != nil {
 		return nil, err
 	}
-	return &twcore.SecureValue{
+	return &corepb.SecureValue{
 		KeyUri:    svalue.KmsUri,
 		DataKey:   base64.RawStdEncoding.EncodeToString(svalue.DataKey),
 		DataValue: base64.RawStdEncoding.EncodeToString(svalue.Data),
@@ -21,7 +21,7 @@ func EncodeSecure(encoder key_manager.Encoder, token string) (*twcore.SecureValu
 
 }
 
-func DecodeSecure(decoder key_manager.Decoder, value *twcore.SecureValue) (string, error) {
+func DecodeSecure(decoder key_manager.Decoder, value *corepb.SecureValue) (string, error) {
 	dataKey, err := base64.RawStdEncoding.DecodeString(value.DataKey)
 	if err != nil {
 		return "", err

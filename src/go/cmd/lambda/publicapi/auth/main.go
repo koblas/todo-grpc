@@ -1,14 +1,14 @@
 package main
 
 import (
+	"github.com/koblas/grpc-todo/gen/apipb"
+	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/pkg/redisutil"
 	"github.com/koblas/grpc-todo/services/publicapi/auth"
-	"github.com/koblas/grpc-todo/twpb/core"
-	"github.com/koblas/grpc-todo/twpb/publicapi"
 	"go.uber.org/zap"
 )
 
@@ -23,8 +23,8 @@ func main() {
 
 	// Connect to the user service
 	opts := []auth.Option{
-		auth.WithUserClient(core.NewUserServiceJSONClient("lambda://core-user", awsutil.NewTwirpCallLambda())),
-		auth.WithOAuthClient(core.NewAuthUserServiceJSONClient("lambda://core-oauth-user", awsutil.NewTwirpCallLambda())),
+		auth.WithUserClient(corepb.NewUserServiceJSONClient("lambda://core-user", awsutil.NewTwirpCallLambda())),
+		auth.WithOAuthClient(corepb.NewAuthUserServiceJSONClient("lambda://core-oauth-user", awsutil.NewTwirpCallLambda())),
 	}
 
 	rdb := redisutil.NewClient(config.RedisAddr)
@@ -34,7 +34,7 @@ func main() {
 		opts = append(opts, auth.WithAttemptService(auth.NewAttemptCounter("publicapi:authentication", rdb)))
 	}
 
-	api := publicapi.NewAuthenticationServiceServer(auth.NewAuthenticationServer(config, opts...))
+	api := apipb.NewAuthenticationServiceServer(auth.NewAuthenticationServer(config, opts...))
 
 	mgr.Start(api)
 }

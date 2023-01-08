@@ -5,10 +5,10 @@ import (
 	"log"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/koblas/grpc-todo/gen/apipb"
+	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/tokenmanager"
-	"github.com/koblas/grpc-todo/twpb/core"
-	"github.com/koblas/grpc-todo/twpb/publicapi"
 	"github.com/twitchtv/twirp"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
@@ -18,13 +18,13 @@ var validate = validator.New()
 
 // Server represents the gRPC server
 type UserServer struct {
-	user     core.UserService
+	user     corepb.UserService
 	jwtMaker tokenmanager.Maker
 }
 
 type Option func(*UserServer)
 
-func WithUserService(client core.UserService) Option {
+func WithUserService(client corepb.UserService) Option {
 	return func(svr *UserServer) {
 		svr.user = client
 	}
@@ -52,7 +52,7 @@ func (svc *UserServer) getUserId(ctx context.Context) (string, error) {
 }
 
 // SayHello generates response to a Ping request
-func (svc *UserServer) GetUser(ctx context.Context, _ *publicapi.UserGetParams) (*publicapi.UserResponse, error) {
+func (svc *UserServer) GetUser(ctx context.Context, _ *apipb.UserGetParams) (*apipb.UserResponse, error) {
 	log := logger.FromContext(ctx)
 	log.Info("GetUser BEGIN")
 
@@ -64,7 +64,7 @@ func (svc *UserServer) GetUser(ctx context.Context, _ *publicapi.UserGetParams) 
 	log = log.With("userId", userId)
 	log.Info("Looking up user")
 
-	user, err := svc.user.FindBy(ctx, &core.UserFindParam{
+	user, err := svc.user.FindBy(ctx, &corepb.UserFindParam{
 		UserId: userId,
 	})
 
@@ -82,7 +82,7 @@ func (svc *UserServer) GetUser(ctx context.Context, _ *publicapi.UserGetParams) 
 	return marshalUser(user), nil
 }
 
-func (svc *UserServer) UpdateUser(ctx context.Context, update *publicapi.UserUpdateParams) (*publicapi.UserResponse, error) {
+func (svc *UserServer) UpdateUser(ctx context.Context, update *apipb.UserUpdateParams) (*apipb.UserResponse, error) {
 	log := logger.FromContext(ctx)
 	log.Info("UserUpdate BEGIN")
 
@@ -92,7 +92,7 @@ func (svc *UserServer) UpdateUser(ctx context.Context, update *publicapi.UserUpd
 		return nil, twirp.Unauthenticated.Error("missing userid")
 	}
 
-	user, err := svc.user.FindBy(ctx, &core.UserFindParam{
+	user, err := svc.user.FindBy(ctx, &corepb.UserFindParam{
 		UserId: userId,
 	})
 	if err != nil {
@@ -116,7 +116,7 @@ func (svc *UserServer) UpdateUser(ctx context.Context, update *publicapi.UserUpd
 		}
 	}
 
-	user, err = svc.user.Update(ctx, &core.UserUpdateParam{
+	user, err = svc.user.Update(ctx, &corepb.UserUpdateParam{
 		UserId:      userId,
 		Name:        update.Name,
 		Email:       update.Email,
@@ -131,14 +131,14 @@ func (svc *UserServer) UpdateUser(ctx context.Context, update *publicapi.UserUpd
 	return marshalUser(user), nil
 }
 
-func marshalUser(user *core.User) *publicapi.UserResponse {
+func marshalUser(user *corepb.User) *apipb.UserResponse {
 	if user == nil {
-		return &publicapi.UserResponse{}
+		return &apipb.UserResponse{}
 	}
 
 	// TODO - shared with websocket serialization
-	return &publicapi.UserResponse{
-		User: &publicapi.User{
+	return &apipb.UserResponse{
+		User: &apipb.User{
 			Id:        user.Id,
 			Email:     user.Email,
 			Name:      user.Name,

@@ -4,12 +4,12 @@ import (
 	"log"
 	"os"
 
+	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/services/workers/workers_file"
-	"github.com/koblas/grpc-todo/twpb/core"
 	"go.uber.org/zap"
 )
 
@@ -29,7 +29,7 @@ func main() {
 
 	opts := []workers_file.Option{
 		workers_file.WithOnly(mode),
-		workers_file.WithProducer(core.NewFileEventbusJSONClient(
+		workers_file.WithProducer(corepb.NewFileEventbusJSONClient(
 			config.EventArn,
 			awsutil.NewTwirpCallLambda(),
 		)),

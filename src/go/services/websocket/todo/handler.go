@@ -8,10 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigatewaymanagementapi"
 	"github.com/aws/aws-sdk-go/aws"
 	smithy "github.com/aws/smithy-go"
+	"github.com/koblas/grpc-todo/gen/apipb"
+	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/store/websocket"
-	"github.com/koblas/grpc-todo/twpb/core"
-	"github.com/koblas/grpc-todo/twpb/publicapi"
 )
 
 type TodoServer struct {
@@ -44,7 +44,7 @@ func WithClient(client PostToConnectionAPI) Option {
 	}
 }
 
-func NewTodoChangeServer(opts ...Option) core.TodoEventbus {
+func NewTodoChangeServer(opts ...Option) corepb.TodoEventbus {
 	svr := TodoServer{}
 
 	for _, opt := range opts {
@@ -54,7 +54,7 @@ func NewTodoChangeServer(opts ...Option) core.TodoEventbus {
 	return &svr
 }
 
-func (svc *TodoServer) TodoChange(ctx context.Context, event *core.TodoChangeEvent) (*core.EventbusEmpty, error) {
+func (svc *TodoServer) TodoChange(ctx context.Context, event *corepb.TodoChangeEvent) (*corepb.EventbusEmpty, error) {
 	log := logger.FromContext(ctx)
 	log.Info("received todo event")
 
@@ -78,7 +78,7 @@ func (svc *TodoServer) TodoChange(ctx context.Context, event *core.TodoChangeEve
 		return nil, err
 	}
 
-	var obj *core.TodoObject
+	var obj *corepb.TodoObject
 	if event.Current != nil {
 		obj = event.Current
 	} else if event.Original != nil {
@@ -90,7 +90,7 @@ func (svc *TodoServer) TodoChange(ctx context.Context, event *core.TodoChangeEve
 		Topic:    "todo",
 		ObjectId: obj.Id,
 		Action:   action,
-		Body: publicapi.TodoObject{
+		Body: apipb.TodoObject{
 			Id:   obj.Id,
 			Task: obj.Task,
 		},
@@ -129,5 +129,5 @@ func (svc *TodoServer) TodoChange(ctx context.Context, event *core.TodoChangeEve
 
 	log.With("count", len(conns)).Info("Found connections")
 
-	return &core.EventbusEmpty{}, nil
+	return &corepb.EventbusEmpty{}, nil
 }

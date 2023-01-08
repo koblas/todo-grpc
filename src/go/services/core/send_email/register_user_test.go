@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/jaswdr/faker"
-	genpb "github.com/koblas/grpc-todo/twpb/core"
+	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/stretchr/testify/require"
 )
 
@@ -14,12 +14,12 @@ func TestRegisterUser(t *testing.T) {
 
 	svc, msgData := buildTestService()
 
-	params := genpb.EmailRegisterParam{
-		Recipient: &genpb.EmailUser{
+	params := corepb.EmailRegisterParam{
+		Recipient: &corepb.EmailUser{
 			Name:  faker.Person().Name(),
 			Email: faker.Internet().Email(),
 		},
-		AppInfo: &genpb.EmailAppInfo{
+		AppInfo: &corepb.EmailAppInfo{
 			AppName: faker.Company().Name(),
 			UrlBase: faker.Internet().URL(),
 		},

@@ -3,16 +3,16 @@ package auth
 import (
 	"strings"
 
+	"github.com/koblas/grpc-todo/gen/apipb"
+	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/util"
-	"github.com/koblas/grpc-todo/twpb/core"
-	"github.com/koblas/grpc-todo/twpb/publicapi"
 	"github.com/twitchtv/twirp"
 	"golang.org/x/net/context"
 )
 
 // Authenticate the user with email and password (aka Login)
-func (s AuthenticationServer) Authenticate(ctx context.Context, params *publicapi.LoginParams) (*publicapi.Token, error) {
+func (s AuthenticationServer) Authenticate(ctx context.Context, params *apipb.LoginParams) (*apipb.Token, error) {
 	log := logger.FromContext(ctx).With("email", params.Email)
 	log.Info("Authenticate")
 
@@ -31,7 +31,7 @@ func (s AuthenticationServer) Authenticate(ctx context.Context, params *publicap
 		log.With("error", err).Error("Authenticate/redis unable to fetch attempts keys")
 	}
 
-	// user, err := s.userClient.FindBy(ctx, &core.FindParam{
+	// user, err := s.userClient.FindBy(ctx, &corepb.FindParam{
 	// 	Email: email,
 	// })
 	// if err != nil || user == nil {
@@ -53,7 +53,7 @@ func (s AuthenticationServer) Authenticate(ctx context.Context, params *publicap
 	// }
 
 	// log = log.With("user_id", user.Id)
-	userParam, err := s.userClient.ComparePassword(ctx, &core.AuthenticateParam{
+	userParam, err := s.userClient.ComparePassword(ctx, &corepb.AuthenticateParam{
 		Email:    params.Email,
 		Password: params.Password,
 	})
@@ -72,7 +72,7 @@ func (s AuthenticationServer) Authenticate(ctx context.Context, params *publicap
 	return s.returnToken(ctx, userParam.UserId)
 }
 
-func (s AuthenticationServer) Register(ctx context.Context, params *publicapi.RegisterParams) (*publicapi.TokenRegister, error) {
+func (s AuthenticationServer) Register(ctx context.Context, params *apipb.RegisterParams) (*apipb.TokenRegister, error) {
 	log := logger.FromContext(ctx).With("email", params.Email)
 	log.Info("Register")
 
@@ -80,8 +80,8 @@ func (s AuthenticationServer) Register(ctx context.Context, params *publicapi.Re
 		return nil, twirp.InvalidArgumentError("password", "password too short").WithMeta("password", "Password must be 8 characters")
 	}
 
-	user, err := s.userClient.Create(ctx, &core.UserCreateParam{
-		Status:   core.UserStatus_REGISTERED,
+	user, err := s.userClient.Create(ctx, &corepb.UserCreateParam{
+		Status:   corepb.UserStatus_REGISTERED,
 		Email:    params.Email,
 		Password: params.Password,
 		Name:     params.Name,
@@ -95,17 +95,17 @@ func (s AuthenticationServer) Register(ctx context.Context, params *publicapi.Re
 	if err != nil {
 		return nil, err
 	}
-	return &publicapi.TokenRegister{
+	return &apipb.TokenRegister{
 		Token:   token,
 		Created: true,
 	}, nil
 }
 
-func (s AuthenticationServer) VerifyEmail(ctx context.Context, params *publicapi.ConfirmParams) (*publicapi.Success, error) {
+func (s AuthenticationServer) VerifyEmail(ctx context.Context, params *apipb.ConfirmParams) (*apipb.Success, error) {
 	log := logger.FromContext(ctx)
 	log.Info("Verify register user")
 
-	user, err := s.userClient.VerificationVerify(ctx, &core.VerificationParam{
+	user, err := s.userClient.VerificationVerify(ctx, &corepb.VerificationParam{
 		UserId: params.UserId,
 		Token:  params.Token,
 	})
@@ -116,12 +116,12 @@ func (s AuthenticationServer) VerifyEmail(ctx context.Context, params *publicapi
 		return nil, twirp.InvalidArgumentError("token", "not found").WithMeta("token", "Not Found")
 	}
 
-	return &publicapi.Success{
+	return &apipb.Success{
 		Success: true,
 	}, nil
 }
 
-func (s AuthenticationServer) RecoverSend(ctx context.Context, params *publicapi.RecoverySendParams) (*publicapi.Success, error) {
+func (s AuthenticationServer) RecoverSend(ctx context.Context, params *apipb.RecoverySendParams) (*apipb.Success, error) {
 	log := logger.FromContext(ctx).With("email", params.Email)
 	log.Info("Recover Send")
 
@@ -135,7 +135,7 @@ func (s AuthenticationServer) RecoverSend(ctx context.Context, params *publicapi
 		log.With("error", err).Error("RecoverSend/redis unable to fetch attempts keys")
 	}
 
-	user, err := s.userClient.ForgotSend(ctx, &core.UserFindParam{
+	user, err := s.userClient.ForgotSend(ctx, &corepb.UserFindParam{
 		Email: params.Email,
 	})
 	if err != nil {
@@ -150,16 +150,16 @@ func (s AuthenticationServer) RecoverSend(ctx context.Context, params *publicapi
 		}
 	}
 
-	return &publicapi.Success{
+	return &apipb.Success{
 		Success: true,
 	}, nil
 }
 
-func (s AuthenticationServer) RecoverVerify(ctx context.Context, params *publicapi.RecoveryUpdateParams) (*publicapi.Success, error) {
+func (s AuthenticationServer) RecoverVerify(ctx context.Context, params *apipb.RecoveryUpdateParams) (*apipb.Success, error) {
 	log := logger.FromContext(ctx).With("user_id", params.UserId)
 	log.Info("Recover Verify")
 
-	user, err := s.userClient.ForgotVerify(ctx, &core.VerificationParam{
+	user, err := s.userClient.ForgotVerify(ctx, &corepb.VerificationParam{
 		UserId: params.UserId,
 		Token:  params.Token,
 	})
@@ -170,16 +170,16 @@ func (s AuthenticationServer) RecoverVerify(ctx context.Context, params *publica
 		return nil, twirp.InvalidArgumentError("token", "not found").WithMeta("token", "Not found")
 	}
 
-	return &publicapi.Success{
+	return &apipb.Success{
 		Success: true,
 	}, nil
 }
 
-func (s AuthenticationServer) RecoverUpdate(ctx context.Context, params *publicapi.RecoveryUpdateParams) (*publicapi.Token, error) {
+func (s AuthenticationServer) RecoverUpdate(ctx context.Context, params *apipb.RecoveryUpdateParams) (*apipb.Token, error) {
 	log := logger.FromContext(ctx)
 	log.Info("Recover Update password")
 
-	user, err := s.userClient.ForgotUpdate(ctx, &core.VerificationParam{
+	user, err := s.userClient.ForgotUpdate(ctx, &corepb.VerificationParam{
 		UserId:   params.UserId,
 		Token:    params.Token,
 		Password: params.Password,

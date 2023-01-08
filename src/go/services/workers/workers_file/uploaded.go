@@ -9,8 +9,8 @@ import (
 
 	"github.com/disintegration/imaging"
 	"github.com/google/uuid"
+	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/logger"
-	genpb "github.com/koblas/grpc-todo/twpb/core"
 	"go.uber.org/zap"
 )
 
@@ -26,13 +26,13 @@ type fileUploaded struct {
 	WorkerConfig
 }
 
-func NewFileUploaded(config WorkerConfig) genpb.TwirpServer {
+func NewFileUploaded(config WorkerConfig) corepb.TwirpServer {
 	svc := &fileUploaded{WorkerConfig: config}
 
-	return genpb.NewFileEventbusServer(svc)
+	return corepb.NewFileEventbusServer(svc)
 }
 
-func (cfg *fileUploaded) FileUploaded(ctx context.Context, msg *genpb.FileUploadEvent) (*genpb.EventbusEmpty, error) {
+func (cfg *fileUploaded) FileUploaded(ctx context.Context, msg *corepb.FileUploadEvent) (*corepb.EventbusEmpty, error) {
 	log := logger.FromContext(ctx).With(
 		zap.String("fileType", msg.Info.FileType),
 		zap.Stringp("userId", msg.Info.UserId),
@@ -41,7 +41,7 @@ func (cfg *fileUploaded) FileUploaded(ctx context.Context, msg *genpb.FileUpload
 
 	// We only handle profile images
 	if msg.Info.FileType != "profile_image:upload" || msg.Info.UserId == nil {
-		return &genpb.EventbusEmpty{}, nil
+		return &corepb.EventbusEmpty{}, nil
 	}
 
 	postComplete := func(errMsg string) {
@@ -51,10 +51,10 @@ func (cfg *fileUploaded) FileUploaded(ctx context.Context, msg *genpb.FileUpload
 		} else {
 			log.Info(errMsg)
 		}
-		event := genpb.FileCompleteEvent{
+		event := corepb.FileCompleteEvent{
 			IdemponcyId:  uuid.NewString(),
 			ErrorMessage: msgPtr,
-			Info: &genpb.FileUploadInfo{
+			Info: &corepb.FileUploadInfo{
 				UserId:      msg.Info.UserId,
 				FileType:    strings.TrimSuffix(msg.Info.FileType, ":upload"),
 				ContentType: nil,
@@ -67,18 +67,18 @@ func (cfg *fileUploaded) FileUploaded(ctx context.Context, msg *genpb.FileUpload
 		}
 	}
 
-	fileData, err := cfg.fileService.Get(ctx, &genpb.FileGetParams{
+	fileData, err := cfg.fileService.Get(ctx, &corepb.FileGetParams{
 		Path: msg.Info.Url,
 	})
 	if err != nil {
 		log.With(zap.Error(err)).Error("unable to get image")
-		return &genpb.EventbusEmpty{}, nil
+		return &corepb.EventbusEmpty{}, nil
 	}
 
 	srcImage, _, err := image.Decode(bytes.NewReader(fileData.Data))
 	if err != nil {
 		postComplete("unable to decode")
-		return &genpb.EventbusEmpty{}, nil
+		return &corepb.EventbusEmpty{}, nil
 	}
 	dstImage := imaging.Resize(srcImage, 128, 128, imaging.CatmullRom)
 
@@ -86,10 +86,10 @@ func (cfg *fileUploaded) FileUploaded(ctx context.Context, msg *genpb.FileUpload
 	writer := bytes.NewBuffer(outData)
 	if err := png.Encode(writer, dstImage); err != nil {
 		postComplete("unable to encode")
-		return &genpb.EventbusEmpty{}, nil
+		return &corepb.EventbusEmpty{}, nil
 	}
 
-	putResult, err := cfg.fileService.Put(ctx, &genpb.FilePutParams{
+	putResult, err := cfg.fileService.Put(ctx, &corepb.FilePutParams{
 		UserId:   *msg.Info.UserId,
 		FileType: "profile_image",
 		Suffix:   ".png",
@@ -97,24 +97,24 @@ func (cfg *fileUploaded) FileUploaded(ctx context.Context, msg *genpb.FileUpload
 	})
 	if err != nil {
 		postComplete("unable to save")
-		return &genpb.EventbusEmpty{}, nil
+		return &corepb.EventbusEmpty{}, nil
 	}
 
-	if _, err := cfg.userService.Update(ctx, &genpb.UserUpdateParam{
+	if _, err := cfg.userService.Update(ctx, &corepb.UserUpdateParam{
 		UserId:    *msg.Info.UserId,
 		AvatarUrl: &putResult.Path,
 	}); err != nil {
 		postComplete("user update failed")
-		return &genpb.EventbusEmpty{}, nil
+		return &corepb.EventbusEmpty{}, nil
 	}
 
 	postComplete("")
-	return &genpb.EventbusEmpty{}, nil
+	return &corepb.EventbusEmpty{}, nil
 }
 
-func (cfg *fileUploaded) FileComplete(ctx context.Context, msg *genpb.FileCompleteEvent) (*genpb.EventbusEmpty, error) {
+func (cfg *fileUploaded) FileComplete(ctx context.Context, msg *corepb.FileCompleteEvent) (*corepb.EventbusEmpty, error) {
 	log := logger.FromContext(ctx).With(zap.String("fileType", msg.Info.FileType))
 
 	log.Info("in ready handler")
-	return &genpb.EventbusEmpty{}, nil
+	return &corepb.EventbusEmpty{}, nil
 }

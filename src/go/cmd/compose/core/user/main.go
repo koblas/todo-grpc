@@ -9,11 +9,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
+	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/pkg/redisutil"
 	"github.com/koblas/grpc-todo/services/core/user"
-	"github.com/koblas/grpc-todo/twpb/core"
 	"go.uber.org/zap"
 )
 
@@ -58,7 +58,7 @@ func main() {
 
 	redis := redisutil.NewTwirpRedis(config.RedisAddr)
 
-	producer := core.NewUserEventbusJSONClient(
+	producer := corepb.NewUserEventbusJSONClient(
 		"topic://"+config.UserEventTopic,
 		redis,
 	)
@@ -85,7 +85,7 @@ func main() {
 		)
 	}
 
-	api := core.NewUserServiceServer(user.NewUserServer(opts...))
+	api := corepb.NewUserServiceServer(user.NewUserServer(opts...))
 
 	mgr.Start(api)
 }

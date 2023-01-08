@@ -5,11 +5,11 @@ import (
 	"strings"
 
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
+	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/pkg/redisutil"
 	"github.com/koblas/grpc-todo/services/core/send_email"
-	"github.com/koblas/grpc-todo/twpb/core"
 	"go.uber.org/zap"
 )
 
@@ -24,14 +24,14 @@ func main() {
 
 	redis := redisutil.NewTwirpRedis(config.RedisAddr)
 
-	producer := core.NewSendEmailEventsProtobufClient(
+	producer := corepb.NewSendEmailEventsProtobufClient(
 		"topic://"+config.EmailSentTopic,
 		redis,
 	)
 
 	s := send_email.NewSendEmailServer(producer, send_email.NewSmtpService(config))
 	mux := http.NewServeMux()
-	mux.Handle(core.SendEmailServicePathPrefix, core.NewSendEmailServiceServer(s))
+	mux.Handle(corepb.SendEmailServicePathPrefix, corepb.NewSendEmailServiceServer(s))
 
 	mgr.StartConsumer(redis.QueueConsumer(mgr.Context(), "send-email", mux))
 }

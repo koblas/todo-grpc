@@ -5,20 +5,20 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/logger"
-	"github.com/koblas/grpc-todo/twpb/core"
 	"github.com/twitchtv/twirp"
 	"go.uber.org/zap"
 )
 
 // Server represents the gRPC server
 type FilePutServer struct {
-	file core.FileService
+	file corepb.FileService
 }
 
 type Option func(*FilePutServer)
 
-func WithFileService(client core.FileService) Option {
+func WithFileService(client corepb.FileService) Option {
 	return func(svr *FilePutServer) {
 		svr.file = client
 	}
@@ -63,7 +63,7 @@ func (svc *FilePutServer) ServeHTTP(writer http.ResponseWriter, req *http.Reques
 		return
 	}
 
-	_, err := svc.file.Upload(ctx, &core.FileUploadParams{
+	_, err := svc.file.Upload(ctx, &corepb.FileUploadParams{
 		Path:        url.Path,
 		Query:       url.RawQuery,
 		ContentType: contentType,

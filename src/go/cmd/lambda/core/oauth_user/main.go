@@ -1,12 +1,12 @@
 package main
 
 import (
+	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	ouser "github.com/koblas/grpc-todo/services/core/oauth_user"
-	"github.com/koblas/grpc-todo/twpb/core"
 	"go.uber.org/zap"
 )
 
@@ -24,11 +24,11 @@ func main() {
 	}
 
 	opts := []ouser.Option{
-		ouser.WithUserService(core.NewUserServiceJSONClient("lambda://core-user", awsutil.NewTwirpCallLambda())),
+		ouser.WithUserService(corepb.NewUserServiceJSONClient("lambda://core-user", awsutil.NewTwirpCallLambda())),
 		ouser.WithSecretManager(oauthConfig),
 	}
 
-	api := core.NewAuthUserServiceServer(ouser.NewOauthUserServer(config, opts...))
+	api := corepb.NewAuthUserServiceServer(ouser.NewOauthUserServer(config, opts...))
 
 	mgr.Start(api)
 }

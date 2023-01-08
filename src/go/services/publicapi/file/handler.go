@@ -3,10 +3,10 @@ package file
 import (
 	"log"
 
+	"github.com/koblas/grpc-todo/gen/apipb"
+	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/tokenmanager"
-	"github.com/koblas/grpc-todo/twpb/core"
-	"github.com/koblas/grpc-todo/twpb/publicapi"
 	"github.com/twitchtv/twirp"
 	"golang.org/x/net/context"
 )
@@ -15,13 +15,13 @@ import (
 
 // Server represents the gRPC server
 type FileServer struct {
-	file     core.FileService
+	file     corepb.FileService
 	jwtMaker tokenmanager.Maker
 }
 
 type Option func(*FileServer)
 
-func WithFileService(client core.FileService) Option {
+func WithFileService(client corepb.FileService) Option {
 	return func(svr *FileServer) {
 		svr.file = client
 	}
@@ -48,7 +48,7 @@ func (svc *FileServer) getUserId(ctx context.Context) (string, error) {
 	return tokenmanager.UserIdFromContext(ctx, svc.jwtMaker)
 }
 
-func (svc *FileServer) UploadUrl(ctx context.Context, input *publicapi.UploadUrlParams) (*publicapi.UploadUrlResponse, error) {
+func (svc *FileServer) UploadUrl(ctx context.Context, input *apipb.UploadUrlParams) (*apipb.UploadUrlResponse, error) {
 	log := logger.FromContext(ctx)
 	log.Info("UploadUrl BEGIN")
 
@@ -61,7 +61,7 @@ func (svc *FileServer) UploadUrl(ctx context.Context, input *publicapi.UploadUrl
 
 	log.Info("Just a test")
 
-	req := core.FileUploadUrlParams{
+	req := corepb.FileUploadUrlParams{
 		UserId: userId,
 		Type:   input.Type,
 	}
@@ -71,7 +71,7 @@ func (svc *FileServer) UploadUrl(ctx context.Context, input *publicapi.UploadUrl
 		return nil, err
 	}
 
-	return &publicapi.UploadUrlResponse{
+	return &apipb.UploadUrlResponse{
 		Url: res.Url,
 	}, err
 }

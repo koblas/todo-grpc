@@ -4,11 +4,11 @@ import (
 	"strings"
 
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
+	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/pkg/redisutil"
 	"github.com/koblas/grpc-todo/services/core/file"
-	"github.com/koblas/grpc-todo/twpb/core"
 	"go.uber.org/zap"
 )
 
@@ -31,7 +31,7 @@ func main() {
 
 	redis := redisutil.NewTwirpRedis(config.RedisAddr)
 
-	producer := core.NewFileEventbusJSONClient(
+	producer := corepb.NewFileEventbusJSONClient(
 		"topic://"+config.FileEventTopic,
 		redis,
 	)
@@ -54,7 +54,7 @@ func main() {
 	// 	)
 	// }
 
-	api := core.NewFileServiceServer(file.NewFileServer(opts...))
+	api := corepb.NewFileServiceServer(file.NewFileServer(opts...))
 
 	mgr.Start(api)
 }
