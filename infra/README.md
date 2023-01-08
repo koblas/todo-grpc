@@ -25,3 +25,13 @@ kubectl create secret generic common-secrets --from-env-file=../.env
 ```
 
     --namespace=new-namespace
+
+
+### Day-to-day startup
+
+```
+minikube start
+minikube addons enable ingress
+minikube tunnel
+tilt up
+```

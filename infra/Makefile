@@ -23,7 +23,7 @@ all:
 	kubectl apply -f core-todo-service.yaml
 	#
 	kubectl apply -f core-send-email-deployment.yaml
-	kubectl apply -f core-workers-deployment.yaml
+	kubectl apply -f workers-user-deployment.yaml
 	kubectl apply -f core-websocket-todo-deployment.yaml
 	#
 	kubectl apply -f client-deployment.yaml

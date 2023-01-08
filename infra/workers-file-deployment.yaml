@@ -2,32 +2,22 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    name: core-workers
-  name: core-workers
+    name: workers-file
+  name: workers-file
 spec:
   replicas: 1
   selector:
     matchLabels:
-      name: core-workers
+      name: workers-file
   strategy: {}
   template:
     metadata:
       labels:
         network/backend: "true"
-        name: core-workers
+        name: workers-file
     spec:
       containers:
         - env:
-            - name: EMAILSERVICE_ADDR
-              valueFrom:
-                configMapKeyRef:
-                  key: EMAILSERVICE_ADDR
-                  name: dev-variables-env
-            - name: JWT_SECRET
-              valueFrom:
-                secretKeyRef:
-                  key: JWT_SECRET
-                  name: common-secrets
             - name: OAUTH_USER_SERVICE_ADDR
               valueFrom:
                 configMapKeyRef:
@@ -53,7 +43,12 @@ spec:
                 configMapKeyRef:
                   key: USER_SERVICE_ADDR
                   name: dev-variables-env
-          image: todo-grpc/core-workers
+            - name: FILE_SERVICE_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  key: FILE_SERVICE_ADDR
+                  name: dev-variables-env
+          image: todo-grpc/workers-file
           imagePullPolicy: IfNotPresent
-          name: core-workers
+          name: workers-file
       restartPolicy: Always
