@@ -24,6 +24,7 @@ func (s *UserServer) toProtoUser(user *User) *genpb.User {
 		Email:           user.Email,
 		Status:          statusToPbStatus[user.Status],
 		EmailIsVerified: isVerified,
+		AvatarUrl:       user.AvatarUrl,
 	}
 }
 

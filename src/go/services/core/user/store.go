@@ -21,16 +21,17 @@ type User struct {
 	VerifiedEmails []string                     `dynamodbav:"verified_email"`
 	Status         UserStatus                   `dynamodbav:"status"`
 	Settings       map[string]map[string]string `dynamodbav:"settings"`
+	AvatarUrl      *string                      `dynamodbav:"avatar_url,nullempty"`
 
 	// For email address confirmation
-	EmailVerifyToken     []byte     `dynamodbav:"email_verify_token",nullempty`
-	EmailVerifyExpiresAt *time.Time `dynamodbav:"email_verify_expires_at",nullempty`
+	EmailVerifyToken     []byte     `dynamodbav:"email_verify_token,nullempty"`
+	EmailVerifyExpiresAt *time.Time `dynamodbav:"email_verify_expires_at,nullempty"`
 }
 
 type UserAuth struct {
 	UserID    string     `dynamodbav:"user_id"`
 	Password  []byte     `dynamodbav:"password"`
-	ExpiresAt *time.Time `dynamodbav:"expires_at",nullempty`
+	ExpiresAt *time.Time `dynamodbav:"expires_at,nullempty"`
 }
 
 type UserStore interface {

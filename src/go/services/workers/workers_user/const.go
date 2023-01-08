@@ -1,4 +1,4 @@
-package workers
+package workers_user
 
 import (
 	genpb "github.com/koblas/grpc-todo/twpb/core"

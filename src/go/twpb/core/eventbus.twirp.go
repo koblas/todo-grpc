@@ -1295,6 +1295,8 @@ func (s *todoEventbusServer) PathPrefix() string {
 
 type FileEventbus interface {
 	FileUploaded(context.Context, *FileUploadEvent) (*EventbusEmpty, error)
+
+	FileComplete(context.Context, *FileCompleteEvent) (*EventbusEmpty, error)
 }
 
 // ============================
@@ -1303,7 +1305,7 @@ type FileEventbus interface {
 
 type fileEventbusProtobufClient struct {
 	client      HTTPClient
-	urls        [1]string
+	urls        [2]string
 	interceptor twirp.Interceptor
 	opts        twirp.ClientOptions
 }
@@ -1331,8 +1333,9 @@ func NewFileEventbusProtobufClient(baseURL string, client HTTPClient, opts ...tw
 	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
 	serviceURL := sanitizeBaseURL(baseURL)
 	serviceURL += baseServicePath(pathPrefix, "core.eventbus", "FileEventbus")
-	urls := [1]string{
+	urls := [2]string{
 		serviceURL + "FileUploaded",
+		serviceURL + "FileComplete",
 	}
 
 	return &fileEventbusProtobufClient{
@@ -1389,13 +1392,59 @@ func (c *fileEventbusProtobufClient) callFileUploaded(ctx context.Context, in *F
 	return out, nil
 }
 
+func (c *fileEventbusProtobufClient) FileComplete(ctx context.Context, in *FileCompleteEvent) (*EventbusEmpty, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "core.eventbus")
+	ctx = ctxsetters.WithServiceName(ctx, "FileEventbus")
+	ctx = ctxsetters.WithMethodName(ctx, "FileComplete")
+	caller := c.callFileComplete
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *FileCompleteEvent) (*EventbusEmpty, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*FileCompleteEvent)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*FileCompleteEvent) when calling interceptor")
+					}
+					return c.callFileComplete(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*EventbusEmpty)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*EventbusEmpty) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *fileEventbusProtobufClient) callFileComplete(ctx context.Context, in *FileCompleteEvent) (*EventbusEmpty, error) {
+	out := new(EventbusEmpty)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[1], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
 // ========================
 // FileEventbus JSON Client
 // ========================
 
 type fileEventbusJSONClient struct {
 	client      HTTPClient
-	urls        [1]string
+	urls        [2]string
 	interceptor twirp.Interceptor
 	opts        twirp.ClientOptions
 }
@@ -1423,8 +1472,9 @@ func NewFileEventbusJSONClient(baseURL string, client HTTPClient, opts ...twirp.
 	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
 	serviceURL := sanitizeBaseURL(baseURL)
 	serviceURL += baseServicePath(pathPrefix, "core.eventbus", "FileEventbus")
-	urls := [1]string{
+	urls := [2]string{
 		serviceURL + "FileUploaded",
+		serviceURL + "FileComplete",
 	}
 
 	return &fileEventbusJSONClient{
@@ -1467,6 +1517,52 @@ func (c *fileEventbusJSONClient) FileUploaded(ctx context.Context, in *FileUploa
 func (c *fileEventbusJSONClient) callFileUploaded(ctx context.Context, in *FileUploadEvent) (*EventbusEmpty, error) {
 	out := new(EventbusEmpty)
 	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
+func (c *fileEventbusJSONClient) FileComplete(ctx context.Context, in *FileCompleteEvent) (*EventbusEmpty, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "core.eventbus")
+	ctx = ctxsetters.WithServiceName(ctx, "FileEventbus")
+	ctx = ctxsetters.WithMethodName(ctx, "FileComplete")
+	caller := c.callFileComplete
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *FileCompleteEvent) (*EventbusEmpty, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*FileCompleteEvent)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*FileCompleteEvent) when calling interceptor")
+					}
+					return c.callFileComplete(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*EventbusEmpty)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*EventbusEmpty) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *fileEventbusJSONClient) callFileComplete(ctx context.Context, in *FileCompleteEvent) (*EventbusEmpty, error) {
+	out := new(EventbusEmpty)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[1], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
 		if !ok {
@@ -1580,6 +1676,9 @@ func (s *fileEventbusServer) ServeHTTP(resp http.ResponseWriter, req *http.Reque
 	switch method {
 	case "FileUploaded":
 		s.serveFileUploaded(ctx, resp, req)
+		return
+	case "FileComplete":
+		s.serveFileComplete(ctx, resp, req)
 		return
 	default:
 		msg := fmt.Sprintf("no handler for path %q", req.URL.Path)
@@ -1768,6 +1867,186 @@ func (s *fileEventbusServer) serveFileUploadedProtobuf(ctx context.Context, resp
 	callResponseSent(ctx, s.hooks)
 }
 
+func (s *fileEventbusServer) serveFileComplete(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	header := req.Header.Get("Content-Type")
+	i := strings.Index(header, ";")
+	if i == -1 {
+		i = len(header)
+	}
+	switch strings.TrimSpace(strings.ToLower(header[:i])) {
+	case "application/json":
+		s.serveFileCompleteJSON(ctx, resp, req)
+	case "application/protobuf":
+		s.serveFileCompleteProtobuf(ctx, resp, req)
+	default:
+		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
+		twerr := badRouteError(msg, req.Method, req.URL.Path)
+		s.writeError(ctx, resp, twerr)
+	}
+}
+
+func (s *fileEventbusServer) serveFileCompleteJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "FileComplete")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	d := json.NewDecoder(req.Body)
+	rawReqBody := json.RawMessage{}
+	if err := d.Decode(&rawReqBody); err != nil {
+		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
+		return
+	}
+	reqContent := new(FileCompleteEvent)
+	unmarshaler := protojson.UnmarshalOptions{DiscardUnknown: true}
+	if err = unmarshaler.Unmarshal(rawReqBody, reqContent); err != nil {
+		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
+		return
+	}
+
+	handler := s.FileEventbus.FileComplete
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *FileCompleteEvent) (*EventbusEmpty, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*FileCompleteEvent)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*FileCompleteEvent) when calling interceptor")
+					}
+					return s.FileEventbus.FileComplete(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*EventbusEmpty)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*EventbusEmpty) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *EventbusEmpty
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *EventbusEmpty and nil error while calling FileComplete. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	marshaler := &protojson.MarshalOptions{UseProtoNames: !s.jsonCamelCase, EmitUnpopulated: !s.jsonSkipDefaults}
+	respBytes, err := marshaler.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal json response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/json")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *fileEventbusServer) serveFileCompleteProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "FileComplete")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	buf, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		s.handleRequestBodyError(ctx, resp, "failed to read request body", err)
+		return
+	}
+	reqContent := new(FileCompleteEvent)
+	if err = proto.Unmarshal(buf, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
+		return
+	}
+
+	handler := s.FileEventbus.FileComplete
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *FileCompleteEvent) (*EventbusEmpty, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*FileCompleteEvent)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*FileCompleteEvent) when calling interceptor")
+					}
+					return s.FileEventbus.FileComplete(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*EventbusEmpty)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*EventbusEmpty) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *EventbusEmpty
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *EventbusEmpty and nil error while calling FileComplete. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	respBytes, err := proto.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal proto response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/protobuf")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
 func (s *fileEventbusServer) ServiceDescriptor() ([]byte, int) {
 	return twirpFileDescriptor1, 2
 }
@@ -1784,19 +2063,20 @@ func (s *fileEventbusServer) PathPrefix() string {
 }
 
 var twirpFileDescriptor1 = []byte{
-	// 215 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x4e, 0xce, 0x2f, 0x4a,
-	0xd5, 0x4f, 0x2d, 0x4b, 0xcd, 0x2b, 0x49, 0x2a, 0x2d, 0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17,
-	0xe2, 0x05, 0x09, 0xea, 0xc1, 0x04, 0xa5, 0xf8, 0xc1, 0x6a, 0x4a, 0x8b, 0x53, 0x8b, 0x20, 0xf2,
-	0x50, 0x81, 0x92, 0xfc, 0x94, 0x7c, 0x14, 0x81, 0xb4, 0xcc, 0x9c, 0x54, 0x88, 0x80, 0x12, 0x3f,
-	0x17, 0xaf, 0x2b, 0x54, 0xbb, 0x6b, 0x6e, 0x41, 0x49, 0xa5, 0xd1, 0x22, 0x46, 0x2e, 0x9e, 0xd0,
-	0xe2, 0xd4, 0x22, 0x98, 0xa8, 0x90, 0x1b, 0x17, 0x17, 0x88, 0xef, 0x9c, 0x91, 0x98, 0x97, 0x9e,
-	0x2a, 0x24, 0xa5, 0x07, 0xb6, 0x12, 0x6c, 0x07, 0x42, 0x18, 0xac, 0x58, 0x4a, 0x46, 0x0f, 0xc5,
-	0x39, 0x7a, 0x28, 0x06, 0x0b, 0x79, 0x41, 0xcc, 0x0d, 0x4e, 0x4d, 0x2e, 0x2d, 0xca, 0x2c, 0xa9,
-	0x14, 0x92, 0x41, 0x33, 0x09, 0x26, 0x41, 0x84, 0x59, 0x46, 0x61, 0x5c, 0x3c, 0x21, 0xf9, 0x29,
-	0xf9, 0xc8, 0x6e, 0x04, 0xf1, 0x51, 0xdd, 0x08, 0xf6, 0x36, 0x42, 0x98, 0x18, 0x73, 0x23, 0xb8,
-	0x78, 0xdc, 0x32, 0x73, 0x52, 0xe1, 0xe6, 0x7a, 0x40, 0xf8, 0xa1, 0x05, 0x39, 0xf9, 0x89, 0x29,
-	0xa9, 0x29, 0x30, 0x93, 0xc1, 0xe1, 0x87, 0x90, 0x20, 0xc2, 0x64, 0x27, 0xce, 0x28, 0x76, 0x3d,
-	0x7d, 0x6b, 0x90, 0x8a, 0x24, 0x36, 0x70, 0xc8, 0x1b, 0x03, 0x02, 0x00, 0x00, 0xff, 0xff, 0x2d,
-	0x41, 0xe6, 0x64, 0xd2, 0x01, 0x00, 0x00,
+	// 234 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x91, 0xc1, 0x4e, 0x84, 0x30,
+	0x10, 0x86, 0xb3, 0x17, 0x8d, 0x0d, 0x9b, 0x4d, 0xea, 0x8d, 0xec, 0xc9, 0x07, 0x28, 0x09, 0x1e,
+	0xbd, 0x49, 0x20, 0xc6, 0xab, 0xe2, 0xc1, 0x1b, 0xd0, 0x51, 0x49, 0x0a, 0xd3, 0x94, 0x62, 0xc2,
+	0xeb, 0x18, 0x1f, 0xd4, 0xb4, 0xa5, 0x60, 0xf7, 0xd4, 0xe3, 0x7c, 0xff, 0xf4, 0x9b, 0x19, 0x20,
+	0xb7, 0x1d, 0x2a, 0xc8, 0xe0, 0x1b, 0x46, 0xdd, 0xce, 0x13, 0x93, 0x0a, 0x35, 0xd2, 0xa3, 0x81,
+	0xcc, 0xc3, 0xf4, 0x64, 0x7b, 0xe6, 0x09, 0x94, 0xcb, 0x57, 0xa0, 0x91, 0x63, 0x00, 0x3e, 0x7a,
+	0x01, 0x0e, 0xdc, 0x9d, 0xc8, 0xb1, 0x5c, 0x9f, 0x97, 0x83, 0xd4, 0x4b, 0xfe, 0x73, 0x20, 0x49,
+	0x3d, 0x81, 0xf2, 0x94, 0x56, 0x84, 0x98, 0xba, 0xf8, 0x6a, 0xc6, 0x4f, 0xa0, 0x29, 0xb3, 0x23,
+	0xed, 0x8c, 0x1d, 0xdb, 0xe6, 0xf4, 0xcc, 0x82, 0x75, 0x58, 0x20, 0xa6, 0xcf, 0xce, 0xfb, 0x02,
+	0xdd, 0xac, 0x7a, 0xbd, 0xd0, 0xf3, 0x85, 0xc9, 0x07, 0x11, 0xae, 0xfc, 0x8d, 0x24, 0xaf, 0xc8,
+	0xf1, 0xff, 0x8e, 0xa6, 0x0e, 0x77, 0xb4, 0x67, 0xef, 0x38, 0xc6, 0xfb, 0x7b, 0x20, 0x49, 0xd5,
+	0x0b, 0xd8, 0xc4, 0x4f, 0xae, 0xae, 0xa5, 0xc0, 0x86, 0x03, 0xf7, 0x6a, 0xfb, 0x01, 0xf7, 0x20,
+	0xf2, 0x7c, 0xf3, 0xa0, 0xc0, 0x41, 0x0a, 0xd0, 0xe0, 0xcf, 0xdf, 0x4c, 0x3e, 0x88, 0x70, 0x3d,
+	0xde, 0xbc, 0x5f, 0xb3, 0xec, 0xc1, 0x74, 0xb4, 0x57, 0xf6, 0x37, 0xde, 0xff, 0x05, 0x00, 0x00,
+	0xff, 0xff, 0xb9, 0x59, 0xdd, 0xd2, 0x1f, 0x02, 0x00, 0x00,
 }

@@ -264,6 +264,9 @@ func (s *UserServer) Update(ctx context.Context, params *genpb.UserUpdateParam) 
 			return nil, twirp.InternalErrorWith(err)
 		}
 	}
+	if params.AvatarUrl != nil {
+		updated.AvatarUrl = params.AvatarUrl
+	}
 
 	s.users.UpdateUser(ctx, &updated)
 

@@ -4,8 +4,9 @@ COPY go.mod .
 COPY go.sum .
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -o /app cmd/compose/workers/workers_user/*.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o /app cmd/compose/websocket/user/*.go
 
 FROM alpine:3.16
 COPY --from=builder /app ./
+EXPOSE 14586
 ENTRYPOINT ["./app"]

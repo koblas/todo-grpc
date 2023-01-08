@@ -63,7 +63,7 @@ func (svc *FilePutServer) ServeHTTP(writer http.ResponseWriter, req *http.Reques
 		return
 	}
 
-	_, err := svc.file.Put(ctx, &core.FilePutParams{
+	_, err := svc.file.Upload(ctx, &core.FileUploadParams{
 		Path:        url.Path,
 		Query:       url.RawQuery,
 		ContentType: contentType,
@@ -74,10 +74,8 @@ func (svc *FilePutServer) ServeHTTP(writer http.ResponseWriter, req *http.Reques
 		log.With(zap.Error(err)).Info("unable to put")
 
 		var twerr twirp.Error
-		if errors.As(err, &twerr) {
-			if twerr.Code() == twirp.InvalidArgument {
-				writer.WriteHeader(http.StatusForbidden)
-			}
+		if errors.As(err, &twerr) && twerr.Code() == twirp.InvalidArgument {
+			writer.WriteHeader(http.StatusForbidden)
 		} else {
 			writer.WriteHeader(http.StatusInternalServerError)
 		}

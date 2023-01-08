@@ -1,9 +1,11 @@
 package file
 
 import (
+	"strings"
+
+	"github.com/google/uuid"
 	"github.com/koblas/grpc-todo/pkg/key_manager"
 	"github.com/koblas/grpc-todo/pkg/logger"
-	"github.com/koblas/grpc-todo/twpb/core"
 	genpb "github.com/koblas/grpc-todo/twpb/core"
 	"github.com/twitchtv/twirp"
 	"go.uber.org/zap"
@@ -13,9 +15,11 @@ import (
 // Server represents the gRPC server
 type FileServer struct {
 	files  FileStore
-	pubsub core.FileEventbus
+	pubsub genpb.FileEventbus
 	kms    key_manager.Encoder
 }
+
+var _ genpb.FileService = (*FileServer)(nil)
 
 type Option func(*FileServer)
 
@@ -25,7 +29,7 @@ func WithFileStore(store FileStore) Option {
 	}
 }
 
-func WithProducer(bus core.FileEventbus) Option {
+func WithProducer(bus genpb.FileEventbus) Option {
 	return func(cfg *FileServer) {
 		cfg.pubsub = bus
 	}
@@ -44,6 +48,9 @@ func NewFileServer(opts ...Option) *FileServer {
 }
 
 func (s *FileServer) UploadUrl(ctx context.Context, params *genpb.FileUploadUrlParams) (*genpb.FileUploadUrlResponse, error) {
+	if params.UserId == "" {
+		return nil, twirp.InvalidArgumentError("userId", "missing")
+	}
 	log := logger.FromContext(ctx).With(zap.String("userId", params.UserId))
 	log.Info("UploadUrl")
 
@@ -75,11 +82,19 @@ func (s *FileServer) VerifyUrl(ctx context.Context, params *genpb.FileVerifyUrlP
 
 // Put - write non-authenticated bytes to a persistent store and triggers a notification.
 // If we have S3 (or similar) then this is not needed
-func (s *FileServer) Put(ctx context.Context, params *genpb.FilePutParams) (*genpb.FilePutResponse, error) {
-	log := logger.FromContext(ctx).With(zap.String("method", "Put"))
+func (s *FileServer) Upload(ctx context.Context, params *genpb.FileUploadParams) (*genpb.FileUploadResponse, error) {
+	log := logger.FromContext(ctx).With(zap.String("method", "Upload"))
 
-	name, entry, err := s.files.StoreFile(ctx, params.Path, params.Query, params.Data)
+	if err := s.files.VerifyUploadUrl(ctx, params.Path, params.Query); err != nil {
+		log.Info("StoreFile failed - signature mismatch")
+		return nil, twirp.NewError(twirp.PermissionDenied, "signature mismatch")
+	}
+	entry, err := s.files.LookupUploadUrl(ctx, params.Path)
 	if err != nil {
+		log.Info("StoreFile failed - signature mismatch")
+		return nil, twirp.NewError(twirp.PermissionDenied, "signature mismatch")
+	}
+	if _, err := s.files.StoreFile(ctx, params.Path, params.Data); err != nil {
 		log.With(zap.Error(err)).Error("StoreFile failed")
 		return nil, twirp.InternalErrorWith(err)
 	}
@@ -87,21 +102,49 @@ func (s *FileServer) Put(ctx context.Context, params *genpb.FilePutParams) (*gen
 
 	s.pubsub.FileUploaded(ctx, &genpb.FileUploadEvent{
 		IdemponcyId: entry.Id,
-		UserId:      &entry.UserId,
-		FileType:    entry.FileType,
-		Url:         entry.InternalUrl,
+		Info: &genpb.FileUploadInfo{
+			UserId:   &entry.UserId,
+			FileType: entry.FileType + ":upload",
+			Url:      entry.InternalUrl,
+		},
 	})
 
+	return &genpb.FileUploadResponse{
+		Path: params.Path,
+	}, nil
+}
+
+func (s *FileServer) Put(ctx context.Context, params *genpb.FilePutParams) (*genpb.FilePutResponse, error) {
+	log := logger.FromContext(ctx).With(zap.String("method", "Put"))
+
+	path := strings.Join([]string{
+		params.UserId,
+		params.FileType,
+		uuid.NewString() + params.Suffix,
+	}, "/")
+
+	url, err := s.files.StoreFile(ctx, path, params.Data)
+	if err != nil {
+		log.With(zap.Error(err)).Error("StoreFile failed")
+	}
+
 	return &genpb.FilePutResponse{
-		Path: name,
+		Path: url,
 	}, nil
 }
 
 func (s *FileServer) Get(ctx context.Context, params *genpb.FileGetParams) (*genpb.FileGetResponse, error) {
-	log := logger.FromContext(ctx).With(zap.String("method", "Get"))
+	log := logger.FromContext(ctx).With(
+		zap.String("method", "Get"),
+		zap.String("path", params.Path),
+	)
 
 	bytes, err := s.files.GetFile(ctx, params.Path)
 	if err != nil {
+		if err == ErrorLookupNotFound {
+			log.Info("file not found")
+			return nil, twirp.NotFoundError("")
+		}
 		log.With(zap.Error(err)).Error("GetFile failed")
 		return nil, twirp.InternalErrorWith(err)
 	}

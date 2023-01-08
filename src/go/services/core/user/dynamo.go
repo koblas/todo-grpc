@@ -94,12 +94,12 @@ func (store *dynamoStore) checkCreateTable(ctx context.Context) error {
 		return nil
 	}
 
-	log := logger.FromContext(ctx)
-	log.With(zap.Error(err)).Error("DescribeTable failed")
-
+	log := logger.FromContext(ctx).With(zap.String("tableName", *store.table))
 	if !errors.As(err, &resourceNotFound) {
+		log.With(zap.Error(err)).Error("DescribeTable failed")
 		return err
 	}
+	log.Info("DescribeTable failed, creating table")
 
 	_, err = store.client.CreateTable(ctx, &dynamodb.CreateTableInput{
 		TableName:   store.table,
@@ -121,6 +121,7 @@ func (store *dynamoStore) checkCreateTable(ctx context.Context) error {
 	if err != nil {
 		log.With(zap.Error(err)).Error("CreateTable failed")
 	}
+	log.Info("create complete")
 
 	return err
 }

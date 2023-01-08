@@ -8,7 +8,7 @@ import (
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
 	"github.com/koblas/grpc-todo/pkg/manager"
-	"github.com/koblas/grpc-todo/services/core/workers"
+	workers "github.com/koblas/grpc-todo/services/workers/workers_user"
 	"github.com/koblas/grpc-todo/twpb/core"
 	"go.uber.org/zap"
 )

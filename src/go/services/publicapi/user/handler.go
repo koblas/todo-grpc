@@ -136,11 +136,13 @@ func marshalUser(user *core.User) *publicapi.UserResponse {
 		return &publicapi.UserResponse{}
 	}
 
+	// TODO - shared with websocket serialization
 	return &publicapi.UserResponse{
 		User: &publicapi.User{
-			Id:    user.Id,
-			Email: user.Email,
-			Name:  user.Name,
+			Id:        user.Id,
+			Email:     user.Email,
+			Name:      user.Name,
+			AvatarUrl: user.AvatarUrl,
 		},
 	}
 }

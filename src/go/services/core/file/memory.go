@@ -5,6 +5,8 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"errors"
+	"net/url"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -12,6 +14,8 @@ import (
 
 var ErrorLookupNotFound = errors.New("not found")
 var ErrorSignatureMismatch = errors.New("signature mismatch")
+var SIGNATURE_PARAM = "sig"
+var MEMORY_SCHEME = "corefile:"
 
 const (
 	MEMORY_NEW = iota
@@ -26,6 +30,8 @@ type memoryStore struct {
 	prefix   string
 	secret   string
 }
+
+var _ FileStore = (*memoryStore)(nil)
 
 func NewFileMemoryStore(prefix string) FileStore {
 	return &memoryStore{
@@ -50,13 +56,13 @@ func (store *memoryStore) CreateUploadUrl(ctx context.Context, userId, fileType 
 		UserId:      userId,
 		FileType:    fileType,
 		Url:         path,
-		InternalUrl: "corefile:" + path,
+		InternalUrl: MEMORY_SCHEME + path,
 		expires:     time.Now().Add(time.Duration(5) * time.Minute),
 		status:      MEMORY_NEW,
 	}
 
 	store.fileInfo[entry.Url] = &entry
-	query := "?sig=" + store.computeSig(entry.Url)
+	query := "?" + SIGNATURE_PARAM + "=" + store.computeSig(entry.Url)
 	return entry.Url + query, nil
 }
 
@@ -64,32 +70,32 @@ func (store *memoryStore) LookupUploadUrl(ctx context.Context, url string) (*Fil
 	entry, found := store.fileInfo[url]
 	if !found {
 		return nil, ErrorLookupNotFound
-
 	}
 
 	return entry, nil
 }
 
-func (store *memoryStore) StoreFile(ctx context.Context, url, query string, bytes []byte) (string, *FileInfo, error) {
-	if query != store.computeSig(url) {
-		return "", nil, ErrorSignatureMismatch
+func (store *memoryStore) VerifyUploadUrl(ctx context.Context, path, query string) error {
+	u, err := url.ParseQuery(query)
+	if err != nil {
+		return ErrorSignatureMismatch
 	}
-	entry, found := store.fileInfo[url]
-	if !found {
-		return "", nil, ErrorLookupNotFound
-	}
-	if entry.status != MEMORY_NEW {
-		return "", nil, ErrorLookupNotFound
-	}
-	store.fileInfo[url].status = MEMORY_UPLOADED
 
-	store.files[url] = bytes
+	if u.Get(SIGNATURE_PARAM) != store.computeSig(path) {
+		return ErrorSignatureMismatch
+	}
 
-	return url, entry, nil
+	return nil
+}
+
+func (store *memoryStore) StoreFile(ctx context.Context, path string, bytes []byte) (string, error) {
+	store.files[path] = bytes
+
+	return MEMORY_SCHEME + path, nil
 }
 
 func (store *memoryStore) GetFile(ctx context.Context, path string) ([]byte, error) {
-	data, found := store.files[path]
+	data, found := store.files[strings.TrimPrefix(path, MEMORY_SCHEME)]
 	if !found {
 		return nil, ErrorLookupNotFound
 	}

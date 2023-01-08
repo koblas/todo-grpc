@@ -1,4 +1,4 @@
-package workers
+package workers_user
 
 type Config struct {
 	UrlBase         string `ssm:"url_base" environment:"URL_BASE_UI"`

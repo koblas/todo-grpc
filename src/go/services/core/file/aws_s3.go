@@ -27,6 +27,8 @@ type s3Store struct {
 	expiresIn     time.Duration
 }
 
+var _ FileStore = (*s3Store)(nil)
+
 func NewFileS3Store(bucket string, prefix string) FileStore {
 	cfg, err := config.LoadDefaultConfig(context.Background())
 	if err != nil {
@@ -94,8 +96,12 @@ func (store *s3Store) LookupUploadUrl(ctx context.Context, url string) (*FileInf
 	}, nil
 }
 
-func (store *s3Store) StoreFile(ctx context.Context, url, query string, bytes []byte) (string, *FileInfo, error) {
-	return "", nil, ErrorNotImplemented
+func (store *s3Store) VerifyUploadUrl(ctx context.Context, url string, query string) error {
+	return ErrorNotImplemented
+}
+
+func (store *s3Store) StoreFile(ctx context.Context, path string, bytes []byte) (string, error) {
+	return "", ErrorNotImplemented
 }
 
 func (store *s3Store) GetFile(ctx context.Context, path string) ([]byte, error) {

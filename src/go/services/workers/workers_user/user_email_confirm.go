@@ -1,4 +1,4 @@
-package workers
+package workers_user
 
 import (
 	"context"

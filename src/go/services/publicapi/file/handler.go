@@ -62,7 +62,8 @@ func (svc *FileServer) UploadUrl(ctx context.Context, input *publicapi.UploadUrl
 	log.Info("Just a test")
 
 	req := core.FileUploadUrlParams{
-		Type: input.Type,
+		UserId: userId,
+		Type:   input.Type,
 	}
 
 	res, err := svc.file.UploadUrl(ctx, &req)

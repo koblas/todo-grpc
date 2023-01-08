@@ -1,4 +1,4 @@
-package workers_user
+package workers_file
 
 import (
 	"bytes"
@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/koblas/grpc-todo/pkg/logger"
-	"github.com/koblas/grpc-todo/twpb/core"
 	genpb "github.com/koblas/grpc-todo/twpb/core"
 )
 
@@ -25,7 +24,9 @@ type Worker struct {
 type WorkerConfig struct {
 	config      Config
 	onlyHandler string
-	sendEmail   genpb.SendEmailService
+	pubsub      genpb.FileEventbus
+	fileService genpb.FileService
+	userService genpb.UserService
 }
 
 type Option func(*WorkerConfig)
@@ -36,9 +37,21 @@ func WithOnly(item string) Option {
 	}
 }
 
-func WithSendEmail(sender genpb.SendEmailService) Option {
+func WithProducer(bus genpb.FileEventbus) Option {
 	return func(cfg *WorkerConfig) {
-		cfg.sendEmail = sender
+		cfg.pubsub = bus
+	}
+}
+
+func WithFileService(svc genpb.FileService) Option {
+	return func(cfg *WorkerConfig) {
+		cfg.fileService = svc
+	}
+}
+
+func WithUserService(svc genpb.UserService) Option {
+	return func(cfg *WorkerConfig) {
+		cfg.userService = svc
 	}
 }
 
@@ -57,7 +70,7 @@ func buildServiceConfig(config Config, opts ...Option) WorkerConfig {
 var workers = []Worker{}
 
 func GetHandler(config Config, opts ...Option) http.HandlerFunc {
-	handlers := []core.TwirpServer{}
+	handlers := []genpb.TwirpServer{}
 
 	cfg := buildServiceConfig(config, opts...)
 

@@ -518,6 +518,7 @@ export class CreateWorkers extends Construct {
 
     new QueueWorker(this, "password-changed", {
       eventbus,
+      path: "workers_user",
       env: { SQS_HANDLER: "userSecurity/password_changed" },
       filterPolicy: {
         stream: SubscriptionFilter.stringFilter({
@@ -531,6 +532,7 @@ export class CreateWorkers extends Construct {
 
     new QueueWorker(this, "register-token", {
       eventbus,
+      path: "workers_user",
       env: { SQS_HANDLER: "userSecurity/register" },
       filterPolicy: {
         stream: SubscriptionFilter.stringFilter({
@@ -544,6 +546,7 @@ export class CreateWorkers extends Construct {
 
     new QueueWorker(this, "forgot-request", {
       eventbus,
+      path: "workers_user",
       env: { SQS_HANDLER: "userSecurity/forgot" },
       filterPolicy: {
         stream: SubscriptionFilter.stringFilter({
@@ -557,6 +560,7 @@ export class CreateWorkers extends Construct {
 
     new QueueWorker(this, "user-invite", {
       eventbus,
+      path: "workers_user",
       env: { SQS_HANDLER: "userSecurity/invite" },
       filterPolicy: {
         stream: SubscriptionFilter.stringFilter({
@@ -575,10 +579,12 @@ export class QueueWorker extends Construct {
     scope: Construct,
     id: string,
     {
+      path,
       eventbus,
       env,
       filterPolicy,
     }: {
+      path: string;
       eventbus: cdk.aws_sns.Topic;
       env: Record<string, string>;
       filterPolicy: NonNullable<cdk.aws_sns_subscriptions.SubscriptionProps["filterPolicy"]>;
@@ -586,7 +592,7 @@ export class QueueWorker extends Construct {
   ) {
     super(scope, id);
 
-    const lambda = goFunction(this, `core-workers-${id}`, ["core", "workers"], {
+    const lambda = goFunction(this, `core-workers-${id}`, ["core", path], {
       environment: env,
     });
 
