@@ -1,4 +1,4 @@
-go_common = ['./pkg', './twpb', './cmd/compose/shared_config', './go.sum', './go.mod', './tilt-scripts']
+go_common = ['./pkg', './gen', './cmd/compose/shared_config', './go.sum', './go.mod', './tilt-scripts']
 
 def go_docker(name, path):
   docker_build('todo-grpc/' + name, './src/go', 
@@ -72,9 +72,17 @@ go_docker('websocket-todo', 'websocket/todo')
 k8s_yaml(['./infra/core-websocket-todo-deployment.yaml'])
 k8s_resource('websocket-todo', labels=['event'])
 
-go_docker('core-workers', 'core/workers')
-k8s_yaml(['./infra/core-workers-deployment.yaml'])
-k8s_resource('core-workers', labels=['event'])
+go_docker('websocket-user', 'websocket/user')
+k8s_yaml(['./infra/core-websocket-user-deployment.yaml'])
+k8s_resource('websocket-user', labels=['event'])
+
+go_docker('workers-user', 'workers/workers_user')
+k8s_yaml(['./infra/workers-user-deployment.yaml'])
+k8s_resource('workers-user', labels=['event'])
+
+go_docker('workers-file', 'workers/workers_file')
+k8s_yaml(['./infra/workers-file-deployment.yaml'])
+k8s_resource('workers-file', labels=['event'])
 
 # Infrastructure
 k8s_yaml(['./infra/ingress.yaml'])

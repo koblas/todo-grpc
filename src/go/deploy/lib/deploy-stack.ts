@@ -499,7 +499,7 @@ export class WebsocketTodo extends Construct {
         rawMessageDelivery: true,
         filterPolicy: {
           "twirp.path": SubscriptionFilter.stringFilter({
-            allowlist: ["/twirp/core.eventbus.TodoEventbus/TodoChange"],
+            allowlist: ["/twirp/corepb.eventbus.TodoEventbus/TodoChange"],
           }),
         },
       }),
