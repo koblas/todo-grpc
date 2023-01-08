@@ -21,7 +21,7 @@ kind: Ingress
 metadata:
   name: client-ingress-auth
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /twirp/api.auth.AuthenticationService/$1
+    nginx.ingress.kubernetes.io/rewrite-target: /twirp/apipb.auth.AuthenticationService/$1
 spec:
   rules:
     - http:
@@ -39,7 +39,7 @@ kind: Ingress
 metadata:
   name: client-ingress-todo
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /twirp/api.todo.TodoService/$1
+    nginx.ingress.kubernetes.io/rewrite-target: /twirp/apipb.todo.TodoService/$1
 spec:
   rules:
     - http:
@@ -57,7 +57,7 @@ kind: Ingress
 metadata:
   name: client-ingress-file
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /twirp/api.file.FileService/$1
+    nginx.ingress.kubernetes.io/rewrite-target: /twirp/apipb.file.FileService/$1
 spec:
   rules:
     - http:
@@ -75,7 +75,7 @@ kind: Ingress
 metadata:
   name: client-ingress-fileput
   # annotations:
-    # nginx.ingress.kubernetes.io/rewrite-target: /twirp/api.file.FileService/$1
+    # nginx.ingress.kubernetes.io/rewrite-target: /twirp/apipb.file.FileService/$1
 spec:
   rules:
     - http:
@@ -93,7 +93,7 @@ kind: Ingress
 metadata:
   name: client-ingress-user
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /twirp/api.user.UserService/$1
+    nginx.ingress.kubernetes.io/rewrite-target: /twirp/apipb.user.UserService/$1
 spec:
   rules:
     - http:
@@ -111,7 +111,7 @@ kind: Ingress
 metadata:
   name: client-ingress-wsapi
   # annotations:
-  #   nginx.ingress.kubernetes.io/rewrite-target: /twirp/api.auth.AuthenticationService/$1
+  #   nginx.ingress.kubernetes.io/rewrite-target: /twirp/apipb.auth.AuthenticationService/$1
 spec:
   rules:
     - http:
