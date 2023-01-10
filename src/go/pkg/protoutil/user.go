@@ -1,6 +1,8 @@
 package protoutil
 
 import (
+	"strings"
+
 	"github.com/koblas/grpc-todo/gen/apipb"
 	"github.com/koblas/grpc-todo/gen/corepb"
 )
@@ -10,10 +12,16 @@ func UserCoreToApi(user *corepb.User) *apipb.User {
 		return nil
 	}
 
+	avatarUrl := user.AvatarUrl
+	if avatarUrl != nil && strings.HasPrefix(*user.AvatarUrl, "corefile:") {
+		url := "/v1/api/fileput/" + strings.TrimPrefix(*user.AvatarUrl, "corefile:")
+		avatarUrl = &url
+	}
+
 	return &apipb.User{
 		Id:        user.Id,
 		Email:     user.Email,
 		Name:      user.Name,
-		AvatarUrl: user.AvatarUrl,
+		AvatarUrl: avatarUrl,
 	}
 }

@@ -28,6 +28,7 @@ export default function Sidebar() {
   const navigate = useNavigate();
   const [isExpanded, setExpanded] = useState(true);
   const [showExpando, setShowExpando] = useState(false);
+  const { user } = useUser();
 
   return (
     <Flex pos="sticky" h="100vh">
@@ -80,7 +81,7 @@ export default function Sidebar() {
 
         <Flex flexDir="column" w="100%" alignItems={isExpanded ? "flex-start" : "center"}>
           <Divider display={isExpanded ? "flex" : "none"} />
-          <NavItem expanded={isExpanded} avatar="avatar-1.jpg">
+          <NavItem expanded={isExpanded} avatar={user?.avatar_url ?? "avatar-1.jpg"}>
             <React.Suspense fallback={<Spinner />}>
               <Username />
             </React.Suspense>

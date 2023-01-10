@@ -2,8 +2,10 @@ package fileput
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/logger"
@@ -41,12 +43,37 @@ func (svc *FilePutServer) ServeHTTP(writer http.ResponseWriter, req *http.Reques
 		zap.String("urlPath", req.URL.Path),
 	)
 
-	if req.Method != "PUT" {
+	switch req.Method {
+	case "PUT":
+		svc.handlePUT(ctx, log, writer, req)
+	case "GET":
+		svc.handleGET(ctx, log, writer, req)
+	default:
 		log.Info("Invalid method sent")
 		writer.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
+func (svc *FilePutServer) handleGET(ctx context.Context, log logger.Logger, writer http.ResponseWriter, req *http.Request) {
+	url := req.URL
+
+	result, err := svc.file.Get(ctx, &corepb.FileGetParams{
+		Path: url.Path,
+	})
+	if err != nil {
+		log.With(zap.Error(err)).Info("unable to get")
+		writer.WriteHeader(http.StatusNotFound)
 		return
 	}
 
+	if strings.HasSuffix(url.Path, ".png") {
+		writer.Header().Add("content-type", "image/png")
+	}
+	writer.WriteHeader(http.StatusOK)
+	writer.Write(result.Data)
+}
+
+func (svc *FilePutServer) handlePUT(ctx context.Context, log logger.Logger, writer http.ResponseWriter, req *http.Request) {
 	url := req.URL
 	contentType := req.Header.Get("content-type")
 	contentLength := req.Header.Get("content-length")
