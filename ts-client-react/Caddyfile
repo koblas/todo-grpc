@@ -42,6 +42,16 @@
 		reverse_proxy public-todo:14586
 	}
 
+	handle_path /api/v1/user/* {
+		rewrite * /twirp/api.user.UserService{path}
+		reverse_proxy public-user:14586
+	}
+
+	handle_path /api/v1/file/* {
+		rewrite * /twirp/api.file.FileService{path}
+		reverse_proxy public-user:14586
+	}
+
 	handle_path /wsapi/* {
 		reverse_proxy public-websocket:14586
 	}
