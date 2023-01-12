@@ -14,6 +14,7 @@ import { useAuth } from "./hooks/auth";
 import { WebsocketProvider } from "./rpc/websocket";
 import { FetchError } from "./rpc/utils";
 import { useTodoListener } from "./hooks/data/todo";
+import { useUserListener } from "./hooks/data/user";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function buildWebsocketUrl(): string {
@@ -87,6 +88,7 @@ function ClearOnLogout({ queryClient }: { queryClient: QueryClient }) {
   }, [token, queryClient]);
 
   useTodoListener(queryClient);
+  useUserListener(queryClient);
 
   return null;
 }

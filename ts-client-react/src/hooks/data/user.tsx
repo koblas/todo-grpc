@@ -1,9 +1,11 @@
-import { useMutation, useQuery, useQueryClient } from "react-query";
+import { QueryClient, useMutation, useQuery, useQueryClient } from "react-query";
+import { useEffect } from "react";
 import { z } from "zod";
 import { User, UserType } from "../../rpc/user";
 import { useAuth } from "../auth";
 import { newFetchClient } from "../../rpc/utils";
 import { Json } from "../../types/json";
+import { useWebsocketUpdates } from "../../rpc/websocket";
 import { buildCallbacksTyped, buildCallbacksTypedQuery } from "../../rpc/utils/helper";
 
 const UserNetwork = z.object({
@@ -45,4 +47,22 @@ export function useUser() {
       updateUser,
     },
   };
+}
+
+const UserEvent = z.object({
+  object_id: z.string(),
+  action: z.enum(["delete", "create", "update"]),
+  topic: z.literal("user"),
+  body: z.nullable(User),
+});
+
+export function useUserListener(queryClient: QueryClient) {
+  const { addListener } = useWebsocketUpdates();
+
+  useEffect(() => {
+    addListener("user", (event: z.infer<typeof UserEvent>) => {
+      queryClient.setQueriesData("user", { user: event.body });
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 }

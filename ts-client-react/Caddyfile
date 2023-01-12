@@ -52,6 +52,11 @@
 		reverse_proxy public-user:14586
 	}
 
+	handle_path /api/v1/fileput/* {
+		# rewrite * /twirp/api.fileput.FileService{path}
+		reverse_proxy public-fileput:14586
+	}
+
 	handle_path /wsapi/* {
 		reverse_proxy public-websocket:14586
 	}
