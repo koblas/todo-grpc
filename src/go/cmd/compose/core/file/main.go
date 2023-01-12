@@ -30,6 +30,9 @@ func main() {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
+	if config.RedisAddr == "" {
+		log.Fatal("redis address is missing")
+	}
 	redis := redisutil.NewTwirpRedis(config.RedisAddr)
 
 	producer := corepb.NewFileEventbusJSONClient(

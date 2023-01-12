@@ -93,7 +93,7 @@ func (cfg *fileUploaded) FileUploaded(ctx context.Context, msg *corepb.FileUploa
 		UserId:   *msg.Info.UserId,
 		FileType: "profile_image",
 		Suffix:   ".png",
-		Data:     outData,
+		Data:     writer.Bytes(),
 	})
 	if err != nil {
 		postComplete("unable to save")

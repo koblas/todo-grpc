@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/koblas/grpc-todo/gen/corepb"
@@ -55,10 +56,12 @@ func (svc *FilePutServer) ServeHTTP(writer http.ResponseWriter, req *http.Reques
 }
 
 func (svc *FilePutServer) handleGET(ctx context.Context, log logger.Logger, writer http.ResponseWriter, req *http.Request) {
+	log = log.With(zap.String("path", req.URL.Path))
+	log.Info("Getting file")
 	url := req.URL
 
 	result, err := svc.file.Get(ctx, &corepb.FileGetParams{
-		Path: url.Path,
+		Path: strings.TrimPrefix(req.URL.Path, "/api/v1/fileput/"),
 	})
 	if err != nil {
 		log.With(zap.Error(err)).Info("unable to get")
@@ -69,6 +72,7 @@ func (svc *FilePutServer) handleGET(ctx context.Context, log logger.Logger, writ
 	if strings.HasSuffix(url.Path, ".png") {
 		writer.Header().Add("content-type", "image/png")
 	}
+	writer.Header().Add("content-length", strconv.Itoa(len(result.Data)))
 	writer.WriteHeader(http.StatusOK)
 	writer.Write(result.Data)
 }

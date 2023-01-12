@@ -14,7 +14,7 @@ func UserCoreToApi(user *corepb.User) *apipb.User {
 
 	avatarUrl := user.AvatarUrl
 	if avatarUrl != nil && strings.HasPrefix(*user.AvatarUrl, "corefile:") {
-		url := "/v1/api/fileput/" + strings.TrimPrefix(*user.AvatarUrl, "corefile:")
+		url := "/api/v1/fileput/" + strings.TrimPrefix(*user.AvatarUrl, "corefile:")
 		avatarUrl = &url
 	}
 

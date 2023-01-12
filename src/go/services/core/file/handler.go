@@ -115,7 +115,10 @@ func (s *FileServer) Upload(ctx context.Context, params *corepb.FileUploadParams
 }
 
 func (s *FileServer) Put(ctx context.Context, params *corepb.FilePutParams) (*corepb.FilePutResponse, error) {
-	log := logger.FromContext(ctx).With(zap.String("method", "Put"))
+	log := logger.FromContext(ctx).With(
+		zap.String("method", "Put"),
+		zap.Int("length", len(params.Data)),
+	)
 
 	path := strings.Join([]string{
 		params.UserId,
@@ -128,6 +131,8 @@ func (s *FileServer) Put(ctx context.Context, params *corepb.FilePutParams) (*co
 		log.With(zap.Error(err)).Error("StoreFile failed")
 	}
 
+	log.Info("File stored success")
+
 	return &corepb.FilePutResponse{
 		Path: url,
 	}, nil
@@ -139,7 +144,7 @@ func (s *FileServer) Get(ctx context.Context, params *corepb.FileGetParams) (*co
 		zap.String("path", params.Path),
 	)
 
-	bytes, err := s.files.GetFile(ctx, params.Path)
+	data, err := s.files.GetFile(ctx, params.Path)
 	if err != nil {
 		if err == ErrorLookupNotFound {
 			log.Info("file not found")
@@ -148,8 +153,9 @@ func (s *FileServer) Get(ctx context.Context, params *corepb.FileGetParams) (*co
 		log.With(zap.Error(err)).Error("GetFile failed")
 		return nil, twirp.InternalErrorWith(err)
 	}
+	log.With(zap.Int("length", len(data))).Info("Sending data")
 
 	return &corepb.FileGetResponse{
-		Data: bytes,
+		Data: data,
 	}, nil
 }
