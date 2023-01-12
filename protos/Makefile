@@ -1,4 +1,4 @@
-GO_GRPC=../src/go
+GO_GRPC=../src/go/gen/
 TS_SERVER=../ts-server
 JS_CLIENT=../js-client-vue
 TS_REACT=../ts-client-react
@@ -13,11 +13,9 @@ all: clean go-grpc
 
 clean:
 	rm -f $(GO_GRPC)/*.pb.go 
-	rm -f $(JS_CLIENT)/src/models/todo_grpc_web_pb.js $(JS_CLIENT)/src/models/todo_pb.js
-	rm -f $(TS_REACT)/src/models/todo_grpc_web_pb.js $(TS_REACT)/src/models/todo_pb.js
-	rm -f $(TS_SERVER)/src/grpcjs/todo_grpc_web_pb.js $(TS_SERVER)/src/grpcjs/todo_pb.js
-
-gen: envoy go-grpc-todo go-grpc-auth ts-server js-client-vue ts-client-react ts-client
+	#rm -f $(JS_CLIENT)/src/models/todo_grpc_web_pb.js $(JS_CLIENT)/src/models/todo_pb.js
+	#rm -f $(TS_REACT)/src/models/todo_grpc_web_pb.js $(TS_REACT)/src/models/todo_pb.js
+	#rm -f $(TS_SERVER)/src/grpcjs/todo_grpc_web_pb.js $(TS_SERVER)/src/grpcjs/todo_pb.js
 
 go-grpc:
 	# Twirp versions
@@ -91,10 +89,10 @@ ts-client:
 #
 # Envoy
 #
-envoy:
-	protoc \
-		-I . \
-		--proto_path=$(PROTO_DIR) \
-		--include_imports --include_source_info \
-		--descriptor_set_out=$(ENVOY_DIR)/common.pb \
-		publicapi/* google/rpc/error_details.proto
+#envoy:
+#	protoc \
+#		-I . \
+#		--proto_path=$(PROTO_DIR) \
+#		--include_imports --include_source_info \
+#		--descriptor_set_out=$(ENVOY_DIR)/common.pb \
+#		publicapi/* google/rpc/error_details.proto

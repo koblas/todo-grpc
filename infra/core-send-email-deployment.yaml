@@ -38,10 +38,10 @@ spec:
                 configMapKeyRef:
                   key: REDIS_ADDR
                   name: dev-variables-env
-            - name: SMTP_ADDR
-              value: zen.heyx.com
-            - name: SMTP_PASSWORD
-              value: Not4me
+                    #- name: SMTP_ADDR
+                    #value: mailserver
+                    #- name: SMTP_PASSWORD
+                    #value: xyzzy
             - name: SMTP_USERNAME
               value: koblas
             - name: TODO_SERVICE_ADDR
