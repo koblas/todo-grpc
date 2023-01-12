@@ -21,7 +21,8 @@ import (
 // }
 
 func main() {
-	mgr := manager.NewManager()
+	// mgr := manager.NewManager(manager.WithHealth("/health"))
+	mgr := manager.NewManager(manager.WithGrpcHealth("15050"))
 	log := mgr.Logger()
 
 	config := file.Config{}

@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	mgr := manager.NewManager()
+	mgr := manager.NewManager(manager.WithGrpcHealth("15050"))
 	log := mgr.Logger()
 
 	var config user.Config

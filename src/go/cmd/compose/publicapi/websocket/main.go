@@ -129,7 +129,7 @@ func (h *socketHandler) consume(ctx context.Context) {
 }
 
 func main() {
-	mgr := manager.NewManager()
+	mgr := manager.NewManager(manager.WithGrpcHealth("15050"))
 	log := mgr.Logger()
 
 	config := websocket.Config{}

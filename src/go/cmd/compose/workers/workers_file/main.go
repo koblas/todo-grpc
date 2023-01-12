@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	mgr := manager.NewManager()
+	mgr := manager.NewManager(manager.WithGrpcHealth("15050"))
 	log := mgr.Logger()
 
 	config := workers_file.Config{}
@@ -22,7 +22,10 @@ func main() {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
-	// var builder workers.SqsConsumerBuilder
+	if config.RedisAddr == "" {
+		log.Fatal("redis address is missing")
+	}
+
 	redis := redisutil.NewTwirpRedis(config.RedisAddr)
 
 	opts := []workers_file.Option{
