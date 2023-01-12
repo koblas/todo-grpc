@@ -1,0 +1,71 @@
+### Global Values if any ###
+global: {}
+
+### Sub Charts Specific Values ###
+# Portal
+ts-client-react:
+  enabled: true
+  image:
+    version:
+
+core-user:
+  enabled: true
+  image:
+    version:
+core-file:
+  enabled: true
+  image:
+    version:
+core-todo:
+  enabled: true
+  image:
+    version:
+core-oauth-user:
+  enabled: true
+  image:
+    version:
+core-send-email:
+  enabled: true
+  image:
+    version:
+
+publicapi-auth:
+  enabled: true
+  image:
+    version:
+publicapi-websocket:
+  enabled: true
+  image:
+publicapi-user:
+  enabled: true
+  image:
+publicapi-todo:
+  enabled: true
+  image:
+    version:
+publicapi-file:
+  enabled: true
+  image:
+    version:
+publicapi-fileput:
+  enabled: true
+  image:
+    version:
+
+websocket-todo:
+  enabled: true
+  image:
+    version:
+websocket-user:
+  enabled: true
+  image:
+    version:
+
+workers-user:
+  enabled: true
+  image:
+    version:
+workers-file:
+  enabled: true
+  image:
+    version:

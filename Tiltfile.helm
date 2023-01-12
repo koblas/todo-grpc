@@ -1,0 +1,67 @@
+load('ext://helm_remote', 'helm_remote')
+
+go_common = ['./pkg', './gen', './cmd/compose/shared_config', './go.sum', './go.mod', './tilt-scripts']
+
+def go_docker(name, path):
+  docker_build('todo-grpc/' + name, './src/go', 
+    #dockerfile='src/go/cmd/compose/'+path+'/Dockerfile.tilt',
+    dockerfile='src/go/cmd/compose/'+path+'/Dockerfile',
+    only=go_common + [
+      './cmd/compose/'+path,
+      './services/'+path,
+    ],
+    #live_update=[
+    #  sync('./src/go', '/build'),
+    #  run('./tilt-scripts/restart.sh'),
+    #],
+  )
+
+# The front end client
+docker_build('todo-grpc/ts-client-react', './ts-client-react', 
+  dockerfile='./ts-client-react/Dockerfile.tilt',
+  live_update=[
+    sync('./ts-client-react', '/app'),
+  ],
+)
+
+#k8s_custom_deploy('secrets',
+#    'kubectl create secret generic common-secrets --from-env-file=./.env',
+#    'kubectl delete secret common-secrets --ignore-not-found',
+#    ['./.env'],
+#)
+
+k8s_yaml(helm('./charts/'))
+
+go_docker('publicapi-auth', 'publicapi/auth')
+go_docker('publicapi-todo', 'publicapi/todo')
+go_docker('publicapi-file', 'publicapi/file')
+go_docker('publicapi-fileput', 'publicapi/fileput')
+go_docker('publicapi-user', 'publicapi/user')
+go_docker('publicapi-websocket', 'publicapi/websocket')
+go_docker('core-oauth-user', 'core/oauth_user')
+go_docker('core-send-email', 'core/send_email')
+go_docker('core-todo', 'core/todo')
+go_docker('core-user', 'core/user')
+go_docker('core-file', 'core/file')
+go_docker('websocket-todo', 'websocket/todo')
+go_docker('websocket-user', 'websocket/user')
+go_docker('workers-user', 'workers/workers_user')
+go_docker('workers-file', 'workers/workers_file')
+
+helm_remote('redis', 
+    repo_name='bitnami', 
+    repo_url='https://charts.bitnami.com/bitnami',
+    set=[
+        'architecture=standalone',
+        'auth.enabled=false',
+    ],
+)
+# k8s_resource('dynamodb', labels=['infrastructure'])
+helm_remote('dynamodb', 
+    repo_name='keyporttech', 
+    repo_url='https://keyporttech.github.io/helm-charts/',
+    set=[
+        'dynamodb.image.tag=1.20.0'
+    ],
+)
+

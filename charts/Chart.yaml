@@ -1,0 +1,78 @@
+apiVersion: v2
+name: todo-grpc
+description: A Parent Helm chart for Kubernetes
+type: application
+# This is the chart version. This version number should be incremented each time you make changes
+# to the chart and its templates
+version: 0.1.0
+# All E-Commerce micro-services Helm Charts that are needed
+# versions needs to be changed, whenever corresponding the sub chart versions are changing
+dependencies:
+- name: ts-client-react
+  repository: file://charts/ts-client-react
+  version: 0.1.0
+  condition: ts-client-react.enabled
+
+- name: core-user
+  repository: file://charts/core-user
+  version: 0.1.0
+  condition: core-user.enabled
+- name: core-todo
+  repository: file://charts/core-todo
+  version: 0.1.0
+  condition: core-todo.enabled
+- name: core-file
+  repository: file://charts/core-file
+  version: 0.1.0
+  condition: core-file.enabled
+- name: core-send-email
+  repository: file://charts/core-send-email
+  version: 0.1.0
+  condition: core-send-email.enabled
+- name: core-oauth-user
+  repository: file://charts/core-oauth-user
+  version: 0.1.0
+  condition: core-oauth-user.enabled
+
+- name: publicapi-auth
+  repository: file://charts/publicapi-auth
+  version: 0.1.0
+  condition: publicapi-auth.enabled
+- name: publicapi-user
+  repository: file://charts/publicapi-user
+  version: 0.1.0
+  condition: publicapi-user.enabled
+- name: publicapi-todo
+  repository: file://charts/publicapi-todo
+  version: 0.1.0
+  condition: publicapi-todo.enabled
+- name: publicapi-file
+  repository: file://charts/publicapi-file
+  version: 0.1.0
+  condition: publicapi-file.enabled
+- name: publicapi-fileput
+  repository: file://charts/publicapi-fileput
+  version: 0.1.0
+  condition: publicapi-fileput.enabled
+- name: publicapi-websocket
+  repository: file://charts/publicapi-websocket
+  version: 0.1.0
+  condition: publicapi-websocket.enabled
+
+- name: websocket-todo
+  repository: file://charts/websocket-todo
+  version: 0.1.0
+  condition: websocket-todo.enabled
+- name: websocket-user
+  repository: file://charts/websocket-user
+  version: 0.1.0
+  condition: websocket-user.enabled
+
+- name: workers-user
+  repository: file://charts/workers-user
+  version: 0.1.0
+  condition: workers-user.enabled
+- name: workers-file
+  repository: file://charts/workers-file
+  version: 0.1.0
+  condition: workers-file.enabled
