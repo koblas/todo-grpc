@@ -59,6 +59,10 @@ dependencies:
   version: 0.1.0
   condition: publicapi-websocket.enabled
 
+- name: websocket-broadcast
+  repository: file://charts/websocket-broadcast
+  version: 0.1.0
+  condition: websocket-broadcast.enabled
 - name: websocket-todo
   repository: file://charts/websocket-todo
   version: 0.1.0
