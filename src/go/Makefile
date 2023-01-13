@@ -40,6 +40,7 @@ build-compose:
 	go build -o build/publicapi-websocket ./cmd/compose/publicapi/websocket/main.go
 	go build -o build/websocket-todo ./cmd/compose/websocket/todo/main.go
 	go build -o build/websocket-user ./cmd/compose/websocket/user/main.go
+	go build -o build/websocket-broadcast ./cmd/compose/websocket/broadcast/main.go
 	go build -o build/core-todo ./cmd/compose/core/todo/main.go
 	go build -o build/core-user ./cmd/compose/core/user/main.go
 	go build -o build/core-file ./cmd/compose/core/file/main.go
@@ -58,6 +59,7 @@ minikube:
 	minikube image build -f ./cmd/compose/publicapi/todo/Dockerfile --tag todo-grpc/publicapi-todo  . 
 	minikube image build -f ./cmd/compose/publicapi/auth/Dockerfile --tag todo-grpc/publicapi-auth .
 	minikube image build -f ./cmd/compose/publicapi/websocket/Dockerfile --tag todo-grpc/publicapi-websocket .
+	minikube image build -f ./cmd/compose/websocket/broadcast/Dockerfile --tag todo-grpc/websocket-broadcast .
 	minikube image build -f ./cmd/compose/websocket/todo/Dockerfile --tag todo-grpc/websocket-todo .
 	minikube image build -f ./cmd/compose/websocket/user/Dockerfile --tag todo-grpc/websocket-user .
 	minikube image build -f ./cmd/compose/core/todo/Dockerfile --tag todo-grpc/core-todo .

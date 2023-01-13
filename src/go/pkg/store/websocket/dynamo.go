@@ -38,7 +38,7 @@ func WithDynamoTable(value string) DynamoOption {
 	}
 }
 
-func NewUserDynamoStore(opts ...DynamoOption) ConnectionStore {
+func NewWsConnectionDynamoStore(opts ...DynamoOption) ConnectionStore {
 	state := dynamoStore{
 		table: aws.String("ws-connection"),
 	}

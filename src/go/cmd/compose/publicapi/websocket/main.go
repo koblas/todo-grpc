@@ -137,7 +137,7 @@ func main() {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
-	consumer := redisbus.NewConsumer(mgr.Context(), config.RedisAddr, config.WebsocketBroadcast)
+	consumer := redisbus.NewConsumer(mgr.Context(), config.RedisAddr, config.WebsocketConnectionMessage)
 
 	handler := socketHandler{
 		api: websocket.NewWebsocketHandler(

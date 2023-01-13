@@ -9,7 +9,6 @@ import (
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/pkg/redisutil"
-	"github.com/koblas/grpc-todo/pkg/store/websocket"
 	"github.com/koblas/grpc-todo/services/websocket/todo"
 	"go.uber.org/zap"
 )
@@ -23,16 +22,17 @@ func main() {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
-	client := redisutil.RedisWsClient(mgr.Context(), config.RedisAddr, config.WebsocketBroadcast)
+	redis := redisutil.NewTwirpRedis(config.RedisAddr)
+	producer := corepb.NewBroadcastEventbusJSONClient(
+		"topic://"+config.BroadcastTopic,
+		redis,
+	)
 
 	s := todo.NewTodoChangeServer(
-		todo.WithStore(websocket.NewRedisStore(config.RedisAddr)),
-		todo.WithClient(client),
+		todo.WithProducer(producer),
 	)
 	mux := http.NewServeMux()
 	mux.Handle(corepb.TodoEventbusPathPrefix, corepb.NewTodoEventbusServer(s))
-
-	redis := redisutil.NewTwirpRedis(config.RedisAddr)
 
 	mgr.StartConsumer(redis.TopicConsumer(mgr.Context(), config.TodoEventsTopic, mux))
 }

@@ -1,9 +1,11 @@
 package user
 
 type Config struct {
-	ConnDb             string `environment:"CONN_DB"`
-	WsEndpoint         string `environment:"WS_ENDPOINT"`
-	RedisAddr          string `environment:"REDIS_ADDR"`
-	WebsocketBroadcast string `json:"websocket-broadcast" validate:"required"`
-	UserEventsTopic    string `json:"user-events"`
+	// Used by lambda
+	EventArn string `ssm:"bus_entity_arn" environment:"BUS_ENTITY_ARN"`
+	// Used by Kubernetes for event source
+	RedisAddr       string `environment:"REDIS_ADDR"`
+	UserEventsTopic string `json:"user-events"`
+	// Shared
+	BroadcastTopic string `json:"websocket-broadcast-events" validate:"required"`
 }

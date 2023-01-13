@@ -26,7 +26,7 @@ func main() {
 	handler := websocket.NewWebsocketHandler(
 		config,
 		websocket.WithStore(
-			store.NewUserDynamoStore(
+			store.NewWsConnectionDynamoStore(
 				store.WithDynamoTable(config.ConnDb),
 			),
 		),
