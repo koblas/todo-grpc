@@ -82,7 +82,8 @@ func (svc *client) Do(req *http.Request) (*http.Response, error) {
 		return nil, err
 	}
 
-	subject := strings.Trim(strings.Replace(req.URL.Path, "/", ".", -1), ".")
+	subject := TwirpPathToNatsPath(req.URL.Path)
+	// subject := strings.Trim(strings.Replace(req.URL.Path, "/", ".", -1), ".")
 	log.With(zap.String("subject", subject)).Info("Sending to subject")
 
 	msg := nats.Msg{
@@ -128,9 +129,14 @@ func (svc *Consumer) Start(ctx context.Context) error {
 	for _, item := range svc.handlers {
 		wg.Add(1)
 		go func(handler manager.MsgHandler) {
+			log := log.With("group", handler.GroupName())
+			log.Info("Creating queue subscription")
 			_, err := svc.conn.QueueSubscribe(svc.Topic, handler.GroupName(), func(msg *nats.Msg) {
 				parts := strings.Split(msg.Subject, ".")
 				path := "/" + strings.Join(parts[0:len(parts)-1], ".") + "/" + parts[len(parts)-1]
+				if parts[0] == "twirp" {
+					path = strings.Replace(path, "/twirp.", "/twirp/", 1)
+				}
 				log.With(
 					zap.String("subject", msg.Subject),
 					zap.String("path", path),
@@ -171,8 +177,11 @@ func (svc *Consumer) Start(ctx context.Context) error {
 }
 
 func (svc *client) TopicConsumer(ctx context.Context, topic string, handlers []manager.MsgHandler) manager.HandlerStart {
+	log := logger.FromContext(ctx)
+
+	log.With(zap.String("topic", topic)).Info("Consuming on topic")
 	if err := svc.connect(ctx); err != nil {
-		logger.FromContext(ctx).With(zap.Error(err)).Fatal("unable to connect")
+		log.With(zap.Error(err)).Fatal("unable to connect")
 	}
 
 	consumer := Consumer{
@@ -186,5 +195,9 @@ func (svc *client) TopicConsumer(ctx context.Context, topic string, handlers []m
 }
 
 func TwirpPathToNatsTopic(path string) string {
-	return strings.Trim(strings.TrimPrefix(path, "/twirp"), "/") + ".*"
+	return "twirp." + strings.Trim(strings.TrimPrefix(path, "/twirp"), "/") + ".*"
+}
+
+func TwirpPathToNatsPath(path string) string {
+	return strings.Trim(strings.Replace(path, "/", ".", -1), ".")
 }

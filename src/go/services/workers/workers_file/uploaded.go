@@ -11,7 +11,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/logger"
-	"github.com/twitchtv/twirp"
 	"go.uber.org/zap"
 )
 
@@ -30,7 +29,7 @@ type fileUploaded struct {
 func NewFileUploaded(config WorkerConfig) corepb.TwirpServer {
 	svc := &fileUploaded{WorkerConfig: config}
 
-	return corepb.NewFileEventbusServer(svc, twirp.WithServerPathPrefix(""))
+	return corepb.NewFileEventbusServer(svc)
 }
 
 func (cfg *fileUploaded) FileUploaded(ctx context.Context, msg *corepb.FileUploadEvent) (*corepb.EventbusEmpty, error) {

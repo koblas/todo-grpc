@@ -37,6 +37,6 @@ func main() {
 	// mgr.StartConsumer(nats.TopicConsumer(mgr.Context(), strings.Trim(sc.PathPrefix(), "/")+".*", "websocket.todo", mux))
 	mgr.Start(nats.TopicConsumer(
 		mgr.Context(),
-		natsutil.TwirpPathToNatsTopic(corepb.BroadcastEventbusPathPrefix),
+		natsutil.TwirpPathToNatsTopic(corepb.TodoEventbusPathPrefix),
 		s))
 }
