@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/koblas/grpc-todo/gen/corepb"
+	"github.com/koblas/grpc-todo/pkg/manager"
 )
 
 type SendEmailServer struct {
@@ -23,7 +24,19 @@ var templates map[corepb.EmailTemplate]emailContent = map[corepb.EmailTemplate]e
 	corepb.EmailTemplate_PASSWORD_RECOVERY: passwordRecovery,
 }
 
-func NewSendEmailServer(producer corepb.SendEmailEvents, sender Sender) corepb.SendEmailService {
+type Handler struct {
+	handler corepb.TwirpServer
+}
+
+func (h Handler) GroupName() string {
+	return "send_email"
+}
+
+func (h Handler) Handler() corepb.TwirpServer {
+	return h.handler
+}
+
+func NewSendEmailServer(producer corepb.SendEmailEvents, sender Sender) []manager.MsgHandler {
 	// pubsub, err := redisqueue.NewProducerWithOptions(&redisqueue.ProducerOptions{
 	// 	StreamMaxLength:      1000,
 	// 	ApproximateMaxLength: true,
@@ -35,9 +48,13 @@ func NewSendEmailServer(producer corepb.SendEmailEvents, sender Sender) corepb.S
 	// 	logger.With(err).Fatal("unable to start producer")
 	// }
 
-	return &SendEmailServer{
-		pubsub: producer,
-		sender: sender,
+	return []manager.MsgHandler{
+		Handler{
+			handler: corepb.NewSendEmailServiceServer(&SendEmailServer{
+				pubsub: producer,
+				sender: sender,
+			}),
+		},
 	}
 }
 

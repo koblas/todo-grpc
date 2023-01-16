@@ -33,5 +33,5 @@ func main() {
 
 	api := apipb.NewUserServiceServer(user.NewUserServer(config, opts...))
 
-	mgr.Start(api)
+	mgr.Start(mgr.WrapHttpHandler(api))
 }

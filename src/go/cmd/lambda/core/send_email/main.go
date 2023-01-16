@@ -1,8 +1,6 @@
 package main
 
 import (
-	"net/http"
-
 	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
@@ -27,8 +25,8 @@ func main() {
 	)
 
 	s := send_email.NewSendEmailServer(producer, send_email.NewSmtpService(config))
-	mux := http.NewServeMux()
-	mux.Handle(corepb.SendEmailServicePathPrefix, corepb.NewSendEmailServiceServer(s))
+	// mux := http.NewServeMux()
+	// mux.Handle(corepb.SendEmailServicePathPrefix, corepb.NewSendEmailServiceServer(s))
 
-	mgr.StartConsumer(awsutil.HandleSqsLambda(mux))
+	mgr.Start(awsutil.HandleSqsLambda(s))
 }

@@ -31,5 +31,5 @@ func main() {
 
 	api := corepb.NewFileServiceServer(file.NewFileServer(opts...))
 
-	mgr.Start(api)
+	mgr.Start(awsutil.HandleApiLambda(api))
 }

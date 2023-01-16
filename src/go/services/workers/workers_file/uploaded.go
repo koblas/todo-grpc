@@ -11,13 +11,14 @@ import (
 	"github.com/google/uuid"
 	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/logger"
+	"github.com/twitchtv/twirp"
 	"go.uber.org/zap"
 )
 
 func init() {
 	workers = append(workers, Worker{
 		Stream:    "event:file_uploaded",
-		GroupName: "file/fileUploaded",
+		GroupName: "file.fileUploaded",
 		Build:     NewFileUploaded,
 	})
 }
@@ -29,7 +30,7 @@ type fileUploaded struct {
 func NewFileUploaded(config WorkerConfig) corepb.TwirpServer {
 	svc := &fileUploaded{WorkerConfig: config}
 
-	return corepb.NewFileEventbusServer(svc)
+	return corepb.NewFileEventbusServer(svc, twirp.WithServerPathPrefix(""))
 }
 
 func (cfg *fileUploaded) FileUploaded(ctx context.Context, msg *corepb.FileUploadEvent) (*corepb.EventbusEmpty, error) {

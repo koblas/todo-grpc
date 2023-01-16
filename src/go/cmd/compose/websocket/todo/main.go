@@ -1,14 +1,13 @@
 package main
 
 import (
-	"net/http"
 	"strings"
 
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
 	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/manager"
-	"github.com/koblas/grpc-todo/pkg/redisutil"
+	"github.com/koblas/grpc-todo/pkg/natsutil"
 	"github.com/koblas/grpc-todo/services/websocket/todo"
 	"go.uber.org/zap"
 )
@@ -22,17 +21,22 @@ func main() {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
-	redis := redisutil.NewTwirpRedis(config.RedisAddr)
-	producer := corepb.NewBroadcastEventbusJSONClient(
-		"topic://"+config.BroadcastTopic,
-		redis,
+	producer := corepb.NewBroadcastEventbusProtobufClient(
+		"",
+		natsutil.NewNatsClient(config.NatsAddr),
 	)
 
 	s := todo.NewTodoChangeServer(
 		todo.WithProducer(producer),
 	)
-	mux := http.NewServeMux()
-	mux.Handle(corepb.TodoEventbusPathPrefix, corepb.NewTodoEventbusServer(s))
+	// sc := corepb.NewTodoEventbusServer(s, twirp.WithServerPathPrefix(""))
+	// mux := http.NewServeMux()
+	// mux.Handle(corepb.TodoEventbusPathPrefix, corepb.NewTodoEventbusServer(s))
 
-	mgr.StartConsumer(redis.TopicConsumer(mgr.Context(), config.TodoEventsTopic, mux))
+	nats := natsutil.NewNatsClient(config.NatsAddr)
+	// mgr.StartConsumer(nats.TopicConsumer(mgr.Context(), strings.Trim(sc.PathPrefix(), "/")+".*", "websocket.todo", mux))
+	mgr.Start(nats.TopicConsumer(
+		mgr.Context(),
+		natsutil.TwirpPathToNatsTopic(corepb.BroadcastEventbusPathPrefix),
+		s))
 }

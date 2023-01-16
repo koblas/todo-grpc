@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-lambda-go/events"
+	lambdaGo "github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
@@ -22,6 +23,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	sqstypes "github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/koblas/grpc-todo/pkg/logger"
+	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
@@ -32,13 +34,14 @@ var errorResponse = events.APIGatewayV2HTTPResponse{
 
 type TwirpHttpApiHandler func(lambdaCtx context.Context, request events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error)
 type TwirpHttpSqsHandler func(lambdaCtx context.Context, request events.SQSEvent) (events.SQSEventResponse, error)
+type TwirpHttpMsgHandler func(lambdaCtx context.Context) error
 
-func HandleApiLambda(ctx context.Context, api http.Handler) TwirpHttpApiHandler {
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		api.ServeHTTP(w, r)
-	})
+type LambdaStart struct {
+	handler http.Handler
+}
 
-	return func(lambdaCtx context.Context, request events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
+func (l *LambdaStart) Start(ctx context.Context) error {
+	lambdaGo.StartWithContext(ctx, func(lambdaCtx context.Context, request events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
 		log := logger.FromContext(ctx).With(
 			"awsHttpMethod", request.RequestContext.HTTP.Method,
 			"awsRequestID", request.RequestContext.RequestID,
@@ -54,7 +57,7 @@ func HandleApiLambda(ctx context.Context, api http.Handler) TwirpHttpApiHandler 
 		}
 		w := httptest.NewRecorder()
 
-		handler.ServeHTTP(w, req)
+		l.handler.ServeHTTP(w, req)
 
 		result := w.Result()
 
@@ -75,31 +78,30 @@ func HandleApiLambda(ctx context.Context, api http.Handler) TwirpHttpApiHandler 
 			Headers:           simpleHeaders,
 			MultiValueHeaders: result.Header,
 		}, nil
-	}
+	})
+
+	// Not reached
+	return nil
+}
+
+func HandleApiLambda(api http.Handler) manager.HandlerStart {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		api.ServeHTTP(w, r)
+	})
+
+	entry := LambdaStart{handler}
+
+	return &entry
 }
 
 type SqsHandlers map[string]http.Handler
 
-func HandleSqsLambda(handler http.Handler) TwirpHttpSqsHandler {
-	/*
-		var handler http.Handler
-		var forcePath *string
-		if len(handlers) == 1 {
-			for k, v := range handlers {
-				handler = v
-				forcePath = &k
-			}
-		} else {
-			mux := http.NewServeMux()
-			for k, v := range handlers {
-				mux.Handle(k, v)
-			}
-			handler = mux
-		}
-	*/
-	var forcePath *string
+type SqsHandler struct {
+	handlers []manager.MsgHandler
+}
 
-	return func(ctx context.Context, request events.SQSEvent) (events.SQSEventResponse, error) {
+func (sqsh *SqsHandler) Start(ctx context.Context) error {
+	lambdaGo.StartWithContext(ctx, func(ctx context.Context, request events.SQSEvent) (events.SQSEventResponse, error) {
 		parentLog := logger.FromContext(ctx).With("eventItemCount", len(request.Records))
 
 		result := events.SQSEventResponse{}
@@ -107,7 +109,7 @@ func HandleSqsLambda(handler http.Handler) TwirpHttpSqsHandler {
 			log := parentLog.With("messageId", record.MessageId)
 			log.Info("Handling SQS Message")
 
-			req, err := SqsEventToHttpRequest(logger.ToContext(ctx, log), record, forcePath)
+			req, err := SqsEventToHttpRequest(logger.ToContext(ctx, log), record)
 			if err != nil {
 				log.With(zap.Error(err)).Error("Unable to decode")
 				result.BatchItemFailures = append(result.BatchItemFailures, events.SQSBatchItemFailure{ItemIdentifier: record.MessageId})
@@ -116,18 +118,34 @@ func HandleSqsLambda(handler http.Handler) TwirpHttpSqsHandler {
 
 			w := httptest.NewRecorder()
 
-			handler.ServeHTTP(w, req.WithContext(ctx))
+			oneSuccess := false
+			for _, item := range sqsh.handlers {
+				item.Handler().ServeHTTP(w, req.WithContext(ctx))
 
-			res := w.Result()
-			if res.StatusCode != http.StatusOK {
-				buf, _ := io.ReadAll(io.LimitReader(res.Body, 256))
-				log.With("statusCode", res.StatusCode).With("statusMsg", string(buf)).Info("SQS Message error")
+				res := w.Result()
+				if res.StatusCode >= http.StatusOK || res.StatusCode < http.StatusBadRequest {
+					oneSuccess = true
+				} else {
+					buf, _ := io.ReadAll(io.LimitReader(res.Body, 256))
+					log.With("statusCode", res.StatusCode).With("statusMsg", string(buf)).Info("SQS Message error")
+				}
+			}
+
+			// All 2xx and 3xx responses are "good"
+			if !oneSuccess {
 				result.BatchItemFailures = append(result.BatchItemFailures, events.SQSBatchItemFailure{ItemIdentifier: record.MessageId})
 			}
 		}
 
 		return result, nil
-	}
+	})
+
+	// Never fails
+	return nil
+}
+
+func HandleSqsLambda(handlers []manager.MsgHandler) *SqsHandler {
+	return &SqsHandler{handlers}
 }
 
 // Matches the Twirp HTTPClient interface

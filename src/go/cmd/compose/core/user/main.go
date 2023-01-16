@@ -12,7 +12,7 @@ import (
 	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/manager"
-	"github.com/koblas/grpc-todo/pkg/redisutil"
+	"github.com/koblas/grpc-todo/pkg/natsutil"
 	"github.com/koblas/grpc-todo/services/core/user"
 	"go.uber.org/zap"
 )
@@ -56,11 +56,9 @@ func main() {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
-	redis := redisutil.NewTwirpRedis(config.RedisAddr)
-
-	producer := corepb.NewUserEventbusJSONClient(
-		"topic://"+config.UserEventTopic,
-		redis,
+	producer := corepb.NewUserEventbusProtobufClient(
+		"",
+		natsutil.NewNatsClient(config.NatsAddr),
 	)
 
 	opts := []user.Option{
@@ -87,5 +85,5 @@ func main() {
 
 	api := corepb.NewUserServiceServer(user.NewUserServer(opts...))
 
-	mgr.Start(api)
+	mgr.Start(mgr.WrapHttpHandler(api))
 }

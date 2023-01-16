@@ -150,5 +150,5 @@ func main() {
 
 	go handler.consume(mgr.Context())
 
-	mgr.Start(&handler)
+	mgr.Start(mgr.WrapHttpHandler(&handler))
 }

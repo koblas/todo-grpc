@@ -30,5 +30,5 @@ func main() {
 
 	api := corepb.NewAuthUserServiceServer(ouser.NewOauthUserServer(config, opts...))
 
-	mgr.Start(api)
+	mgr.Start(awsutil.HandleApiLambda(api))
 }

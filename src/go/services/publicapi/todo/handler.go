@@ -8,8 +8,8 @@ import (
 
 	"github.com/koblas/grpc-todo/gen/apipb"
 	"github.com/koblas/grpc-todo/gen/corepb"
-	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/logger"
+	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/pkg/tokenmanager"
 	"github.com/twitchtv/twirp"
 	"go.uber.org/zap"
@@ -48,9 +48,9 @@ func NewTodoServer(config Config, opts ...Option) *TodoServer {
 }
 
 func (svc *TodoServer) getUserId(ctx context.Context) (string, error) {
-	headers, ok := ctx.Value(awsutil.HeaderCtxKey).(http.Header)
+	headers, ok := ctx.Value(manager.HttpHeaderCtxKey).(http.Header)
 	if !ok {
-		if ctx.Value(awsutil.HeaderCtxKey) != nil {
+		if ctx.Value(manager.HttpHeaderCtxKey) != nil {
 			log.Println("Headers are present")
 		}
 		return "", fmt.Errorf("headers not in context")

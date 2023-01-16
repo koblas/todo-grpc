@@ -8,6 +8,7 @@ import (
 	"github.com/koblas/grpc-todo/gen/apipb"
 	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/logger"
+	"github.com/koblas/grpc-todo/pkg/manager"
 	"go.uber.org/zap"
 )
 
@@ -30,14 +31,30 @@ func WithProducer(producer corepb.BroadcastEventbus) Option {
 	}
 }
 
-func NewTodoChangeServer(opts ...Option) corepb.TodoEventbus {
+type TodoServerHandler struct {
+	handler corepb.TwirpServer
+}
+
+func NewTodoChangeServer(opts ...Option) []manager.MsgHandler {
 	svr := TodoServer{}
 
 	for _, opt := range opts {
 		opt(&svr)
 	}
 
-	return &svr
+	return []manager.MsgHandler{
+		&TodoServerHandler{
+			handler: corepb.NewTodoEventbusServer(&svr),
+		},
+	}
+}
+
+func (svc *TodoServerHandler) GroupName() string {
+	return "websocket.todo"
+}
+
+func (svc *TodoServerHandler) Handler() corepb.TwirpServer {
+	return svc.handler
 }
 
 func (svc *TodoServer) TodoChange(ctx context.Context, event *corepb.TodoChangeEvent) (*corepb.EventbusEmpty, error) {

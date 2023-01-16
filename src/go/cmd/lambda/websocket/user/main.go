@@ -1,8 +1,6 @@
 package main
 
 import (
-	"net/http"
-
 	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
@@ -11,6 +9,17 @@ import (
 	"github.com/koblas/grpc-todo/services/websocket/user"
 	"go.uber.org/zap"
 )
+
+type handler struct {
+	bus corepb.TwirpServer
+}
+
+func (h handler) GroupName() string {
+	return ""
+}
+func (h handler) Handler() corepb.TwirpServer {
+	return h.bus
+}
 
 func main() {
 	mgr := manager.NewManager()
@@ -26,11 +35,13 @@ func main() {
 		awsutil.NewTwirpCallLambda(),
 	)
 
-	s := user.NewUserChangeServer(
-		user.WithProducer(producer),
-	)
-	mux := http.NewServeMux()
-	mux.Handle(corepb.UserEventbusPathPrefix, corepb.NewUserEventbusServer(s))
+	// s := user.NewUserChangeServer(
+	// 	user.WithProducer(producer),
+	// )
+	// mux := http.NewServeMux()
+	// mux.Handle(corepb.UserEventbusPathPrefix, corepb.NewUserEventbusServer(s))
 
-	mgr.StartConsumer(awsutil.HandleSqsLambda(mux))
+	h := user.NewUserChangeServer(user.WithProducer(producer))
+
+	mgr.Start(awsutil.HandleSqsLambda(h))
 }

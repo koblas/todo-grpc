@@ -1,13 +1,13 @@
 package main
 
 import (
-	"net/http"
 	"strings"
 
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
 	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/manager"
+	"github.com/koblas/grpc-todo/pkg/natsutil"
 	"github.com/koblas/grpc-todo/pkg/redisutil"
 	"github.com/koblas/grpc-todo/pkg/store/websocket"
 	"github.com/koblas/grpc-todo/services/websocket/broadcast"
@@ -29,13 +29,7 @@ func main() {
 		broadcast.WithStore(websocket.NewRedisStore(config.RedisAddr)),
 		broadcast.WithClient(client),
 	)
-	mux := http.NewServeMux()
-	mux.Handle(corepb.BroadcastEventbusPathPrefix, corepb.NewBroadcastEventbusServer(s))
+	nats := natsutil.NewNatsClient(config.NatsAddr)
 
-	if config.RedisAddr == "" {
-		log.Fatal("Redis address not set")
-	}
-	redis := redisutil.NewTwirpRedis(config.RedisAddr)
-
-	mgr.StartConsumer(redis.TopicConsumer(mgr.Context(), config.BroadcastEventTopic, mux))
+	mgr.Start(nats.TopicConsumer(mgr.Context(), natsutil.TwirpPathToNatsTopic(corepb.BroadcastEventbusPathPrefix), s))
 }

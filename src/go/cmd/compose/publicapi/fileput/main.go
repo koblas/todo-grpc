@@ -32,5 +32,5 @@ func main() {
 
 	api := fileput.NewFilePutServer(config, opts...)
 
-	mgr.Start(api)
+	mgr.Start(mgr.WrapHttpHandler(api))
 }

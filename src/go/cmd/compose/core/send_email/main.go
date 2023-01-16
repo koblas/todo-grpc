@@ -1,14 +1,13 @@
 package main
 
 import (
-	"net/http"
 	"strings"
 
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
 	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/manager"
-	"github.com/koblas/grpc-todo/pkg/redisutil"
+	"github.com/koblas/grpc-todo/pkg/natsutil"
 	"github.com/koblas/grpc-todo/services/core/send_email"
 	"go.uber.org/zap"
 )
@@ -22,16 +21,16 @@ func main() {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
-	redis := redisutil.NewTwirpRedis(config.RedisAddr)
-
 	producer := corepb.NewSendEmailEventsProtobufClient(
-		"topic://"+config.EmailSentTopic,
-		redis,
+		"",
+		natsutil.NewNatsClient(config.NatsAddr),
 	)
 
 	s := send_email.NewSendEmailServer(producer, send_email.NewSmtpService(config))
-	mux := http.NewServeMux()
-	mux.Handle(corepb.SendEmailServicePathPrefix, corepb.NewSendEmailServiceServer(s))
 
-	mgr.StartConsumer(redis.QueueConsumer(mgr.Context(), "send-email", mux))
+	nats := natsutil.NewNatsClient(config.NatsAddr)
+	mgr.Start(nats.TopicConsumer(
+		mgr.Context(),
+		natsutil.TwirpPathToNatsTopic(corepb.BroadcastEventbusPathPrefix),
+		s))
 }

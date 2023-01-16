@@ -4,6 +4,7 @@ type Config struct {
 	// Used by Lambda
 	WsEndpoint string `environment:"WS_ENDPOINT"`
 	// Used by Kubernetes
+	NatsAddr                   string `environment:"NATS_ADDR"`             // Message bus
 	RedisAddr                  string `environment:"REDIS_ADDR"`            // Message bus
 	BroadcastEventTopic        string `json:"websocket-broadcast-events"`   // Event source
 	WebsocketConnectionMessage string `json:"websocket-connection-message"` // Event target

@@ -35,5 +35,6 @@ func main() {
 		)),
 	}
 
-	mgr.StartConsumer(awsutil.HandleSqsLambda(workers_file.GetHandler(config, opts...)))
+	// mgr.StartConsumerMsg(awsutil.HandleSqsLambda(workers_file.GetHandler(config, opts...)))
+	mgr.Start(awsutil.HandleSqsLambda(workers_file.BuildHandlers(config, opts...)))
 }

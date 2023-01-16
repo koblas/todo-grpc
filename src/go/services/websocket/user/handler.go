@@ -7,6 +7,7 @@ import (
 
 	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/logger"
+	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/pkg/protoutil"
 	"go.uber.org/zap"
 )
@@ -24,20 +25,36 @@ type SocketMessage struct {
 
 type Option func(*UserServer)
 
+type UserServerHandler struct {
+	handler corepb.TwirpServer
+}
+
 func WithProducer(producer corepb.BroadcastEventbus) Option {
 	return func(conf *UserServer) {
 		conf.producer = producer
 	}
 }
 
-func NewUserChangeServer(opts ...Option) corepb.UserEventbus {
+func NewUserChangeServer(opts ...Option) []manager.MsgHandler {
 	svr := UserServer{}
 
 	for _, opt := range opts {
 		opt(&svr)
 	}
 
-	return &svr
+	return []manager.MsgHandler{
+		&UserServerHandler{
+			handler: corepb.NewUserEventbusServer(&svr),
+		},
+	}
+}
+
+func (svc *UserServerHandler) GroupName() string {
+	return "websocket.user"
+}
+
+func (svc *UserServerHandler) Handler() corepb.TwirpServer {
+	return svc.handler
 }
 
 func (svc *UserServer) UserChange(ctx context.Context, event *corepb.UserChangeEvent) (*corepb.EventbusEmpty, error) {

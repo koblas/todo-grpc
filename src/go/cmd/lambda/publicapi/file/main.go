@@ -26,5 +26,5 @@ func main() {
 
 	api := apipb.NewFileServiceServer(file.NewFileServer(config, opts...))
 
-	mgr.Start(api)
+	mgr.Start(awsutil.HandleApiLambda(api))
 }

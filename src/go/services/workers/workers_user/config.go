@@ -1,8 +1,14 @@
 package workers_user
 
 type Config struct {
-	UrlBase         string `ssm:"url_base" environment:"URL_BASE_UI"`
+	// Used by lambda
+	EventArn string `ssm:"bus_entity_arn" environment:"BUS_ENTITY_ARN"`
+	// Used by Kubernetes for the event source
+	NatsAddr        string `environment:"NATS_ADDR"`
+	RedisAddr       string `environment:"REDIS_ADDR"`
 	UserEventsTopic string `json:"user-events"`
-	SendEmail       string `json:"send-email"`
-	RedisAddr       string `ssm:"redis_addr" json:"redis-addr" environment:"REDIS_ADDR" default:"redis:6379"`
+
+	// Shared
+	UrlBase   string `ssm:"url_base" environment:"URL_BASE_UI"`
+	SendEmail string `json:"send-email"`
 }

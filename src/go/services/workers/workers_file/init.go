@@ -9,6 +9,7 @@ import (
 
 	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/logger"
+	"github.com/koblas/grpc-todo/pkg/manager"
 )
 
 type SqsConsumerBuilder func(WorkerConfig) corepb.TwirpServer
@@ -69,7 +70,44 @@ func buildServiceConfig(config Config, opts ...Option) WorkerConfig {
 
 var workers = []Worker{}
 
-func GetHandler(config Config, opts ...Option) http.HandlerFunc {
+type HandlerData struct {
+	group   string
+	handler corepb.TwirpServer
+}
+
+type Handler interface {
+	GroupName() string
+	Handler() corepb.TwirpServer
+}
+
+func (h *HandlerData) GroupName() string {
+	return h.group
+}
+func (h *HandlerData) Handler() corepb.TwirpServer {
+	return h.handler
+}
+
+func BuildHandlers(config Config, opts ...Option) []manager.MsgHandler {
+	handlers := []manager.MsgHandler{}
+
+	cfg := buildServiceConfig(config, opts...)
+
+	for _, worker := range workers {
+		if cfg.onlyHandler != "" && cfg.onlyHandler != worker.Stream {
+			continue
+		}
+		data := HandlerData{
+			group:   worker.GroupName,
+			handler: worker.Build(cfg),
+		}
+
+		handlers = append(handlers, manager.MsgHandler(&data))
+	}
+
+	return handlers
+}
+
+func GetHandlers(config Config, opts ...Option) http.HandlerFunc {
 	handlers := []corepb.TwirpServer{}
 
 	cfg := buildServiceConfig(config, opts...)

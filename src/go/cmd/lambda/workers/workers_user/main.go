@@ -50,15 +50,5 @@ func main() {
 		),
 	}
 
-	/*
-		handler := builder(config, opts...)
-
-		sender := awsbus.NewAwsSqsConsumer(handler)
-		if err != nil {
-			log.With(zap.Error(err)).Fatal("Unable to start consumer")
-		}
-
-		mgr.StartConsumer(sender.AddMessagesLambda)
-	*/
-	mgr.StartConsumer(awsutil.HandleSqsLambda(workers.GetHandler(config, opts...)))
+	mgr.Start(awsutil.HandleSqsLambda(workers.GetHandler(config, opts...)))
 }

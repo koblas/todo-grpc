@@ -36,5 +36,5 @@ func main() {
 
 	api := apipb.NewAuthenticationServiceServer(auth.NewAuthenticationServer(config, opts...))
 
-	mgr.Start(api)
+	mgr.Start(awsutil.HandleApiLambda(api))
 }

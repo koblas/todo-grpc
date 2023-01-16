@@ -9,6 +9,7 @@ import (
 	smithy "github.com/aws/smithy-go"
 	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/logger"
+	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/pkg/store/websocket"
 )
 
@@ -42,15 +43,31 @@ func WithClient(client PostToConnectionAPI) Option {
 	}
 }
 
+type BroadcastServerHandler struct {
+	handler corepb.TwirpServer
+}
+
 // Convert websocket-broadcast events into per-connection events
-func NewBroadcastServer(opts ...Option) corepb.BroadcastEventbus {
+func NewBroadcastServer(opts ...Option) []manager.MsgHandler {
 	svr := BroadcastServer{}
 
 	for _, opt := range opts {
 		opt(&svr)
 	}
 
-	return &svr
+	return []manager.MsgHandler{
+		&BroadcastServerHandler{
+			handler: corepb.NewBroadcastEventbusServer(&svr),
+		},
+	}
+}
+
+func (svc *BroadcastServerHandler) GroupName() string {
+	return "websocket.broadcast"
+}
+
+func (svc *BroadcastServerHandler) Handler() corepb.TwirpServer {
+	return svc.handler
 }
 
 func (svc *BroadcastServer) Send(ctx context.Context, event *corepb.BroadcastEvent) (*corepb.EventbusEmpty, error) {

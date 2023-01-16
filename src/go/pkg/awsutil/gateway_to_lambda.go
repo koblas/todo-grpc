@@ -11,11 +11,8 @@ import (
 	"path"
 
 	"github.com/aws/aws-lambda-go/events"
+	"github.com/koblas/grpc-todo/pkg/manager"
 )
-
-type headerCtxKeyType string
-
-const HeaderCtxKey headerCtxKeyType = "headers"
 
 /** Convert an Lambda APIGatewayProxyRequest to an HTTPRequest */
 func GatewayToHttpRequest(ctx context.Context, event events.APIGatewayProxyRequest, useProxyPath bool) (*http.Request, error) {
@@ -116,7 +113,7 @@ func GatewayToHttpRequestV2(ctx context.Context, event events.APIGatewayV2HTTPRe
 	}
 
 	// Create a new request.
-	lctx := context.WithValue(ctx, HeaderCtxKey, headers)
+	lctx := context.WithValue(ctx, manager.HttpHeaderCtxKey, headers)
 	r, err := http.NewRequestWithContext(lctx, event.RequestContext.HTTP.Method, u.String(), body)
 	if err != nil {
 		return nil, err
@@ -134,7 +131,7 @@ func GatewayToHttpRequestV2(ctx context.Context, event events.APIGatewayV2HTTPRe
 	return r, nil
 }
 
-func SqsEventToHttpRequest(ctx context.Context, event events.SQSMessage, forcePath *string) (*http.Request, error) {
+func SqsEventToHttpRequest(ctx context.Context, event events.SQSMessage) (*http.Request, error) {
 	headers := http.Header{}
 	for k, v := range event.MessageAttributes {
 		if v.DataType == "String" {
@@ -150,20 +147,15 @@ func SqsEventToHttpRequest(ctx context.Context, event events.SQSMessage, forcePa
 		Scheme: "sqs",
 		Host:   parts[len(parts)-1],
 	}
-	if forcePath != nil {
-		u.Path = *forcePath
-		u.RawPath = *forcePath
-	} else {
-		u.Path = headers.Get("twirp.path")
-		u.RawPath = headers.Get("twirp.path")
-	}
+	u.Path = headers.Get("twirp.path")
+	u.RawPath = headers.Get("twirp.path")
 
 	var body io.Reader = strings.NewReader(event.Body)
 	if headers.Get("content-transfer-encoding") == "base64" {
 		body = base64.NewDecoder(base64.StdEncoding, body)
 	}
 
-	lctx := context.WithValue(ctx, HeaderCtxKey, headers)
+	lctx := context.WithValue(ctx, manager.HttpHeaderCtxKey, headers)
 	r, err := http.NewRequestWithContext(lctx, http.MethodPost, u.String(), body)
 
 	if err != nil {

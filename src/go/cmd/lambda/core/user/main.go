@@ -31,5 +31,5 @@ func main() {
 
 	api := corepb.NewUserServiceServer(user.NewUserServer(opts...))
 
-	mgr.Start(api)
+	mgr.Start(awsutil.HandleApiLambda(api))
 }

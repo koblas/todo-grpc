@@ -32,5 +32,5 @@ func main() {
 
 	api := corepb.NewTodoServiceServer(todo.NewTodoServer(opts...))
 
-	mgr.Start(api)
+	mgr.Start(awsutil.HandleApiLambda(api))
 }

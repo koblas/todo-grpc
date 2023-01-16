@@ -1,8 +1,6 @@
 package main
 
 import (
-	"net/http"
-
 	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
@@ -26,11 +24,7 @@ func main() {
 		awsutil.NewTwirpCallLambda(),
 	)
 
-	s := todo.NewTodoChangeServer(
-		todo.WithProducer(producer),
-	)
-	mux := http.NewServeMux()
-	mux.Handle(corepb.TodoEventbusPathPrefix, corepb.NewTodoEventbusServer(s))
+	h := todo.NewTodoChangeServer(todo.WithProducer(producer))
 
-	mgr.StartConsumer(awsutil.HandleSqsLambda(mux))
+	mgr.Start(awsutil.HandleSqsLambda(h))
 }

@@ -7,7 +7,7 @@ import (
 	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/manager"
-	"github.com/koblas/grpc-todo/pkg/redisutil"
+	"github.com/koblas/grpc-todo/pkg/natsutil"
 	"github.com/koblas/grpc-todo/services/workers/workers_user"
 	"go.uber.org/zap"
 )
@@ -22,16 +22,20 @@ func main() {
 	}
 
 	// var builder workers.SqsConsumerBuilder
-	redis := redisutil.NewTwirpRedis(config.RedisAddr)
+	nats := natsutil.NewNatsClient(config.NatsAddr)
 
 	opts := []workers_user.Option{
 		workers_user.WithSendEmail(
 			corepb.NewSendEmailServiceProtobufClient(
 				"queue://"+config.SendEmail,
-				redis,
+				nats,
 			),
 		),
 	}
+	s := workers_user.GetHandler(config, opts...)
 
-	mgr.StartConsumer(redis.TopicConsumer(mgr.Context(), config.UserEventsTopic, workers_user.GetHandler(config, opts...)))
+	mgr.Start(nats.TopicConsumer(
+		mgr.Context(),
+		natsutil.TwirpPathToNatsTopic(corepb.UserEventbusPathPrefix),
+		s))
 }

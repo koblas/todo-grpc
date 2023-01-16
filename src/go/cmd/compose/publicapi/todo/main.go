@@ -33,5 +33,5 @@ func main() {
 
 	api := apipb.NewTodoServiceServer(todo.NewTodoServer(config, opts...))
 
-	mgr.Start(api)
+	mgr.Start(mgr.WrapHttpHandler(api))
 }
