@@ -22,12 +22,7 @@ func main() {
 	}
 
 	nats := natsutil.NewNatsClient(config.NatsAddr)
-
-	producer := corepb.NewBroadcastEventbusProtobufClient(
-		"",
-		nats,
-	)
-	log.With(zap.String("nats", config.NatsAddr)).Info("Creating nats producer")
+	producer := corepb.NewBroadcastEventbusProtobufClient("", nats)
 
 	s := user.NewUserChangeServer(
 		user.WithProducer(producer),

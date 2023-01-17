@@ -14,10 +14,9 @@ import (
 	"time"
 
 	"github.com/adjust/rmq/v5"
-	"github.com/aws/aws-lambda-go/events"
 	"github.com/go-redis/redis/v8"
-	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/logger"
+	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/pkg/errors"
 	"github.com/robinjoseph08/redisqueue"
 	"go.uber.org/zap"
@@ -35,11 +34,6 @@ type client struct {
 	queue  map[string]rmq.Queue
 }
 
-// Create a version that can serialize via the redis client
-// type queueHeaders struct {
-// 	http.Header
-// }
-
 type payloadHeaders map[string][]string
 
 var _ encoding.BinaryMarshaler = (payloadHeaders)(nil)
@@ -47,28 +41,6 @@ var _ encoding.BinaryMarshaler = (payloadHeaders)(nil)
 func (m payloadHeaders) MarshalBinary() ([]byte, error) {
 	return json.Marshal(m)
 }
-
-// var _ encoding.BinaryUnmarshaler = (*queueHeaders)(nil)
-
-// func (m *queueHeaders) MarshalBinary() ([]byte, error) {
-// 	return json.Marshal(m.Header)
-// }
-
-// func (m *queueHeaders) UnmarshalBinary(data []byte) error {
-// 	value := map[string][]string{}
-
-// 	if err := json.Unmarshal(data, &value); err != nil {
-// 		return err
-// 	}
-
-// 	m.Header = value
-
-// 	return nil
-// }
-
-// func (m *queueHeaders) MarshalJSON() ([]byte, error) {
-// 	return json.Marshal(m.Header)
-// }
 
 func (m *payloadHeaders) UnmarshalJSON(data []byte) error {
 	cleanValue := data
@@ -242,23 +214,16 @@ func (svc *client) Do(req *http.Request) (*http.Response, error) {
 }
 
 func buildRequestFromPayload(host string, payloadString string) (http.Request, error) {
-	// fmt.Println("=== payload === ")
-	// fmt.Println(payloadString)
-	// fmt.Println("")
-
 	payload := queuePayload{}
 	err := json.Unmarshal([]byte(payloadString), &payload)
 	if err != nil {
 		return http.Request{}, errors.Wrap(err, "redis-topic-consumer: unable to unmarshal json")
 	}
-	// fmt.Println(payload)
-	// fmt.Println("")
 
 	bodyBytes, err := base64.RawStdEncoding.DecodeString(payload.Body)
 	if err != nil {
 		return http.Request{}, errors.Wrap(err, "redis-topic-consumer: unable to unmarshal base64")
 	}
-	// fmt.Println("PUTTING ", len(bodyBytes), "BYTES", string(bodyBytes))
 
 	req := http.Request{
 		URL: &url.URL{
@@ -274,110 +239,154 @@ func buildRequestFromPayload(host string, payloadString string) (http.Request, e
 	return req, nil
 }
 
-func (svc *client) TopicConsumer(_ context.Context, topicName string, handler http.Handler) awsutil.TwirpHttpSqsHandler {
-	return func(ctx context.Context, request events.SQSEvent) (events.SQSEventResponse, error) {
-		log := logger.FromContext(ctx).With(zap.String("topic", topicName))
-
-		consumer, err := svc.openRedisTopicConsumer(topicName)
-
-		if err != nil {
-			return events.SQSEventResponse{}, nil
-		}
-
-		consumer.Register(topicName, func(msg *redisqueue.Message) error {
-			payloadValue, found := msg.Values["Payload"]
-			if !found {
-				return errors.New("redis-topic-consumer: Missing payload")
-			}
-			payloadStr, found := payloadValue.(string)
-			if !found {
-				return errors.New("redis-topic-consumer: payload bad type")
-			}
-
-			req, err := buildRequestFromPayload(topicName, payloadStr)
-			if err != nil {
-				return err
-			}
-
-			w := httptest.NewRecorder()
-			handler.ServeHTTP(w, req.WithContext(ctx))
-
-			res := w.Result()
-			if res.StatusCode != http.StatusOK {
-				buf, _ := io.ReadAll(io.LimitReader(res.Body, 1024))
-				log.With("statusCode", res.StatusCode).With("statusMsg", string(buf)).Info("Redis Consumer error")
-			}
-
-			return nil
-		})
-
-		go func(c *redisqueue.Consumer) {
-			for err := range c.Errors {
-				// handle errors accordingly
-				log.With(zap.Error(err)).Error("Unable to consume")
-			}
-		}(consumer)
-
-		consumer.Run()
-
-		return events.SQSEventResponse{}, nil
-	}
+type topicConsumer struct {
+	client   *client
+	handlers []manager.MsgHandler
+	Topic    string
 }
 
-func (svc *client) QueueConsumer(ctx context.Context, queueName string, handler http.Handler) awsutil.TwirpHttpSqsHandler {
-	return func(ctx context.Context, request events.SQSEvent) (events.SQSEventResponse, error) {
-		log := logger.FromContext(ctx).With(zap.String("queueName", queueName))
+type queueConsumer struct {
+	client   *client
+	handlers []manager.MsgHandler
+	Queue    string
+}
 
-		queue, err := svc.openRedisQueue(queueName)
+func (con *topicConsumer) Start(ctx context.Context) error {
+	topicName := con.Topic
 
+	log := logger.FromContext(ctx).With(zap.String("topic", topicName))
+
+	consumer, err := con.client.openRedisTopicConsumer(topicName)
+	if err != nil {
+		return err
+	}
+
+	consumer.Register(topicName, func(msg *redisqueue.Message) error {
+		payloadValue, found := msg.Values["Payload"]
+		if !found {
+			return errors.New("redis-topic-consumer: Missing payload")
+		}
+		payloadStr, found := payloadValue.(string)
+		if !found {
+			return errors.New("redis-topic-consumer: payload bad type")
+		}
+
+		req, err := buildRequestFromPayload(topicName, payloadStr)
 		if err != nil {
-			log.With(zap.Error(err)).Error("unable to open queue")
-			return events.SQSEventResponse{}, err
+			return err
 		}
 
-		if err = queue.StartConsuming(10, time.Second); err != nil {
-			log.With(zap.Error(err)).Error("queue.StartConsuming failed")
-			return events.SQSEventResponse{}, err
-		}
-
-		finished := make(chan bool)
-
-		_, err = queue.AddConsumerFunc(queueName, func(delivery rmq.Delivery) {
-			// defer func() {
-			// 	finished <- true
-			// }()
-
-			req, err := buildRequestFromPayload(queueName, delivery.Payload())
-			if err != nil {
-				log.With(zap.Error(err)).Error("failed to unmarshal")
-				return
-			}
-
+		for _, item := range con.handlers {
 			w := httptest.NewRecorder()
-			handler.ServeHTTP(w, req.WithContext(ctx))
+			item.Handler().ServeHTTP(w, req.WithContext(ctx))
 
 			res := w.Result()
-			if res.StatusCode != http.StatusOK {
-				buf, _ := io.ReadAll(io.LimitReader(res.Body, 1024))
-				log.With("statusCode", res.StatusCode).With("statusMsg", string(buf)).Info("Redis Queue consumer error")
+			if res.StatusCode >= http.StatusOK || res.StatusCode < http.StatusBadRequest {
+				// ignore
+			} else {
+				buf, _ := io.ReadAll(io.LimitReader(res.Body, 256))
+				log.With("statusCode", res.StatusCode).With("statusMsg", string(buf)).Info("SQS Message error")
 			}
-
-			if err := delivery.Ack(); err != nil {
-				log.With(zap.Error(err)).Error("failed to Ack")
-				return
-			}
-		})
-
-		if err != nil {
-			log.With(zap.Error(err)).Error("failed to add consumer")
-			return events.SQSEventResponse{}, err
 		}
 
-		// Wait for the finished event
-		<-finished
+		return nil
+	})
 
-		log.Info("all done")
+	go func(c *redisqueue.Consumer) {
+		for err := range c.Errors {
+			// handle errors accordingly
+			log.With(zap.Error(err)).Error("Unable to consume")
+		}
+	}(consumer)
 
-		return events.SQSEventResponse{}, nil
+	consumer.Run()
+
+	return nil
+}
+
+func (svc *client) TopicConsumer(ctx context.Context, topic string, handlers []manager.MsgHandler) manager.HandlerStart {
+	consumer := topicConsumer{
+		client:   svc,
+		Topic:    topic,
+		handlers: handlers,
 	}
+
+	return &consumer
+}
+
+func (svc *client) QueueConsumer(ctx context.Context, queue string, handlers []manager.MsgHandler) manager.HandlerStart {
+	consumer := queueConsumer{
+		client:   svc,
+		Queue:    queue,
+		handlers: handlers,
+	}
+
+	return &consumer
+}
+
+func (con *queueConsumer) Start(ctx context.Context) error {
+	// func (svc *client) QueueConsumer(ctx context.Context, queueName string, handler http.Handler) awsutil.TwirpHttpSqsHandler {
+	log := logger.FromContext(ctx).With(zap.String("queueName", con.Queue))
+
+	queue, err := con.client.openRedisQueue(con.Queue)
+
+	if err != nil {
+		log.With(zap.Error(err)).Error("unable to open queue")
+		return err
+	}
+
+	if err = queue.StartConsuming(10, time.Second); err != nil {
+		log.With(zap.Error(err)).Error("queue.StartConsuming failed")
+		return err
+	}
+
+	finished := make(chan bool)
+
+	_, err = queue.AddConsumerFunc(con.Queue, func(delivery rmq.Delivery) {
+		// defer func() {
+		// 	finished <- true
+		// }()
+
+		req, err := buildRequestFromPayload(con.Queue, delivery.Payload())
+		if err != nil {
+			log.With(zap.Error(err)).Error("failed to unmarshal")
+			return
+		}
+
+		oneSuccess := false
+		for _, item := range con.handlers {
+			w := httptest.NewRecorder()
+			item.Handler().ServeHTTP(w, req.WithContext(ctx))
+
+			res := w.Result()
+			if res.StatusCode >= http.StatusOK || res.StatusCode < http.StatusBadRequest {
+				oneSuccess = true
+			} else {
+				buf, _ := io.ReadAll(io.LimitReader(res.Body, 256))
+				log.With("statusCode", res.StatusCode).With("statusMsg", string(buf)).Info("SQS Message error")
+			}
+		}
+
+		if oneSuccess {
+			if err := delivery.Ack(); err != nil {
+				log.With(zap.Error(err)).Error("failed to Ack")
+			}
+		} else {
+			if err := delivery.Reject(); err != nil {
+				log.With(zap.Error(err)).Error("failed to Reject")
+			}
+		}
+	})
+
+	if err != nil {
+		log.With(zap.Error(err)).Error("failed to add consumer")
+		return err
+	}
+
+	// Wait for the finished event
+	<-finished
+
+	log.Info("all done")
+
+	return nil
 }

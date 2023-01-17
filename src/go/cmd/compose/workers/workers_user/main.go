@@ -21,7 +21,6 @@ func main() {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
-	// var builder workers.SqsConsumerBuilder
 	nats := natsutil.NewNatsClient(config.NatsAddr)
 
 	opts := []workers_user.Option{

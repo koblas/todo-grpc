@@ -26,10 +26,8 @@ func main() {
 		log.Fatal("redis address is missing")
 	}
 
-	producer := corepb.NewFileEventbusProtobufClient(
-		"",
-		natsutil.NewNatsClient(config.NatsAddr),
-	)
+	nats := natsutil.NewNatsClient(config.NatsAddr)
+	producer := corepb.NewFileEventbusProtobufClient("", nats)
 
 	opts := []workers_file.Option{
 		workers_file.WithProducer(producer),
@@ -49,18 +47,7 @@ func main() {
 
 	handlers := workers_file.BuildHandlers(config, opts...)
 
-	nats := natsutil.NewNatsClient(config.NatsAddr)
-
 	mgr.Start(nats.TopicConsumer(mgr.Context(),
 		natsutil.TwirpPathToNatsTopic(corepb.FileEventbusPathPrefix),
 		handlers))
 }
-
-// https://dusted.codes/using-go-generics-to-pass-struct-slices-for-interface-slices
-// func CastToTopicHandler[T natsutil.TopicHandler](handlers []T) []natsutil.TopicHandler {
-// 	result := []natsutil.TopicHandler{}
-// 	for _, h := range handlers {
-// 		result = append(result, h)
-// 	}
-// 	return result
-// }

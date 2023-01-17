@@ -21,20 +21,13 @@ func main() {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
-	producer := corepb.NewBroadcastEventbusProtobufClient(
-		"",
-		natsutil.NewNatsClient(config.NatsAddr),
-	)
+	nats := natsutil.NewNatsClient(config.NatsAddr)
+	producer := corepb.NewBroadcastEventbusProtobufClient("", nats)
 
 	s := todo.NewTodoChangeServer(
 		todo.WithProducer(producer),
 	)
-	// sc := corepb.NewTodoEventbusServer(s, twirp.WithServerPathPrefix(""))
-	// mux := http.NewServeMux()
-	// mux.Handle(corepb.TodoEventbusPathPrefix, corepb.NewTodoEventbusServer(s))
 
-	nats := natsutil.NewNatsClient(config.NatsAddr)
-	// mgr.StartConsumer(nats.TopicConsumer(mgr.Context(), strings.Trim(sc.PathPrefix(), "/")+".*", "websocket.todo", mux))
 	mgr.Start(nats.TopicConsumer(
 		mgr.Context(),
 		natsutil.TwirpPathToNatsTopic(corepb.TodoEventbusPathPrefix),
