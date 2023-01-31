@@ -18,19 +18,19 @@ import (
 	"go.uber.org/zap"
 )
 
-type client struct {
-	conn *nats.Conn
+type Client struct {
+	Conn *nats.Conn
 	url  string
 }
 
-func NewNatsClient(addr string) *client {
-	return &client{
+func NewNatsClient(addr string) *Client {
+	return &Client{
 		url: "nats://" + addr,
 	}
 }
 
-func (svc *client) connect(ctx context.Context) error {
-	if svc.conn != nil {
+func (svc *Client) Connect(ctx context.Context) error {
+	if svc.Conn != nil {
 		return nil
 	}
 
@@ -61,14 +61,14 @@ func (svc *client) connect(ctx context.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "unable to connect to nats")
 	}
-	svc.conn = conn
+	svc.Conn = conn
 
 	return nil
 }
 
-func (svc *client) Do(req *http.Request) (*http.Response, error) {
+func (svc *Client) Do(req *http.Request) (*http.Response, error) {
 	ctx := req.Context()
-	if err := svc.connect(ctx); err != nil {
+	if err := svc.Connect(ctx); err != nil {
 		return nil, err
 	}
 
@@ -92,7 +92,7 @@ func (svc *client) Do(req *http.Request) (*http.Response, error) {
 		Header:  nats.Header(req.Header),
 	}
 
-	if err := svc.conn.PublishMsg(&msg); err != nil {
+	if err := svc.Conn.PublishMsg(&msg); err != nil {
 		return nil, errors.Wrap(err, "unable to send on nats")
 	}
 
@@ -176,16 +176,16 @@ func (svc *Consumer) Start(ctx context.Context) error {
 	return nil
 }
 
-func (svc *client) TopicConsumer(ctx context.Context, topic string, handlers []manager.MsgHandler) manager.HandlerStart {
+func (svc *Client) TopicConsumer(ctx context.Context, topic string, handlers []manager.MsgHandler) manager.HandlerStart {
 	log := logger.FromContext(ctx)
 
 	log.With(zap.String("topic", topic)).Info("Consuming on topic")
-	if err := svc.connect(ctx); err != nil {
+	if err := svc.Connect(ctx); err != nil {
 		log.With(zap.Error(err)).Fatal("unable to connect")
 	}
 
 	consumer := Consumer{
-		conn:     svc.conn,
+		conn:     svc.Conn,
 		url:      svc.url,
 		Topic:    topic,
 		handlers: handlers,

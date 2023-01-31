@@ -11,9 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	"github.com/google/uuid"
 	"github.com/jaswdr/faker"
 	"github.com/koblas/grpc-todo/services/core/user"
+	"github.com/renstrom/shortuuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -39,7 +39,7 @@ func (suite *DynamoBasicSuite) SetupSuite() {
 	require.NoError(t, err, "Unable to load AWS")
 
 	suite.client = dynamodb.NewFromConfig(cfg)
-	suite.tableName = "test-user" + uuid.NewString()
+	suite.tableName = "test-user" + shortuuid.New()
 
 	_, err = suite.client.CreateTable(context.TODO(), &dynamodb.CreateTableInput{
 		BillingMode: types.BillingModePayPerRequest,
@@ -100,7 +100,7 @@ func (suite *DynamoBasicSuite) TearDownSuite() {
 
 func (suite *DynamoBasicSuite) createUser(t *testing.T) user.User {
 	user := user.User{
-		ID:    uuid.NewString(),
+		ID:    shortuuid.New(),
 		Email: faker.New().Internet().Email(),
 	}
 
@@ -147,7 +147,7 @@ func (suite *DynamoBasicSuite) TestUpdateUser() {
 	t := suite.T()
 	u0 := suite.createUser(t)
 
-	u0.Status = user.UserStatus(uuid.NewString())
+	u0.Status = user.UserStatus(shortuuid.New())
 
 	err := suite.store.UpdateUser(context.TODO(), &u0)
 	require.NoError(t, err, "update user 1")

@@ -106,6 +106,15 @@ func (svc *UserServer) UserChange(ctx context.Context, event *corepb.UserChangeE
 	return &corepb.EventbusEmpty{}, nil
 }
 
-func (svc *UserServer) UserSecurity(ctx context.Context, event *corepb.UserSecurityEvent) (*corepb.EventbusEmpty, error) {
+func (*UserServer) SecurityPasswordChange(context.Context, *corepb.UserSecurityEvent) (*corepb.EventbusEmpty, error) {
+	return &corepb.EventbusEmpty{}, nil
+}
+func (*UserServer) SecurityForgotRequest(context.Context, *corepb.UserSecurityEvent) (*corepb.EventbusEmpty, error) {
+	return &corepb.EventbusEmpty{}, nil
+}
+func (*UserServer) SecurityRegisterToken(context.Context, *corepb.UserSecurityEvent) (*corepb.EventbusEmpty, error) {
+	return &corepb.EventbusEmpty{}, nil
+}
+func (*UserServer) SecurityInviteToken(context.Context, *corepb.UserSecurityEvent) (*corepb.EventbusEmpty, error) {
 	return &corepb.EventbusEmpty{}, nil
 }

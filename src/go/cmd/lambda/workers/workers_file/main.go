@@ -8,6 +8,7 @@ import (
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
+	"github.com/koblas/grpc-todo/pkg/filestore"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/services/workers/workers_file"
 	"go.uber.org/zap"
@@ -27,12 +28,16 @@ func main() {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
+	client := awsutil.NewTwirpCallLambda()
 	opts := []workers_file.Option{
 		workers_file.WithOnly(mode),
 		workers_file.WithProducer(corepb.NewFileEventbusJSONClient(
 			config.EventArn,
-			awsutil.NewTwirpCallLambda(),
+			client,
 		)),
+		// workers_file.WithFileService(corepb.NewFileServiceJSONClient("lambda://core-file", client)),
+		workers_file.WithFileService(filestore.NewAwsProvider()),
+		workers_file.WithUserService(corepb.NewUserServiceJSONClient("lambda://core-user", client)),
 	}
 
 	// mgr.StartConsumerMsg(awsutil.HandleSqsLambda(workers_file.GetHandler(config, opts...)))

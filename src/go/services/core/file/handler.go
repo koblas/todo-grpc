@@ -3,10 +3,10 @@ package file
 import (
 	"strings"
 
-	"github.com/google/uuid"
 	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/key_manager"
 	"github.com/koblas/grpc-todo/pkg/logger"
+	"github.com/oklog/ulid/v2"
 	"github.com/twitchtv/twirp"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
@@ -54,7 +54,7 @@ func (s *FileServer) UploadUrl(ctx context.Context, params *corepb.FileUploadUrl
 	log := logger.FromContext(ctx).With(zap.String("userId", params.UserId))
 	log.Info("UploadUrl")
 
-	result, err := s.files.CreateUploadUrl(ctx, params.UserId, params.Type)
+	result, err := s.files.CreateUploadUrl(logger.ToContext(ctx, log), params.UserId, params.Type)
 	if err != nil {
 		log.With(zap.Error(err)).Error("UploadUrl failed")
 		return nil, twirp.InternalErrorWith(err)
@@ -123,7 +123,7 @@ func (s *FileServer) Put(ctx context.Context, params *corepb.FilePutParams) (*co
 	path := strings.Join([]string{
 		params.UserId,
 		params.FileType,
-		uuid.NewString() + params.Suffix,
+		ulid.Make().String() + params.Suffix,
 	}, "/")
 
 	url, err := s.files.StoreFile(ctx, path, params.Data)

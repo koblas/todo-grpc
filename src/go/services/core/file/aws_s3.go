@@ -11,6 +11,8 @@ import (
 	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/koblas/grpc-todo/pkg/logger"
+	"go.uber.org/zap"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/google/uuid"
@@ -20,8 +22,9 @@ import (
 var ErrorNotImplemented = errors.New("not implemented")
 
 type s3Store struct {
-	bucket        string
-	prefix        string
+	bucket        string // S3 Bucket name
+	domain        string // Fully qualified domain name
+	prefix        string // path prefix
 	client        *s3.Client
 	presignClient *s3.PresignClient
 	expiresIn     time.Duration
@@ -29,20 +32,33 @@ type s3Store struct {
 
 var _ FileStore = (*s3Store)(nil)
 
-func NewFileS3Store(bucket string, prefix string) FileStore {
+func NewFileS3Store(bucket string, domain string, prefix string) FileStore {
 	cfg, err := config.LoadDefaultConfig(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	clientOptions := []func(o *s3.Options){}
+
+	// if domain != "" {
+	// 	resolver := s3.EndpointResolverFromURL("https://" + domain)
+	// 	clientOptions = append(clientOptions, func(o *s3.Options) {
+	// 		o.EndpointResolver = resolver
+	// 	})
+	// }
+
 	client := s3.NewFromConfig(cfg)
-	presignClient := s3.NewPresignClient(client)
+	presignClient := s3.NewPresignClient(client, func(opt *s3.PresignOptions) {
+		opt.ClientOptions = clientOptions
+	})
 
 	return &s3Store{
 		bucket:        bucket,
 		client:        client,
-		prefix:        strings.TrimPrefix(prefix, "/"),
+		prefix:        strings.Trim(prefix, "/"),
+		domain:        domain,
 		presignClient: presignClient,
-		expiresIn:     time.Duration(60 * int64(time.Second)),
+		expiresIn:     60 * time.Second,
 	}
 }
 
@@ -53,17 +69,20 @@ func (store *s3Store) CreateUploadUrl(ctx context.Context, userId, fileType stri
 		fileType,
 		uuid.NewString(),
 	}
-	objectKey := strings.Join(parts, "/")
-	request, err := store.presignClient.PresignPutObject(context.TODO(), &s3.PutObjectInput{
+	objectKey := strings.TrimPrefix(strings.Join(parts, "/"), "/")
+
+	request, err := store.presignClient.PresignPutObject(ctx, &s3.PutObjectInput{
 		Bucket: aws.String(store.bucket),
 		Key:    aws.String(objectKey),
-	}, func(opts *s3.PresignOptions) {
-		opts.Expires = store.expiresIn
-	})
+	}, s3.WithPresignExpires(store.expiresIn))
 	if err != nil {
 		return "", errors.Wrapf(err, "Couldn't get a presigned request to put %v:%v. Here's why: %v\n",
 			store.bucket, objectKey)
 	}
+	logger.FromContext(ctx).With(
+		zap.String("bucket", store.bucket),
+		zap.String("objectKey", objectKey),
+	).Info("generated S3 path")
 
 	return request.URL, nil
 }

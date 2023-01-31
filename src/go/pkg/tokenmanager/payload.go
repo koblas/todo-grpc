@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/google/uuid"
+	"github.com/renstrom/shortuuid"
 )
 
 // Different types of error returned by the VerifyToken function
@@ -15,7 +15,7 @@ var (
 
 // Payload contains the payload data of the token
 type Payload struct {
-	ID        uuid.UUID `json:"id"`
+	ID        string    `json:"id"`
 	UserId    string    `json:"user_id"`
 	IssuedAt  time.Time `json:"issued_at"`
 	ExpiredAt time.Time `json:"expired_at"`
@@ -23,10 +23,7 @@ type Payload struct {
 
 // NewPayload creates a new token payload with a specific username and duration
 func NewPayload(userId string, duration time.Duration) (*Payload, error) {
-	tokenID, err := uuid.NewRandom()
-	if err != nil {
-		return nil, err
-	}
+	tokenID := shortuuid.New()
 
 	payload := &Payload{
 		ID:        tokenID,

@@ -190,13 +190,16 @@ func (s *UserServer) Create(ctx context.Context, params *corepb.UserCreateParam)
 
 			if params.Status == corepb.UserStatus_REGISTERED {
 				payload.Action = corepb.UserSecurity_USER_REGISTER_TOKEN
+				if _, err := s.pubsub.SecurityRegisterToken(ctx, &payload); err != nil {
+					log.With(zap.Error(err)).Info("user security publish failed")
+				}
 			} else if params.Status == corepb.UserStatus_INVITED {
 				payload.Action = corepb.UserSecurity_USER_INVITE_TOKEN
+				if _, err := s.pubsub.SecurityInviteToken(ctx, &payload); err != nil {
+					log.With(zap.Error(err)).Info("user security publish failed")
+				}
 			}
 
-			if _, err := s.pubsub.UserSecurity(ctx, &payload); err != nil {
-				log.With(zap.Error(err)).Info("user security publish failed")
-			}
 		}
 	}
 
@@ -297,7 +300,7 @@ func (s *UserServer) Update(ctx context.Context, params *corepb.UserUpdateParam)
 	}
 
 	if params.PasswordNew != nil {
-		if _, err := s.pubsub.UserSecurity(ctx, &corepb.UserSecurityEvent{
+		if _, err := s.pubsub.SecurityPasswordChange(ctx, &corepb.UserSecurityEvent{
 			Action: corepb.UserSecurity_USER_PASSWORD_CHANGE,
 			User:   s.toProtoUser(&updated),
 		}); err != nil {
@@ -534,7 +537,7 @@ func (s *UserServer) ForgotUpdate(ctx context.Context, params *corepb.Verificati
 		log.With(zap.Error(err)).Info("user entity publish failed")
 	}
 	if params.Password != "" {
-		if _, err := s.pubsub.UserSecurity(ctx, &corepb.UserSecurityEvent{
+		if _, err := s.pubsub.SecurityPasswordChange(ctx, &corepb.UserSecurityEvent{
 			Action: corepb.UserSecurity_USER_PASSWORD_CHANGE,
 			User:   s.toProtoUser(user),
 		}); err != nil {
@@ -581,7 +584,7 @@ func (s *UserServer) ForgotSend(ctx context.Context, params *corepb.UserFindPara
 	// }
 	if token, err := protoutil.SecureValueEncode(s.kms, secret); err != nil {
 		log.With(zap.Error(err)).Info("failed to encrypt token")
-	} else if _, err := s.pubsub.UserSecurity(ctx, &corepb.UserSecurityEvent{
+	} else if _, err := s.pubsub.SecurityForgotRequest(ctx, &corepb.UserSecurityEvent{
 		Action: corepb.UserSecurity_USER_FORGOT_REQUEST,
 		User:   s.toProtoUser(user),
 		Token:  token,

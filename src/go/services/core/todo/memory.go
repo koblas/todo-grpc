@@ -3,7 +3,7 @@ package todo
 import (
 	"context"
 
-	"github.com/google/uuid"
+	"github.com/oklog/ulid/v2"
 )
 
 type memoryTodo struct {
@@ -56,7 +56,7 @@ func (store *memoryTodo) Create(ctx context.Context, todo Todo) (*Todo, error) {
 		todos = []Todo{}
 	}
 
-	todo.ID = uuid.NewString()
+	todo.ID = ulid.Make().String()
 	store.todos[todo.UserId] = append(todos, todo)
 
 	return &todo, nil

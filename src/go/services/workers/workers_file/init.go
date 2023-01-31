@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/koblas/grpc-todo/gen/corepb"
+	"github.com/koblas/grpc-todo/pkg/filestore"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/manager"
 )
@@ -26,7 +27,8 @@ type WorkerConfig struct {
 	config      Config
 	onlyHandler string
 	pubsub      corepb.FileEventbus
-	fileService corepb.FileService
+	// fileService corepb.FileService
+	fileService filestore.Filestore
 	userService corepb.UserService
 }
 
@@ -44,7 +46,7 @@ func WithProducer(bus corepb.FileEventbus) Option {
 	}
 }
 
-func WithFileService(svc corepb.FileService) Option {
+func WithFileService(svc filestore.Filestore) Option {
 	return func(cfg *WorkerConfig) {
 		cfg.fileService = svc
 	}

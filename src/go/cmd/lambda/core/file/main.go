@@ -26,7 +26,7 @@ func main() {
 
 	opts := []file.Option{
 		file.WithProducer(producer),
-		file.WithFileStore(file.NewFileS3Store(config.S3Bucket, config.S3Prefix)),
+		file.WithFileStore(file.NewFileS3Store(config.S3Bucket, config.S3DomainAlias, config.S3Prefix)),
 	}
 
 	api := corepb.NewFileServiceServer(file.NewFileServer(opts...))

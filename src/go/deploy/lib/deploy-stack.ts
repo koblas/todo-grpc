@@ -1,4 +1,3 @@
-import * as path from "path";
 import * as cdk from "aws-cdk-lib";
 import {
   HttpApi,
@@ -12,13 +11,11 @@ import {
   WebSocketStage,
 } from "@aws-cdk/aws-apigatewayv2-alpha";
 import { HttpLambdaIntegration, WebSocketLambdaIntegration } from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
-import { LambdaToDynamoDB } from "@aws-solutions-constructs/aws-lambda-dynamodb";
-import { LambdaToSns } from "@aws-solutions-constructs/aws-lambda-sns";
 import { Construct } from "constructs";
-import { SqsToLambda } from "@aws-solutions-constructs/aws-sqs-lambda";
-import { SubscriptionFilter } from "aws-cdk-lib/aws-sns";
-import { goFunction } from "./utils";
-// import * as sqs from 'aws-cdk-lib/aws-sqs';
+import { goFunction, wireLambda, QueueLambda } from "./utils";
+import { WebsocketBroadcast, WebsocketTodo, WebsocketUser } from "./websocket";
+import { CreateWorkersFile, CreateWorkersUser } from "./workers";
+import { CertificateStack } from "./certificate";
 
 export class DeployStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -104,14 +101,19 @@ export class DeployStack extends cdk.Stack {
 
     new CoreUser(this, "core-user", { eventbus });
     new CoreTodo(this, "core-todo", { eventbus });
+    const coreFile = new FileStorage(this, "core-file", { eventbus, hostedZone, hostname: "files" });
     new CoreOauthUser(this, "core-oauth-user", { eventbus });
     // new CoreSendEmail(this, "core-send-email", { eventbus });
-    new PublicUser(this, "public-user", { eventbus, apigw: apigw.apigw });
     new PublicAuth(this, "public-auth", { eventbus, apigw: apigw.apigw });
+    new PublicFile(this, "public-file", { eventbus, apigw: apigw.apigw, publicBucket: coreFile.uploadBucket });
     new PublicTodo(this, "public-todo", { eventbus, apigw: apigw.apigw });
-    new CreateWorkers(this, "workers", { eventbus });
+    new PublicUser(this, "public-user", { eventbus, apigw: apigw.apigw });
+    new CreateWorkersUser(this, "workers_user", { eventbus });
+    new CreateWorkersFile(this, "workers_file", { eventbus, coreFile });
     new CoreSendEmailQueue(this, "send-email-queue", { eventbus });
-    new WebsocketTodo(this, "websocket-todo", { eventbus, wsstage: apiws.wsstage, wsapi: apiws.wsapi });
+    new WebsocketTodo(this, "websocket-todo", { eventbus });
+    new WebsocketUser(this, "websocket-user", { eventbus });
+    new WebsocketBroadcast(this, "websocket-broadcast", { eventbus, wsstage: apiws.wsstage, wsapi: apiws.wsapi });
 
     // await sqsWorkers(corestack);
   }
@@ -127,7 +129,7 @@ export class DeployStack extends cdk.Stack {
       hostedZone,
       domainName: initialDns,
       subjectAlternativeNames: [baseDns, ...rest],
-      region: this.region,
+      region: this.region, // must be in US-East-1 for Cloudfront
       validation: cdk.aws_certificatemanager.CertificateValidation.fromDns(hostedZone),
     });
 
@@ -312,6 +314,127 @@ export class CoreTodo extends Construct {
   }
 }
 
+export class FileStorage extends Construct {
+  // Where uploaded files are staged
+  uploadBucket: cdk.aws_s3.Bucket;
+  // Non-public files
+  privateBucket: cdk.aws_s3.Bucket;
+  // Where public (e.g. web accessible) files are staged
+  // this is fronted by CloudFront
+  publicBucket: cdk.aws_s3.Bucket;
+
+  constructor(
+    scope: Construct,
+    id: string,
+    props: {
+      eventbus: cdk.aws_sns.Topic;
+      hostname: string;
+      hostedZone: cdk.aws_route53.IHostedZone;
+    },
+  ) {
+    super(scope, id);
+
+    this.publicBucket = new cdk.aws_s3.Bucket(this, "public_bucket", {
+      publicReadAccess: false,
+      blockPublicAccess: cdk.aws_s3.BlockPublicAccess.BLOCK_ALL,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      accessControl: cdk.aws_s3.BucketAccessControl.PRIVATE,
+      objectOwnership: cdk.aws_s3.ObjectOwnership.BUCKET_OWNER_ENFORCED,
+      encryption: cdk.aws_s3.BucketEncryption.S3_MANAGED,
+    });
+
+    this.privateBucket = new cdk.aws_s3.Bucket(this, "private_bucket", {
+      publicReadAccess: false,
+      blockPublicAccess: cdk.aws_s3.BlockPublicAccess.BLOCK_ALL,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      accessControl: cdk.aws_s3.BucketAccessControl.PRIVATE,
+      objectOwnership: cdk.aws_s3.ObjectOwnership.BUCKET_OWNER_ENFORCED,
+      encryption: cdk.aws_s3.BucketEncryption.S3_MANAGED,
+    });
+
+    this.uploadBucket = new cdk.aws_s3.Bucket(this, "upload_bucket", {
+      publicReadAccess: false,
+      blockPublicAccess: cdk.aws_s3.BlockPublicAccess.BLOCK_ALL,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      accessControl: cdk.aws_s3.BucketAccessControl.PRIVATE,
+      objectOwnership: cdk.aws_s3.ObjectOwnership.BUCKET_OWNER_ENFORCED,
+      encryption: cdk.aws_s3.BucketEncryption.S3_MANAGED,
+      lifecycleRules: [
+        {
+          expiration: cdk.Duration.days(1),
+        },
+      ],
+      cors: [
+        {
+          allowedMethods: [cdk.aws_s3.HttpMethods.GET, cdk.aws_s3.HttpMethods.PUT],
+          allowedOrigins: ["*"],
+          allowedHeaders: ["*"],
+        },
+      ],
+    });
+
+    const domainName = `${props.hostname}.${props.hostedZone.zoneName}`;
+
+    const certificate = new CertificateStack(scope, "certificate", {
+      hostedZone: props.hostedZone,
+      domainName: `files.${props.hostedZone.zoneName}`,
+      region: "us-east-1",
+    });
+
+    const accessIdentity = new cdk.aws_cloudfront.OriginAccessIdentity(this, "OriginAccessIdentity", {
+      comment: `${this.uploadBucket.bucketName}-access-identity`,
+    });
+
+    const distribution = new cdk.aws_cloudfront.Distribution(this, "filesource", {
+      domainNames: [domainName],
+      certificate: certificate.certificate,
+      priceClass: cdk.aws_cloudfront.PriceClass.PRICE_CLASS_100,
+      defaultRootObject: "",
+
+      defaultBehavior: {
+        origin: new cdk.aws_cloudfront_origins.S3Origin(this.publicBucket, {
+          // originAccessIdentity: accessIdentity,
+        }),
+        // originRequestPolicy: cdk.aws_cloudfront.OriginRequestPolicy.CORS_S3_ORIGIN,
+        allowedMethods: cdk.aws_cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+        viewerProtocolPolicy: cdk.aws_cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        // responseHeadersPolicy: responseHeaderPolicy,
+        functionAssociations: [],
+
+        // responseHeadersPolicy: cdk.aws_cloudfront.ResponseHeadersPolicy.CORS_ALLOW_ALL_ORIGINS_AND_SECURITY_HEADERS,
+      },
+
+      // additionalBehaviors: additionalBehaviors,
+
+      // We need to redirect all unknown routes back to index.html for angular routing to work
+      errorResponses: [],
+
+      minimumProtocolVersion: cdk.aws_cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
+      sslSupportMethod: cdk.aws_cloudfront.SSLMethod.SNI,
+    });
+
+    new cdk.aws_route53.ARecord(this, "Alias", {
+      zone: props.hostedZone,
+      recordName: domainName,
+      target: cdk.aws_route53.RecordTarget.fromAlias(new cdk.aws_route53_targets.CloudFrontTarget(distribution)),
+    });
+
+    const { eventbus } = props;
+
+    // const lambda = goFunction(this, "core-file", ["core", "file"], {
+    //   environment: {
+    //     BUCKET: this.uploadBucket.bucketName,
+    //     BUCKET_DOMAIN: domainName,
+    //     BUCKET_ALIAS: `${props.hostname}.${props.hostedZone.zoneName}`,
+    //   },
+    // });
+
+    // wireLambda(this, lambda, { eventbus, parameters: ["/common/*"], s3buckets: [this.uploadBucket] });
+
+    new TriggerS3(this, "trigger-s3", { eventbus, bucket: this.uploadBucket });
+  }
+}
+
 export class CoreUser extends Construct {
   constructor(scope: Construct, id: string, props: { eventbus: cdk.aws_sns.Topic }) {
     super(scope, id);
@@ -384,7 +507,7 @@ export class PublicAuth extends Construct {
     const integration = new HttpLambdaIntegration("integration", lambda, {
       payloadFormatVersion: PayloadFormatVersion.VERSION_2_0,
       parameterMapping: new ParameterMapping().overwritePath(
-        MappingValue.custom("/twirp/api.auth.AuthenticationService/$request.path.proxy"),
+        MappingValue.custom("/twirp/apipb.auth.AuthenticationService/$request.path.proxy"),
       ),
     });
 
@@ -395,6 +518,42 @@ export class PublicAuth extends Construct {
     });
     apigw.addRoutes({
       path: "/api/v1/auth/{proxy+}",
+      methods: [HttpMethod.POST],
+      integration: integration,
+    });
+  }
+}
+
+export class PublicFile extends Construct {
+  constructor(
+    scope: Construct,
+    id: string,
+    { eventbus, apigw, publicBucket }: { eventbus: cdk.aws_sns.Topic; apigw: HttpApi; publicBucket: cdk.aws_s3.Bucket },
+  ) {
+    super(scope, id);
+
+    const lambda = goFunction(this, "publicapi-file", ["publicapi", "file"], {
+      environment: {
+        UPLOAD_BUCKET: publicBucket.bucketName,
+      },
+    });
+
+    wireLambda(this, lambda, { parameters: ["/common/*"], s3buckets: [publicBucket] });
+
+    const integration = new HttpLambdaIntegration("integration", lambda, {
+      payloadFormatVersion: PayloadFormatVersion.VERSION_2_0,
+      parameterMapping: new ParameterMapping().overwritePath(
+        MappingValue.custom("/twirp/apipb.file.FileService/$request.path.proxy"),
+      ),
+    });
+
+    apigw.addRoutes({
+      path: "/v1/file/{proxy+}",
+      methods: [HttpMethod.POST],
+      integration: integration,
+    });
+    apigw.addRoutes({
+      path: "/api/v1/file/{proxy+}",
       methods: [HttpMethod.POST],
       integration: integration,
     });
@@ -412,7 +571,7 @@ export class PublicUser extends Construct {
     const integration = new HttpLambdaIntegration("integration", lambda, {
       payloadFormatVersion: PayloadFormatVersion.VERSION_2_0,
       parameterMapping: new ParameterMapping().overwritePath(
-        MappingValue.custom("/twirp/api.user.UserService/$request.path.proxy"),
+        MappingValue.custom("/twirp/apipb.user.UserService/$request.path.proxy"),
       ),
     });
 
@@ -440,7 +599,7 @@ export class PublicTodo extends Construct {
     const integration = new HttpLambdaIntegration("integration", lambda, {
       payloadFormatVersion: PayloadFormatVersion.VERSION_2_0,
       parameterMapping: new ParameterMapping().overwritePath(
-        MappingValue.custom("/twirp/api.todo.TodoService/$request.path.proxy"),
+        MappingValue.custom("/twirp/apipb.todo.TodoService/$request.path.proxy"),
       ),
     });
 
@@ -457,278 +616,24 @@ export class PublicTodo extends Construct {
   }
 }
 
-//
-export class WebsocketTodo extends Construct {
-  constructor(
-    scope: Construct,
-    id: string,
-    { eventbus, wsstage, wsapi }: { eventbus: cdk.aws_sns.Topic; wsstage: WebSocketStage; wsapi: WebSocketApi },
-  ) {
-    super(scope, id);
-
-    const db = cdk.aws_dynamodb.Table.fromTableName(this, "conns", "ws-connection");
-
-    const lambda = goFunction(this, "websocket-todo", ["websocket", "todo"], {
-      environment: {
-        CONN_DB: db.tableName,
-        WS_ENDPOINT: wsstage.callbackUrl,
-      },
-    });
-
-    wsstage.grantManagementApiAccess(lambda);
-
-    const queue = new SqsToLambda(this, "sqs", {
-      existingLambdaObj: lambda,
-      deadLetterQueueProps: {
-        queueName: `${id}-dlq`,
-        retentionPeriod: cdk.Duration.days(7),
-      },
-      queueProps: {
-        queueName: `${id}`,
-        retentionPeriod: cdk.Duration.days(7),
-        visibilityTimeout: cdk.Duration.minutes(5),
-        // SNS cannot deliver to encrypted SQS queues
-        encryption: cdk.aws_sqs.QueueEncryption.UNENCRYPTED,
-      },
-    });
-
-    wireLambda(this, lambda, { parameters: ["/common/*"], dynamo: db });
-
-    eventbus.addSubscription(
-      new cdk.aws_sns_subscriptions.SqsSubscription(queue.sqsQueue, {
-        rawMessageDelivery: true,
-        filterPolicy: {
-          "twirp.path": SubscriptionFilter.stringFilter({
-            allowlist: ["/twirp/corepb.eventbus.TodoEventbus/TodoChange"],
-          }),
-        },
-      }),
-    );
-
-    //
-  }
-}
-
 ///
 //
 //
-export class CreateWorkers extends Construct {
-  constructor(scope: Construct, id: string, { eventbus }: { eventbus: cdk.aws_sns.Topic }) {
-    super(scope, id);
 
-    new QueueWorker(this, "password-changed", {
-      eventbus,
-      path: "workers_user",
-      env: { SQS_HANDLER: "userSecurity/password_changed" },
-      filterPolicy: {
-        stream: SubscriptionFilter.stringFilter({
-          allowlist: ["event:user_security"],
-        }),
-        action: SubscriptionFilter.stringFilter({
-          allowlist: ["USER_PASSWORD_CHANGE"],
-        }),
-      },
-    });
-
-    new QueueWorker(this, "register-token", {
-      eventbus,
-      path: "workers_user",
-      env: { SQS_HANDLER: "userSecurity/register" },
-      filterPolicy: {
-        stream: SubscriptionFilter.stringFilter({
-          allowlist: ["event:user_security"],
-        }),
-        action: SubscriptionFilter.stringFilter({
-          allowlist: ["USER_REGISTER_TOKEN"],
-        }),
-      },
-    });
-
-    new QueueWorker(this, "forgot-request", {
-      eventbus,
-      path: "workers_user",
-      env: { SQS_HANDLER: "userSecurity/forgot" },
-      filterPolicy: {
-        stream: SubscriptionFilter.stringFilter({
-          allowlist: ["event:user_security"],
-        }),
-        action: SubscriptionFilter.stringFilter({
-          allowlist: ["USER_FORGOT_REQUEST"],
-        }),
-      },
-    });
-
-    new QueueWorker(this, "user-invite", {
-      eventbus,
-      path: "workers_user",
-      env: { SQS_HANDLER: "userSecurity/invite" },
-      filterPolicy: {
-        stream: SubscriptionFilter.stringFilter({
-          allowlist: ["event:user_security"],
-        }),
-        action: SubscriptionFilter.stringFilter({
-          allowlist: ["USER_INVITE_TOKEN"],
-        }),
-      },
-    });
-  }
-}
-
-export class QueueWorker extends Construct {
+export class TriggerS3 extends Construct {
   constructor(
     scope: Construct,
     id: string,
-    {
-      path,
-      eventbus,
-      env,
-      filterPolicy,
-    }: {
-      path: string;
-      eventbus: cdk.aws_sns.Topic;
-      env: Record<string, string>;
-      filterPolicy: NonNullable<cdk.aws_sns_subscriptions.SubscriptionProps["filterPolicy"]>;
-    },
+    { eventbus, bucket }: { eventbus: cdk.aws_sns.Topic; bucket: cdk.aws_s3.Bucket },
   ) {
     super(scope, id);
 
-    const lambda = goFunction(this, `core-workers-${id}`, ["core", path], {
-      environment: env,
-    });
+    const lambda = goFunction(this, "trigger-s3", ["trigger", "s3"]);
 
-    const worker = new QueueLambda(this, id, {
-      eventbus,
-      queueProps: {
-        // SNS cannot deliver to encrypted SQS queues
-        encryption: cdk.aws_sqs.QueueEncryption.UNENCRYPTED,
-      },
-      existingLambdaObj: lambda,
-    });
+    wireLambda(this, lambda, { eventbus, parameters: ["/common/*"] });
 
-    eventbus.addSubscription(
-      new cdk.aws_sns_subscriptions.SqsSubscription(worker.queue, {
-        rawMessageDelivery: true,
-        filterPolicy,
-      }),
-    );
-  }
-}
-
-export class QueueLambda extends Construct {
-  queue: cdk.aws_sqs.Queue;
-
-  constructor(
-    scope: Construct,
-    id: string,
-    {
-      eventbus,
-      lambdaFunctionProps,
-      existingLambdaObj,
-      queueProps,
-    }: {
-      eventbus: cdk.aws_sns.Topic;
-      queueProps?: cdk.aws_sqs.QueueProps;
-      lambdaFunctionProps?: cdk.aws_lambda.FunctionProps;
-      existingLambdaObj?: cdk.aws_lambda.Function;
-    },
-  ) {
-    super(scope, id);
-
-    // Connect the queue
-    const inst = new SqsToLambda(this, "sqs", {
-      ...(lambdaFunctionProps
-        ? {
-            lambdaFunctionProps: {
-              functionName: `worker-${id}`,
-              logRetention: cdk.Duration.days(3).toDays(),
-              ...lambdaFunctionProps,
-            },
-          }
-        : {}),
-      ...(existingLambdaObj ? { existingLambdaObj } : {}),
-      deadLetterQueueProps: {
-        queueName: `${id}-dlq`,
-        retentionPeriod: cdk.Duration.days(7),
-      },
-      queueProps: {
-        queueName: `${id}`,
-        retentionPeriod: cdk.Duration.days(7),
-        visibilityTimeout: cdk.Duration.minutes(5),
-        ...queueProps,
-      },
-    });
-
-    this.queue = inst.sqsQueue;
-
-    // Make sure we can write to SNS
-    wireLambda(this, inst.lambdaFunction, { eventbus, parameters: ["/common/*"] });
-  }
-}
-
-//
-//
-//
-function wireLambda(
-  scope: Construct,
-  lambda: cdk.aws_lambda.Function,
-  {
-    eventbus,
-    parameters,
-    dynamo,
-  }: {
-    dynamo?: cdk.aws_dynamodb.ITable;
-    eventbus?: cdk.aws_sns.Topic;
-    parameters?: string[];
-  },
-) {
-  if (parameters?.length) {
-    cdk.aws_iam.Grant.addToPrincipal({
-      grantee: lambda,
-      actions: ["ssm:DescribeParameters", "ssm:GetParameters", "ssm:GetParameter", "ssm:GetParameterHistory"],
-      resourceArns: parameters.map((p) =>
-        cdk.Stack.of(scope).formatArn({
-          service: "ssm",
-          resource: `parameter${p}`,
-        }),
-      ),
-    });
-  }
-
-  // Invoke and SendMessage are good downstream calls
-  cdk.aws_iam.Grant.addToPrincipal({
-    grantee: lambda,
-    actions: ["lambda:InvokeFunction"],
-    resourceArns: [
-      cdk.Stack.of(scope).formatArn({
-        service: "lambda",
-        resource: "function:*",
-      }),
-    ],
-  });
-
-  cdk.aws_iam.Grant.addToPrincipal({
-    grantee: lambda,
-    actions: ["sqs:GetQueueUrl", "sqs:SendMessage"],
-    resourceArns: [
-      cdk.Stack.of(scope).formatArn({
-        service: "sqs",
-        resource: "*",
-      }),
-    ],
-  });
-
-  if (eventbus) {
-    new LambdaToSns(scope, "sns-perms", {
-      existingLambdaObj: lambda,
-      existingTopicObj: eventbus,
-    });
-  }
-
-  if (dynamo) {
-    new LambdaToDynamoDB(scope, "dynamo-perms", {
-      existingTableObj: dynamo as cdk.aws_dynamodb.Table,
-      tablePermissions: "ReadWrite",
-      existingLambdaObj: lambda,
-    });
+    const notificaiton = new cdk.aws_s3_notifications.LambdaDestination(lambda);
+    notificaiton.bind(scope, bucket);
+    bucket.addEventNotification(cdk.aws_s3.EventType.OBJECT_CREATED, notificaiton);
   }
 }

@@ -9,7 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
+	"github.com/oklog/ulid/v2"
+	"github.com/renstrom/shortuuid"
 )
 
 var ErrorLookupNotFound = errors.New("not found")
@@ -35,7 +36,7 @@ var _ FileStore = (*memoryStore)(nil)
 
 func NewFileMemoryStore(prefix string) FileStore {
 	return &memoryStore{
-		secret:   uuid.NewString(),
+		secret:   shortuuid.New(),
 		prefix:   prefix,
 		fileInfo: map[string]*FileInfo{},
 		files:    FileByteStore{},
@@ -50,9 +51,9 @@ func (store *memoryStore) computeSig(path string) string {
 }
 
 func (store *memoryStore) CreateUploadUrl(ctx context.Context, userId, fileType string) (string, error) {
-	path := store.prefix + uuid.NewString()
+	path := store.prefix + ulid.Make().String()
 	entry := FileInfo{
-		Id:          uuid.NewString(),
+		Id:          shortuuid.New(),
 		UserId:      userId,
 		FileType:    fileType,
 		Url:         path,

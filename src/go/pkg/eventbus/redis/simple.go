@@ -6,9 +6,9 @@ import (
 	"errors"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/koblas/grpc-todo/pkg/eventbus"
 	"github.com/koblas/grpc-todo/pkg/logger"
+	"github.com/renstrom/shortuuid"
 	"github.com/robinjoseph08/redisqueue"
 	"go.uber.org/zap"
 )
@@ -48,7 +48,7 @@ func NewProducer(redisAddr, topic string) *simpleProducer {
 func (svc *simpleProducer) Write(ctx context.Context, msg *eventbus.SimpleMessage) error {
 	id := msg.ID
 	if id == "" {
-		id = uuid.NewString()
+		id = shortuuid.New()
 	}
 
 	attr, err := json.Marshal(msg.Attributes)

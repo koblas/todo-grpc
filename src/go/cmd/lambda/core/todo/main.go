@@ -19,6 +19,7 @@ func main() {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
+	log.With(zap.String("eventArn", config.EventArn)).Info("Constructing producer")
 	// eventbus := corepb.NewTodoEventbusProtobufClient(config.EventArn, awsutil.NewTwirpCallLambda())
 	producer := corepb.NewTodoEventbusJSONClient(
 		config.EventArn,

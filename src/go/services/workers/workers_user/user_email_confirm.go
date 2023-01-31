@@ -17,6 +17,7 @@ func init() {
 }
 
 type userEmailConfirm struct {
+	EmptyServer
 	WorkerConfig
 }
 
@@ -26,11 +27,7 @@ func NewUserEmailConfirm(config WorkerConfig) corepb.TwirpServer {
 	return corepb.NewUserEventbusServer(svc)
 }
 
-func (cfg *userEmailConfirm) UserChange(ctx context.Context, msg *corepb.UserChangeEvent) (*corepb.EventbusEmpty, error) {
-	return &corepb.EventbusEmpty{}, nil
-}
-
-func (cfg *userEmailConfirm) UserSecurity(ctx context.Context, msg *corepb.UserSecurityEvent) (*corepb.EventbusEmpty, error) {
+func (cfg *userEmailConfirm) SecurityRegisterToken(ctx context.Context, msg *corepb.UserSecurityEvent) (*corepb.EventbusEmpty, error) {
 	log := logger.FromContext(ctx).With(zap.Int32("action", int32(msg.Action))).With(zap.String("email", msg.User.Email))
 
 	log.Info("processing message")

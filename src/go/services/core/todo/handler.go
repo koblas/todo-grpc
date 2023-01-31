@@ -7,6 +7,7 @@ import (
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/rs/xid"
 	"github.com/twitchtv/twirp"
+	"go.uber.org/zap"
 )
 
 type TodoServer struct {
@@ -40,7 +41,7 @@ func NewTodoServer(opts ...Option) corepb.TodoService {
 }
 
 func (svc *TodoServer) AddTodo(ctx context.Context, newTodo *corepb.TodoAddParams) (*corepb.TodoObject, error) {
-	log := logger.FromContext(ctx)
+	log := logger.FromContext(ctx).With(zap.String("method", "AddTodo"))
 	log.Info("creating todo event")
 
 	task, err := svc.todos.Create(ctx, Todo{
@@ -87,7 +88,7 @@ func (svc *TodoServer) GetTodos(ctx context.Context, find *corepb.TodoGetParams)
 }
 
 func (svc *TodoServer) DeleteTodo(ctx context.Context, params *corepb.TodoDeleteParams) (*corepb.TodoDeleteResponse, error) {
-	log := logger.FromContext(ctx)
+	log := logger.FromContext(ctx).With(zap.String("method", "DeleteTodo"))
 	log.Info("delete todo event")
 
 	todo, err := svc.todos.DeleteOne(ctx, params.UserId, params.Id)

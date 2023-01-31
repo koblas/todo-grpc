@@ -7,6 +7,7 @@ import (
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
 	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
+	"github.com/koblas/grpc-todo/pkg/filestore"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/pkg/natsutil"
 	"github.com/koblas/grpc-todo/services/workers/workers_file"
@@ -32,10 +33,7 @@ func main() {
 	opts := []workers_file.Option{
 		workers_file.WithProducer(producer),
 		workers_file.WithFileService(
-			corepb.NewFileServiceProtobufClient(
-				"http://"+config.FileServiceAddr,
-				&http.Client{},
-			),
+			filestore.NewMinioProvider(config.MinioEndpoint),
 		),
 		workers_file.WithUserService(
 			corepb.NewUserServiceProtobufClient(

@@ -380,9 +380,16 @@ func (svc twClient) Do(req *http.Request) (*http.Response, error) {
 			return nil, err
 		}
 
+		var empty io.Reader
+		if strings.Contains(req.Header.Get("content-type"), "application/json") {
+			empty = strings.NewReader("{}")
+		} else {
+			empty = bytes.NewReader([]byte{})
+		}
+
 		res = &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewReader([]byte{})),
+			Body:       ioutil.NopCloser(empty),
 		}
 	} else if scheme == "sns" {
 		body, attributes := lambdaToSns(req, lambdaRequest)
@@ -401,9 +408,16 @@ func (svc twClient) Do(req *http.Request) (*http.Response, error) {
 			return nil, err
 		}
 
+		var empty io.Reader
+		if strings.Contains(req.Header.Get("content-type"), "application/json") {
+			empty = strings.NewReader("{}")
+		} else {
+			empty = bytes.NewReader([]byte{})
+		}
+
 		res = &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewReader([]byte{})),
+			Body:       ioutil.NopCloser(empty),
 		}
 	} else {
 		return nil, errors.New("unknown scheme")

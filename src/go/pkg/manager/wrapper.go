@@ -5,10 +5,14 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/util"
 	"go.uber.org/zap"
+	"golang.org/x/sync/errgroup"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
@@ -26,6 +30,10 @@ type Manager struct {
 	port           string
 	healthPrefix   string
 	grpcHealthPort string
+
+	//
+	grpcHealthServer *grpc.Server
+	httpServer       *http.Server
 }
 
 type grpcServer struct {
@@ -103,12 +111,47 @@ func (mgr *Manager) Start(handler HandlerStart) {
 	if isLambda() {
 		handler.Start(mgr.ctx)
 	} else {
+		interrupt := make(chan os.Signal, 1)
+		signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
+		defer signal.Stop(interrupt)
+
 		// A little funky in that we're assuming this never returns until all messages are consumed
 		//
 		// It would probably be better to re-abstract this to a channel based system
-		mgr.startGrpcHealthCheck()
+		ctx, cancel := context.WithCancel(mgr.ctx)
+		defer cancel()
 
-		handler.Start(mgr.ctx)
+		group, ctx := errgroup.WithContext(ctx)
+		mgr.ctx = ctx
+
+		group.Go(func() error { return mgr.startGrpcHealthCheck(ctx) })
+
+		group.Go(func() error { return handler.Start(ctx) })
+
+		select {
+		case <-interrupt:
+			break
+		case <-ctx.Done():
+			break
+		}
+
+		mgr.log.Info("received shutdown")
+
+		cancel()
+
+		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer shutdownCancel()
+
+		if mgr.httpServer != nil {
+			mgr.httpServer.Shutdown(shutdownCtx)
+		}
+		if mgr.grpcHealthServer != nil {
+			mgr.grpcHealthServer.GracefulStop()
+		}
+
+		if err := group.Wait(); err != nil {
+			mgr.log.With(zap.Error(err)).Error("unable to shutdown")
+		}
 	}
 }
 
@@ -119,7 +162,6 @@ type WrapHttp struct {
 
 func (wrap *WrapHttp) Start(ctx context.Context) error {
 	mgr := wrap.manager
-	mgr.startGrpcHealthCheck()
 	mgr.log.Info("starting service", zap.String("port", mgr.port))
 	server := &http.Server{
 		Addr:        ":" + mgr.port,
@@ -127,11 +169,12 @@ func (wrap *WrapHttp) Start(ctx context.Context) error {
 		BaseContext: func(net.Listener) context.Context { return mgr.ctx },
 	}
 
-	if err := server.ListenAndServe(); err != nil {
-		mgr.log.With(zap.Error(err)).Fatal("failed to serve")
-	}
+	return server.ListenAndServe()
+	// if err := server.ListenAndServe(); err != nil {
+	// 	mgr.log.With(zap.Error(err)).Fatal("failed to serve")
+	// }
 
-	return nil
+	// return nil
 }
 
 func (mgr *Manager) WrapHttpHandler(api http.Handler) HandlerStart {
@@ -149,7 +192,7 @@ func (mgr *Manager) WrapHttpHandler(api http.Handler) HandlerStart {
 // 	}
 // }
 
-func (mgr *Manager) startGrpcHealthCheck() error {
+func (mgr *Manager) startGrpcHealthCheck(ctx context.Context) error {
 	if mgr.grpcHealthPort == "" {
 		return nil
 	}
@@ -162,16 +205,16 @@ func (mgr *Manager) startGrpcHealthCheck() error {
 		mgr.log.With(zap.Error(err)).Error("failed to listen on port")
 		return err
 	}
-	s := grpc.NewServer()
 	healthcheck := health.NewServer()
+	s := grpc.NewServer()
 	healthgrpc.RegisterHealthServer(s, healthcheck)
 	log.Info("gRPC healthcheck server is running")
 
-	go func() {
-		if err := s.Serve(lis); err != nil {
-			log.With(zap.Error(err)).Error("failed to serve")
-		}
-	}()
+	mgr.grpcHealthServer = s
+
+	if err := s.Serve(lis); err != http.ErrServerClosed {
+		log.With(zap.Error(err)).Error("failed to serve")
+	}
 
 	return nil
 }

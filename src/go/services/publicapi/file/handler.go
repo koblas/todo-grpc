@@ -4,10 +4,11 @@ import (
 	"log"
 
 	"github.com/koblas/grpc-todo/gen/apipb"
-	"github.com/koblas/grpc-todo/gen/corepb"
+	"github.com/koblas/grpc-todo/pkg/filestore"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/tokenmanager"
 	"github.com/twitchtv/twirp"
+	"go.uber.org/zap"
 	"golang.org/x/net/context"
 )
 
@@ -15,13 +16,15 @@ import (
 
 // Server represents the gRPC server
 type FileServer struct {
-	file     corepb.FileService
-	jwtMaker tokenmanager.Maker
+	// file     corepb.FileService
+	uploadBucket string
+	file         filestore.Filestore
+	jwtMaker     tokenmanager.Maker
 }
 
 type Option func(*FileServer)
 
-func WithFileService(client corepb.FileService) Option {
+func WithFileStore(client filestore.Filestore) Option {
 	return func(svr *FileServer) {
 		svr.file = client
 	}
@@ -34,7 +37,8 @@ func NewFileServer(config Config, opts ...Option) *FileServer {
 	}
 
 	svr := FileServer{
-		jwtMaker: maker,
+		jwtMaker:     maker,
+		uploadBucket: config.UploadBucket,
 	}
 
 	for _, opt := range opts {
@@ -59,19 +63,29 @@ func (svc *FileServer) UploadUrl(ctx context.Context, input *apipb.UploadUrlPara
 	}
 	log = log.With("userId", userId)
 
-	log.Info("Just a test")
-
-	req := corepb.FileUploadUrlParams{
-		UserId: userId,
-		Type:   input.Type,
+	req := filestore.FilePutParams{
+		Bucket:   svc.uploadBucket,
+		UserId:   userId,
+		FileType: input.Type + ".upload",
 	}
 
 	res, err := svc.file.UploadUrl(ctx, &req)
 	if err != nil {
-		return nil, err
+		log.With(zap.Error(err)).Error("Unable to build PUT url")
+		return nil, twirp.InternalError("unable to construct url")
 	}
 
+	urlStr := res.Url
+	// if true {
+	// 	u, err := url.Parse(urlStr)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+
+	// 	urlStr = "/minio_" + u.Path + "?" + u.RawQuery
+	// }
+
 	return &apipb.UploadUrlResponse{
-		Url: res.Url,
-	}, err
+		Url: urlStr,
+	}, nil
 }

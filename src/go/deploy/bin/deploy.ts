@@ -5,6 +5,7 @@ import { DeployStack } from "../lib/deploy-stack";
 
 const app = new cdk.App();
 
+// Todo change name
 new DeployStack(app, "go-lambda", {
   env: {
     account: process.env.CDK_DEPLOY_ACCOUNT || process.env.CDK_DEFAULT_ACCOUNT,

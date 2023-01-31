@@ -5,12 +5,15 @@ import (
 	"context"
 	"image"
 	"image/png"
+	"io"
 	"strings"
 
 	"github.com/disintegration/imaging"
-	"github.com/google/uuid"
 	"github.com/koblas/grpc-todo/gen/corepb"
+	"github.com/koblas/grpc-todo/pkg/filestore"
 	"github.com/koblas/grpc-todo/pkg/logger"
+	"github.com/oklog/ulid/v2"
+
 	"go.uber.org/zap"
 )
 
@@ -36,13 +39,16 @@ func (cfg *fileUploaded) FileUploaded(ctx context.Context, msg *corepb.FileUploa
 	log := logger.FromContext(ctx).With(
 		zap.String("fileType", msg.Info.FileType),
 		zap.Stringp("userId", msg.Info.UserId),
+		zap.String("fileUrl", msg.Info.Url),
 	)
 	log.Info("in uploaded event handler")
 
 	// We only handle profile images
-	if msg.Info.FileType != "profile_image:upload" || msg.Info.UserId == nil {
+	if msg.Info.FileType != "profile_image.upload" || msg.Info.UserId == nil {
 		return &corepb.EventbusEmpty{}, nil
 	}
+
+	fileType := strings.TrimSuffix(msg.Info.FileType, ".upload")
 
 	postComplete := func(errMsg string) {
 		msgPtr := &errMsg
@@ -52,11 +58,11 @@ func (cfg *fileUploaded) FileUploaded(ctx context.Context, msg *corepb.FileUploa
 			log.Info(errMsg)
 		}
 		event := corepb.FileCompleteEvent{
-			IdemponcyId:  uuid.NewString(),
+			IdemponcyId:  ulid.Make().String(),
 			ErrorMessage: msgPtr,
 			Info: &corepb.FileUploadInfo{
 				UserId:      msg.Info.UserId,
-				FileType:    strings.TrimSuffix(msg.Info.FileType, ":upload"),
+				FileType:    fileType,
 				ContentType: nil,
 				Url:         msg.Info.Url,
 			},
@@ -67,42 +73,54 @@ func (cfg *fileUploaded) FileUploaded(ctx context.Context, msg *corepb.FileUploa
 		}
 	}
 
-	fileData, err := cfg.fileService.Get(ctx, &corepb.FileGetParams{
+	reader, err := cfg.fileService.GetFile(ctx, &filestore.FileGetParams{
 		Path: msg.Info.Url,
 	})
 	if err != nil {
-		log.With(zap.Error(err)).Error("unable to get image")
+		log.With(zap.Error(err)).Error("failed to get file data")
+		postComplete("unable to get data")
+		return &corepb.EventbusEmpty{}, nil
+	}
+	buf := bytes.Buffer{}
+	if _, err := io.Copy(&buf, reader); err != nil {
+		log.With(zap.Error(err)).Error("failed to copy data")
+		postComplete("unable to get data")
 		return &corepb.EventbusEmpty{}, nil
 	}
 
-	srcImage, _, err := image.Decode(bytes.NewReader(fileData.Data))
+	data := buf.Bytes()
+	log.With(zap.Int("dataLen", len(data))).Info("Processing uploaded data")
+
+	srcImage, format, err := image.Decode(bytes.NewReader(data))
 	if err != nil {
 		postComplete("unable to decode")
 		return &corepb.EventbusEmpty{}, nil
 	}
+	log.With(zap.String("format", format)).Info("image decoded sucessfully")
 	dstImage := imaging.Resize(srcImage, 128, 128, imaging.CatmullRom)
+	log.Info("image resized sucessfully")
 
-	outData := []byte{}
-	writer := bytes.NewBuffer(outData)
-	if err := png.Encode(writer, dstImage); err != nil {
+	writer := bytes.Buffer{}
+	if err := png.Encode(&writer, dstImage); err != nil {
 		postComplete("unable to encode")
 		return &corepb.EventbusEmpty{}, nil
 	}
 
-	putResult, err := cfg.fileService.Put(ctx, &corepb.FilePutParams{
+	log.With(zap.Int("writeLen", writer.Len())).Info("Uploading resized data")
+	putResult, err := cfg.fileService.PutFile(ctx, &filestore.FilePutParams{
+		Bucket:   cfg.config.PublicBucket,
 		UserId:   *msg.Info.UserId,
-		FileType: "profile_image",
+		FileType: fileType,
 		Suffix:   ".png",
-		Data:     writer.Bytes(),
-	})
+	}, &writer)
 	if err != nil {
-		postComplete("unable to save")
+		postComplete("unable to put data")
 		return &corepb.EventbusEmpty{}, nil
 	}
 
 	if _, err := cfg.userService.Update(ctx, &corepb.UserUpdateParam{
 		UserId:    *msg.Info.UserId,
-		AvatarUrl: &putResult.Path,
+		AvatarUrl: &putResult.Url,
 	}); err != nil {
 		postComplete("user update failed")
 		return &corepb.EventbusEmpty{}, nil

@@ -1,6 +1,7 @@
 package file
 
 type Config struct {
-	FileServiceAddr string `environment:"FILE_SERVICE_ADDR" json:"core-file-addr" default:":13007"`
-	JwtSecret       string `ssm:"jwt_secret" environment:"JWT_SECRET" validate:"min=32"`
+	UploadBucket  string `environment:"UPLOAD_BUCKET"`
+	JwtSecret     string `ssm:"jwt_secret" environment:"JWT_SECRET" validate:"min=32"`
+	MinioEndpoint string `environment:"MINIO_ENDPOINT" default:"s3.amazonaws.com"`
 }

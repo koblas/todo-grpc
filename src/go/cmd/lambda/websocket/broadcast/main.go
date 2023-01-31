@@ -1,9 +1,6 @@
 package main
 
 import (
-	"net/http"
-
-	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
@@ -29,12 +26,10 @@ func main() {
 
 	store := websocket.NewWsConnectionDynamoStore(websocket.WithDynamoTable(conf.ConnDb))
 
-	s := broadcast.NewBroadcastServer(
+	handlers := broadcast.NewBroadcastServer(
 		broadcast.WithStore(store),
 		broadcast.WithClient(client),
 	)
-	mux := http.NewServeMux()
-	mux.Handle(corepb.BroadcastEventbusPathPrefix, corepb.NewBroadcastEventbusServer(s))
 
-	mgr.StartConsumer(awsutil.HandleSqsLambda(mux))
+	mgr.Start(awsutil.HandleSqsLambda(handlers))
 }

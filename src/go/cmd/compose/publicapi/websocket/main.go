@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
-	"github.com/google/uuid"
 	wsocket "github.com/gorilla/websocket"
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
@@ -17,6 +16,7 @@ import (
 	"github.com/koblas/grpc-todo/pkg/manager"
 	wstore "github.com/koblas/grpc-todo/pkg/store/websocket"
 	"github.com/koblas/grpc-todo/services/publicapi/websocket"
+	"github.com/oklog/ulid/v2"
 	"go.uber.org/zap"
 )
 
@@ -32,7 +32,7 @@ type socketHandler struct {
 }
 
 func (h *socketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	connectionID := uuid.NewString()
+	connectionID := ulid.Make().String()
 	log := logger.FromContext(r.Context()).With(zap.String("connectionId", connectionID))
 
 	log.Info("Handling request")

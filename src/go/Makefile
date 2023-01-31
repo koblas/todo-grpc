@@ -25,7 +25,7 @@ build-lambda:
 	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/websocket-user ./cmd/lambda/websocket/user/main.go
 	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/core-todo ./cmd/lambda/core/todo/main.go
 	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/core-user ./cmd/lambda/core/user/main.go
-	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/core-file ./cmd/lambda/core/file/main.go
+	# GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/core-file ./cmd/lambda/core/file/main.go
 	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/core-oauth-user ./cmd/lambda/core/oauth_user/main.go
 	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/core-send-email ./cmd/lambda/core/send_email/main.go
 	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/workers-user ./cmd/lambda/workers/workers_user/main.go
@@ -43,7 +43,7 @@ build-compose:
 	go build -o build/websocket-broadcast ./cmd/compose/websocket/broadcast/main.go
 	go build -o build/core-todo ./cmd/compose/core/todo/main.go
 	go build -o build/core-user ./cmd/compose/core/user/main.go
-	go build -o build/core-file ./cmd/compose/core/file/main.go
+	# go build -o build/core-file ./cmd/compose/core/file/main.go
 	go build -o build/core-oauth-user ./cmd/compose/core/oauth_user/main.go
 	go build -o build/core-send-email ./cmd/compose/core/send_email/main.go
 	go build -o build/workers-user ./cmd/compose/workers/workers_user/main.go

@@ -1,13 +1,12 @@
 package main
 
 import (
-	"net/http"
 	"strings"
 
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
 	"github.com/koblas/grpc-todo/gen/apipb"
-	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
+	"github.com/koblas/grpc-todo/pkg/filestore"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/services/publicapi/file"
 	"go.uber.org/zap"
@@ -23,11 +22,8 @@ func main() {
 	}
 
 	opts := []file.Option{
-		file.WithFileService(
-			corepb.NewFileServiceProtobufClient(
-				"http://"+config.FileServiceAddr,
-				&http.Client{},
-			),
+		file.WithFileStore(
+			filestore.NewMinioProvider(config.MinioEndpoint),
 		),
 	}
 
