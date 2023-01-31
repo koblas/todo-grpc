@@ -1,0 +1,14 @@
+syntax = "proto3";
+package corepb.websocket;
+
+option go_package = "./;corepb";
+
+message BroadcastFilter {
+    string user_id = 1;
+}
+
+message BroadcastEvent {
+    BroadcastFilter filter = 1;
+    bytes data = 2;
+}
+

@@ -22,14 +22,14 @@ go-grpc:
 	protoc \
 		-I . \
 		--proto_path=$(PROTO_DIR) \
-		--go_out=$(GO_GRPC)/gen --go_opt=paths=source_relative \
-		--twirp_out=$(GO_GRPC)/gen/apipb \
+		--go_out=$(GO_GRPC) --go_opt=paths=source_relative \
+		--twirp_out=$(GO_GRPC)/apipb \
 		./apipb/*
 	protoc \
 		-I . \
 		--proto_path=$(PROTO_DIR) \
-		--go_out=$(GO_GRPC)/gen --go_opt=paths=source_relative \
-		--twirp_out=$(GO_GRPC)/gen/corepb \
+		--go_out=$(GO_GRPC) --go_opt=paths=source_relative \
+		--twirp_out=$(GO_GRPC)/corepb \
 		./corepb/*
 
 

@@ -137,6 +137,7 @@ export class HostingStack extends Construct {
     config: HostedZoneProps,
     cert: cdk.aws_certificatemanager.DnsValidatedCertificate,
     accessIdentity: cdk.aws_cloudfront.OriginAccessIdentity,
+    zoneName: string,
     domainNames: string[],
     additionalBehaviors: Record<string, cdk.aws_cloudfront.BehaviorOptions> | undefined,
   ): cdk.aws_cloudfront.DistributionProps {
@@ -158,7 +159,8 @@ export class HostingStack extends Construct {
               "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
               "style-src 'self' 'unsafe-inline'",
               "img-src * 'unsafe-inline' data:",
-              "connect-src 'self' wss: ws:;",
+              // `connect-src 'self' wss: ws: ${domainNames.map((d) => `https://*.files.${zoneName}`).join(" ")}`,
+              `connect-src 'self' wss: ws: https://files.${zoneName} https://*.s3.us-west-2.amazonaws.com`,
             ].join(";"),
           },
           strictTransportSecurity: {
@@ -300,7 +302,15 @@ export class HostingStack extends Construct {
     const distribution = new cdk.aws_cloudfront.Distribution(
       this,
       "cloudfrontDistribution",
-      this.getCFConfig(websiteBucket, config, certificate, accessIdentity, [domainName], config.additional),
+      this.getCFConfig(
+        websiteBucket,
+        config,
+        certificate,
+        accessIdentity,
+        config.zoneName,
+        [domainName],
+        config.additional,
+      ),
     );
 
     new cdk.aws_s3_deployment.BucketDeployment(this, "BucketDeployment", {

@@ -85,3 +85,4 @@ envFrom:
   normal:
     URL_BASE_UI: dev-variables-env
     REDIS_ADDR: dev-variables-env
+    NATS_ADDR: dev-variables-env

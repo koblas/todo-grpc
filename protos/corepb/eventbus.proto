@@ -5,12 +5,30 @@ option go_package = "./;corepb";
 import "corepb/user.proto";
 import "corepb/todo.proto";
 import "corepb/file.proto";
+import "corepb/websocket.proto";
 
 message EventbusEmpty {}
 
+// Websocket broadcast event
+service BroadcastEventbus {
+  rpc Send(corepb.websocket.BroadcastEvent) returns (EventbusEmpty);
+}
+
 service UserEventbus {
   rpc UserChange(corepb.user.UserChangeEvent) returns (EventbusEmpty);
-  rpc UserSecurity(corepb.user.UserSecurityEvent) returns (EventbusEmpty);
+
+  // Password change notification
+  rpc SecurityPasswordChange(corepb.user.UserSecurityEvent)
+      returns (EventbusEmpty);
+  // Forgot password request notfication
+  rpc SecurityForgotRequest(corepb.user.UserSecurityEvent)
+      returns (EventbusEmpty);
+  // New user registration
+  rpc SecurityRegisterToken(corepb.user.UserSecurityEvent)
+      returns (EventbusEmpty);
+  // Invite sent
+  rpc SecurityInviteToken(corepb.user.UserSecurityEvent)
+      returns (EventbusEmpty);
 }
 
 service TodoEventbus {

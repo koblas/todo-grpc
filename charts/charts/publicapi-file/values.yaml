@@ -84,6 +84,9 @@ affinity: {}
 
 envFrom:
   normal:
-    FILE_SERVICE_ADDR: dev-variables-env
+    MINIO_ENDPOINT: dev-variables-env
+    UPLOAD_BUCKET: dev-variables-env
   secret:
     JWT_SECRET: common-secrets
+    MINIO_ROOT_USER: minio|root-user
+    MINIO_ROOT_PASSWORD: minio|root-password

@@ -17,6 +17,12 @@ def go_docker(name, path):
   )
 
 # The front end client
+#docker_build('todo-grpc/ts-client-react', './ts-client-react', 
+#  dockerfile='./ts-client-react/Dockerfile',
+#  live_update=[
+#    sync('./ts-client-react', '/app'),
+#  ],
+#)
 docker_build('todo-grpc/ts-client-react', './ts-client-react', 
   dockerfile='./ts-client-react/Dockerfile.tilt',
   live_update=[
@@ -35,27 +41,29 @@ k8s_yaml(helm('./charts/'))
 go_docker('publicapi-auth', 'publicapi/auth')
 go_docker('publicapi-todo', 'publicapi/todo')
 go_docker('publicapi-file', 'publicapi/file')
-go_docker('publicapi-fileput', 'publicapi/fileput')
+# go_docker('publicapi-fileput', 'publicapi/fileput')
 go_docker('publicapi-user', 'publicapi/user')
 go_docker('publicapi-websocket', 'publicapi/websocket')
 go_docker('core-oauth-user', 'core/oauth_user')
 go_docker('core-send-email', 'core/send_email')
 go_docker('core-todo', 'core/todo')
 go_docker('core-user', 'core/user')
-go_docker('core-file', 'core/file')
+# go_docker('core-file', 'core/file')
+go_docker('websocket-broadcast', 'websocket/broadcast')
 go_docker('websocket-todo', 'websocket/todo')
 go_docker('websocket-user', 'websocket/user')
 go_docker('workers-user', 'workers/workers_user')
 go_docker('workers-file', 'workers/workers_file')
+go_docker('trigger-minio', 'trigger/minio')
 
-helm_remote('redis', 
-    repo_name='bitnami', 
-    repo_url='https://charts.bitnami.com/bitnami',
-    set=[
-        'architecture=standalone',
-        'auth.enabled=false',
-    ],
-)
+#helm_remote('redis', 
+#    repo_name='bitnami', 
+#    repo_url='https://charts.bitnami.com/bitnami',
+#    set=[
+#        'architecture=standalone',
+#        'auth.enabled=false',
+#    ],
+#)
 # k8s_resource('dynamodb', labels=['infrastructure'])
 helm_remote('dynamodb', 
     repo_name='keyporttech', 
@@ -64,4 +72,11 @@ helm_remote('dynamodb',
         'dynamodb.image.tag=1.20.0'
     ],
 )
+#helm_remote('nats', 
+#    repo_name='nats', 
+#    repo_url='https://nats-io.github.io/k8s/helm/charts/',
+#    set=[
+#        # "nats.logging.trace=true",
+#    ],
+#)
 

@@ -84,3 +84,4 @@ affinity: {}
 envFrom:
   normal:
     REDIS_ADDR: dev-variables-env
+    NATS_ADDR: dev-variables-env

@@ -1,30 +1,34 @@
 {
 	auto_https disable_redirects
+	# log {
+	# 	output stdout
+	# 	level DEBUG
+	# }
 }
 
 (cors) {
-  @cors_preflight method OPTIONS
-  #@cors header Origin {args.0}
-  @cors header Origin *
+	@cors_preflight method OPTIONS
+	#@cors header Origin {args.0}
+	@cors header Origin *
 
-  handle @cors_preflight {
-    header Access-Control-Allow-Origin "*"
-    header Access-Control-Allow-Methods "GET,POST,PUT,PATCH,DELETE"
-    header Access-Control-Allow-Headers "Content-Type,Authorization,Connection,Upgrade,Sec-WebSocket-Extensions,Sec-WebSocket-Version,Sec-WebSocket-Protocol,Sec-WebSocket-Key"
-    header Vary "Access-Control-Request-Headers"
-    header Access-Control-Max-Age "3600"
-    header Access-Control-Allow-Credentials "true"
+	handle @cors_preflight {
+		header Access-Control-Allow-Origin "*"
+		header Access-Control-Allow-Methods "GET,POST,PUT,PATCH,DELETE"
+		header Access-Control-Allow-Headers "Content-Type,Authorization,Connection,Upgrade,Sec-WebSocket-Extensions,Sec-WebSocket-Version,Sec-WebSocket-Protocol,Sec-WebSocket-Key"
+		header Vary "Access-Control-Request-Headers"
+		header Access-Control-Max-Age "3600"
+		header Access-Control-Allow-Credentials "true"
 
-    respond "" 204
-  }
+		respond "" 204
+	}
 
-#  handle @cors {
-    header Access-Control-Allow-Origin "*"
-    header Access-Control-Allow-Headers "Content-Type,Authorization,Connection,Upgrade,Sec-WebSocket-Extensions,Sec-WebSocket-Version,Sec-WebSocket-Protocol,Sec-WebSocket-Key"
-    # header Vary "Access-Control-Request-Headers"
-    # header Access-Control-Max-Age "3600"
-    header Access-Control-Allow-Credentials "true"
-#  }
+	#  handle @cors {
+	header Access-Control-Allow-Origin "*"
+	header Access-Control-Allow-Headers "Content-Type,Authorization,Connection,Upgrade,Sec-WebSocket-Extensions,Sec-WebSocket-Version,Sec-WebSocket-Protocol,Sec-WebSocket-Key"
+	# header Vary "Access-Control-Request-Headers"
+	# header Access-Control-Max-Age "3600"
+	header Access-Control-Allow-Credentials "true"
+	#  }
 }
 
 :80 :443 {
@@ -52,9 +56,15 @@
 		reverse_proxy public-user:14586
 	}
 
-	handle_path /api/v1/fileput/* {
-		# rewrite * /twirp/api.fileput.FileService{path}
-		reverse_proxy public-fileput:14586
+	#handle_path /api/v1/fileput/* {
+	#	# rewrite * /twirp/api.fileput.FileService{path}
+	#	reverse_proxy public-fileput:14586
+	#}
+
+	handle_path /minio_/* {
+		# strip_path_prefix "/_minio"
+		rewrite * /{path}
+		reverse_proxy minio:9000
 	}
 
 	handle_path /wsapi/* {

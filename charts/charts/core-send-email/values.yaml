@@ -85,6 +85,7 @@ envFrom:
   normal:
     URL_BASE_UI: dev-variables-env
     REDIS_ADDR: dev-variables-env
+    NATS_ADDR: dev-variables-env
     BUS_ENTITY_ARN: dev-variables-env
   secret:
     JWT_SECRET: common-secrets

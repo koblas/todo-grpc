@@ -1,4 +1,7 @@
 {
+  "/minio_": {
+    "target": "http://localhost:80"
+  },
   "/api": {
     "target": "http://localhost:80"
   },

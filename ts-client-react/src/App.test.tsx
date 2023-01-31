@@ -4,7 +4,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import App from "./App";
 
-jest.mock("./rpc/todo/factory.ts");
+// jest.mock("./rpc/todo/factory.ts");
 
 function waitForNextTick() {
   return new Promise<void>((resolve) => {

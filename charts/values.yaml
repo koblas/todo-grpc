@@ -13,7 +13,7 @@ core-user:
   image:
     version:
 core-file:
-  enabled: true
+  enabled: false
   image:
     version:
 core-todo:
@@ -48,7 +48,7 @@ publicapi-file:
   image:
     version:
 publicapi-fileput:
-  enabled: true
+  enabled: false
   image:
     version:
 
@@ -73,3 +73,45 @@ workers-file:
   enabled: true
   image:
     version:
+
+trigger-minio:
+  enabled: true
+  image:
+    version:
+#
+#  External
+#
+minio:
+  enabled: true
+  fullnameOverride: minio
+  extraEnvVars:
+  - name: MINIO_NOTIFY_NATS_ENABLE_PRIMARY
+    value: "on"
+  - name: MINIO_NOTIFY_NATS_ADDRESS_PRIMARY
+    value: "nats:4222"
+  - name: MINIO_NOTIFY_NATS_SUBJECT_PRIMARY
+    value: minioevents
+  apiIngress:
+    hostname: "minio"
+    enabled: true
+    #path: /minio_(.*)
+    #pathType: Prefix
+    #annotations:
+    #  nginx.ingress.kubernetes.io/rewrite-target: $1
+
+#  auth:
+#    rootUser: admin
+#    rootPassword: xyzzyxyzzy
+nats:
+  enabled: true
+  fullnameOverride: nats
+  #debug: { trace: true }
+  #replicaCount: 0
+  nats:
+    logging:
+      trace: true
+redis:
+  enabled: true
+  fullnameOverride: redis
+  architecture: standalone
+  auth: { enabled: false }
