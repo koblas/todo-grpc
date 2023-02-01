@@ -8,5 +8,5 @@ message FileUploadUrlRequest { string type = 1; }
 message FileUploadUrlResponse { string url = 1; }
 
 service FileService {
-  rpc UploadUrl(FileUploadUrlRequest) returns (FileUploadUrlResponse);
+  rpc upload_url(FileUploadUrlRequest) returns (FileUploadUrlResponse);
 }

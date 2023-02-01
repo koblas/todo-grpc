@@ -20,7 +20,7 @@ message TodoAddResponse { TodoObject todo = 1; }
 message TodoDeleteResponse { string message = 1; }
 
 service TodoService {
-  rpc TodoAdd(TodoAddRequest) returns (TodoAddResponse);
-  rpc TodoDelete(TodoDeleteRequest) returns (TodoDeleteResponse);
-  rpc TodoList(TodoListRequest) returns (TodoListResponse);
+  rpc todo_add(TodoAddRequest) returns (TodoAddResponse);
+  rpc todo_delete(TodoDeleteRequest) returns (TodoDeleteResponse);
+  rpc todo_list(TodoListRequest) returns (TodoListResponse);
 }

@@ -91,16 +91,16 @@ message TokenRegister {
 }
 
 service AuthenticationService {
-  rpc Register(RegisterParams) returns (TokenRegister) ;
+  rpc register(RegisterParams) returns (TokenRegister) ;
 
-  rpc Authenticate(LoginParams) returns (Token) ;
+  rpc authenticate(LoginParams) returns (Token) ;
 
-  rpc VerifyEmail(ConfirmParams) returns (Success) ;
+  rpc verify_email(ConfirmParams) returns (Success) ;
 
-  rpc RecoverSend(RecoverySendParams) returns (Success) ;
-  rpc RecoverVerify(RecoveryUpdateParams) returns (Success) ;
-  rpc RecoverUpdate(RecoveryUpdateParams) returns (Token) ;
+  rpc recover_send(RecoverySendParams) returns (Success) ;
+  rpc recover_verify(RecoveryUpdateParams) returns (Success) ;
+  rpc recover_update(RecoveryUpdateParams) returns (Token) ;
 
-  rpc OauthLogin(OauthAssociateParams) returns (TokenRegister) ;
-  rpc OauthUrl(OauthUrlParams) returns (OauthUrlResult) ;
+  rpc oauth_login(OauthAssociateParams) returns (TokenRegister) ;
+  rpc oauth_url(OauthUrlParams) returns (OauthUrlResult) ;
 }

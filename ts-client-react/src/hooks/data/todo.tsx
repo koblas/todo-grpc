@@ -1,7 +1,7 @@
 import { QueryClient, useMutation, useQuery, useQueryClient } from "react-query";
 import { useEffect } from "react";
 import { z } from "zod";
-import { TodoItem, TodoItemType, TodoList, TodoListType } from "../../rpc/todo";
+import { TodoAdd, TodoAddType, TodoItemType, TodoList, TodoListType } from "../../rpc/todo";
 import { useAuth } from "../auth";
 import { newFetchClient } from "../../rpc/utils";
 import { Json } from "../../types/json";
@@ -36,24 +36,24 @@ export function useTodos() {
   const client = newFetchClient({ token });
   const queryClient = useQueryClient();
 
-  const result = useQuery("todos", () => client.POST("/v1/todo/get_todos", {}), {
+  const result = useQuery("todos", () => client.POST("/v1/todo/todo_list", {}), {
     staleTime: 300_000,
     enabled: !!token,
   });
 
-  const addTodo = useMutation<TodoItemType, unknown, AddTodoParam, unknown>(
+  const addTodo = useMutation<TodoAddType, unknown, AddTodoParam, unknown>(
     "todos",
-    (data) => client.POST<TodoItemType>("/v1/todo/add_todo", data as unknown as Json),
-    buildCallbacksTyped(queryClient, TodoItem, {
+    (data) => client.POST<TodoAddType>("/v1/todo/todo_add", data as unknown as Json),
+    buildCallbacksTyped(queryClient, TodoAdd, {
       onCompleted(data) {
-        cacheAddTodo(queryClient, data);
+        cacheAddTodo(queryClient, data.todo);
       },
     }),
   );
 
   const deleteTodo = useMutation<Json, unknown, DeleteTodoParam, unknown>(
     "todos",
-    (data) => client.POST<Json>("/v1/todo/delete_todo", data),
+    (data) => client.POST<Json>("/v1/todo/todo_delete", data),
     buildCallbacksTyped<z.ZodUnknown, unknown, unknown, DeleteTodoParam>(queryClient, z.unknown(), {
       onCompleted(data, variables) {
         cacheDeleteTodo(queryClient, variables.id);

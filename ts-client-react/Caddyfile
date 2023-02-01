@@ -37,22 +37,22 @@
 	import cors
 
 	handle_path /api/v1/auth/* {
-		rewrite * /twirp/api.auth.AuthenticationService{path}
+		rewrite * /twirp/api.AuthenticationService{path}
 		reverse_proxy public-auth:14586
 	}
 
 	handle_path /api/v1/todo/* {
-		rewrite * /twirp/api.todo.TodoService{path}
+		rewrite * /twirp/api.TodoService{path}
 		reverse_proxy public-todo:14586
 	}
 
 	handle_path /api/v1/user/* {
-		rewrite * /twirp/api.user.UserService{path}
+		rewrite * /twirp/api.UserService{path}
 		reverse_proxy public-user:14586
 	}
 
 	handle_path /api/v1/file/* {
-		rewrite * /twirp/api.file.FileService{path}
+		rewrite * /twirp/api.FileService{path}
 		reverse_proxy public-user:14586
 	}
 

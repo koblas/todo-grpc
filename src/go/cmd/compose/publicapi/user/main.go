@@ -10,6 +10,7 @@ import (
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/services/publicapi/user"
+	"github.com/twitchtv/twirp"
 	"go.uber.org/zap"
 )
 
@@ -31,7 +32,7 @@ func main() {
 		),
 	}
 
-	api := apipbv1.NewUserServiceServer(user.NewUserServer(config, opts...))
+	api := apipbv1.NewUserServiceServer(user.NewUserServer(config, opts...), twirp.WithServerJSONCamelCaseNames(true))
 
 	mgr.Start(mgr.WrapHttpHandler(api))
 }
