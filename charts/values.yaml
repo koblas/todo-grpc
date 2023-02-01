@@ -109,7 +109,7 @@ nats:
   #replicaCount: 0
   nats:
     logging:
-      trace: true
+      trace: false
 redis:
   enabled: true
   fullnameOverride: redis
