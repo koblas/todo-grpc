@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
-	"github.com/koblas/grpc-todo/gen/apipb"
-	"github.com/koblas/grpc-todo/gen/corepb"
+	apipbv1 "github.com/koblas/grpc-todo/gen/apipb/v1"
+	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/services/publicapi/todo"
@@ -24,14 +24,14 @@ func main() {
 
 	opts := []todo.Option{
 		todo.WithTodoService(
-			corepb.NewTodoServiceProtobufClient(
+			corepbv1.NewTodoServiceProtobufClient(
 				"http://"+config.TodoServiceAddr,
 				&http.Client{},
 			),
 		),
 	}
 
-	api := apipb.NewTodoServiceServer(todo.NewTodoServer(config, opts...))
+	api := apipbv1.NewTodoServiceServer(todo.NewTodoServer(config, opts...))
 
 	mgr.Start(mgr.WrapHttpHandler(api))
 }

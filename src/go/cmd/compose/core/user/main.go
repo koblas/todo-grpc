@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
-	"github.com/koblas/grpc-todo/gen/corepb"
+	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/pkg/natsutil"
@@ -56,7 +56,7 @@ func main() {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
-	producer := corepb.NewUserEventbusProtobufClient(
+	producer := corepbv1.NewUserEventbusProtobufClient(
 		"",
 		natsutil.NewNatsClient(config.NatsAddr),
 	)
@@ -83,7 +83,7 @@ func main() {
 		)
 	}
 
-	api := corepb.NewUserServiceServer(user.NewUserServer(opts...))
+	api := corepbv1.NewUserServiceServer(user.NewUserServer(opts...))
 
 	mgr.Start(mgr.WrapHttpHandler(api))
 }

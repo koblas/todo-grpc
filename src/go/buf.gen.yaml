@@ -1,0 +1,8 @@
+version: v1
+plugins:
+  - name: twirp
+    out: gen/twirp
+    opt: paths=source_relative
+      #- name: go
+      #out: gen/go
+      #opt: paths=source_relative

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/koblas/grpc-todo/gen/corepb"
+	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
@@ -11,13 +11,13 @@ import (
 )
 
 type handler struct {
-	bus corepb.TwirpServer
+	bus corepbv1.TwirpServer
 }
 
 func (h handler) GroupName() string {
 	return ""
 }
-func (h handler) Handler() corepb.TwirpServer {
+func (h handler) Handler() corepbv1.TwirpServer {
 	return h.bus
 }
 
@@ -30,7 +30,7 @@ func main() {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
-	producer := corepb.NewBroadcastEventbusJSONClient(
+	producer := corepbv1.NewBroadcastEventbusJSONClient(
 		conf.EventArn,
 		awsutil.NewTwirpCallLambda(),
 	)
@@ -39,7 +39,7 @@ func main() {
 	// 	user.WithProducer(producer),
 	// )
 	// mux := http.NewServeMux()
-	// mux.Handle(corepb.UserEventbusPathPrefix, corepb.NewUserEventbusServer(s))
+	// mux.Handle(corepbv1.UserEventbusPathPrefix, corepbv1.NewUserEventbusServer(s))
 
 	h := user.NewUserChangeServer(user.WithProducer(producer))
 

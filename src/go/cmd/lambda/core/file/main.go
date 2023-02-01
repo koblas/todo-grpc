@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
@@ -19,7 +18,7 @@ func main() {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
-	producer := corepb.NewFileEventbusJSONClient(
+	producer := corepbv1.NewFileEventbusJSONClient(
 		config.EventArn,
 		awsutil.NewTwirpCallLambda(),
 	)
@@ -29,7 +28,7 @@ func main() {
 		file.WithFileStore(file.NewFileS3Store(config.S3Bucket, config.S3DomainAlias, config.S3Prefix)),
 	}
 
-	api := corepb.NewFileServiceServer(file.NewFileServer(opts...))
+	api := corepbv1.NewFileServiceServer(file.NewFileServer(opts...))
 
 	mgr.Start(awsutil.HandleApiLambda(api))
 }

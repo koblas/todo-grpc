@@ -3,7 +3,7 @@ package gpt
 import (
 	"log"
 
-	"github.com/koblas/grpc-todo/gen/apipb"
+	apipbv1 "github.com/koblas/grpc-todo/gen/apipb/v1"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/tokenmanager"
 	"github.com/twitchtv/twirp"
@@ -39,7 +39,7 @@ func (svc *GptServer) getUserId(ctx context.Context) (string, error) {
 }
 
 // SayHello generates response to a Ping request
-func (svc *GptServer) Create(ctx context.Context, params *apipb.GptCreateParams) (*apipb.GptCreateResponse, error) {
+func (svc *GptServer) Create(ctx context.Context, params *apipbv1.GptServiceCreateRequest) (*apipbv1.GptServiceCreateResponse, error) {
 	log := logger.FromContext(ctx)
 	log.Info("GptCreate BEGIN")
 
@@ -53,7 +53,7 @@ func (svc *GptServer) Create(ctx context.Context, params *apipb.GptCreateParams)
 
 	text := params.Prompt
 
-	return &apipb.GptCreateResponse{
+	return &apipbv1.GptServiceCreateResponse{
 		Text: text,
 	}, nil
 }

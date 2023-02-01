@@ -3,7 +3,6 @@ package send_email_test
 import (
 	"context"
 
-	"github.com/koblas/grpc-todo/gen/corepb"
 	email "github.com/koblas/grpc-todo/services/core/send_email"
 )
 
@@ -22,11 +21,11 @@ func (svc *stubSender) SendEmail(ctx context.Context, sender, to, subject, html 
 type stubBus struct {
 }
 
-func (svc *stubBus) NotifySent(context.Context, *corepb.EmailSentEvent) (*corepb.EmailOkResponse, error) {
+func (svc *stubBus) NotifySent(context.Context, *corepbv1.EmailSentEvent) (*corepbv1.EmailOkResponse, error) {
 	return nil, nil
 }
 
-func buildTestService() (corepb.SendEmailService, *stubSender) {
+func buildTestService() (corepbv1.SendEmailService, *stubSender) {
 	senderData := &stubSender{}
 	bus := &stubBus{}
 	svc := email.NewSendEmailServer(bus, senderData)

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/koblas/grpc-todo/gen/apipb"
+	apipbv1 "github.com/koblas/grpc-todo/gen/apipb/v1"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
@@ -21,11 +21,11 @@ func main() {
 	}
 
 	opts := []file.Option{
-		// file.WithFileService(corepb.NewFileServiceJSONClient("lambda://core-file", awsutil.NewTwirpCallLambda())),
+		// file.WithFileService(corepbv1.NewFileServiceJSONClient("lambda://core-file", awsutil.NewTwirpCallLambda())),
 		file.WithFileStore(filestore.NewAwsProvider()),
 	}
 
-	api := apipb.NewFileServiceServer(file.NewFileServer(config, opts...))
+	api := apipbv1.NewFileServiceServer(file.NewFileServer(config, opts...))
 
 	mgr.Start(awsutil.HandleApiLambda(api))
 }

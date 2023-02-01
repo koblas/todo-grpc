@@ -3,8 +3,8 @@ package auth
 import (
 	"strings"
 
-	"github.com/koblas/grpc-todo/gen/apipb"
-	"github.com/koblas/grpc-todo/gen/corepb"
+	apipbv1 "github.com/koblas/grpc-todo/gen/apipb/v1"
+	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/util"
 	"github.com/twitchtv/twirp"
@@ -12,7 +12,7 @@ import (
 )
 
 // Authenticate the user with email and password (aka Login)
-func (s AuthenticationServer) Authenticate(ctx context.Context, params *apipb.LoginParams) (*apipb.Token, error) {
+func (s AuthenticationServer) Authenticate(ctx context.Context, params *apipbv1.LoginParams) (*apipbv1.Token, error) {
 	log := logger.FromContext(ctx).With("email", params.Email)
 	log.Info("Authenticate")
 
@@ -31,7 +31,7 @@ func (s AuthenticationServer) Authenticate(ctx context.Context, params *apipb.Lo
 		log.With("error", err).Error("Authenticate/redis unable to fetch attempts keys")
 	}
 
-	// user, err := s.userClient.FindBy(ctx, &corepb.FindParam{
+	// user, err := s.userClient.FindBy(ctx, &corepbv1.FindParam{
 	// 	Email: email,
 	// })
 	// if err != nil || user == nil {
@@ -53,7 +53,7 @@ func (s AuthenticationServer) Authenticate(ctx context.Context, params *apipb.Lo
 	// }
 
 	// log = log.With("user_id", user.Id)
-	userParam, err := s.userClient.ComparePassword(ctx, &corepb.AuthenticateParam{
+	userParam, err := s.userClient.ComparePassword(ctx, &corepbv1.AuthenticateParam{
 		Email:    params.Email,
 		Password: params.Password,
 	})
@@ -72,7 +72,7 @@ func (s AuthenticationServer) Authenticate(ctx context.Context, params *apipb.Lo
 	return s.returnToken(ctx, userParam.UserId)
 }
 
-func (s AuthenticationServer) Register(ctx context.Context, params *apipb.RegisterParams) (*apipb.TokenRegister, error) {
+func (s AuthenticationServer) Register(ctx context.Context, params *apipbv1.RegisterParams) (*apipbv1.TokenRegister, error) {
 	log := logger.FromContext(ctx).With("email", params.Email)
 	log.Info("Register")
 
@@ -80,8 +80,8 @@ func (s AuthenticationServer) Register(ctx context.Context, params *apipb.Regist
 		return nil, twirp.InvalidArgumentError("password", "password too short").WithMeta("password", "Password must be 8 characters")
 	}
 
-	user, err := s.userClient.Create(ctx, &corepb.UserCreateParam{
-		Status:   corepb.UserStatus_REGISTERED,
+	user, err := s.userClient.Create(ctx, &corepbv1.UserCreateParam{
+		Status:   corepbv1.UserStatus_REGISTERED,
 		Email:    params.Email,
 		Password: params.Password,
 		Name:     params.Name,
@@ -95,17 +95,17 @@ func (s AuthenticationServer) Register(ctx context.Context, params *apipb.Regist
 	if err != nil {
 		return nil, err
 	}
-	return &apipb.TokenRegister{
+	return &apipbv1.TokenRegister{
 		Token:   token,
 		Created: true,
 	}, nil
 }
 
-func (s AuthenticationServer) VerifyEmail(ctx context.Context, params *apipb.ConfirmParams) (*apipb.Success, error) {
+func (s AuthenticationServer) VerifyEmail(ctx context.Context, params *apipbv1.ConfirmParams) (*apipbv1.Success, error) {
 	log := logger.FromContext(ctx)
 	log.Info("Verify register user")
 
-	user, err := s.userClient.VerificationVerify(ctx, &corepb.VerificationParam{
+	user, err := s.userClient.VerificationVerify(ctx, &corepbv1.VerificationParam{
 		UserId: params.UserId,
 		Token:  params.Token,
 	})
@@ -116,12 +116,12 @@ func (s AuthenticationServer) VerifyEmail(ctx context.Context, params *apipb.Con
 		return nil, twirp.InvalidArgumentError("token", "not found").WithMeta("token", "Not Found")
 	}
 
-	return &apipb.Success{
+	return &apipbv1.Success{
 		Success: true,
 	}, nil
 }
 
-func (s AuthenticationServer) RecoverSend(ctx context.Context, params *apipb.RecoverySendParams) (*apipb.Success, error) {
+func (s AuthenticationServer) RecoverSend(ctx context.Context, params *apipbv1.RecoverySendParams) (*apipbv1.Success, error) {
 	log := logger.FromContext(ctx).With("email", params.Email)
 	log.Info("Recover Send")
 
@@ -135,7 +135,7 @@ func (s AuthenticationServer) RecoverSend(ctx context.Context, params *apipb.Rec
 		log.With("error", err).Error("RecoverSend/redis unable to fetch attempts keys")
 	}
 
-	user, err := s.userClient.ForgotSend(ctx, &corepb.UserFindParam{
+	user, err := s.userClient.ForgotSend(ctx, &corepbv1.UserFindParam{
 		Email: params.Email,
 	})
 	if err != nil {
@@ -150,16 +150,16 @@ func (s AuthenticationServer) RecoverSend(ctx context.Context, params *apipb.Rec
 		}
 	}
 
-	return &apipb.Success{
+	return &apipbv1.Success{
 		Success: true,
 	}, nil
 }
 
-func (s AuthenticationServer) RecoverVerify(ctx context.Context, params *apipb.RecoveryUpdateParams) (*apipb.Success, error) {
+func (s AuthenticationServer) RecoverVerify(ctx context.Context, params *apipbv1.RecoveryUpdateParams) (*apipbv1.Success, error) {
 	log := logger.FromContext(ctx).With("user_id", params.UserId)
 	log.Info("Recover Verify")
 
-	user, err := s.userClient.ForgotVerify(ctx, &corepb.VerificationParam{
+	user, err := s.userClient.ForgotVerify(ctx, &corepbv1.VerificationParam{
 		UserId: params.UserId,
 		Token:  params.Token,
 	})
@@ -170,16 +170,16 @@ func (s AuthenticationServer) RecoverVerify(ctx context.Context, params *apipb.R
 		return nil, twirp.InvalidArgumentError("token", "not found").WithMeta("token", "Not found")
 	}
 
-	return &apipb.Success{
+	return &apipbv1.Success{
 		Success: true,
 	}, nil
 }
 
-func (s AuthenticationServer) RecoverUpdate(ctx context.Context, params *apipb.RecoveryUpdateParams) (*apipb.Token, error) {
+func (s AuthenticationServer) RecoverUpdate(ctx context.Context, params *apipbv1.RecoveryUpdateParams) (*apipbv1.Token, error) {
 	log := logger.FromContext(ctx)
 	log.Info("Recover Update password")
 
-	user, err := s.userClient.ForgotUpdate(ctx, &corepb.VerificationParam{
+	user, err := s.userClient.ForgotUpdate(ctx, &corepbv1.VerificationParam{
 		UserId:   params.UserId,
 		Token:    params.Token,
 		Password: params.Password,

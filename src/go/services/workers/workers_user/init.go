@@ -1,11 +1,11 @@
 package workers_user
 
 import (
-	"github.com/koblas/grpc-todo/gen/corepb"
+	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
 	"github.com/koblas/grpc-todo/pkg/manager"
 )
 
-type SqsConsumerBuilder func(WorkerConfig) corepb.TwirpServer
+type SqsConsumerBuilder func(WorkerConfig) corepbv1.TwirpServer
 
 type Worker struct {
 	Stream    string
@@ -18,7 +18,7 @@ type Worker struct {
 type WorkerConfig struct {
 	config      Config
 	onlyHandler string
-	sendEmail   corepb.SendEmailService
+	sendEmail   corepbv1.SendEmailService
 }
 
 type Option func(*WorkerConfig)
@@ -29,7 +29,7 @@ func WithOnly(item string) Option {
 	}
 }
 
-func WithSendEmail(sender corepb.SendEmailService) Option {
+func WithSendEmail(sender corepbv1.SendEmailService) Option {
 	return func(cfg *WorkerConfig) {
 		cfg.sendEmail = sender
 	}
@@ -51,14 +51,14 @@ var workers = []Worker{}
 
 type WorkerHandler struct {
 	group   string
-	handler corepb.TwirpServer
+	handler corepbv1.TwirpServer
 }
 
 func (w *WorkerHandler) GroupName() string {
 	return w.group
 }
 
-func (w *WorkerHandler) Handler() corepb.TwirpServer {
+func (w *WorkerHandler) Handler() corepbv1.TwirpServer {
 	return w.handler
 }
 
@@ -82,7 +82,7 @@ func GetHandler(config Config, opts ...Option) []manager.MsgHandler {
 }
 
 // func XxGetHandler(config Config, opts ...Option) http.HandlerFunc {
-// 	handlers := []corepb.TwirpServer{}
+// 	handlers := []corepbv1.TwirpServer{}
 
 // 	cfg := buildServiceConfig(config, opts...)
 

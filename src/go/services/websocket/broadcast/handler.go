@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigatewaymanagementapi"
 	"github.com/aws/aws-sdk-go/aws"
 	smithy "github.com/aws/smithy-go"
-	"github.com/koblas/grpc-todo/gen/corepb"
+	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/pkg/store/websocket"
@@ -44,7 +44,7 @@ func WithClient(client PostToConnectionAPI) Option {
 }
 
 type BroadcastServerHandler struct {
-	handler corepb.TwirpServer
+	handler corepbv1.TwirpServer
 }
 
 // Convert websocket-broadcast events into per-connection events
@@ -57,7 +57,7 @@ func NewBroadcastServer(opts ...Option) []manager.MsgHandler {
 
 	return []manager.MsgHandler{
 		&BroadcastServerHandler{
-			handler: corepb.NewBroadcastEventbusServer(&svr),
+			handler: corepbv1.NewBroadcastEventbusServer(&svr),
 		},
 	}
 }
@@ -66,11 +66,11 @@ func (svc *BroadcastServerHandler) GroupName() string {
 	return "websocket.broadcast"
 }
 
-func (svc *BroadcastServerHandler) Handler() corepb.TwirpServer {
+func (svc *BroadcastServerHandler) Handler() corepbv1.TwirpServer {
 	return svc.handler
 }
 
-func (svc *BroadcastServer) Send(ctx context.Context, event *corepb.BroadcastEvent) (*corepb.EventbusEmpty, error) {
+func (svc *BroadcastServer) Send(ctx context.Context, event *corepbv1.BroadcastEvent) (*corepbv1.EventbusEmpty, error) {
 	log := logger.FromContext(ctx)
 	log.Info("received broadcast event")
 
@@ -108,5 +108,5 @@ func (svc *BroadcastServer) Send(ctx context.Context, event *corepb.BroadcastEve
 
 	log.With("count", len(conns)).Info("Found connections")
 
-	return &corepb.EventbusEmpty{}, nil
+	return &corepbv1.EventbusEmpty{}, nil
 }

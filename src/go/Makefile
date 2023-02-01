@@ -4,6 +4,9 @@ REGISTRY=`minikube ip`:5000
 
 all: build-lambda build-compose
 
+proto:
+	buf generate ../../protos/
+
 start:
 	# Front end
 	PORT=14002 go run cmd/auth/main.go

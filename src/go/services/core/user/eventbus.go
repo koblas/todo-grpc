@@ -1,12 +1,14 @@
 package user
 
-import "github.com/koblas/grpc-todo/gen/corepb"
+import (
+	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
+)
 
 const ENTITY_USER = "entity:user"
 const ENTITY_SETTINGS = "entity:user_settings"
 const ENTITY_SECURITY = "event:user_security"
 
-func (s *UserServer) toProtoUser(user *User) *corepb.User {
+func (s *UserServer) toProtoUser(user *User) *corepbv1.User {
 	if user == nil {
 		return nil
 	}
@@ -16,7 +18,7 @@ func (s *UserServer) toProtoUser(user *User) *corepb.User {
 		isVerified = isVerified || (v == user.Email)
 	}
 
-	return &corepb.User{
+	return &corepbv1.User{
 		Id:              user.ID,
 		Name:            user.Name,
 		Email:           user.Email,
@@ -26,21 +28,21 @@ func (s *UserServer) toProtoUser(user *User) *corepb.User {
 	}
 }
 
-func (s *UserServer) toProtoSettings(user *User) *corepb.UserSettings {
+func (s *UserServer) toProtoSettings(user *User) *corepbv1.UserSettings {
 	if user == nil {
 		return nil
 	}
 
-	output := map[string]*corepb.UserSettingGroup{}
+	output := map[string]*corepbv1.UserSettingGroup{}
 	for key, value := range user.Settings {
-		subgroup := corepb.UserSettingGroup{}
+		subgroup := corepbv1.UserSettingGroup{}
 		output[key] = &subgroup
 		for subkey, subvalue := range value {
 			subgroup.Values[subkey] = subvalue
 		}
 	}
 
-	return &corepb.UserSettings{
+	return &corepbv1.UserSettings{
 		UserId:   user.ID,
 		Settings: output,
 	}

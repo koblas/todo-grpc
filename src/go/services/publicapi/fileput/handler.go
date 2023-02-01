@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/koblas/grpc-todo/gen/corepb"
+	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/twitchtv/twirp"
 	"go.uber.org/zap"
@@ -16,12 +16,12 @@ import (
 
 // Server represents the gRPC server
 type FilePutServer struct {
-	file corepb.FileService
+	file corepbv1.FileService
 }
 
 type Option func(*FilePutServer)
 
-func WithFileService(client corepb.FileService) Option {
+func WithFileService(client corepbv1.FileService) Option {
 	return func(svr *FilePutServer) {
 		svr.file = client
 	}
@@ -60,7 +60,7 @@ func (svc *FilePutServer) handleGET(ctx context.Context, log logger.Logger, writ
 	log.Info("Getting file")
 	url := req.URL
 
-	result, err := svc.file.Get(ctx, &corepb.FileGetParams{
+	result, err := svc.file.Get(ctx, &corepbv1.FileServiceGetRequest{
 		Path: strings.TrimPrefix(req.URL.Path, "/api/v1/fileput/"),
 	})
 	if err != nil {
@@ -95,7 +95,7 @@ func (svc *FilePutServer) handlePUT(ctx context.Context, log logger.Logger, writ
 		return
 	}
 
-	_, err := svc.file.Upload(ctx, &corepb.FileUploadParams{
+	_, err := svc.file.Upload(ctx, &corepbv1.FileServiceUploadRequest{
 		Path:        url.Path,
 		Query:       url.RawQuery,
 		ContentType: contentType,

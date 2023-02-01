@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
-	"github.com/koblas/grpc-todo/gen/apipb"
-	"github.com/koblas/grpc-todo/gen/corepb"
+	apipbv1 "github.com/koblas/grpc-todo/gen/apipb/v1"
+	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/pkg/redisutil"
@@ -25,13 +25,13 @@ func main() {
 
 	opts := []auth.Option{
 		auth.WithUserClient(
-			corepb.NewUserServiceProtobufClient(
+			corepbv1.NewUserServiceProtobufClient(
 				"http://"+config.UserServiceAddr,
 				&http.Client{},
 			),
 		),
 		auth.WithOAuthClient(
-			corepb.NewAuthUserServiceProtobufClient(
+			corepbv1.NewAuthUserServiceProtobufClient(
 				"http://"+config.OauthUserServiceAddr,
 				&http.Client{},
 			),
@@ -43,7 +43,7 @@ func main() {
 		opts = append(opts, auth.WithAttemptService(auth.NewAttemptCounter("publicapi:authentication", rdb)))
 	}
 
-	api := apipb.NewAuthenticationServiceServer(auth.NewAuthenticationServer(config, opts...))
+	api := apipbv1.NewAuthenticationServiceServer(auth.NewAuthenticationServer(config, opts...))
 
 	mgr.Start(mgr.WrapHttpHandler(api))
 }

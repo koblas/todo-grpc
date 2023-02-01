@@ -10,7 +10,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/koblas/grpc-todo/gen/corepb"
+	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/nats-io/nats.go"
@@ -112,7 +112,7 @@ func (svc *Client) Do(req *http.Request) (*http.Response, error) {
 
 type TopicHandler interface {
 	GroupName() string
-	Handler() corepb.TwirpServer
+	Handler() corepbv1.TwirpServer
 }
 
 type Consumer struct {

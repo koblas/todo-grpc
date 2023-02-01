@@ -1,0 +1,10 @@
+syntax = "proto3";
+package apipb.v1;
+
+option go_package = "./;apipbv1";
+
+message GptServiceCreateRequest { string prompt = 1; }
+
+message GptServiceCreateResponse { string text = 1; }
+
+service GptService { rpc Create(GptServiceCreateRequest) returns (GptServiceCreateResponse); }

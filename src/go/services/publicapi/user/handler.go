@@ -5,8 +5,8 @@ import (
 	"log"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/koblas/grpc-todo/gen/apipb"
-	"github.com/koblas/grpc-todo/gen/corepb"
+	apipbv1 "github.com/koblas/grpc-todo/gen/apipb/v1"
+	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/protoutil"
 	"github.com/koblas/grpc-todo/pkg/tokenmanager"
@@ -19,13 +19,13 @@ var validate = validator.New()
 
 // Server represents the gRPC server
 type UserServer struct {
-	user     corepb.UserService
+	user     corepbv1.UserService
 	jwtMaker tokenmanager.Maker
 }
 
 type Option func(*UserServer)
 
-func WithUserService(client corepb.UserService) Option {
+func WithUserService(client corepbv1.UserService) Option {
 	return func(svr *UserServer) {
 		svr.user = client
 	}
@@ -53,7 +53,7 @@ func (svc *UserServer) getUserId(ctx context.Context) (string, error) {
 }
 
 // SayHello generates response to a Ping request
-func (svc *UserServer) GetUser(ctx context.Context, _ *apipb.UserGetParams) (*apipb.UserResponse, error) {
+func (svc *UserServer) GetUser(ctx context.Context, _ *apipbv1.UserGetParams) (*apipbv1.UserResponse, error) {
 	log := logger.FromContext(ctx)
 	log.Info("GetUser BEGIN")
 
@@ -65,7 +65,7 @@ func (svc *UserServer) GetUser(ctx context.Context, _ *apipb.UserGetParams) (*ap
 	log = log.With("userId", userId)
 	log.Info("Looking up user")
 
-	user, err := svc.user.FindBy(ctx, &corepb.UserFindParam{
+	user, err := svc.user.FindBy(ctx, &corepbv1.UserFindParam{
 		UserId: userId,
 	})
 
@@ -83,7 +83,7 @@ func (svc *UserServer) GetUser(ctx context.Context, _ *apipb.UserGetParams) (*ap
 	return marshalUser(user), nil
 }
 
-func (svc *UserServer) UpdateUser(ctx context.Context, update *apipb.UserUpdateParams) (*apipb.UserResponse, error) {
+func (svc *UserServer) UpdateUser(ctx context.Context, update *apipbv1.UserUpdateParams) (*apipbv1.UserResponse, error) {
 	log := logger.FromContext(ctx)
 	log.Info("UserUpdate BEGIN")
 
@@ -93,7 +93,7 @@ func (svc *UserServer) UpdateUser(ctx context.Context, update *apipb.UserUpdateP
 		return nil, twirp.Unauthenticated.Error("missing userid")
 	}
 
-	user, err := svc.user.FindBy(ctx, &corepb.UserFindParam{
+	user, err := svc.user.FindBy(ctx, &corepbv1.UserFindParam{
 		UserId: userId,
 	})
 	if err != nil {
@@ -117,7 +117,7 @@ func (svc *UserServer) UpdateUser(ctx context.Context, update *apipb.UserUpdateP
 		}
 	}
 
-	user, err = svc.user.Update(ctx, &corepb.UserUpdateParam{
+	user, err = svc.user.Update(ctx, &corepbv1.UserUpdateParam{
 		UserId:      userId,
 		Name:        update.Name,
 		Email:       update.Email,
@@ -132,8 +132,8 @@ func (svc *UserServer) UpdateUser(ctx context.Context, update *apipb.UserUpdateP
 	return marshalUser(user), nil
 }
 
-func marshalUser(user *corepb.User) *apipb.UserResponse {
-	return &apipb.UserResponse{
+func marshalUser(user *corepbv1.User) *apipbv1.UserResponse {
+	return &apipbv1.UserResponse{
 		User: protoutil.UserCoreToApi(user),
 	}
 }

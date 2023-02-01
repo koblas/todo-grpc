@@ -33,7 +33,7 @@ export class WebsocketTodo extends Construct {
         rawMessageDelivery: true,
         filterPolicy: {
           "twirp.path": SubscriptionFilter.stringFilter({
-            allowlist: ["/twirp/corepb.eventbus.TodoEventbus/TodoChange"],
+            allowlist: ["/twirp/corepbv1.eventbus.TodoEventbus/TodoChange"],
           }),
         },
       }),
@@ -69,7 +69,7 @@ export class WebsocketUser extends Construct {
         rawMessageDelivery: true,
         filterPolicy: {
           "twirp.path": SubscriptionFilter.stringFilter({
-            allowlist: ["/twirp/corepb.eventbus.UserEventbus/UserChange"],
+            allowlist: ["/twirp/corepbv1.eventbus.UserEventbus/UserChange"],
           }),
         },
       }),
@@ -118,7 +118,7 @@ export class WebsocketBroadcast extends Construct {
         rawMessageDelivery: true,
         filterPolicy: {
           "twirp.path": SubscriptionFilter.stringFilter({
-            allowlist: ["/twirp/corepb.eventbus.BroadcastEventbus/Send"],
+            allowlist: ["/twirp/corepbv1.eventbus.BroadcastEventbus/Send"],
           }),
         },
       }),

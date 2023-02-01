@@ -3,7 +3,6 @@ package file
 import (
 	"strings"
 
-	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/key_manager"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/oklog/ulid/v2"
@@ -15,11 +14,11 @@ import (
 // Server represents the gRPC server
 type FileServer struct {
 	files  FileStore
-	pubsub corepb.FileEventbus
+	pubsub corepbv1.FileEventbus
 	kms    key_manager.Encoder
 }
 
-var _ corepb.FileService = (*FileServer)(nil)
+var _ corepbv1.FileService = (*FileServer)(nil)
 
 type Option func(*FileServer)
 
@@ -29,7 +28,7 @@ func WithFileStore(store FileStore) Option {
 	}
 }
 
-func WithProducer(bus corepb.FileEventbus) Option {
+func WithProducer(bus corepbv1.FileEventbus) Option {
 	return func(cfg *FileServer) {
 		cfg.pubsub = bus
 	}
@@ -47,7 +46,7 @@ func NewFileServer(opts ...Option) *FileServer {
 	return &svr
 }
 
-func (s *FileServer) UploadUrl(ctx context.Context, params *corepb.FileUploadUrlParams) (*corepb.FileUploadUrlResponse, error) {
+func (s *FileServer) UploadUrl(ctx context.Context, params *corepbv1.FileUploadUrlParams) (*corepbv1.FileUploadUrlResponse, error) {
 	if params.UserId == "" {
 		return nil, twirp.InvalidArgumentError("userId", "missing")
 	}
@@ -60,12 +59,12 @@ func (s *FileServer) UploadUrl(ctx context.Context, params *corepb.FileUploadUrl
 		return nil, twirp.InternalErrorWith(err)
 	}
 
-	return &corepb.FileUploadUrlResponse{
+	return &corepbv1.FileUploadUrlResponse{
 		Url: result,
 	}, nil
 }
 
-func (s *FileServer) VerifyUrl(ctx context.Context, params *corepb.FileVerifyUrlParams) (*corepb.FileVerifyUrlResponse, error) {
+func (s *FileServer) VerifyUrl(ctx context.Context, params *corepbv1.FileVerifyUrlParams) (*corepbv1.FileVerifyUrlResponse, error) {
 	log := logger.FromContext(ctx)
 
 	result, err := s.files.LookupUploadUrl(ctx, params.Url)
@@ -74,7 +73,7 @@ func (s *FileServer) VerifyUrl(ctx context.Context, params *corepb.FileVerifyUrl
 		return nil, twirp.InternalErrorWith(err)
 	}
 
-	return &corepb.FileVerifyUrlResponse{
+	return &corepbv1.FileVerifyUrlResponse{
 		Type:   result.FileType,
 		UserId: result.UserId,
 	}, nil
@@ -82,7 +81,7 @@ func (s *FileServer) VerifyUrl(ctx context.Context, params *corepb.FileVerifyUrl
 
 // Put - write non-authenticated bytes to a persistent store and triggers a notification.
 // If we have S3 (or similar) then this is not needed
-func (s *FileServer) Upload(ctx context.Context, params *corepb.FileUploadParams) (*corepb.FileUploadResponse, error) {
+func (s *FileServer) Upload(ctx context.Context, params *corepbv1.FileUploadParams) (*corepbv1.FileUploadResponse, error) {
 	log := logger.FromContext(ctx).With(zap.String("method", "Upload"))
 
 	if err := s.files.VerifyUploadUrl(ctx, params.Path, params.Query); err != nil {
@@ -100,21 +99,21 @@ func (s *FileServer) Upload(ctx context.Context, params *corepb.FileUploadParams
 	}
 	log.With(zap.String("path", params.Path)).Info("Accepted file")
 
-	s.pubsub.FileUploaded(ctx, &corepb.FileUploadEvent{
+	s.pubsub.FileUploaded(ctx, &corepbv1.FileUploadEvent{
 		IdemponcyId: entry.Id,
-		Info: &corepb.FileUploadInfo{
+		Info: &corepbv1.FileUploadInfo{
 			UserId:   &entry.UserId,
 			FileType: entry.FileType + ":upload",
 			Url:      entry.InternalUrl,
 		},
 	})
 
-	return &corepb.FileUploadResponse{
+	return &corepbv1.FileUploadResponse{
 		Path: params.Path,
 	}, nil
 }
 
-func (s *FileServer) Put(ctx context.Context, params *corepb.FilePutParams) (*corepb.FilePutResponse, error) {
+func (s *FileServer) Put(ctx context.Context, params *corepbv1.FilePutParams) (*corepbv1.FilePutResponse, error) {
 	log := logger.FromContext(ctx).With(
 		zap.String("method", "Put"),
 		zap.Int("length", len(params.Data)),
@@ -133,12 +132,12 @@ func (s *FileServer) Put(ctx context.Context, params *corepb.FilePutParams) (*co
 
 	log.Info("File stored success")
 
-	return &corepb.FilePutResponse{
+	return &corepbv1.FilePutResponse{
 		Path: url,
 	}, nil
 }
 
-func (s *FileServer) Get(ctx context.Context, params *corepb.FileGetParams) (*corepb.FileGetResponse, error) {
+func (s *FileServer) Get(ctx context.Context, params *corepbv1.FileGetParams) (*corepbv1.FileGetResponse, error) {
 	log := logger.FromContext(ctx).With(
 		zap.String("method", "Get"),
 		zap.String("path", params.Path),
@@ -155,7 +154,7 @@ func (s *FileServer) Get(ctx context.Context, params *corepb.FileGetParams) (*co
 	}
 	log.With(zap.Int("length", len(data))).Info("Sending data")
 
-	return &corepb.FileGetResponse{
+	return &corepbv1.FileGetResponse{
 		Data: data,
 	}, nil
 }

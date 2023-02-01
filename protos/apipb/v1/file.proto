@@ -1,0 +1,12 @@
+syntax = "proto3";
+package apipb.v1;
+
+option go_package = "./;apipbv1";
+
+// Upload URL RPC
+message FileUploadUrlRequest { string type = 1; }
+message FileUploadUrlResponse { string url = 1; }
+
+service FileService {
+  rpc UploadUrl(FileUploadUrlRequest) returns (FileUploadUrlResponse);
+}

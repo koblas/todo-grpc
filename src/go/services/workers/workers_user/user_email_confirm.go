@@ -3,7 +3,7 @@ package workers_user
 import (
 	"context"
 
-	"github.com/koblas/grpc-todo/gen/corepb"
+	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"go.uber.org/zap"
 )
@@ -21,18 +21,18 @@ type userEmailConfirm struct {
 	WorkerConfig
 }
 
-func NewUserEmailConfirm(config WorkerConfig) corepb.TwirpServer {
+func NewUserEmailConfirm(config WorkerConfig) corepbv1.TwirpServer {
 	svc := &userEmailConfirm{WorkerConfig: config}
 
-	return corepb.NewUserEventbusServer(svc)
+	return corepbv1.NewUserEventbusServer(svc)
 }
 
-func (cfg *userEmailConfirm) SecurityRegisterToken(ctx context.Context, msg *corepb.UserSecurityEvent) (*corepb.EventbusEmpty, error) {
+func (cfg *userEmailConfirm) SecurityRegisterToken(ctx context.Context, msg *corepbv1.UserSecurityEvent) (*corepbv1.EventbusEmpty, error) {
 	log := logger.FromContext(ctx).With(zap.Int32("action", int32(msg.Action))).With(zap.String("email", msg.User.Email))
 
 	log.Info("processing message")
-	if msg.Action != corepb.UserSecurity_USER_REGISTER_TOKEN {
-		return &corepb.EventbusEmpty{}, nil
+	if msg.Action != corepbv1.UserSecurity_USER_REGISTER_TOKEN {
+		return &corepbv1.EventbusEmpty{}, nil
 	}
 
 	tokenValue, err := decodeSecure(log, msg.Token)
@@ -42,9 +42,9 @@ func (cfg *userEmailConfirm) SecurityRegisterToken(ctx context.Context, msg *cor
 
 	log = log.With("email", msg.User.Email)
 
-	params := corepb.EmailRegisterParam{
+	params := corepbv1.EmailRegisterParam{
 		AppInfo: buildAppInfo(cfg.config),
-		Recipient: &corepb.EmailUser{
+		Recipient: &corepbv1.EmailUser{
 			UserId: msg.User.Id,
 			Name:   msg.User.Name,
 			Email:  msg.User.Email,
@@ -59,5 +59,5 @@ func (cfg *userEmailConfirm) SecurityRegisterToken(ctx context.Context, msg *cor
 		return nil, err
 	}
 
-	return &corepb.EventbusEmpty{}, err
+	return &corepbv1.EventbusEmpty{}, err
 }

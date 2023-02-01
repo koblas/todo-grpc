@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/koblas/grpc-todo/gen/corepb"
+	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
@@ -43,7 +43,7 @@ func main() {
 	opts := []workers.Option{
 		workers.WithOnly(mode),
 		workers.WithSendEmail(
-			corepb.NewSendEmailServiceProtobufClient(
+			corepbv1.NewSendEmailServiceProtobufClient(
 				"sqs://send-email",
 				awsutil.NewTwirpCallLambda(),
 			),

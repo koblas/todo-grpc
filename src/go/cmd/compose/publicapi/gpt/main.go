@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
-	"github.com/koblas/grpc-todo/gen/apipb"
+	apipbv1 "github.com/koblas/grpc-todo/gen/apipb/v1"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/services/publicapi/gpt"
@@ -22,7 +22,7 @@ func main() {
 
 	opts := []gpt.Option{}
 
-	api := apipb.NewGptServiceServer(gpt.NewGptServer(config, opts...))
+	api := apipbv1.NewGptServiceServer(gpt.NewGptServer(config, opts...))
 
 	mgr.Start(mgr.WrapHttpHandler(api))
 }

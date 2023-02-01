@@ -4,16 +4,16 @@ import (
 	"encoding/base64"
 	"errors"
 
-	"github.com/koblas/grpc-todo/gen/corepb"
+	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
 	"github.com/koblas/grpc-todo/pkg/key_manager"
 )
 
-func SecureValueEncode(encoder key_manager.Encoder, token string) (*corepb.SecureValue, error) {
+func SecureValueEncode(encoder key_manager.Encoder, token string) (*corepbv1.SecureValue, error) {
 	svalue, err := encoder.Encode([]byte(token))
 	if err != nil {
 		return nil, err
 	}
-	return &corepb.SecureValue{
+	return &corepbv1.SecureValue{
 		KeyUri:    svalue.KmsUri,
 		DataKey:   base64.RawStdEncoding.EncodeToString(svalue.DataKey),
 		DataValue: base64.RawStdEncoding.EncodeToString(svalue.Data),
@@ -21,7 +21,7 @@ func SecureValueEncode(encoder key_manager.Encoder, token string) (*corepb.Secur
 
 }
 
-func SecureValueDecode(decoder key_manager.Decoder, value *corepb.SecureValue) (string, error) {
+func SecureValueDecode(decoder key_manager.Decoder, value *corepbv1.SecureValue) (string, error) {
 	dataKey, err := base64.RawStdEncoding.DecodeString(value.DataKey)
 	if err != nil {
 		return "", err

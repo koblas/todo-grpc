@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/koblas/grpc-todo/gen/corepb"
+	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
@@ -20,8 +20,8 @@ func main() {
 	}
 
 	log.With(zap.String("eventArn", config.EventArn)).Info("Constructing producer")
-	// eventbus := corepb.NewTodoEventbusProtobufClient(config.EventArn, awsutil.NewTwirpCallLambda())
-	producer := corepb.NewTodoEventbusJSONClient(
+	// eventbus := corepbv1.NewTodoEventbusProtobufClient(config.EventArn, awsutil.NewTwirpCallLambda())
+	producer := corepbv1.NewTodoEventbusJSONClient(
 		config.EventArn,
 		awsutil.NewTwirpCallLambda(),
 	)
@@ -31,7 +31,7 @@ func main() {
 		todo.WithTodoStore(todo.NewTodoDynamoStore()),
 	}
 
-	api := corepb.NewTodoServiceServer(todo.NewTodoServer(opts...))
+	api := corepbv1.NewTodoServiceServer(todo.NewTodoServer(opts...))
 
 	mgr.Start(awsutil.HandleApiLambda(api))
 }

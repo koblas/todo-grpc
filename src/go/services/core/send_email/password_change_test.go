@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/jaswdr/faker"
-	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/stretchr/testify/require"
 )
 
@@ -14,12 +13,12 @@ func TestPasswordChange(t *testing.T) {
 
 	svc, msgData := buildTestService()
 
-	params := corepb.EmailPasswordChangeParam{
-		Recipient: &corepb.EmailUser{
+	params := corepbv1.EmailPasswordChangeParam{
+		Recipient: &corepbv1.EmailUser{
 			Name:  faker.Person().Name(),
 			Email: faker.Internet().Email(),
 		},
-		AppInfo: &corepb.EmailAppInfo{
+		AppInfo: &corepbv1.EmailAppInfo{
 			AppName: faker.Company().Name(),
 			UrlBase: faker.Internet().URL(),
 		},

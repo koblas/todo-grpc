@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/jaswdr/faker"
-	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/stretchr/testify/require"
 )
 
@@ -14,16 +13,16 @@ func TestInviteUser(t *testing.T) {
 
 	svc, msgData := buildTestService()
 
-	params := corepb.EmailInviteUserParam{
-		Sender: &corepb.EmailUser{
+	params := corepbv1.EmailInviteUserParam{
+		Sender: &corepbv1.EmailUser{
 			Name:  faker.Person().Name(),
 			Email: faker.Internet().Email(),
 		},
-		Recipient: &corepb.EmailUser{
+		Recipient: &corepbv1.EmailUser{
 			Name:  faker.Person().Name(),
 			Email: faker.Internet().Email(),
 		},
-		AppInfo: &corepb.EmailAppInfo{
+		AppInfo: &corepbv1.EmailAppInfo{
 			AppName: faker.Company().Name(),
 			UrlBase: faker.Internet().URL(),
 		},

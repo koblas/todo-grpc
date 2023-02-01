@@ -36,7 +36,7 @@ export class CreateWorkersFile extends Construct {
       },
       filterPolicy: {
         "twirp.path": SubscriptionFilter.stringFilter({
-          allowlist: ["/twirp/corepb.eventbus.FileEventbus/FileUploaded"],
+          allowlist: ["/twirp/corepbv1.eventbus.FileEventbus/FileUploaded"],
         }),
       },
     });
@@ -57,7 +57,7 @@ export class CreateWorkersUser extends Construct {
       env: { SQS_HANDLER: "userSecurity/password_changed" },
       filterPolicy: {
         "twirp.path": SubscriptionFilter.stringFilter({
-          allowlist: ["/twirp/corepb.eventbus.UserEventbus/SecurityPasswordChange"],
+          allowlist: ["/twirp/corepbv1.eventbus.UserEventbus/SecurityPasswordChange"],
         }),
       },
     });
@@ -68,7 +68,7 @@ export class CreateWorkersUser extends Construct {
       env: { SQS_HANDLER: "userSecurity/register" },
       filterPolicy: {
         "twirp.path": SubscriptionFilter.stringFilter({
-          allowlist: ["/twirp/corepb.eventbus.UserEventbus/SecurityRegisterToken"],
+          allowlist: ["/twirp/corepbv1.eventbus.UserEventbus/SecurityRegisterToken"],
         }),
       },
     });
@@ -79,7 +79,7 @@ export class CreateWorkersUser extends Construct {
       env: { SQS_HANDLER: "userSecurity/forgot" },
       filterPolicy: {
         "twirp.path": SubscriptionFilter.stringFilter({
-          allowlist: ["/twirp/corepb.eventbus.UserEventbus/SecurityForgotRequest"],
+          allowlist: ["/twirp/corepbv1.eventbus.UserEventbus/SecurityForgotRequest"],
         }),
       },
     });
@@ -90,7 +90,7 @@ export class CreateWorkersUser extends Construct {
       env: { SQS_HANDLER: "userSecurity/invite" },
       filterPolicy: {
         "twirp.path": SubscriptionFilter.stringFilter({
-          allowlist: ["/twirp/corepb.eventbus.UserEventbus/SecurityInviteToken"],
+          allowlist: ["/twirp/corepbv1.eventbus.UserEventbus/SecurityInviteToken"],
         }),
       },
     });

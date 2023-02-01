@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/koblas/grpc-todo/gen/corepb"
+	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/pkg/protoutil"
@@ -13,7 +13,7 @@ import (
 )
 
 type UserServer struct {
-	producer corepb.BroadcastEventbus
+	producer corepbv1.BroadcastEventbus
 }
 
 type SocketMessage struct {
@@ -26,10 +26,10 @@ type SocketMessage struct {
 type Option func(*UserServer)
 
 type UserServerHandler struct {
-	handler corepb.TwirpServer
+	handler corepbv1.TwirpServer
 }
 
-func WithProducer(producer corepb.BroadcastEventbus) Option {
+func WithProducer(producer corepbv1.BroadcastEventbus) Option {
 	return func(conf *UserServer) {
 		conf.producer = producer
 	}
@@ -44,7 +44,7 @@ func NewUserChangeServer(opts ...Option) []manager.MsgHandler {
 
 	return []manager.MsgHandler{
 		&UserServerHandler{
-			handler: corepb.NewUserEventbusServer(&svr),
+			handler: corepbv1.NewUserEventbusServer(&svr),
 		},
 	}
 }
@@ -53,11 +53,11 @@ func (svc *UserServerHandler) GroupName() string {
 	return "websocket.user"
 }
 
-func (svc *UserServerHandler) Handler() corepb.TwirpServer {
+func (svc *UserServerHandler) Handler() corepbv1.TwirpServer {
 	return svc.handler
 }
 
-func (svc *UserServer) UserChange(ctx context.Context, event *corepb.UserChangeEvent) (*corepb.EventbusEmpty, error) {
+func (svc *UserServer) UserChange(ctx context.Context, event *corepbv1.UserChangeEvent) (*corepbv1.EventbusEmpty, error) {
 	log := logger.FromContext(ctx)
 	log.Info("received user event")
 
@@ -94,8 +94,8 @@ func (svc *UserServer) UserChange(ctx context.Context, event *corepb.UserChangeE
 		return nil, err
 	}
 
-	if _, err := svc.producer.Send(ctx, &corepb.BroadcastEvent{
-		Filter: &corepb.BroadcastFilter{
+	if _, err := svc.producer.Send(ctx, &corepbv1.BroadcastEvent{
+		Filter: &corepbv1.BroadcastFilter{
 			UserId: userId,
 		},
 		Data: data,
@@ -103,18 +103,18 @@ func (svc *UserServer) UserChange(ctx context.Context, event *corepb.UserChangeE
 		log.With(zap.Error(err)).Error("failed to send to websocket")
 	}
 
-	return &corepb.EventbusEmpty{}, nil
+	return &corepbv1.EventbusEmpty{}, nil
 }
 
-func (*UserServer) SecurityPasswordChange(context.Context, *corepb.UserSecurityEvent) (*corepb.EventbusEmpty, error) {
-	return &corepb.EventbusEmpty{}, nil
+func (*UserServer) SecurityPasswordChange(context.Context, *corepbv1.UserSecurityEvent) (*corepbv1.EventbusEmpty, error) {
+	return &corepbv1.EventbusEmpty{}, nil
 }
-func (*UserServer) SecurityForgotRequest(context.Context, *corepb.UserSecurityEvent) (*corepb.EventbusEmpty, error) {
-	return &corepb.EventbusEmpty{}, nil
+func (*UserServer) SecurityForgotRequest(context.Context, *corepbv1.UserSecurityEvent) (*corepbv1.EventbusEmpty, error) {
+	return &corepbv1.EventbusEmpty{}, nil
 }
-func (*UserServer) SecurityRegisterToken(context.Context, *corepb.UserSecurityEvent) (*corepb.EventbusEmpty, error) {
-	return &corepb.EventbusEmpty{}, nil
+func (*UserServer) SecurityRegisterToken(context.Context, *corepbv1.UserSecurityEvent) (*corepbv1.EventbusEmpty, error) {
+	return &corepbv1.EventbusEmpty{}, nil
 }
-func (*UserServer) SecurityInviteToken(context.Context, *corepb.UserSecurityEvent) (*corepb.EventbusEmpty, error) {
-	return &corepb.EventbusEmpty{}, nil
+func (*UserServer) SecurityInviteToken(context.Context, *corepbv1.UserSecurityEvent) (*corepbv1.EventbusEmpty, error) {
+	return &corepbv1.EventbusEmpty{}, nil
 }

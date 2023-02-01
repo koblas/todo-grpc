@@ -1,8 +1,6 @@
 package main
 
 import (
-	"github.com/koblas/grpc-todo/gen/apipb"
-	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
@@ -21,10 +19,10 @@ func main() {
 	}
 
 	opts := []todo.Option{
-		todo.WithTodoService(corepb.NewTodoServiceJSONClient("lambda://core-todo", awsutil.NewTwirpCallLambda())),
+		todo.WithTodoService(corepbv1.NewTodoServiceJSONClient("lambda://core-todo", awsutil.NewTwirpCallLambda())),
 	}
 
-	api := apipb.NewTodoServiceServer(todo.NewTodoServer(config, opts...))
+	api := apipbv1.NewTodoServiceServer(todo.NewTodoServer(config, opts...))
 
 	mgr.Start(awsutil.HandleApiLambda(api))
 }

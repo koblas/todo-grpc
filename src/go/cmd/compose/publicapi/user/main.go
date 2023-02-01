@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
-	"github.com/koblas/grpc-todo/gen/apipb"
-	"github.com/koblas/grpc-todo/gen/corepb"
+	apipbv1 "github.com/koblas/grpc-todo/gen/apipb/v1"
+	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/services/publicapi/user"
@@ -24,14 +24,14 @@ func main() {
 
 	opts := []user.Option{
 		user.WithUserService(
-			corepb.NewUserServiceProtobufClient(
+			corepbv1.NewUserServiceProtobufClient(
 				"http://"+config.UserServiceAddr,
 				&http.Client{},
 			),
 		),
 	}
 
-	api := apipb.NewUserServiceServer(user.NewUserServer(config, opts...))
+	api := apipbv1.NewUserServiceServer(user.NewUserServer(config, opts...))
 
 	mgr.Start(mgr.WrapHttpHandler(api))
 }

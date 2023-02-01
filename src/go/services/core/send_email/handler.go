@@ -5,38 +5,38 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/koblas/grpc-todo/gen/corepb"
+	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
 	"github.com/koblas/grpc-todo/pkg/manager"
 )
 
 type SendEmailServer struct {
 	sender Sender
-	pubsub corepb.SendEmailEvents
+	pubsub corepbv1.SendEmailEvents
 }
 
 // This is really hear to make it easy to make sure that you've
 //
 //	tied the correct event to the template that will be sent
-var templates map[corepb.EmailTemplate]emailContent = map[corepb.EmailTemplate]emailContent{
-	corepb.EmailTemplate_USER_REGISTERED:   registerUser,
-	corepb.EmailTemplate_USER_INVITED:      inviteUser,
-	corepb.EmailTemplate_PASSWORD_CHANGE:   passwordChange,
-	corepb.EmailTemplate_PASSWORD_RECOVERY: passwordRecovery,
+var templates map[corepbv1.EmailTemplate]emailContent = map[corepbv1.EmailTemplate]emailContent{
+	corepbv1.EmailTemplate_USER_REGISTERED:   registerUser,
+	corepbv1.EmailTemplate_USER_INVITED:      inviteUser,
+	corepbv1.EmailTemplate_PASSWORD_CHANGE:   passwordChange,
+	corepbv1.EmailTemplate_PASSWORD_RECOVERY: passwordRecovery,
 }
 
 type Handler struct {
-	handler corepb.TwirpServer
+	handler corepbv1.TwirpServer
 }
 
 func (h Handler) GroupName() string {
 	return "send_email"
 }
 
-func (h Handler) Handler() corepb.TwirpServer {
+func (h Handler) Handler() corepbv1.TwirpServer {
 	return h.handler
 }
 
-func NewSendEmailServer(producer corepb.SendEmailEvents, sender Sender) []manager.MsgHandler {
+func NewSendEmailServer(producer corepbv1.SendEmailEvents, sender Sender) []manager.MsgHandler {
 	// pubsub, err := redisqueue.NewProducerWithOptions(&redisqueue.ProducerOptions{
 	// 	StreamMaxLength:      1000,
 	// 	ApproximateMaxLength: true,
@@ -50,7 +50,7 @@ func NewSendEmailServer(producer corepb.SendEmailEvents, sender Sender) []manage
 
 	return []manager.MsgHandler{
 		Handler{
-			handler: corepb.NewSendEmailServiceServer(&SendEmailServer{
+			handler: corepbv1.NewSendEmailServiceServer(&SendEmailServer{
 				pubsub: producer,
 				sender: sender,
 			}),
@@ -58,7 +58,7 @@ func NewSendEmailServer(producer corepb.SendEmailEvents, sender Sender) []manage
 	}
 }
 
-func (s *SendEmailServer) RegisterMessage(ctx context.Context, params *corepb.EmailRegisterParam) (*corepb.EmailOkResponse, error) {
+func (s *SendEmailServer) RegisterMessage(ctx context.Context, params *corepbv1.EmailRegisterParam) (*corepbv1.EmailOkResponse, error) {
 	recipient := params.Recipient.Email
 	sender := params.Recipient.Email
 	data := Params{
@@ -72,14 +72,14 @@ func (s *SendEmailServer) RegisterMessage(ctx context.Context, params *corepb.Em
 		"Token":   params.Token,
 	}
 
-	if err := s.simpleSend(ctx, sender, recipient, data, corepb.EmailTemplate_USER_REGISTERED, params.ReferenceId); err != nil {
+	if err := s.simpleSend(ctx, sender, recipient, data, corepbv1.EmailTemplate_USER_REGISTERED, params.ReferenceId); err != nil {
 		return nil, err
 	}
 
-	return &corepb.EmailOkResponse{Ok: true}, nil
+	return &corepbv1.EmailOkResponse{Ok: true}, nil
 }
 
-func (s *SendEmailServer) PasswordChangeMessage(ctx context.Context, params *corepb.EmailPasswordChangeParam) (*corepb.EmailOkResponse, error) {
+func (s *SendEmailServer) PasswordChangeMessage(ctx context.Context, params *corepbv1.EmailPasswordChangeParam) (*corepbv1.EmailOkResponse, error) {
 	recipient := params.Recipient.Email
 	sender := params.Recipient.Email
 	data := Params{
@@ -92,14 +92,14 @@ func (s *SendEmailServer) PasswordChangeMessage(ctx context.Context, params *cor
 		"URLBase": params.AppInfo.UrlBase,
 	}
 
-	if err := s.simpleSend(ctx, sender, recipient, data, corepb.EmailTemplate_PASSWORD_CHANGE, params.ReferenceId); err != nil {
+	if err := s.simpleSend(ctx, sender, recipient, data, corepbv1.EmailTemplate_PASSWORD_CHANGE, params.ReferenceId); err != nil {
 		return nil, err
 	}
 
-	return &corepb.EmailOkResponse{Ok: true}, nil
+	return &corepbv1.EmailOkResponse{Ok: true}, nil
 }
 
-func (s *SendEmailServer) PasswordRecoveryMessage(ctx context.Context, params *corepb.EmailPasswordRecoveryParam) (*corepb.EmailOkResponse, error) {
+func (s *SendEmailServer) PasswordRecoveryMessage(ctx context.Context, params *corepbv1.EmailPasswordRecoveryParam) (*corepbv1.EmailOkResponse, error) {
 	recipient := params.Recipient.Email
 	sender := params.Recipient.Email
 	data := Params{
@@ -113,14 +113,14 @@ func (s *SendEmailServer) PasswordRecoveryMessage(ctx context.Context, params *c
 		"Token":   params.Token,
 	}
 
-	if err := s.simpleSend(ctx, sender, recipient, data, corepb.EmailTemplate_PASSWORD_RECOVERY, params.ReferenceId); err != nil {
+	if err := s.simpleSend(ctx, sender, recipient, data, corepbv1.EmailTemplate_PASSWORD_RECOVERY, params.ReferenceId); err != nil {
 		return nil, err
 	}
 
-	return &corepb.EmailOkResponse{Ok: true}, nil
+	return &corepbv1.EmailOkResponse{Ok: true}, nil
 }
 
-func (s *SendEmailServer) InviteUserMessage(ctx context.Context, params *corepb.EmailInviteUserParam) (*corepb.EmailOkResponse, error) {
+func (s *SendEmailServer) InviteUserMessage(ctx context.Context, params *corepbv1.EmailInviteUserParam) (*corepbv1.EmailOkResponse, error) {
 	recipient := params.Recipient.Email
 	sender := params.Recipient.Email
 	data := Params{
@@ -139,18 +139,18 @@ func (s *SendEmailServer) InviteUserMessage(ctx context.Context, params *corepb.
 		"Token":   params.Token,
 	}
 
-	if err := s.simpleSend(ctx, sender, recipient, data, corepb.EmailTemplate_USER_INVITED, params.ReferenceId); err != nil {
+	if err := s.simpleSend(ctx, sender, recipient, data, corepbv1.EmailTemplate_USER_INVITED, params.ReferenceId); err != nil {
 		return nil, err
 	}
 
-	return &corepb.EmailOkResponse{Ok: true}, nil
+	return &corepbv1.EmailOkResponse{Ok: true}, nil
 }
 
 // One stop shop to send a message
-func (svc *SendEmailServer) simpleSend(ctx context.Context, sender, recipient string, data Params, tmpl corepb.EmailTemplate, referenceId string) error {
+func (svc *SendEmailServer) simpleSend(ctx context.Context, sender, recipient string, data Params, tmpl corepbv1.EmailTemplate, referenceId string) error {
 	content, found := templates[tmpl]
 	if !found {
-		return fmt.Errorf("unable to find template id=%d name=%s", tmpl, corepb.EmailTemplate_name[int32(tmpl)])
+		return fmt.Errorf("unable to find template id=%d name=%s", tmpl, corepbv1.EmailTemplate_name[int32(tmpl)])
 	}
 
 	subject, body, err := buildEmail(data, content)
@@ -168,8 +168,8 @@ func (svc *SendEmailServer) simpleSend(ctx context.Context, sender, recipient st
 	return nil
 }
 
-func (svc *SendEmailServer) notify(ctx context.Context, messageId string, recipient string, tmpl corepb.EmailTemplate, referenceId string) error {
-	_, err := svc.pubsub.NotifySent(ctx, &corepb.EmailSentEvent{
+func (svc *SendEmailServer) notify(ctx context.Context, messageId string, recipient string, tmpl corepbv1.EmailTemplate, referenceId string) error {
+	_, err := svc.pubsub.NotifySent(ctx, &corepbv1.EmailSentEvent{
 		RecipientEmail: recipient,
 		MessageId:      messageId,
 		Template:       tmpl,

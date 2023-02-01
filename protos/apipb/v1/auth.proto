@@ -1,0 +1,106 @@
+syntax = "proto3";
+
+package apipb.v1;
+
+// import "google/api/annotations.proto";
+
+option go_package = "./;apipbv1";
+
+message RegisterParams {
+  // Required
+  string email = 1;
+  // Required
+  string password = 2;
+  // Username
+  string name = 4;
+  // invite code
+  string invite = 5;
+}
+
+message LoginParams {
+  // Required
+  string email = 1;
+  // Required
+  string password = 2;
+  // TFA One Time Token
+  string tfa_otp = 4;
+  // TFA Type
+  string tfa_type = 5;
+}
+
+message ConfirmParams {
+  // Required: Verify and Update
+  string user_id = 1;
+  // Email confirmation token
+  string token = 2;
+}
+
+message RecoverySendParams {
+  // Required: Send
+  string email = 1;
+}
+
+message RecoveryUpdateParams {
+  // Required: Verify and Update
+  string user_id = 1;
+  // Required: Verify and Update
+  string token = 2;
+  // Required: Update
+  string password = 3;
+}
+
+// Oauth
+message OauthUrlParams {
+  string provider = 1;
+  string redirect_url = 2;
+  string state = 3;
+}
+
+message OauthUrlResult { string url = 1; }
+
+message OauthAssociateParams {
+  string provider = 1;
+  string redirect_url = 2;
+  string code = 3;
+  string state = 4;
+}
+
+// Response structures
+
+message ValidationError {
+  // Field name
+  string field = 1;
+  // Human readable message
+  string message = 2;
+}
+
+message Success { bool success = 1; }
+
+message Token {
+  string access_token = 1;
+  string token_type = 2;
+  int32 expires_in = 3;
+  string refresh_token = 4;
+}
+
+message TokenRegister {
+  Token token = 1;
+
+  // More for the OAuth case to distingish between new account and old
+  bool created = 2;
+}
+
+service AuthenticationService {
+  rpc Register(RegisterParams) returns (TokenRegister) ;
+
+  rpc Authenticate(LoginParams) returns (Token) ;
+
+  rpc VerifyEmail(ConfirmParams) returns (Success) ;
+
+  rpc RecoverSend(RecoverySendParams) returns (Success) ;
+  rpc RecoverVerify(RecoveryUpdateParams) returns (Success) ;
+  rpc RecoverUpdate(RecoveryUpdateParams) returns (Token) ;
+
+  rpc OauthLogin(OauthAssociateParams) returns (TokenRegister) ;
+  rpc OauthUrl(OauthUrlParams) returns (OauthUrlResult) ;
+}

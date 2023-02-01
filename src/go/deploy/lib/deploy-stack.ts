@@ -507,7 +507,7 @@ export class PublicAuth extends Construct {
     const integration = new HttpLambdaIntegration("integration", lambda, {
       payloadFormatVersion: PayloadFormatVersion.VERSION_2_0,
       parameterMapping: new ParameterMapping().overwritePath(
-        MappingValue.custom("/twirp/apipb.auth.AuthenticationService/$request.path.proxy"),
+        MappingValue.custom("/twirp/apipbv1.auth.AuthenticationService/$request.path.proxy"),
       ),
     });
 
@@ -543,7 +543,7 @@ export class PublicFile extends Construct {
     const integration = new HttpLambdaIntegration("integration", lambda, {
       payloadFormatVersion: PayloadFormatVersion.VERSION_2_0,
       parameterMapping: new ParameterMapping().overwritePath(
-        MappingValue.custom("/twirp/apipb.file.FileService/$request.path.proxy"),
+        MappingValue.custom("/twirp/apipbv1.file.FileService/$request.path.proxy"),
       ),
     });
 
@@ -571,7 +571,7 @@ export class PublicUser extends Construct {
     const integration = new HttpLambdaIntegration("integration", lambda, {
       payloadFormatVersion: PayloadFormatVersion.VERSION_2_0,
       parameterMapping: new ParameterMapping().overwritePath(
-        MappingValue.custom("/twirp/apipb.user.UserService/$request.path.proxy"),
+        MappingValue.custom("/twirp/apipbv1.user.UserService/$request.path.proxy"),
       ),
     });
 
@@ -599,7 +599,7 @@ export class PublicTodo extends Construct {
     const integration = new HttpLambdaIntegration("integration", lambda, {
       payloadFormatVersion: PayloadFormatVersion.VERSION_2_0,
       parameterMapping: new ParameterMapping().overwritePath(
-        MappingValue.custom("/twirp/apipb.todo.TodoService/$request.path.proxy"),
+        MappingValue.custom("/twirp/apipbv1.todo.TodoService/$request.path.proxy"),
       ),
     });
 

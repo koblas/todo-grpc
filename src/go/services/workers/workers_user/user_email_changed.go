@@ -3,7 +3,7 @@ package workers_user
 import (
 	"context"
 
-	"github.com/koblas/grpc-todo/gen/corepb"
+	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"go.uber.org/zap"
 )
@@ -21,24 +21,24 @@ type userEmailChanged struct {
 	WorkerConfig
 }
 
-func NewUserEmailChanged(config WorkerConfig) corepb.TwirpServer {
+func NewUserEmailChanged(config WorkerConfig) corepbv1.TwirpServer {
 	svc := &userEmailChanged{WorkerConfig: config}
 
-	return corepb.NewUserEventbusServer(svc)
+	return corepbv1.NewUserEventbusServer(svc)
 }
 
-func (cfg *userEmailChanged) SecurityPasswordChange(ctx context.Context, msg *corepb.UserSecurityEvent) (*corepb.EventbusEmpty, error) {
+func (cfg *userEmailChanged) SecurityPasswordChange(ctx context.Context, msg *corepbv1.UserSecurityEvent) (*corepbv1.EventbusEmpty, error) {
 	log := logger.FromContext(ctx).With(zap.Int32("action", int32(msg.Action))).With(zap.String("email", msg.User.Email))
 
 	log.Info("processing message")
-	if msg.Action != corepb.UserSecurity_USER_PASSWORD_CHANGE {
-		return &corepb.EventbusEmpty{}, nil
+	if msg.Action != corepbv1.UserSecurity_USER_PASSWORD_CHANGE {
+		return &corepbv1.EventbusEmpty{}, nil
 	}
 	user := msg.User
 
-	params := corepb.EmailPasswordChangeParam{
+	params := corepbv1.EmailPasswordChangeParam{
 		AppInfo: buildAppInfo(cfg.config),
-		Recipient: &corepb.EmailUser{
+		Recipient: &corepbv1.EmailUser{
 			UserId: user.Id,
 			Name:   user.Name,
 			Email:  user.Email,
@@ -52,5 +52,5 @@ func (cfg *userEmailChanged) SecurityPasswordChange(ctx context.Context, msg *co
 		return nil, err
 	}
 
-	return &corepb.EventbusEmpty{}, nil
+	return &corepbv1.EventbusEmpty{}, nil
 }

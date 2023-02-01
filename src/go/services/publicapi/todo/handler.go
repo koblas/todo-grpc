@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/koblas/grpc-todo/gen/apipb"
-	"github.com/koblas/grpc-todo/gen/corepb"
+	apipbv1 "github.com/koblas/grpc-todo/gen/apipb/v1"
+	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/pkg/tokenmanager"
@@ -18,13 +18,13 @@ import (
 
 // Server represents the gRPC server
 type TodoServer struct {
-	todos    corepb.TodoService
+	todos    corepbv1.TodoService
 	jwtMaker tokenmanager.Maker
 }
 
 type Option func(*TodoServer)
 
-func WithTodoService(client corepb.TodoService) Option {
+func WithTodoService(client corepbv1.TodoService) Option {
 	return func(svr *TodoServer) {
 		svr.todos = client
 	}
@@ -77,7 +77,7 @@ func (svc *TodoServer) getUserId(ctx context.Context) (string, error) {
 }
 
 // SayHello generates response to a Ping request
-func (svc *TodoServer) AddTodo(ctx context.Context, newTodo *apipb.TodoAddParams) (*apipb.TodoObject, error) {
+func (svc *TodoServer) TodoAdd(ctx context.Context, newTodo *apipbv1.TodoAddRequest) (*apipbv1.TodoAddResponse, error) {
 	log := logger.FromContext(ctx)
 	log.Info("AddTodo BEGIN")
 	userId, err := svc.getUserId(ctx)
@@ -86,7 +86,7 @@ func (svc *TodoServer) AddTodo(ctx context.Context, newTodo *apipb.TodoAddParams
 		return nil, twirp.Unauthenticated.Error("missing userid")
 	}
 
-	task, err := svc.todos.AddTodo(ctx, &corepb.TodoAddParams{
+	task, err := svc.todos.TodoAdd(ctx, &corepbv1.TodoAddRequest{
 		UserId: userId, // TODO
 		Task:   newTodo.Task,
 	})
@@ -97,13 +97,15 @@ func (svc *TodoServer) AddTodo(ctx context.Context, newTodo *apipb.TodoAddParams
 	}
 	log.With("task", newTodo.Task).Info("Received new task")
 
-	return &apipb.TodoObject{
-		Id:   task.Id,
-		Task: task.Task,
+	return &apipbv1.TodoAddResponse{
+		Todo: &apipbv1.TodoObject{
+			Id:   task.Todo.Id,
+			Task: task.Todo.Task,
+		},
 	}, nil
 }
 
-func (svc *TodoServer) GetTodos(ctx context.Context, _ *apipb.TodoGetParams) (*apipb.TodoResponse, error) {
+func (svc *TodoServer) TodoList(ctx context.Context, _ *apipbv1.TodoListRequest) (*apipbv1.TodoListResponse, error) {
 	log := logger.FromContext(ctx)
 	log.Info("GetTodos BEGIN")
 
@@ -113,7 +115,7 @@ func (svc *TodoServer) GetTodos(ctx context.Context, _ *apipb.TodoGetParams) (*a
 		return nil, twirp.Unauthenticated.Error("missing userid")
 	}
 
-	out, err := svc.todos.GetTodos(ctx, &corepb.TodoGetParams{
+	out, err := svc.todos.TodoList(ctx, &corepbv1.TodoListRequest{
 		UserId: userId,
 	})
 
@@ -121,20 +123,20 @@ func (svc *TodoServer) GetTodos(ctx context.Context, _ *apipb.TodoGetParams) (*a
 		return nil, twirp.InternalErrorWith(err)
 	}
 
-	todos := []*apipb.TodoObject{}
+	todos := []*apipbv1.TodoObject{}
 	if out != nil {
 		for _, item := range out.Todos {
-			todos = append(todos, &apipb.TodoObject{
+			todos = append(todos, &apipbv1.TodoObject{
 				Id:   item.Id,
 				Task: item.Task,
 			})
 		}
 	}
 
-	return &apipb.TodoResponse{Todos: todos}, nil
+	return &apipbv1.TodoListResponse{Todos: todos}, nil
 }
 
-func (svc *TodoServer) DeleteTodo(ctx context.Context, delTodo *apipb.TodoDeleteParams) (*apipb.TodoDeleteResponse, error) {
+func (svc *TodoServer) TodoDelete(ctx context.Context, delTodo *apipbv1.TodoDeleteRequest) (*apipbv1.TodoDeleteResponse, error) {
 	log := logger.FromContext(ctx)
 	log.Info("DeleteTodo BEGIN")
 
@@ -144,7 +146,7 @@ func (svc *TodoServer) DeleteTodo(ctx context.Context, delTodo *apipb.TodoDelete
 		return nil, twirp.Unauthenticated.Error("missing userid")
 	}
 
-	_, err = svc.todos.DeleteTodo(ctx, &corepb.TodoDeleteParams{
+	_, err = svc.todos.TodoDelete(ctx, &corepbv1.TodoDeleteRequest{
 		UserId: userId,
 		Id:     delTodo.Id,
 	})
@@ -153,5 +155,5 @@ func (svc *TodoServer) DeleteTodo(ctx context.Context, delTodo *apipb.TodoDelete
 		return nil, twirp.InternalErrorWith(err)
 	}
 
-	return &apipb.TodoDeleteResponse{Message: "success"}, nil
+	return &apipbv1.TodoDeleteResponse{Message: "success"}, nil
 }

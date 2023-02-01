@@ -7,13 +7,13 @@ import (
 	"net/http/httptest"
 	"strings"
 
-	"github.com/koblas/grpc-todo/gen/corepb"
+	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
 	"github.com/koblas/grpc-todo/pkg/filestore"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/manager"
 )
 
-type SqsConsumerBuilder func(WorkerConfig) corepb.TwirpServer
+type SqsConsumerBuilder func(WorkerConfig) corepbv1.TwirpServer
 
 type Worker struct {
 	Stream    string
@@ -26,10 +26,10 @@ type Worker struct {
 type WorkerConfig struct {
 	config      Config
 	onlyHandler string
-	pubsub      corepb.FileEventbus
-	// fileService corepb.FileService
+	pubsub      corepbv1.FileEventbus
+	// fileService corepbv1.FileService
 	fileService filestore.Filestore
-	userService corepb.UserService
+	userService corepbv1.UserService
 }
 
 type Option func(*WorkerConfig)
@@ -40,7 +40,7 @@ func WithOnly(item string) Option {
 	}
 }
 
-func WithProducer(bus corepb.FileEventbus) Option {
+func WithProducer(bus corepbv1.FileEventbus) Option {
 	return func(cfg *WorkerConfig) {
 		cfg.pubsub = bus
 	}
@@ -52,7 +52,7 @@ func WithFileService(svc filestore.Filestore) Option {
 	}
 }
 
-func WithUserService(svc corepb.UserService) Option {
+func WithUserService(svc corepbv1.UserService) Option {
 	return func(cfg *WorkerConfig) {
 		cfg.userService = svc
 	}
@@ -74,18 +74,18 @@ var workers = []Worker{}
 
 type HandlerData struct {
 	group   string
-	handler corepb.TwirpServer
+	handler corepbv1.TwirpServer
 }
 
 type Handler interface {
 	GroupName() string
-	Handler() corepb.TwirpServer
+	Handler() corepbv1.TwirpServer
 }
 
 func (h *HandlerData) GroupName() string {
 	return h.group
 }
-func (h *HandlerData) Handler() corepb.TwirpServer {
+func (h *HandlerData) Handler() corepbv1.TwirpServer {
 	return h.handler
 }
 
@@ -110,7 +110,7 @@ func BuildHandlers(config Config, opts ...Option) []manager.MsgHandler {
 }
 
 func GetHandlers(config Config, opts ...Option) http.HandlerFunc {
-	handlers := []corepb.TwirpServer{}
+	handlers := []corepbv1.TwirpServer{}
 
 	cfg := buildServiceConfig(config, opts...)
 

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/koblas/grpc-todo/gen/corepb"
+	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
@@ -19,7 +19,7 @@ func main() {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
-	producer := corepb.NewUserEventbusJSONClient(
+	producer := corepbv1.NewUserEventbusJSONClient(
 		config.EventArn,
 		awsutil.NewTwirpCallLambda(),
 	)
@@ -29,7 +29,7 @@ func main() {
 		user.WithUserStore(user.NewUserDynamoStore()),
 	}
 
-	api := corepb.NewUserServiceServer(user.NewUserServer(opts...))
+	api := corepbv1.NewUserServiceServer(user.NewUserServer(opts...))
 
 	mgr.Start(awsutil.HandleApiLambda(api))
 }

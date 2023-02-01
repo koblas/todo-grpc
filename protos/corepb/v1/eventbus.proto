@@ -1,0 +1,41 @@
+syntax = "proto3";
+package corepb.v1;
+option go_package = "./;corepbv1";
+
+import "corepb/v1/user.proto";
+import "corepb/v1/todo.proto";
+import "corepb/v1/file.proto";
+import "corepb/v1/websocket.proto";
+
+message EventbusEmpty {}
+
+// Websocket broadcast event
+service BroadcastEventbus {
+  rpc Send(corepb.v1.BroadcastEvent) returns (EventbusEmpty);
+}
+
+service UserEventbus {
+  rpc UserChange(corepb.v1.UserChangeEvent) returns (EventbusEmpty);
+
+  // Password change notification
+  rpc SecurityPasswordChange(corepb.v1.UserSecurityEvent)
+      returns (EventbusEmpty);
+  // Forgot password request notfication
+  rpc SecurityForgotRequest(corepb.v1.UserSecurityEvent)
+      returns (EventbusEmpty);
+  // New user registration
+  rpc SecurityRegisterToken(corepb.v1.UserSecurityEvent)
+      returns (EventbusEmpty);
+  // Invite sent
+  rpc SecurityInviteToken(corepb.v1.UserSecurityEvent)
+      returns (EventbusEmpty);
+}
+
+service TodoEventbus {
+  rpc TodoChange(corepb.v1.TodoChangeEvent) returns (EventbusEmpty);
+}
+
+service FileEventbus {
+  rpc FileUploaded(corepb.v1.FileServiceUploadEvent) returns (EventbusEmpty);
+  rpc FileComplete(corepb.v1.FileServiceCompleteEvent) returns (EventbusEmpty);
+}

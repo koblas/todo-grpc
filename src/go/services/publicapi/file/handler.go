@@ -3,7 +3,7 @@ package file
 import (
 	"log"
 
-	"github.com/koblas/grpc-todo/gen/apipb"
+	apipbv1 "github.com/koblas/grpc-todo/gen/apipb/v1"
 	"github.com/koblas/grpc-todo/pkg/filestore"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/tokenmanager"
@@ -16,7 +16,7 @@ import (
 
 // Server represents the gRPC server
 type FileServer struct {
-	// file     corepb.FileService
+	// file     corepbv1.FileService
 	uploadBucket string
 	file         filestore.Filestore
 	jwtMaker     tokenmanager.Maker
@@ -52,7 +52,7 @@ func (svc *FileServer) getUserId(ctx context.Context) (string, error) {
 	return tokenmanager.UserIdFromContext(ctx, svc.jwtMaker)
 }
 
-func (svc *FileServer) UploadUrl(ctx context.Context, input *apipb.UploadUrlParams) (*apipb.UploadUrlResponse, error) {
+func (svc *FileServer) UploadUrl(ctx context.Context, input *apipbv1.FileUploadUrlRequest) (*apipbv1.FileUploadUrlResponse, error) {
 	log := logger.FromContext(ctx)
 	log.Info("UploadUrl BEGIN")
 
@@ -85,7 +85,7 @@ func (svc *FileServer) UploadUrl(ctx context.Context, input *apipb.UploadUrlPara
 	// 	urlStr = "/minio_" + u.Path + "?" + u.RawQuery
 	// }
 
-	return &apipb.UploadUrlResponse{
+	return &apipbv1.FileUploadUrlResponse{
 		Url: urlStr,
 	}, nil
 }

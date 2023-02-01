@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
-	"github.com/koblas/grpc-todo/gen/corepb"
+	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/services/publicapi/fileput"
@@ -23,7 +23,7 @@ func main() {
 
 	opts := []fileput.Option{
 		fileput.WithFileService(
-			corepb.NewFileServiceProtobufClient(
+			corepbv1.NewFileServiceProtobufClient(
 				"http://"+config.FileServiceAddr,
 				&http.Client{},
 			),

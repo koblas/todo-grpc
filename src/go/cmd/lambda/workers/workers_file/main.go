@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/koblas/grpc-todo/gen/corepb"
+	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
@@ -31,13 +31,13 @@ func main() {
 	client := awsutil.NewTwirpCallLambda()
 	opts := []workers_file.Option{
 		workers_file.WithOnly(mode),
-		workers_file.WithProducer(corepb.NewFileEventbusJSONClient(
+		workers_file.WithProducer(corepbv1.NewFileEventbusJSONClient(
 			config.EventArn,
 			client,
 		)),
-		// workers_file.WithFileService(corepb.NewFileServiceJSONClient("lambda://core-file", client)),
+		// workers_file.WithFileService(corepbv1.NewFileServiceJSONClient("lambda://core-file", client)),
 		workers_file.WithFileService(filestore.NewAwsProvider()),
-		workers_file.WithUserService(corepb.NewUserServiceJSONClient("lambda://core-user", client)),
+		workers_file.WithUserService(corepbv1.NewUserServiceJSONClient("lambda://core-user", client)),
 	}
 
 	// mgr.StartConsumerMsg(awsutil.HandleSqsLambda(workers_file.GetHandler(config, opts...)))

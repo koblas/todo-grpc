@@ -6,7 +6,6 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	lambdaGo "github.com/aws/aws-lambda-go/lambda"
-	"github.com/koblas/grpc-todo/gen/corepb"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
@@ -21,7 +20,7 @@ type Config struct {
 }
 
 type Handler struct {
-	produer corepb.FileEventbus
+	produer corepbv1.FileEventbus
 }
 
 func (state *Handler) Start(ctx context.Context) error {
@@ -39,8 +38,8 @@ func (state *Handler) Start(ctx context.Context) error {
 				continue
 			}
 
-			state.produer.FileUploaded(ctx, &corepb.FileUploadEvent{
-				Info: &corepb.FileUploadInfo{
+			state.produer.FileUploaded(ctx, &corepbv1.FileUploadEvent{
+				Info: &corepbv1.FileUploadInfo{
 					UserId:   &parts[1],
 					FileType: parts[0],
 					Url:      "s3://" + bucket + "/" + key,
@@ -63,7 +62,7 @@ func main() {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
-	producer := corepb.NewFileEventbusJSONClient(
+	producer := corepbv1.NewFileEventbusJSONClient(
 		config.EventArn,
 		awsutil.NewTwirpCallLambda(),
 	)

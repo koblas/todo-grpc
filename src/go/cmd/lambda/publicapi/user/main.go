@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/koblas/grpc-todo/gen/apipb"
-	"github.com/koblas/grpc-todo/gen/corepb"
+	apipbv1 "github.com/koblas/grpc-todo/gen/apipb/v1"
+	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
@@ -21,10 +21,10 @@ func main() {
 	}
 
 	opts := []user.Option{
-		user.WithUserService(corepb.NewUserServiceJSONClient("lambda://core-user", awsutil.NewTwirpCallLambda())),
+		user.WithUserService(corepbv1.NewUserServiceJSONClient("lambda://core-user", awsutil.NewTwirpCallLambda())),
 	}
 
-	api := apipb.NewUserServiceServer(user.NewUserServer(config, opts...))
+	api := apipbv1.NewUserServiceServer(user.NewUserServer(config, opts...))
 
 	mgr.Start(awsutil.HandleApiLambda(api))
 }

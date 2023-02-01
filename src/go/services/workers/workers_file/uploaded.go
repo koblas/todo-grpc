@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/disintegration/imaging"
-	"github.com/koblas/grpc-todo/gen/corepb"
+	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
 	"github.com/koblas/grpc-todo/pkg/filestore"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/oklog/ulid/v2"
@@ -29,13 +29,13 @@ type fileUploaded struct {
 	WorkerConfig
 }
 
-func NewFileUploaded(config WorkerConfig) corepb.TwirpServer {
+func NewFileUploaded(config WorkerConfig) corepbv1.TwirpServer {
 	svc := &fileUploaded{WorkerConfig: config}
 
-	return corepb.NewFileEventbusServer(svc)
+	return corepbv1.NewFileEventbusServer(svc)
 }
 
-func (cfg *fileUploaded) FileUploaded(ctx context.Context, msg *corepb.FileUploadEvent) (*corepb.EventbusEmpty, error) {
+func (cfg *fileUploaded) FileUploaded(ctx context.Context, msg *corepbv1.FileServiceUploadEvent) (*corepbv1.EventbusEmpty, error) {
 	log := logger.FromContext(ctx).With(
 		zap.String("fileType", msg.Info.FileType),
 		zap.Stringp("userId", msg.Info.UserId),
@@ -45,7 +45,7 @@ func (cfg *fileUploaded) FileUploaded(ctx context.Context, msg *corepb.FileUploa
 
 	// We only handle profile images
 	if msg.Info.FileType != "profile_image.upload" || msg.Info.UserId == nil {
-		return &corepb.EventbusEmpty{}, nil
+		return &corepbv1.EventbusEmpty{}, nil
 	}
 
 	fileType := strings.TrimSuffix(msg.Info.FileType, ".upload")
@@ -57,10 +57,10 @@ func (cfg *fileUploaded) FileUploaded(ctx context.Context, msg *corepb.FileUploa
 		} else {
 			log.Info(errMsg)
 		}
-		event := corepb.FileCompleteEvent{
+		event := corepbv1.FileServiceCompleteEvent{
 			IdemponcyId:  ulid.Make().String(),
 			ErrorMessage: msgPtr,
-			Info: &corepb.FileUploadInfo{
+			Info: &corepbv1.FileServiceUploadInfo{
 				UserId:      msg.Info.UserId,
 				FileType:    fileType,
 				ContentType: nil,
@@ -79,13 +79,13 @@ func (cfg *fileUploaded) FileUploaded(ctx context.Context, msg *corepb.FileUploa
 	if err != nil {
 		log.With(zap.Error(err)).Error("failed to get file data")
 		postComplete("unable to get data")
-		return &corepb.EventbusEmpty{}, nil
+		return &corepbv1.EventbusEmpty{}, nil
 	}
 	buf := bytes.Buffer{}
 	if _, err := io.Copy(&buf, reader); err != nil {
 		log.With(zap.Error(err)).Error("failed to copy data")
 		postComplete("unable to get data")
-		return &corepb.EventbusEmpty{}, nil
+		return &corepbv1.EventbusEmpty{}, nil
 	}
 
 	data := buf.Bytes()
@@ -94,7 +94,7 @@ func (cfg *fileUploaded) FileUploaded(ctx context.Context, msg *corepb.FileUploa
 	srcImage, format, err := image.Decode(bytes.NewReader(data))
 	if err != nil {
 		postComplete("unable to decode")
-		return &corepb.EventbusEmpty{}, nil
+		return &corepbv1.EventbusEmpty{}, nil
 	}
 	log.With(zap.String("format", format)).Info("image decoded sucessfully")
 	dstImage := imaging.Resize(srcImage, 128, 128, imaging.CatmullRom)
@@ -103,7 +103,7 @@ func (cfg *fileUploaded) FileUploaded(ctx context.Context, msg *corepb.FileUploa
 	writer := bytes.Buffer{}
 	if err := png.Encode(&writer, dstImage); err != nil {
 		postComplete("unable to encode")
-		return &corepb.EventbusEmpty{}, nil
+		return &corepbv1.EventbusEmpty{}, nil
 	}
 
 	log.With(zap.Int("writeLen", writer.Len())).Info("Uploading resized data")
@@ -115,24 +115,24 @@ func (cfg *fileUploaded) FileUploaded(ctx context.Context, msg *corepb.FileUploa
 	}, &writer)
 	if err != nil {
 		postComplete("unable to put data")
-		return &corepb.EventbusEmpty{}, nil
+		return &corepbv1.EventbusEmpty{}, nil
 	}
 
-	if _, err := cfg.userService.Update(ctx, &corepb.UserUpdateParam{
+	if _, err := cfg.userService.Update(ctx, &corepbv1.UserUpdateParam{
 		UserId:    *msg.Info.UserId,
 		AvatarUrl: &putResult.Url,
 	}); err != nil {
 		postComplete("user update failed")
-		return &corepb.EventbusEmpty{}, nil
+		return &corepbv1.EventbusEmpty{}, nil
 	}
 
 	postComplete("")
-	return &corepb.EventbusEmpty{}, nil
+	return &corepbv1.EventbusEmpty{}, nil
 }
 
-func (cfg *fileUploaded) FileComplete(ctx context.Context, msg *corepb.FileCompleteEvent) (*corepb.EventbusEmpty, error) {
+func (cfg *fileUploaded) FileComplete(ctx context.Context, msg *corepbv1.FileServiceCompleteEvent) (*corepbv1.EventbusEmpty, error) {
 	log := logger.FromContext(ctx).With(zap.String("fileType", msg.Info.FileType))
 
 	log.Info("in ready handler")
-	return &corepb.EventbusEmpty{}, nil
+	return &corepbv1.EventbusEmpty{}, nil
 }
