@@ -33,6 +33,10 @@ publicapi-auth:
   enabled: true
   image:
     version:
+publicapi-gpt:
+  enabled: true
+  image:
+    version:
 publicapi-websocket:
   enabled: true
   image:

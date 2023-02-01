@@ -39,8 +39,9 @@ docker_build('todo-grpc/ts-client-react', './ts-client-react',
 k8s_yaml(helm('./charts/'))
 
 go_docker('publicapi-auth', 'publicapi/auth')
-go_docker('publicapi-todo', 'publicapi/todo')
 go_docker('publicapi-file', 'publicapi/file')
+go_docker('publicapi-gpt', 'publicapi/gpt')
+go_docker('publicapi-todo', 'publicapi/todo')
 # go_docker('publicapi-fileput', 'publicapi/fileput')
 go_docker('publicapi-user', 'publicapi/user')
 go_docker('publicapi-websocket', 'publicapi/websocket')

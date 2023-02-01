@@ -38,6 +38,10 @@ dependencies:
   repository: file://charts/publicapi-auth
   version: 0.1.0
   condition: publicapi-auth.enabled
+- name: publicapi-gpt
+  repository: file://charts/publicapi-gpt
+  version: 0.1.0
+  condition: publicapi-gpt.enabled
 - name: publicapi-user
   repository: file://charts/publicapi-user
   version: 0.1.0

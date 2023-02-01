@@ -1,0 +1,10 @@
+syntax = "proto3";
+package apipb.gpt;
+
+option go_package = "./;apipb";
+
+message GptCreateParams { string prompt = 1; }
+
+message GptCreateResponse { string text = 1; }
+
+service GptService { rpc create(GptCreateParams) returns (GptCreateResponse); }
