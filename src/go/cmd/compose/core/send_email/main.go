@@ -22,7 +22,7 @@ func main() {
 	}
 
 	producer := corepbv1.NewSendEmailEventsProtobufClient(
-		"",
+		"topic://"+config.EmailSentTopic,
 		natsutil.NewNatsClient(config.NatsAddr),
 	)
 
@@ -31,6 +31,6 @@ func main() {
 	nats := natsutil.NewNatsClient(config.NatsAddr)
 	mgr.Start(nats.TopicConsumer(
 		mgr.Context(),
-		natsutil.TwirpPathToNatsTopic(corepbv1.BroadcastEventbusPathPrefix),
+		natsutil.TwirpPathToNatsTopic(corepbv1.SendEmailServicePathPrefix),
 		s))
 }

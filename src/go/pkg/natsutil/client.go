@@ -68,11 +68,11 @@ func (svc *Client) Connect(ctx context.Context) error {
 
 func (svc *Client) Do(req *http.Request) (*http.Response, error) {
 	ctx := req.Context()
+	log := logger.FromContext(ctx)
 	if err := svc.Connect(ctx); err != nil {
+		log.With(zap.Error(err)).Error("Unable to connect to nats")
 		return nil, err
 	}
-
-	log := logger.FromContext(ctx)
 
 	// Copy the body
 	buf := []byte{}

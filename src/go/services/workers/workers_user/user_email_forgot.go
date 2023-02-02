@@ -5,6 +5,7 @@ import (
 
 	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
 	"github.com/koblas/grpc-todo/pkg/logger"
+	"github.com/twitchtv/twirp"
 	"go.uber.org/zap"
 )
 
@@ -52,9 +53,10 @@ func (cfg *userEmailForgot) SecurityForgotRequest(ctx context.Context, msg *core
 
 	log.Info("Sending forgot email")
 	if cfg.sendEmail != nil {
-		_, err := cfg.sendEmail.PasswordRecoveryMessage(ctx, &params)
-		log.With(zap.Error(err)).Info("Failed to send")
-		return nil, err
+		if _, err := cfg.sendEmail.PasswordRecoveryMessage(ctx, &params); err != nil {
+			log.With(zap.Error(err)).Info("Failed to send")
+			return nil, twirp.WrapError(twirp.InternalError("failed to send"), err)
+		}
 	}
 
 	return &corepbv1.EventbusEmpty{}, err

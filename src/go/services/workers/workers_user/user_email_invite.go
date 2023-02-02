@@ -5,6 +5,7 @@ import (
 
 	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
 	"github.com/koblas/grpc-todo/pkg/logger"
+	"github.com/twitchtv/twirp"
 	"go.uber.org/zap"
 )
 
@@ -57,9 +58,10 @@ func (cfg *userEmailInvite) SecurityInviteToken(ctx context.Context, msg *corepb
 
 	log.Info("Sending registration email")
 	if cfg.sendEmail != nil {
-		_, err := cfg.sendEmail.InviteUserMessage(ctx, &params)
-		log.With(zap.Error(err)).Info("Failed to send")
-		return nil, err
+		if _, err := cfg.sendEmail.InviteUserMessage(ctx, &params); err != nil {
+			log.With(zap.Error(err)).Info("Failed to send")
+			return nil, twirp.WrapError(twirp.InternalError("failed to send"), err)
+		}
 	}
 
 	return &corepbv1.EventbusEmpty{}, nil

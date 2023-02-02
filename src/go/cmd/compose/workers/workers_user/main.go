@@ -26,7 +26,7 @@ func main() {
 	opts := []workers_user.Option{
 		workers_user.WithSendEmail(
 			corepbv1.NewSendEmailServiceProtobufClient(
-				"queue://"+config.SendEmail,
+				"topic://"+config.SendEmail,
 				nats,
 			),
 		),
