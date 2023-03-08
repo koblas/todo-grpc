@@ -1618,7 +1618,7 @@ func (s *fileServiceServer) serveGetProtobuf(ctx context.Context, resp http.Resp
 }
 
 func (s *fileServiceServer) ServiceDescriptor() ([]byte, int) {
-	return twirpFileDescriptor3, 0
+	return twirpFileDescriptor2, 0
 }
 
 func (s *fileServiceServer) ProtocGenTwirpVersion() string {
@@ -1632,7 +1632,7 @@ func (s *fileServiceServer) PathPrefix() string {
 	return baseServicePath(s.pathPrefix, "corepb.v1", "FileService")
 }
 
-var twirpFileDescriptor3 = []byte{
+var twirpFileDescriptor2 = []byte{
 	// 583 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x55, 0xcd, 0x6e, 0xd3, 0x40,
 	0x10, 0x66, 0x71, 0x9a, 0x36, 0x93, 0x04, 0xaa, 0x55, 0x29, 0xa1, 0xed, 0x21, 0x35, 0xa8, 0x44,

@@ -1339,7 +1339,7 @@ func (s *sendEmailServiceServer) serveInviteUserMessageProtobuf(ctx context.Cont
 }
 
 func (s *sendEmailServiceServer) ServiceDescriptor() ([]byte, int) {
-	return twirpFileDescriptor5, 0
+	return twirpFileDescriptor3, 0
 }
 
 func (s *sendEmailServiceServer) ProtocGenTwirpVersion() string {
@@ -1834,7 +1834,7 @@ func (s *sendEmailEventsServer) serveNotifySentProtobuf(ctx context.Context, res
 }
 
 func (s *sendEmailEventsServer) ServiceDescriptor() ([]byte, int) {
-	return twirpFileDescriptor5, 1
+	return twirpFileDescriptor3, 1
 }
 
 func (s *sendEmailEventsServer) ProtocGenTwirpVersion() string {
@@ -1848,7 +1848,7 @@ func (s *sendEmailEventsServer) PathPrefix() string {
 	return baseServicePath(s.pathPrefix, "corepb.v1", "SendEmailEvents")
 }
 
-var twirpFileDescriptor5 = []byte{
+var twirpFileDescriptor3 = []byte{
 	// 667 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x95, 0xcd, 0x4e, 0xdb, 0x4a,
 	0x14, 0xc7, 0x71, 0xf8, 0xcc, 0x09, 0x24, 0x66, 0x2e, 0x88, 0x10, 0x09, 0x71, 0xf1, 0xd5, 0xd5,

@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	lambdaGo "github.com/aws/aws-lambda-go/lambda"
+	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
@@ -38,8 +39,8 @@ func (state *Handler) Start(ctx context.Context) error {
 				continue
 			}
 
-			state.produer.FileUploaded(ctx, &corepbv1.FileUploadEvent{
-				Info: &corepbv1.FileUploadInfo{
+			state.produer.FileUploaded(ctx, &corepbv1.FileServiceUploadEvent{
+				Info: &corepbv1.FileServiceUploadInfo{
 					UserId:   &parts[1],
 					FileType: parts[0],
 					Url:      "s3://" + bucket + "/" + key,

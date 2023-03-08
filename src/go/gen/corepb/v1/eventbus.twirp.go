@@ -503,7 +503,7 @@ func (s *broadcastEventbusServer) serveSendProtobuf(ctx context.Context, resp ht
 }
 
 func (s *broadcastEventbusServer) ServiceDescriptor() ([]byte, int) {
-	return twirpFileDescriptor4, 0
+	return twirpFileDescriptor1, 0
 }
 
 func (s *broadcastEventbusServer) ProtocGenTwirpVersion() string {
@@ -2117,7 +2117,7 @@ func (s *userEventbusServer) serveSecurityInviteTokenProtobuf(ctx context.Contex
 }
 
 func (s *userEventbusServer) ServiceDescriptor() ([]byte, int) {
-	return twirpFileDescriptor4, 1
+	return twirpFileDescriptor1, 1
 }
 
 func (s *userEventbusServer) ProtocGenTwirpVersion() string {
@@ -2611,7 +2611,7 @@ func (s *todoEventbusServer) serveTodoChangeProtobuf(ctx context.Context, resp h
 }
 
 func (s *todoEventbusServer) ServiceDescriptor() ([]byte, int) {
-	return twirpFileDescriptor4, 2
+	return twirpFileDescriptor1, 2
 }
 
 func (s *todoEventbusServer) ProtocGenTwirpVersion() string {
@@ -3384,7 +3384,7 @@ func (s *fileEventbusServer) serveFileCompleteProtobuf(ctx context.Context, resp
 }
 
 func (s *fileEventbusServer) ServiceDescriptor() ([]byte, int) {
-	return twirpFileDescriptor4, 3
+	return twirpFileDescriptor1, 3
 }
 
 func (s *fileEventbusServer) ProtocGenTwirpVersion() string {
@@ -3398,7 +3398,7 @@ func (s *fileEventbusServer) PathPrefix() string {
 	return baseServicePath(s.pathPrefix, "corepb.v1", "FileEventbus")
 }
 
-var twirpFileDescriptor4 = []byte{
+var twirpFileDescriptor1 = []byte{
 	// 329 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x93, 0xcd, 0x4a, 0xf3, 0x50,
 	0x10, 0x86, 0xf9, 0xf8, 0x44, 0x70, 0x6c, 0x11, 0x8f, 0x3f, 0xb4, 0xc5, 0x8d, 0xba, 0x4f, 0x69,

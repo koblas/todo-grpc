@@ -58,6 +58,7 @@ require (
 require (
 	cloud.google.com/go v0.65.0 // indirect
 	github.com/Masterminds/semver/v3 v3.1.1 // indirect
+	github.com/PullRequestInc/go-gpt3 v1.1.11 // indirect
 	github.com/aead/chacha20 v0.0.0-20180709150244-8b13a72661da // indirect
 	github.com/aead/poly1305 v0.0.0-20180717145839-3fee0db0b635 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.10 // indirect

@@ -20,20 +20,22 @@ start:
 
 
 build-lambda:
-	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/publicapi-websocket ./cmd/lambda/publicapi/websocket/main.go
-	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/publicapi-auth ./cmd/lambda/publicapi/auth/main.go
-	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/publicapi-file ./cmd/lambda/publicapi/file/main.go
-	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/publicapi-gpt ./cmd/lambda/publicapi/user/main.go
-	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/publicapi-user ./cmd/lambda/publicapi/user/main.go
-	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/websocket-todo ./cmd/lambda/websocket/todo/main.go
-	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/websocket-user ./cmd/lambda/websocket/user/main.go
-	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/core-todo ./cmd/lambda/core/todo/main.go
-	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/core-user ./cmd/lambda/core/user/main.go
+	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/publicapi-websocket ./cmd/lambda/publicapi/websocket/main.go
+	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/publicapi-auth ./cmd/lambda/publicapi/auth/main.go
+	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/publicapi-file ./cmd/lambda/publicapi/file/main.go
+	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/publicapi-gpt ./cmd/lambda/publicapi/user/main.go
+	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/publicapi-todo ./cmd/lambda/publicapi/todo/main.go
+	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/publicapi-user ./cmd/lambda/publicapi/user/main.go
+	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/websocket-todo ./cmd/lambda/websocket/todo/main.go
+	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/websocket-user ./cmd/lambda/websocket/user/main.go
+	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/core-todo ./cmd/lambda/core/todo/main.go
+	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/core-user ./cmd/lambda/core/user/main.go
 	# GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/core-file ./cmd/lambda/core/file/main.go
-	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/core-oauth-user ./cmd/lambda/core/oauth_user/main.go
-	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/core-send-email ./cmd/lambda/core/send_email/main.go
-	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/workers-user ./cmd/lambda/workers/workers_user/main.go
-	GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/workers-file ./cmd/lambda/workers/workers_file/main.go
+	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/core-oauth-user ./cmd/lambda/core/oauth_user/main.go
+	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/core-send-email ./cmd/lambda/core/send_email/main.go
+	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/workers-user ./cmd/lambda/workers/workers_user/main.go
+	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/workers-file ./cmd/lambda/workers/workers_file/main.go
+	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/trigger-s3 ./cmd/lambda/trigger/s3/main.go
 
 build-compose:
 	go build -o build/publicapi-auth ./cmd/compose/publicapi/auth/main.go
