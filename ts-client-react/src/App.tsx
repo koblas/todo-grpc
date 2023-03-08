@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from "react-query";
 import { AuthPages } from "./pages/auth";
 import { SettingsPage } from "./pages/settings";
 import { TodoPage } from "./pages/TodoPage";
+import { GptPage } from "./pages/GptPage";
 import { UploadPage } from "./pages/UploadPage";
 import { HomePage } from "./pages/HomePage";
 import Sidebar from "./components/Sidebar";
@@ -61,6 +62,14 @@ function Site() {
           element={
             <ProtectedRoute>
               <TodoPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="gpt/*"
+          element={
+            <ProtectedRoute>
+              <GptPage />
             </ProtectedRoute>
           }
         />

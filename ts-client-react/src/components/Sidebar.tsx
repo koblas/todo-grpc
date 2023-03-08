@@ -68,8 +68,15 @@ export default function Sidebar() {
           >
             Upload
           </NavItem>
-          <NavItem expanded={isExpanded} icon={BsPerson}>
-            Clients
+          <NavItem
+            expanded={isExpanded}
+            icon={BsPerson}
+            active={pathname === "/gpt"}
+            onClick={() => {
+              navigate("/gpt");
+            }}
+          >
+            GptTest
           </NavItem>
           <NavItem expanded={isExpanded} icon={BsCurrencyDollar}>
             Stocks
