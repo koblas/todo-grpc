@@ -28,6 +28,11 @@ export class CoreTodo extends Construct {
       eventbus,
       parameters: ["/common/*"],
       dynamo: db,
+      environment: {
+        variables: {
+          BUS_ENTITY_ARN: eventbus.arn,
+        },
+      },
     });
   }
 }
@@ -54,6 +59,11 @@ export class CoreUser extends Construct {
       eventbus,
       parameters: ["/common/*"],
       dynamo: db,
+      environment: {
+        variables: {
+          BUS_ENTITY_ARN: eventbus.arn,
+        },
+      },
     });
   }
 }
@@ -66,15 +76,27 @@ export class CoreOauthUser extends Construct {
       path: ["core", "oauth-user"],
       eventbus,
       parameters: ["/common/*", "/oauth/*"],
+      environment: {
+        variables: {
+          BUS_ENTITY_ARN: eventbus.arn,
+        },
+      },
     });
   }
 }
 
 export class CoreSendEmailQueue extends Construct {
-  constructor(scope: Construct, id: string, _: { eventbus: aws.snsTopic.SnsTopic }) {
+  constructor(scope: Construct, id: string, { eventbus }: { eventbus: aws.snsTopic.SnsTopic }) {
     super(scope, id);
 
-    const handler = new GoHandler(this, "core-send-email", { path: ["core", "send-email"] });
+    const handler = new GoHandler(this, "core-send-email", {
+      path: ["core", "send-email"],
+      environment: {
+        variables: {
+          BUS_ENTITY_ARN: eventbus.arn,
+        },
+      },
+    });
 
     handler.listenQueue("send-email");
   }

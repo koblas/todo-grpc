@@ -7,7 +7,7 @@ import { Construct } from "constructs";
 import { CertificateDomain } from "./components/certificate";
 import { StateS3Bucket } from "./components/s3bucket";
 import { Fn, TerraformAsset } from "cdktf";
-import { WebsocketHandler } from "./gw-websocket";
+import { WebsocketConfig, WebsocketHandler } from "./gw-websocket";
 
 export interface Props {
   apigw: aws.apigatewayv2Api.Apigatewayv2Api;
@@ -16,6 +16,7 @@ export interface Props {
   wsHostname: string;
   appHostname: string;
   filesDomainName: string;
+  logsBucket: aws.s3Bucket.S3Bucket;
 }
 
 const API_ORIGIN = "apigw";
@@ -25,12 +26,12 @@ const WS_ORIGIN = "websocket";
 export class Frontend extends Construct {
   public appDomainName: string;
   public distribution: aws.cloudfrontDistribution.CloudfrontDistribution;
-  public wsdb: aws.dynamodbTable.DynamodbTable;
-  public wsapi: aws.apigatewayv2Api.Apigatewayv2Api;
-  public wsstage: aws.apigatewayv2Stage.Apigatewayv2Stage;
+  public wsconf: WebsocketConfig;
 
   constructor(scope: Construct, id: string, props: Props) {
     super(scope, id);
+
+    const account = new aws.dataAwsCallerIdentity.DataAwsCallerIdentity(this, "ident", {});
 
     //
     const { bucket } = new StateS3Bucket(this, "public", {
@@ -98,9 +99,28 @@ export class Frontend extends Construct {
     });
 
     const ws = new WebsocketHandler(this, "ws", props);
-    this.wsapi = ws.wsapi;
-    this.wsstage = ws.wsstage;
-    this.wsdb = ws.wsdb;
+    this.wsconf = ws.wsconf;
+
+    //
+    const logDoc = new aws.dataAwsIamPolicyDocument.DataAwsIamPolicyDocument(this, "logdoc", {
+      statement: [
+        {
+          effect: "Allow",
+          principals: [
+            {
+              type: "AWS",
+              identifiers: [`arn:aws:iam::${account.accountId}:root`],
+            },
+          ],
+          actions: ["s3:GetBucketAcl", "s3:PutBucketAcl"],
+          resources: [props.logsBucket.arn],
+        },
+      ],
+    });
+    const logPolicy = new aws.s3BucketPolicy.S3BucketPolicy(this, "logpolicy", {
+      bucket: props.logsBucket.id,
+      policy: logDoc.json,
+    });
 
     // const secret = new randprovider.uuid.Uuid(this, "secret", {});
 
@@ -125,7 +145,9 @@ export class Frontend extends Construct {
           },
         },
         {
-          domainName: Fn.element(Fn.split("://", this.wsapi.apiEndpoint), 1),
+          domainName: Fn.element(Fn.split("://", this.wsconf.wsapi.apiEndpoint), 1),
+          // originPath: `/${this.wsstage.name}`,
+          // domainName: ws.wsdomainName,
           originId: WS_ORIGIN,
           customOriginConfig: {
             httpPort: 80,
@@ -164,7 +186,7 @@ export class Frontend extends Construct {
           restrictionType: "none",
         },
       },
-      orderedCacheBehavior: [this.createApiBehavior(props)],
+      orderedCacheBehavior: [this.createApiBehavior(props), this.createWsBehavior(this.wsconf.wsstage, props)],
       defaultRootObject: "index.html",
       customErrorResponse: [
         {
@@ -174,6 +196,12 @@ export class Frontend extends Construct {
           responsePagePath: "/index.html",
         },
       ],
+      loggingConfig: {
+        bucket: props.logsBucket.bucketDomainName,
+        prefix: "cloudfront/app/",
+      },
+
+      dependsOn: [logPolicy],
     });
 
     new aws.route53Record.Route53Record(this, "appAlias", {
@@ -225,15 +253,24 @@ export class Frontend extends Construct {
     // TODO Wire up Websocket
   }
 
-  createWsBehavior(_: Props): aws.cloudfrontDistribution.CloudfrontDistributionOrderedCacheBehavior {
+  createWsBehavior(
+    wsstage: aws.apigatewayv2Stage.Apigatewayv2Stage,
+    _: Props,
+  ): aws.cloudfrontDistribution.CloudfrontDistributionOrderedCacheBehavior {
     const policy = new aws.cloudfrontOriginRequestPolicy.CloudfrontOriginRequestPolicy(this, "ws-policy", {
       name: "webSocketPolicy",
-      queryStringsConfig: { queryStringBehavior: "all" },
+      queryStringsConfig: { queryStringBehavior: "none" },
       cookiesConfig: { cookieBehavior: "none" },
       headersConfig: {
         headerBehavior: "whitelist",
         headers: {
-          items: ["Sec-WebSocket-Key", "Sec-WebSocket-Version", "Sec-WebSocket-Protocol", "Sec-WebSocket-Accept"],
+          items: [
+            "Sec-WebSocket-Key",
+            "Sec-WebSocket-Version",
+            "Sec-WebSocket-Protocol",
+            "Sec-WebSocket-Accept",
+            "Sec-WebSocket-Extensions",
+          ],
         },
       },
     });
@@ -244,22 +281,35 @@ export class Frontend extends Construct {
         name: "Managed-CORS-and-SecurityHeadersPolicy",
       },
     );
-    const cache = new aws.cloudfrontCachePolicy.CloudfrontCachePolicy(this, "ws-cache", {
-      name: "api-cache",
-      defaultTtl: 0,
-      maxTtl: 0,
-      minTtl: 0,
-      parametersInCacheKeyAndForwardedToOrigin: {
-        cookiesConfig: {
-          cookieBehavior: "none",
-        },
-        headersConfig: {
-          headerBehavior: "none",
-        },
-        queryStringsConfig: {
-          queryStringBehavior: "none",
-        },
-      },
+    const cpolicy = new aws.dataAwsCloudfrontCachePolicy.DataAwsCloudfrontCachePolicy(this, "ws-cache", {
+      name: "Managed-CachingDisabled",
+    });
+    // const cache = new aws.cloudfrontCachePolicy.CloudfrontCachePolicy(this, "ws-cache", {
+    //   name: "ws-cache",
+    //   defaultTtl: 0,
+    //   maxTtl: 0,
+    //   minTtl: 0,
+    //   parametersInCacheKeyAndForwardedToOrigin: {
+    //     cookiesConfig: {
+    //       cookieBehavior: "none",
+    //     },
+    //     headersConfig: {
+    //       headerBehavior: "none",
+    //     },
+    //     queryStringsConfig: {
+    //       queryStringBehavior: "none",
+    //     },
+    //   },
+    // });
+
+    const viewerFunc = new aws.cloudfrontFunction.CloudfrontFunction(this, "viewer", {
+      name: "remove-wsapi",
+      runtime: "cloudfront-js-1.0",
+      code: `function handler(event) {
+        var request = event.request;
+        request.uri = "/${wsstage.name}";
+        return request;
+      }`,
     });
 
     return {
@@ -274,7 +324,13 @@ export class Frontend extends Construct {
       maxTtl: 0,
       defaultTtl: 0,
       responseHeadersPolicyId: rhead.id,
-      cachePolicyId: cache.id,
+      cachePolicyId: cpolicy.id,
+      functionAssociation: [
+        {
+          eventType: "viewer-request",
+          functionArn: viewerFunc.arn,
+        },
+      ],
     };
   }
 

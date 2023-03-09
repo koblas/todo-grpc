@@ -6,7 +6,7 @@ import * as aws from "@cdktf/provider-aws";
 import { Architecture, Runtime, StackLambda, StackLambdaConfig } from "./lambda";
 import { AssetType, TerraformAsset } from "cdktf";
 
-interface Props extends Partial<aws.lambdaFunction.LambdaFunctionConfig> {
+interface Props extends Partial<StackLambdaConfig> {
   // environment?: Record<string, string>;
   path: string[];
 
@@ -16,8 +16,8 @@ interface Props extends Partial<aws.lambdaFunction.LambdaFunctionConfig> {
   parameters?: string[];
   s3buckets?: aws.s3Bucket.S3Bucket[];
 
-  allowedTriggers?: StackLambdaConfig["allowedTriggers"];
-  attachPolicies?: StackLambdaConfig["attachPolicies"];
+  // allowedTriggers?: StackLambdaConfig["allowedTriggers"];
+  // attachPolicies?: StackLambdaConfig["attachPolicies"];
 }
 
 export class GoHandler extends Construct {
@@ -46,13 +46,16 @@ export class GoHandler extends Construct {
             ],
           }
         : {}),
-      ...(props.allowedTriggers ? { allowedTriggers: props.allowedTriggers } : {}),
-      attachPolicies: createPolicies(this, id, {
-        dynamo: props.dynamo,
-        eventbus: props.eventbus,
-        parameters: props.parameters,
-        s3buckets: props.s3buckets,
-      }),
+      ...props,
+      attachPolicies: [
+        ...createPolicies(this, id, {
+          dynamo: props.dynamo,
+          eventbus: props.eventbus,
+          parameters: props.parameters,
+          s3buckets: props.s3buckets,
+        }),
+        ...(props.attachPolicies ?? []),
+      ],
     });
 
     if (!handler.lambda) {
@@ -74,7 +77,7 @@ export class GoHandler extends Construct {
       sqsManagedSseEnabled: false,
     });
 
-    const topic = new aws.snsTopicSubscription.SnsTopicSubscription(this, `${name}-subscription`, {
+    new aws.snsTopicSubscription.SnsTopicSubscription(this, `${name}-subscription`, {
       topicArn: eventbus.arn,
       protocol: "sqs",
       endpoint: queue.arn,
@@ -87,12 +90,18 @@ export class GoHandler extends Construct {
         {
           effect: "Allow",
           actions: ["sqs:SendMessage"],
+          principals: [
+            {
+              type: "Service",
+              identifiers: ["sns.amazonaws.com"],
+            },
+          ],
           resources: [queue.arn],
           condition: [
             {
               test: "ArnEquals",
               variable: "aws:SourceArn",
-              values: [topic.arn],
+              values: [eventbus.arn],
             },
           ],
         },

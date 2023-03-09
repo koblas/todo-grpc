@@ -203,7 +203,7 @@ export interface StackLambdaConfig {
   /**
    * A map that defines environment variables for the Lambda Function.
    */
-  environment?: Record<string, string>;
+  environment?: aws.lambdaFunction.LambdaFunctionConfig["environment"];
 
   /**
    * Amount of ephemeral storage (/tmp) in MB your Lambda Function can use at runtime.

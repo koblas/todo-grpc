@@ -56,7 +56,7 @@ export class PublicAuth extends Construct {
       lambda,
       apigw,
       apiPath: "auth",
-      targetPath: "apipb.v1.AuthService",
+      targetPath: "apipb.v1.AuthenticationService",
     });
   }
 }

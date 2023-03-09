@@ -6,6 +6,8 @@ export interface Props
   expiresInDays?: number;
   enableCors?: boolean;
   public?: boolean;
+  // Disable object ownerhsip rules
+  writerIsOwner?: boolean;
 }
 
 export class StateS3Bucket extends Construct {
@@ -38,12 +40,14 @@ export class StateS3Bucket extends Construct {
       restrictPublicBuckets: !props.public,
     });
 
-    new aws.s3BucketOwnershipControls.S3BucketOwnershipControls(this, "ownership", {
-      bucket: bucket.bucket,
-      rule: {
-        objectOwnership: "BucketOwnerEnforced",
-      },
-    });
+    if (!props.writerIsOwner) {
+      new aws.s3BucketOwnershipControls.S3BucketOwnershipControls(this, "ownership", {
+        bucket: bucket.bucket,
+        rule: {
+          objectOwnership: "BucketOwnerEnforced",
+        },
+      });
+    }
 
     if (props.expiresInDays) {
       new aws.s3BucketLifecycleConfiguration.S3BucketLifecycleConfiguration(this, "lifecycle", {

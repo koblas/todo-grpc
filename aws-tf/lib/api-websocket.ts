@@ -1,6 +1,7 @@
 import { Construct } from "constructs";
 import * as aws from "@cdktf/provider-aws";
 import { GoHandler } from "./components/gohandler";
+import { WebsocketConfig } from "./gw-websocket";
 
 export interface Props {
   apigw: aws.apigatewayv2Api.Apigatewayv2Api;
@@ -15,11 +16,16 @@ export class WebsocketTodo extends Construct {
       path: ["websocket", "todo"],
       eventbus,
       parameters: ["/common/*"],
+      environment: {
+        variables: {
+          BUS_ENTITY_ARN: eventbus.arn,
+        },
+      },
     });
 
     handler.eventQueue("websocket-todo", eventbus, {
       filterPolicy: JSON.stringify({
-        "twirp.path": ["/twirp/corepbv1.eventbus.TodoEventbus/TodoChange"],
+        "twirp.path": ["/twirp/corepb.v1.TodoEventbus/TodoChange"],
       }),
     });
   }
@@ -33,11 +39,16 @@ export class WebsocketUser extends Construct {
       path: ["websocket", "user"],
       eventbus,
       parameters: ["/common/*"],
+      environment: {
+        variables: {
+          BUS_ENTITY_ARN: eventbus.arn,
+        },
+      },
     });
 
-    handler.eventQueue("websocket-todo", eventbus, {
+    handler.eventQueue("websocket-user", eventbus, {
       filterPolicy: JSON.stringify({
-        "twirp.path": ["/twirp/corepbv1.eventbus.UserEventbus/UserChange"],
+        "twirp.path": ["/twirp/corepb.v1.UserEventbus/UserChange"],
       }),
     });
   }
@@ -49,21 +60,19 @@ export class WebsocketBroadcast extends Construct {
     id: string,
     {
       eventbus,
-      wsstage,
-      wsapi,
-      db,
+      wsconf,
     }: {
-      db: aws.dynamodbTable.DynamodbTable;
+      wsconf: WebsocketConfig;
       eventbus: aws.snsTopic.SnsTopic;
-      wsstage: aws.apigatewayv2Stage.Apigatewayv2Stage;
-      wsapi: aws.apigatewayv2Api.Apigatewayv2Api;
     },
   ) {
     super(scope, id);
 
     const region = new aws.dataAwsRegion.DataAwsRegion(this, "rcurrent");
     const account = new aws.dataAwsCallerIdentity.DataAwsCallerIdentity(this, "acurrent");
-    const callbackUrl = `https://${wsapi.id}.execute-api.${region.name}.com/${wsstage.name}`;
+    // const callbackUrl = `https://${wsapi.id}.execute-api.${region.name}.amazonaws.com/${wsstage.name}`;
+
+    //  https://egbilew0jf.execute-api.us-west-2.amazonaws.com/$default/@connections
 
     const mgtdoc = new aws.dataAwsIamPolicyDocument.DataAwsIamPolicyDocument(this, "gwdoc", {
       statement: [
@@ -71,7 +80,8 @@ export class WebsocketBroadcast extends Construct {
           effect: "Allow",
           actions: ["execute-api:ManageConnections"],
           resources: [
-            `arn:aws:execute-api:${region.name}:${account.accountId}:${wsapi.id}/${wsstage.name}/*/@connections/*`,
+            // `arn:aws:execute-api:${region.name}:${account.accountId}:${wsapi.id}/${wsstage.name}/*/@connections`,
+            `arn:aws:execute-api:${region.name}:${account.accountId}:${wsconf.wsapi.id}/${wsconf.wsstage.name}/*/@connections/*`,
           ],
         },
       ],
@@ -81,8 +91,9 @@ export class WebsocketBroadcast extends Construct {
       path: ["websocket", "broadcast"],
       environment: {
         variables: {
-          CONN_DB: db.name,
-          WS_ENDPOINT: callbackUrl,
+          CONN_DB: wsconf.wsdb.name,
+          WS_ENDPOINT: wsconf.wsCallbackUrl,
+          BUS_ENTITY_ARN: eventbus.arn,
         },
       },
       attachPolicies: [
@@ -91,7 +102,7 @@ export class WebsocketBroadcast extends Construct {
         }),
       ],
       parameters: ["/common/*"],
-      dynamo: db,
+      dynamo: wsconf.wsdb,
     });
 
     // TODO TODO TODO
@@ -125,7 +136,7 @@ export class WebsocketBroadcast extends Construct {
 
     handler.eventQueue("websocket-broadcast", eventbus, {
       filterPolicy: JSON.stringify({
-        "twirp.path": ["/twirp/corepbv1.eventbus.BroadcastEventbus/Send"],
+        "twirp.path": ["/twirp/corepb.v1.BroadcastEventbus/Send"],
       }),
     });
   }

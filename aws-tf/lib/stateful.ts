@@ -7,15 +7,17 @@ export interface Props {
   apiHostname: string;
   filesHostname: string;
   domainName: string;
-  publicBucketName: string;
-  privateBucketName: string;
-  uploadBucketName: string;
+  publicBucketPrefxi: string;
+  privateBucketPrefix: string;
+  uploadBucketPrefix: string;
+  logsBucketPrefix: string;
 }
 
 export class Stateful extends Construct {
   public publicBucket: aws.s3Bucket.S3Bucket;
   public privateBucket: aws.s3Bucket.S3Bucket;
   public uploadBucket: aws.s3Bucket.S3Bucket;
+  public logsBucket: aws.s3Bucket.S3Bucket;
   public apigw: aws.apigatewayv2Api.Apigatewayv2Api;
   public zone: aws.dataAwsRoute53Zone.DataAwsRoute53Zone;
   public apiDomainName: string;
@@ -31,15 +33,21 @@ export class Stateful extends Construct {
 
     // Buckets
     this.publicBucket = new StateS3Bucket(this, "public", {
-      bucketPrefix: props.publicBucketName,
+      bucketPrefix: props.publicBucketPrefxi,
     }).bucket;
     this.privateBucket = new StateS3Bucket(this, "private", {
-      bucketPrefix: props.privateBucketName,
+      bucketPrefix: props.privateBucketPrefix,
     }).bucket;
     this.uploadBucket = new StateS3Bucket(this, "upload", {
-      bucketPrefix: props.uploadBucketName,
+      bucketPrefix: props.uploadBucketPrefix,
       expiresInDays: 1,
       enableCors: true,
+    }).bucket;
+    this.logsBucket = new StateS3Bucket(this, "logs", {
+      bucketPrefix: props.logsBucketPrefix,
+      expiresInDays: 3,
+      // Required for Cloudfront to be able to dump logs
+      writerIsOwner: true,
     }).bucket;
 
     // Connect up File storage CDN
@@ -127,22 +135,22 @@ export class Stateful extends Construct {
       zoneId: this.zone.zoneId,
     });
 
+    const stage = new aws.apigatewayv2Stage.Apigatewayv2Stage(this, "stage", {
+      apiId: this.apigw.id,
+      description: "Default Route",
+      name: "$default",
+      autoDeploy: true,
+
+      lifecycle: {
+        ignoreChanges: ["deployment_id"],
+      },
+    });
     const dn = new aws.apigatewayv2DomainName.Apigatewayv2DomainName(this, "apidn", {
       domainName: this.apiDomainName,
       domainNameConfiguration: {
         certificateArn: apiCert.cert.arn,
         endpointType: "REGIONAL",
         securityPolicy: "TLS_1_2",
-      },
-    });
-
-    const stage = new aws.apigatewayv2Stage.Apigatewayv2Stage(this, "stage", {
-      apiId: this.apigw.id,
-      name: "$default",
-      autoDeploy: true,
-
-      lifecycle: {
-        ignoreChanges: ["deployment_id"],
       },
     });
     new aws.apigatewayv2ApiMapping.Apigatewayv2ApiMapping(this, "mapping", {

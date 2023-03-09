@@ -6,13 +6,12 @@ import { WebsocketBroadcast, WebsocketTodo, WebsocketUser } from "./api-websocke
 import { WorkerFile, WorkerUser } from "./api-workers";
 import { TriggerS3 } from "./api-trigger";
 import * as rand from "@cdktf/provider-random";
+import { WebsocketConfig } from "./gw-websocket";
 
 export interface Props {
   apigw: aws.apigatewayv2Api.Apigatewayv2Api;
   apiDomainName: string;
-  wsdb: aws.dynamodbTable.DynamodbTable;
-  wsapi: aws.apigatewayv2Api.Apigatewayv2Api;
-  wsstage: aws.apigatewayv2Stage.Apigatewayv2Stage;
+  wsconf: WebsocketConfig;
   uploadBucket: aws.s3Bucket.S3Bucket;
   publicBucket: aws.s3Bucket.S3Bucket;
   privateBucket: aws.s3Bucket.S3Bucket;
@@ -51,10 +50,8 @@ export class Backend extends Construct {
     new WebsocketTodo(this, "websocket-todo", { eventbus });
     new WebsocketUser(this, "websocket-user", { eventbus });
     new WebsocketBroadcast(this, "websocket-broadcast", {
-      db: props.wsdb,
       eventbus,
-      wsstage: props.wsstage,
-      wsapi: props.wsapi,
+      wsconf: props.wsconf,
     });
 
     new TriggerS3(this, "trigger-s3", { eventbus, bucket: props.uploadBucket });

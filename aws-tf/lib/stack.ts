@@ -19,6 +19,7 @@ export class BaseStack extends TerraformStack {
       publicBucketName: "iqvine-public",
       privateBucketName: "iqvine-private",
       uploadBucketName: "iqvine-upload",
+      logsBucketName: "logs",
     };
 
     new aws.provider.AwsProvider(this, "AWS", {
@@ -29,9 +30,10 @@ export class BaseStack extends TerraformStack {
     const stateful = new Stateful(this, "stateful", {
       domainName: props.domainName,
       filesHostname: props.filesHostname,
-      publicBucketName: props.publicBucketName,
-      privateBucketName: props.privateBucketName,
-      uploadBucketName: props.uploadBucketName,
+      publicBucketPrefxi: props.publicBucketName,
+      privateBucketPrefix: props.privateBucketName,
+      uploadBucketPrefix: props.uploadBucketName,
+      logsBucketPrefix: props.logsBucketName,
       apiHostname: props.apiHostname,
     });
 
@@ -42,14 +44,13 @@ export class BaseStack extends TerraformStack {
       domainName: props.domainName,
       apigw: stateful.apigw,
       filesDomainName: stateful.fileDomainName,
+      logsBucket: stateful.logsBucket,
     });
 
     new Backend(this, "backend-parts", {
       apigw: stateful.apigw,
       apiDomainName: stateful.apiDomainName,
-      wsapi: frontend.wsapi,
-      wsdb: frontend.wsdb,
-      wsstage: frontend.wsstage,
+      wsconf: frontend.wsconf,
       uploadBucket: stateful.uploadBucket,
       publicBucket: stateful.publicBucket,
       privateBucket: stateful.privateBucket,

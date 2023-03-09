@@ -36,9 +36,9 @@ export class WorkerFile extends Construct {
       s3buckets: [uploadBucket, publicBucket],
     });
 
-    handler.eventQueue("websocket-todo", eventbus, {
+    handler.eventQueue("worker-file", eventbus, {
       filterPolicy: JSON.stringify({
-        "twirp.path": ["/twirp/corepbv1.eventbus.FileEventbus/FileUploaded"],
+        "twirp.path": ["/twirp/corepb.v1.FileEventbus/FileUploaded"],
       }),
     });
   }
@@ -61,13 +61,13 @@ export class WorkerUser extends Construct {
       memorySize: 512,
     });
 
-    handler.eventQueue("websocket-todo", eventbus, {
+    handler.eventQueue("worker-user", eventbus, {
       filterPolicy: JSON.stringify({
         "twirp.path": [
-          "/twirp/corepbv1.eventbus.UserEventbus/SecurityPasswordChange",
-          "/twirp/corepbv1.eventbus.UserEventbus/SecurityRegisterToken",
-          "/twirp/corepbv1.eventbus.UserEventbus/SecurityForgotRequest",
-          "/twirp/corepbv1.eventbus.UserEventbus/SecurityInviteToken",
+          "/twirp/corepb.v1.UserEventbus/SecurityPasswordChange",
+          "/twirp/corepb.v1.UserEventbus/SecurityRegisterToken",
+          "/twirp/corepb.v1.UserEventbus/SecurityForgotRequest",
+          "/twirp/corepb.v1.UserEventbus/SecurityInviteToken",
         ],
       }),
     });
