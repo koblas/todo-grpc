@@ -11,6 +11,7 @@ import (
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/pkg/store/websocket"
+	"go.uber.org/zap"
 )
 
 type BroadcastServer struct {
@@ -71,16 +72,19 @@ func (svc *BroadcastServerHandler) Handler() corepbv1.TwirpServer {
 }
 
 func (svc *BroadcastServer) Send(ctx context.Context, event *corepbv1.BroadcastEvent) (*corepbv1.EventbusEmpty, error) {
-	log := logger.FromContext(ctx)
+	log := logger.FromContext(ctx).With(zap.String("userId", event.Filter.UserId))
 	log.Info("received broadcast event")
 
 	conns, err := svc.store.ForUser(ctx, event.Filter.UserId)
 	if err != nil {
+		log.With(zap.Error(err)).Info("Failed to lookup user")
 		return nil, err
 	}
+	success := 0
 
 	for _, connection := range conns {
-		log.With("connectionId", connection).Info("Sending to connection")
+		clog := log.With("connectionId", connection)
+		clog.Info("Sending to connection")
 		_, err = svc.client.PostToConnection(ctx, &apigatewaymanagementapi.PostToConnectionInput{
 			ConnectionId: aws.String(connection),
 			Data:         event.Data,
@@ -92,21 +96,27 @@ func (svc *BroadcastServer) Send(ctx context.Context, event *corepbv1.BroadcastE
 				// TODO:  There has to be a more-Go way to do this
 				//   however with a bit of errors.Is / errors.As cannot get the goneexception
 				if ae.ErrorCode() == "GoneException" {
-					log.With("connectionId", connection).Info("Connect is Gone - deleting")
+					clog.Info("Connect is Gone - deleting")
 					// Connection is no longer present it should be removed
 					if err = svc.store.Delete(ctx, connection); err != nil {
-						log.With("error", err).Info("Unable to delete connection")
+						clog.With("error", err).Info("Unable to delete connection")
 					}
 				} else {
-					log.With("status", ae.ErrorCode()).With("message", ae.ErrorMessage()).Info("Unable to send")
+					clog.With("status", ae.ErrorCode()).With("message", ae.ErrorMessage()).Info("Unable to send")
 				}
 			} else {
-				log.With("connectionId", connection).With("error", err).Info("Unable to send message")
+				clog.With("error", err).Info("Unable to send message")
 			}
+		} else {
+			success += 1
 		}
 	}
 
-	log.With("count", len(conns)).Info("Found connections")
+	if len(conns) == success {
+		log.With("count", len(conns), "success", success).Info("send successful")
+	} else {
+		log.With("count", len(conns), "success", success).Info("send partial failure")
+	}
 
 	return &corepbv1.EventbusEmpty{}, nil
 }

@@ -28,6 +28,7 @@ build-lambda:
 	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/publicapi-user ./cmd/lambda/publicapi/user/main.go
 	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/websocket-todo ./cmd/lambda/websocket/todo/main.go
 	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/websocket-user ./cmd/lambda/websocket/user/main.go
+	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/websocket-broadcast ./cmd/lambda/websocket/broadcast/main.go
 	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/core-todo ./cmd/lambda/core/todo/main.go
 	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/core-user ./cmd/lambda/core/user/main.go
 	# GOOS=linux GOARCH=amd64 go build -ldflags=$(LDFLAGS) -o build/core-file ./cmd/lambda/core/file/main.go
