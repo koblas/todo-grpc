@@ -1,15 +1,8 @@
 package workers_file
 
 import (
-	"bytes"
-	"io"
-	"net/http"
-	"net/http/httptest"
-	"strings"
-
 	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
 	"github.com/koblas/grpc-todo/pkg/filestore"
-	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/manager"
 )
 
@@ -109,45 +102,45 @@ func BuildHandlers(config Config, opts ...Option) []manager.MsgHandler {
 	return handlers
 }
 
-func GetHandlers(config Config, opts ...Option) http.HandlerFunc {
-	handlers := []corepbv1.TwirpServer{}
+// func GetHandlers(config Config, opts ...Option) http.HandlerFunc {
+// 	handlers := []corepbv1.TwirpServer{}
 
-	cfg := buildServiceConfig(config, opts...)
+// 	cfg := buildServiceConfig(config, opts...)
 
-	for _, worker := range workers {
-		if cfg.onlyHandler != "" && cfg.onlyHandler != worker.Stream {
-			continue
-		}
+// 	for _, worker := range workers {
+// 		if cfg.onlyHandler != "" && cfg.onlyHandler != worker.Stream {
+// 			continue
+// 		}
 
-		handlers = append(handlers, worker.Build(cfg))
-	}
+// 		handlers = append(handlers, worker.Build(cfg))
+// 	}
 
-	return func(w http.ResponseWriter, req *http.Request) {
-		// We need to copy the input such that we can read multiple times
-		buf := bytes.Buffer{}
-		_, err := io.Copy(&buf, req.Body)
-		if err != nil {
-			// TODO
-			return
-		}
+// 	return func(w http.ResponseWriter, req *http.Request) {
+// 		// We need to copy the input such that we can read multiple times
+// 		buf := bytes.Buffer{}
+// 		_, err := io.Copy(&buf, req.Body)
+// 		if err != nil {
+// 			// TODO
+// 			return
+// 		}
 
-		for _, handler := range handlers {
-			if !strings.HasPrefix(req.URL.Path, handler.PathPrefix()) {
-				continue
-			}
+// 		for _, handler := range handlers {
+// 			if !strings.HasPrefix(req.URL.Path, handler.PathPrefix()) {
+// 				continue
+// 			}
 
-			writer := httptest.NewRecorder()
-			reqCopy := *req
-			reqCopy.Body = io.NopCloser(bytes.NewReader(buf.Bytes()))
+// 			writer := httptest.NewRecorder()
+// 			reqCopy := *req
+// 			reqCopy.Body = io.NopCloser(bytes.NewReader(buf.Bytes()))
 
-			handler.ServeHTTP(writer, &reqCopy)
+// 			handler.ServeHTTP(writer, &reqCopy)
 
-			res := writer.Result()
-			if res.StatusCode != http.StatusOK {
-				log := logger.FromContext(req.Context())
-				buf, _ := io.ReadAll(io.LimitReader(res.Body, 1024))
-				log.With("statusCode", res.StatusCode).With("statusMsg", string(buf)).Info("handler invoke error")
-			}
-		}
-	}
-}
+// 			res := writer.Result()
+// 			if res.StatusCode != http.StatusOK {
+// 				log := logger.FromContext(req.Context())
+// 				buf, _ := io.ReadAll(io.LimitReader(res.Body, 1024))
+// 				log.With("statusCode", res.StatusCode).With("statusMsg", string(buf)).Info("handler invoke error")
+// 			}
+// 		}
+// 	}
+// }
