@@ -7,6 +7,7 @@ import { RpcMutationNew } from "../../rpc/errors";
 
 type UploadUrlParam = {
   type: string;
+  contentType: string;
 };
 
 const UploadUrlResponse = z.object({
@@ -35,6 +36,7 @@ export function useUploadFile() {
         (data: UploadUrlParam) =>
           client.POST<UploadUrl>("/v1/file/upload_url", {
             type: data.type,
+            contentType: data.contentType,
           }),
         {},
       );

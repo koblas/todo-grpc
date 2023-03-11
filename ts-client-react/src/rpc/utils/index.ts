@@ -162,6 +162,8 @@ export function newFetchClient(config?: { token?: string | null; base?: string |
     },
     async PUT_FILE<T>(url: string, file: File): Promise<T> {
       const fileHdrs = {
+        // M
+        // "Content-Type": "application/octet-stream",
         "Content-Type": file.type,
         "Content-Length": String(file.size),
       };

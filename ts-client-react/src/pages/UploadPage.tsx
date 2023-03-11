@@ -26,15 +26,17 @@ function Dropzone() {
   const [uploaderFile] = useUploadSend();
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length !== 0) {
+      const file = acceptedFiles[0];
+
       uploaderUrl(
-        { type: "profile_image" },
+        { type: "profile_image", contentType: file.type },
         {
           onCompleted(data) {
             console.log("UPLOAD URL SUCCESS", data.url);
             uploaderFile(
               {
                 url: data.url,
-                file: acceptedFiles[0],
+                file,
               },
               {
                 onCompleted(data2) {

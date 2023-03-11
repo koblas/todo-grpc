@@ -10,7 +10,7 @@ import { TodoPage } from "./pages/TodoPage";
 import { GptPage } from "./pages/GptPage";
 import { UploadPage } from "./pages/UploadPage";
 import { HomePage } from "./pages/HomePage";
-import Sidebar from "./components/Sidebar";
+import { Sidebar } from "./components/Sidebar";
 import { useAuth } from "./hooks/auth";
 import { WebsocketProvider } from "./rpc/websocket";
 import { FetchError } from "./rpc/utils";
