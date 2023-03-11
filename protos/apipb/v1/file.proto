@@ -4,7 +4,7 @@ package apipb.v1;
 option go_package = "./;apipbv1";
 
 // Upload URL RPC
-message FileUploadUrlRequest { string type = 1; }
+message FileUploadUrlRequest { string type = 1; string content_type = 2; }
 message FileUploadUrlResponse { string url = 1; }
 
 service FileService {
