@@ -2,47 +2,84 @@ on:
   push:
     branches:
       - main
-    paths:
-      - "ts-client-react/**"
-      - .github/workflows/app_deploy.yaml
+    # paths:
+      # - "ts-client-react/**"
+      # - .github/workflows/app_deploy.yaml
 
 jobs:
-  build-and-test:
+
+  build-spa:
     environment: production
+    runs-on: ubuntu-latest
+
     defaults:
       run:
         working-directory: ts-client-react
 
+    steps:
+      - uses: actions/checkout@v2 # setup the repository in the runner
+      - name: Setup Node.js # setup Node.js in the runner
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - run: npm ci # install dependencies
+      - run: npm run build --if-present # build the project
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: frontend
+          path: dist
+
+  build-go:
+    environment: production
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: src/go
+
+    steps:
+      - uses: actions/checkout@v2 # setup the repository in the runner
+      - name: Setup Golang
+        uses: actions/setup-go@v1
+      - run: make build-lambda
+      - uses: actions/upload-artifact@v3
+        with:
+          name: lambda
+          path: build
+
+  deploy:
+    environment: production
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: aws-tf
+
     steps:
       - uses: actions/checkout@v2 # setup the repository in the runner
       - name: Setup Node.js # setup Node.js in the runner
         uses: actions/setup-node@v1
         with:
-          node-version: '16'
-      - uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: ${{ runner.os }}-node-
-      - run: npm ci # install dependencies
-      - run: npm run build --if-present # build the project
+          node-version: 18
+      - run: npm ci
+
       #- run: npm run test:unit # run the tests
       # deploy site to netlify using secrets created on repository
 
-      - uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}-cdk
-          restore-keys: ${{ runner.os }}-node-
-      - run: npm ci
-        working-directory: ts-client-react/deploy
-      - run: npx cdk deploy --require-approval never --all
-        working-directory: ts-client-react/deploy
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION || 'us-west-2' }}
+      # - uses: actions/cache@v2
+      #   with:
+      #     path: ~/.npm
+      #     key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}-cdk
+      #     restore-keys: ${{ runner.os }}-node-
+      # - run: npm ci
+      #   working-directory: ts-client-react/deploy
+      # - run: npx cdk deploy --require-approval never --all
+      #   working-directory: ts-client-react/deploy
+      #   env:
+      #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION || 'us-west-2' }}
 
 
       # - name: cdk diff
