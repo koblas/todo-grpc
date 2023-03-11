@@ -6,3 +6,9 @@ plugins:
       #- name: go
       #out: gen/go
       #opt: paths=source_relative
+  - name: go
+    out: gen
+    opt: paths=source_relative
+      #- name: go
+      #out: gen/go
+      #opt: paths=source_relative
