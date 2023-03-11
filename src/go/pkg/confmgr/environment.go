@@ -3,6 +3,7 @@
 package confmgr
 
 import (
+	"context"
 	"os"
 )
 
@@ -12,7 +13,7 @@ func NewLoaderEnvironment() envLoader {
 	return envLoader{}
 }
 
-func (envLoader) Loader(conf interface{}, specs []*ConfigSpec) ([]*ConfigSpec, error) {
+func (envLoader) Loader(_ context.Context, conf interface{}, specs []*ConfigSpec) ([]*ConfigSpec, error) {
 	reducedSpec := []*ConfigSpec{}
 
 	for _, spec := range specs {

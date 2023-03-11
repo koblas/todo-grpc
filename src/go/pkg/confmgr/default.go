@@ -2,13 +2,15 @@
 // Store) directly into a struct.
 package confmgr
 
+import "context"
+
 type defLoader struct{}
 
 func NewLoaderDefault() defLoader {
 	return defLoader{}
 }
 
-func (defLoader) Loader(conf interface{}, specs []*ConfigSpec) ([]*ConfigSpec, error) {
+func (defLoader) Loader(_ context.Context, spec interface{}, specs []*ConfigSpec) ([]*ConfigSpec, error) {
 	reducedSpec := []*ConfigSpec{}
 
 	for _, spec := range specs {

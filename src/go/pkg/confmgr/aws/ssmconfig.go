@@ -13,9 +13,8 @@ type SsmGetParamertsAPI interface {
 }
 
 type Provider struct {
-	Path    string
-	Client  SsmGetParamertsAPI
-	Context context.Context
+	Path   string
+	Client SsmGetParamertsAPI
 }
 
 type Option func(p *Provider)
@@ -26,25 +25,15 @@ func WithClient(client SsmGetParamertsAPI) Option {
 	}
 }
 
-func WithContext(ctx context.Context) Option {
-	return func(p *Provider) {
-		p.Context = ctx
-	}
-}
-
-func NewLoaderSsm(path string, opts ...Option) *Provider {
+func NewLoaderSsm(ctx context.Context, path string, opts ...Option) *Provider {
 	p := Provider{Path: path}
 
 	for _, opt := range opts {
 		opt(&p)
 	}
 
-	if p.Context == nil {
-		p.Context = context.Background()
-	}
-
 	if p.Client == nil {
-		cfg, err := config.LoadDefaultConfig(p.Context)
+		cfg, err := config.LoadDefaultConfig(ctx)
 		if err != nil {
 			panic("configuration error, " + err.Error())
 		}
@@ -55,7 +44,7 @@ func NewLoaderSsm(path string, opts ...Option) *Provider {
 	return &p
 }
 
-func (p *Provider) Loader(conf interface{}, specs []*confmgr.ConfigSpec) ([]*confmgr.ConfigSpec, error) {
+func (p *Provider) Loader(ctx context.Context, conf interface{}, specs []*confmgr.ConfigSpec) ([]*confmgr.ConfigSpec, error) {
 	names := []string{}
 	reverse := map[string]*confmgr.ConfigSpec{}
 
@@ -81,7 +70,7 @@ func (p *Provider) Loader(conf interface{}, specs []*confmgr.ConfigSpec) ([]*con
 		WithDecryption: true,
 	}
 
-	output, err := p.Client.GetParameters(p.Context, input)
+	output, err := p.Client.GetParameters(ctx, input)
 	if err != nil {
 		return specs, err
 	}

@@ -1,6 +1,7 @@
 package confmgr
 
 import (
+	"context"
 	"reflect"
 	"strconv"
 
@@ -8,7 +9,7 @@ import (
 )
 
 type Loadable interface {
-	Loader(interface{}, []*ConfigSpec) ([]*ConfigSpec, error)
+	Loader(context.Context, interface{}, []*ConfigSpec) ([]*ConfigSpec, error)
 }
 
 type ConfigSpec struct {
@@ -33,14 +34,18 @@ func NewLoader(loaders ...Loadable) *ConfigLoader {
 
 // Parse is a convience function to combine the NewLoader().Parse() calls
 func Parse(conf interface{}, loaders ...Loadable) error {
+	return ParseWithContext(context.TODO(), conf, loaders...)
+}
+
+func ParseWithContext(ctx context.Context, conf interface{}, loaders ...Loadable) error {
 	mgr := &ConfigLoader{
 		loaders: append(loaders, NewLoaderEnvironment(), NewLoaderDefault(), NewLoaderValidate()),
 	}
 
-	return mgr.Parse(conf)
+	return mgr.Parse(ctx, conf)
 }
 
-func (mgr *ConfigLoader) Parse(conf interface{}) error {
+func (mgr *ConfigLoader) Parse(ctx context.Context, conf interface{}) error {
 	spec, err := walkInput(conf)
 
 	if err != nil {
@@ -48,7 +53,7 @@ func (mgr *ConfigLoader) Parse(conf interface{}) error {
 	}
 
 	for _, loader := range mgr.loaders {
-		spec, err = loader.Loader(conf, spec)
+		spec, err = loader.Loader(ctx, conf, spec)
 		if err != nil {
 			return err
 		}

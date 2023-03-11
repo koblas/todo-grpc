@@ -3,6 +3,7 @@
 package confmgr
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"os"
@@ -30,7 +31,7 @@ func NewJsonReader(reader io.Reader) *jsonLoader {
 	}
 }
 
-func (ldr *jsonLoader) Loader(conf interface{}, specs []*ConfigSpec) ([]*ConfigSpec, error) {
+func (ldr *jsonLoader) Loader(ctx context.Context, spec interface{}, specs []*ConfigSpec) ([]*ConfigSpec, error) {
 	if ldr.reader == nil && ldr.path == "" {
 		return specs, nil
 	}
