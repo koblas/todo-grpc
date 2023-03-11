@@ -11,6 +11,7 @@ import (
 	"github.com/koblas/grpc-todo/pkg/util"
 	oauth_provider "github.com/koblas/grpc-todo/services/core/oauth_user/provider"
 	"github.com/twitchtv/twirp"
+	"go.uber.org/zap"
 	"golang.org/x/net/context"
 )
 
@@ -63,6 +64,7 @@ func (svc *OauthUserServer) GetAuthURL(ctx context.Context, params *corepbv1.Aut
 	log.Info("Calling GetAuthURL")
 	oprovider, err := oauth_provider.GetOAuthProvider(params.GetProvider(), svc.smanager, log)
 	if err != nil {
+		log.With(zap.Error(err)).Info("failed to get provider")
 		return nil, twirp.InternalErrorWith(err)
 	}
 
@@ -76,10 +78,6 @@ func (svc *OauthUserServer) GetAuthURL(ctx context.Context, params *corepbv1.Aut
 		return nil, twirp.InternalErrorWith(err)
 	}
 
-	if err != nil {
-		return nil, err
-	}
-
 	url := oprovider.BuildRedirect(ctx, params.RedirectUrl, state)
 
 	return &corepbv1.AuthUserGetUrlResult{Url: url}, nil
@@ -91,6 +89,7 @@ func (svc *OauthUserServer) UpsertUser(ctx context.Context, params *corepbv1.Aut
 	oprovider, err := oauth_provider.GetOAuthProvider(params.Oauth.Provider, svc.smanager, log)
 
 	if err != nil {
+		log.With(zap.Error(err)).Info("failed to get provider")
 		return nil, twirp.InternalErrorWith(err)
 	}
 

@@ -1,7 +1,7 @@
 package user
 
 type Config struct {
-	EventArn        string `environment:"BUS_ENTITY_ARN" ssm:"bus_entity_arn"`
+	// EventArn        string `environment:"BUS_ENTITY_ARN" ssm:"bus_entity_arn"`
 	JwtSecret       string `ssm:"jwt_secret" environment:"JWT_SECRET" validate:"min=32"`
 	UserServiceAddr string `environment:"USER_SERVICE_ADDR" json:"core-user-addr" default:":13001"`
 }

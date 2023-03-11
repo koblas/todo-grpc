@@ -64,9 +64,10 @@ func (svc *FileServer) UploadUrl(ctx context.Context, input *apipbv1.FileUploadU
 	log = log.With("userId", userId)
 
 	req := filestore.FilePutParams{
-		Bucket:   svc.uploadBucket,
-		UserId:   userId,
-		FileType: input.Type + ".upload",
+		Bucket:      svc.uploadBucket,
+		UserId:      userId,
+		FileType:    input.Type + ".upload",
+		ContentType: input.ContentType,
 	}
 
 	res, err := svc.file.UploadUrl(ctx, &req)
