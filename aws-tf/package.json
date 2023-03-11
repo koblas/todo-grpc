@@ -25,6 +25,7 @@
     "constructs": "^10.1.264"
   },
   "devDependencies": {
+    "@cdktf/provider-null": "^5.0.0",
     "@cdktf/provider-random": "^5.0.0",
     "@types/adm-zip": "^0.5.0",
     "@types/jest": "^29.4.0",

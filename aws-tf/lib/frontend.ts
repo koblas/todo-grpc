@@ -1,8 +1,9 @@
 import * as path from "path";
+import * as crypto from "crypto";
 import * as fs from "fs";
 import * as mime from "mime-types";
 import * as aws from "@cdktf/provider-aws";
-import { DataAwsIamPolicyDocument } from "@cdktf/provider-aws/lib/data-aws-iam-policy-document";
+import * as nullp from "@cdktf/provider-null";
 import { Construct } from "constructs";
 import { CertificateDomain } from "./components/certificate";
 import { StateS3Bucket } from "./components/s3bucket";
@@ -88,11 +89,20 @@ export class Frontend extends Construct {
             frameOption: "DENY",
           },
         },
+        // customHeadersConfig: {
+        //   items: [
+        //     {
+        //       header: "Cache-control",
+        //       override: true,
+        //       value: "max-age=60",
+        //     },
+        //   ],
+        // },
       },
     );
 
     const oac = new aws.cloudfrontOriginAccessControl.CloudfrontOriginAccessControl(this, "oac", {
-      name: "s3-access",
+      name: "s3-spa-access",
       originAccessControlOriginType: "s3",
       signingBehavior: "always",
       signingProtocol: "sigv4",
@@ -190,10 +200,10 @@ export class Frontend extends Construct {
       defaultRootObject: "index.html",
       customErrorResponse: [
         {
-          errorCachingMinTtl: 60 * 60, // 1 hour
           errorCode: 404,
-          responseCode: 404,
+          responseCode: 200,
           responsePagePath: "/index.html",
+          errorCachingMinTtl: 1 * 60 * 60, // 5 minutes (same as default)
         },
       ],
       loggingConfig: {
@@ -216,14 +226,29 @@ export class Frontend extends Construct {
     });
 
     // Add Assets
-    bucketDeployment(this, "spa", {
+    const { hash, s3objects } = bucketDeployment(this, "spa", {
       source: path.join(__dirname, "../../ts-client-react/dist"),
       bucket,
       distribution: this.distribution,
       invalidations: [],
     });
 
-    const s3policy = new DataAwsIamPolicyDocument(this, "s3policy", {
+    new nullp.resource.Resource(this, "invalidate", {
+      dependsOn: s3objects,
+
+      triggers: {
+        hash,
+      },
+
+      provisioners: [
+        {
+          type: "local-exec",
+          command: `aws cloudfront create-invalidation --distribution-id ${this.distribution.id} --paths /index.html`,
+        },
+      ],
+    });
+
+    const s3policy = new aws.dataAwsIamPolicyDocument.DataAwsIamPolicyDocument(this, "s3policy", {
       statement: [
         {
           actions: ["s3:GetObject", "s3:ListBucket"],
@@ -397,21 +422,40 @@ function bucketDeployment(
     invalidations: string[];
   },
 ) {
-  for (const item of getFiles(params.source)) {
-    const nm = item.replace(params.source, "").replace(/[^A-Za-z_-]/, "_");
+  const s3objects: aws.s3Object.S3Object[] = [];
+  const assets = [];
 
-    const asset = new TerraformAsset(scope, `${id}-${nm}-assets`, {
-      path: item,
-      // type: AssetType.ARCHIVE, // if left empty it infers directory and file
-    });
+  for (const path of getFiles(params.source)) {
+    const nm = path.replace(params.source, "").replace(/[^A-Za-z_-]/, "_");
 
-    new aws.s3Object.S3Object(scope, `${id}-${nm}-objects`, {
+    assets.push(
+      new TerraformAsset(scope, `${id}-${nm}-assets`, {
+        path,
+        // type: AssetType.ARCHIVE, // if left empty it infers directory and file
+      }),
+    );
+  }
+
+  const hash = crypto.createHash("md5");
+
+  const ONE_HOUR = 1 * 60 * 60;
+  const ONE_YEAR = 365 * 24 * 60 * 60;
+
+  assets.map((asset) => {
+    const s3o = new aws.s3Object.S3Object(scope, `${id}-${asset.assetHash}-objects`, {
       bucket: params.bucket.bucket,
+      sourceHash: asset.assetHash,
       key: asset.fileName,
       source: asset.path, // returns a posix path
       contentType: mime.lookup(asset.fileName) || "application/octet-stream",
+      cacheControl: `public, max-age=${asset.fileName === "index.html" ? ONE_HOUR : ONE_YEAR}`,
     });
-  }
+
+    hash.update(asset.assetHash);
+    s3objects.push(s3o);
+  });
+
+  return { hash: hash.digest("hex"), s3objects };
 }
 
 function* getFiles(item: string): IterableIterator<string> {

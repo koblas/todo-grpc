@@ -96,6 +96,7 @@ export class CoreSendEmailQueue extends Construct {
           BUS_ENTITY_ARN: eventbus.arn,
         },
       },
+      parameters: ["/common/*", "/smtp/*"],
     });
 
     handler.listenQueue("send-email");

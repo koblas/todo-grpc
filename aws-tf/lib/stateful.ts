@@ -13,6 +13,8 @@ export interface Props {
   logsBucketPrefix: string;
 }
 
+const FILE_ORIGIN = "files";
+
 export class Stateful extends Construct {
   public publicBucket: aws.s3Bucket.S3Bucket;
   public privateBucket: aws.s3Bucket.S3Bucket;
@@ -59,7 +61,12 @@ export class Stateful extends Construct {
       region: "us-east-1",
     });
 
-    const fileOriginId = "fileOrigin";
+    const oac = new aws.cloudfrontOriginAccessControl.CloudfrontOriginAccessControl(this, "oac", {
+      name: "s3-file-access",
+      originAccessControlOriginType: "s3",
+      signingBehavior: "always",
+      signingProtocol: "sigv4",
+    });
 
     const distribution = new aws.cloudfrontDistribution.CloudfrontDistribution(this, "files", {
       enabled: true,
@@ -68,13 +75,8 @@ export class Stateful extends Construct {
       origin: [
         {
           domainName: this.publicBucket.bucketRegionalDomainName,
-          originId: fileOriginId,
-          customOriginConfig: {
-            httpPort: 80,
-            httpsPort: 443,
-            originProtocolPolicy: "https-only",
-            originSslProtocols: ["TLSv1.2"],
-          },
+          originId: FILE_ORIGIN,
+          originAccessControlId: oac.id,
         },
       ],
       defaultCacheBehavior: {
@@ -84,7 +86,7 @@ export class Stateful extends Construct {
         cachedMethods: ["GET", "HEAD"],
         allowedMethods: ["GET", "HEAD"],
         viewerProtocolPolicy: "redirect-to-https",
-        targetOriginId: fileOriginId,
+        targetOriginId: FILE_ORIGIN,
         forwardedValues: {
           cookies: {
             forward: "none",
@@ -115,6 +117,33 @@ export class Stateful extends Construct {
         zoneId: distribution.hostedZoneId,
         evaluateTargetHealth: true,
       },
+    });
+
+    const s3policy = new aws.dataAwsIamPolicyDocument.DataAwsIamPolicyDocument(this, "s3policy", {
+      statement: [
+        {
+          actions: ["s3:GetObject", "s3:ListBucket"],
+          resources: [`${this.publicBucket.arn}/*`, this.publicBucket.arn],
+          principals: [
+            {
+              type: "Service",
+              identifiers: ["cloudfront.amazonaws.com"],
+            },
+          ],
+          condition: [
+            {
+              test: "StringEquals",
+              variable: "AWS:SourceArn",
+              values: [distribution.arn],
+            },
+          ],
+        },
+      ],
+    });
+
+    new aws.s3BucketPolicy.S3BucketPolicy(this, "origin", {
+      bucket: this.publicBucket.id,
+      policy: s3policy.json,
     });
 
     // Create the base API GW

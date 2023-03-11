@@ -1,6 +1,7 @@
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
 import * as aws from "@cdktf/provider-aws";
+import * as nullp from "@cdktf/provider-null";
 import * as randprovider from "@cdktf/provider-random";
 import { Stateful } from "./stateful";
 import { Frontend } from "./frontend";
@@ -26,6 +27,7 @@ export class BaseStack extends TerraformStack {
       region: "us-west-2",
     });
     new randprovider.provider.RandomProvider(this, "rand");
+    new nullp.provider.NullProvider(this, "nullprovider");
 
     const stateful = new Stateful(this, "stateful", {
       domainName: props.domainName,

@@ -26,6 +26,11 @@ export class TriggerS3 extends Construct {
         },
       ],
       s3buckets: [bucket],
+      environment: {
+        variables: {
+          BUS_ENTITY_ARN: eventbus.arn,
+        },
+      },
     });
 
     if (!handler.role) {

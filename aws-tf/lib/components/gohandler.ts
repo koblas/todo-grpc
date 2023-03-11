@@ -315,9 +315,9 @@ export function createPolicies(
         },
         {
           effect: "Allow",
-          actions: ["s3:*Object"],
+          actions: ["s3:PutObject", "s3:GetObject", "s3:PutObjectAcl", "s3:GetObjectAcl"],
           // resources: s3buckets.map((bucket) => formatArn({ service: "s3", resource: `${bucket.bucket}/*` })),
-          resources: s3buckets.map((bucket) => bucket.arn),
+          resources: s3buckets.map((bucket) => `${bucket.arn}/*`),
         },
       ],
     });

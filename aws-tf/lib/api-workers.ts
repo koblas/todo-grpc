@@ -29,10 +29,13 @@ export class WorkerFile extends Construct {
       memorySize: 512,
       environment: {
         variables: {
+          BUS_ENTITY_ARN: eventbus.arn,
           PRIVATE_BUCKET: privateBucket.bucket,
           PUBLIC_BUCKET: publicBucket.bucket,
         },
       },
+      eventbus,
+      parameters: ["/common/*"],
       s3buckets: [uploadBucket, publicBucket],
     });
 
@@ -59,6 +62,12 @@ export class WorkerUser extends Construct {
     const handler = new GoHandler(this, "worker-user", {
       path: ["workers", "user"],
       memorySize: 512,
+      environment: {
+        variables: {
+          BUS_ENTITY_ARN: eventbus.arn,
+        },
+      },
+      parameters: ["/common/*"],
     });
 
     handler.eventQueue("worker-user", eventbus, {
