@@ -1,9 +1,6 @@
 package main
 
 import (
-	"log"
-	"os"
-
 	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
@@ -14,34 +11,14 @@ import (
 )
 
 func main() {
-	mode := os.Getenv("SQS_HANDLER")
-	if mode == "" {
-		log.Fatal("SQS_HANDLER environment variable must be set")
-	}
-
 	mgr := manager.NewManager()
-	log := mgr.Logger().With("SQS_HANDLER", mode)
 
 	config := workers.Config{}
-	if err := confmgr.Parse(&config, aws.NewLoaderSsm("/common/")); err != nil {
-		log.With(zap.Error(err)).Fatal("failed to load configuration")
+	if err := confmgr.Parse(&config, aws.NewLoaderSsm(mgr.Context(), "/common/")); err != nil {
+		mgr.Logger().With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
-	// var builder workers.SqsConsumerBuilder
-
-	// for _, item := range workers.GetWorkers() {
-	// 	if item.GroupName == mode {
-	// 		builder = item.Build
-	// 		break
-	// 	}
-	// }
-
-	// if builder == nil {
-	// 	log.Fatal("Unable to find handler")
-	// }
-
 	opts := []workers.Option{
-		workers.WithOnly(mode),
 		workers.WithSendEmail(
 			corepbv1.NewSendEmailServiceProtobufClient(
 				"sqs://send-email",

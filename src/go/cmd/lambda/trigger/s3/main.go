@@ -39,13 +39,16 @@ func (state *Handler) Start(ctx context.Context) error {
 				continue
 			}
 
-			state.produer.FileUploaded(ctx, &corepbv1.FileServiceUploadEvent{
+			_, err := state.produer.FileUploaded(ctx, &corepbv1.FileServiceUploadEvent{
 				Info: &corepbv1.FileServiceUploadInfo{
 					UserId:   &parts[1],
 					FileType: parts[0],
 					Url:      "s3://" + bucket + "/" + key,
 				},
 			})
+			if err != nil {
+				log.With(zap.Error(err)).Info("failed to publish")
+			}
 
 		}
 		return nil
@@ -59,7 +62,7 @@ func main() {
 
 	var config Config
 
-	if err := confmgr.Parse(&config, aws.NewLoaderSsm("/common/")); err != nil {
+	if err := confmgr.Parse(&config, aws.NewLoaderSsm(mgr.Context(), "/common/")); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 

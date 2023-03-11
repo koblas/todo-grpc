@@ -26,7 +26,7 @@ func main() {
 	log := mgr.Logger()
 
 	conf := user.Config{}
-	if err := confmgr.Parse(&conf, aws.NewLoaderSsm("/common/")); err != nil {
+	if err := confmgr.Parse(&conf, aws.NewLoaderSsm(mgr.Context(), "/common/")); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 

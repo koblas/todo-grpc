@@ -16,10 +16,10 @@ func main() {
 
 	config := ouser.Config{}
 	oauthConfig := ouser.OauthConfig{}
-	if err := confmgr.Parse(&config, aws.NewLoaderSsm("/common/")); err != nil {
+	if err := confmgr.Parse(&config, aws.NewLoaderSsm(mgr.Context(), "/common/")); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load general configuration")
 	}
-	if err := confmgr.Parse(&oauthConfig, aws.NewLoaderSsm("/oauth/")); err != nil {
+	if err := confmgr.Parse(&oauthConfig, aws.NewLoaderSsm(mgr.Context(), "/oauth/")); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load oauth configuration")
 	}
 
