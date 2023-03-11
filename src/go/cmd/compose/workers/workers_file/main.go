@@ -11,41 +11,50 @@ import (
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/pkg/natsutil"
 	"github.com/koblas/grpc-todo/services/workers/workers_file"
+	"go.opentelemetry.io/otel"
 	"go.uber.org/zap"
 )
 
 func main() {
 	mgr := manager.NewManager(manager.WithGrpcHealth("15050"))
-	log := mgr.Logger()
+	defer mgr.Shutdown()
 
-	config := workers_file.Config{}
-	if err := confmgr.Parse(&config, confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
-		log.With(zap.Error(err)).Fatal("failed to load configuration")
-	}
+	var config workers_file.Config
+	var opts []workers_file.Option
+	var nats *natsutil.Client
 
-	if config.RedisAddr == "" {
-		log.Fatal("redis address is missing")
-	}
+	{
+		ctx, span := otel.Tracer("test").Start(mgr.Context(), "fishsh")
+		defer span.End()
+		log := mgr.Logger()
 
-	nats := natsutil.NewNatsClient(config.NatsAddr)
-	producer := corepbv1.NewFileEventbusProtobufClient("", nats)
+		if err := confmgr.ParseWithContext(ctx, &config, confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
+			log.With(zap.Error(err)).Fatal("failed to load configuration")
+		}
 
-	opts := []workers_file.Option{
-		workers_file.WithProducer(producer),
-		workers_file.WithFileService(
-			filestore.NewMinioProvider(config.MinioEndpoint),
-		),
-		workers_file.WithUserService(
-			corepbv1.NewUserServiceProtobufClient(
-				"http://"+config.UserServiceAddr,
-				&http.Client{},
+		if config.RedisAddr == "" {
+			log.Fatal("redis address is missing")
+		}
+
+		nats = natsutil.NewNatsClient(config.NatsAddr)
+		producer := corepbv1.NewFileEventbusProtobufClient("", nats)
+
+		opts = []workers_file.Option{
+			workers_file.WithProducer(producer),
+			workers_file.WithFileService(
+				filestore.NewMinioProvider(config.MinioEndpoint),
 			),
-		),
-	}
+			workers_file.WithUserService(
+				corepbv1.NewUserServiceProtobufClient(
+					"http://"+config.UserServiceAddr,
+					&http.Client{},
+				),
+			),
+		}
 
-	handlers := workers_file.BuildHandlers(config, opts...)
+	}
 
 	mgr.Start(nats.TopicConsumer(mgr.Context(),
 		natsutil.TwirpPathToNatsTopic(corepbv1.FileEventbusPathPrefix),
-		handlers))
+		workers_file.BuildHandlers(config, opts...)))
 }
