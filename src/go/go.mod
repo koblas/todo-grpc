@@ -41,7 +41,7 @@ require (
 	github.com/renstrom/shortuuid v3.0.0+incompatible
 	github.com/robinjoseph08/redisqueue v1.1.0
 	github.com/rs/xid v1.4.0
-	github.com/stretchr/testify v1.8.0
+	github.com/stretchr/testify v1.8.2
 	github.com/tencentyun/scf-go-lib v0.0.0-20211123032342-f972dcd16ff6
 	github.com/twitchtv/twirp v8.1.1+incompatible
 	go.uber.org/zap v1.19.1
@@ -83,6 +83,8 @@ require (
 	github.com/envoyproxy/protoc-gen-validate v0.1.0 // indirect
 	github.com/fatih/color v1.7.0 // indirect
 	github.com/git-chglog/git-chglog v0.0.0-20190611050339-63a4e637021f // indirect
+	github.com/go-logr/logr v1.2.3 // indirect
+	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
 	github.com/go-redis/redis v6.15.2+incompatible // indirect
@@ -104,17 +106,22 @@ require (
 	github.com/nats-io/nats-server/v2 v2.9.11 // indirect
 	github.com/nats-io/nkeys v0.3.0 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
+	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/tsuyoshiwada/go-gitcmd v0.0.0-20180205145712-5f1f5f9475df // indirect
 	github.com/urfave/cli v1.20.0 // indirect
 	github.com/yuin/goldmark v1.4.13 // indirect
+	go.opentelemetry.io/otel v1.14.0 // indirect
+	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.14.0 // indirect
+	go.opentelemetry.io/otel/sdk v1.14.0 // indirect
+	go.opentelemetry.io/otel/trace v1.14.0 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	golang.org/x/image v0.3.0 // indirect
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
-	golang.org/x/sys v0.4.0 // indirect
+	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/text v0.6.0 // indirect
 	golang.org/x/tools v0.1.12 // indirect
 	google.golang.org/appengine v1.6.6 // indirect

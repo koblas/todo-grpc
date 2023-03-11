@@ -2,6 +2,7 @@ package manager
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"net/http"
 	"os"
@@ -17,7 +18,13 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
+
 	// healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
+
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
+	"go.opentelemetry.io/otel/sdk/resource"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
 type headerCtxKeyType string
@@ -27,6 +34,7 @@ const HttpHeaderCtxKey headerCtxKeyType = "headers"
 type Manager struct {
 	log            logger.Logger
 	ctx            context.Context
+	tracer         *sdktrace.TracerProvider
 	port           string
 	healthPrefix   string
 	grpcHealthPort string
@@ -63,10 +71,24 @@ func WithGrpcHealth(port string) Option {
 func NewManager(opts ...Option) *Manager {
 	log := logger.NewZap(logger.LevelInfo)
 
+	exp, err := newExporter()
+	if err != nil {
+		log.With(zap.Error(err)).Fatal("unable to construct tracer")
+	}
+
+	sp := sdktrace.NewBatchSpanProcessor(exp)
+	tp := sdktrace.NewTracerProvider(
+		sdktrace.WithSpanProcessor(sp),
+		// sdktrace.WithBatcher(exp),
+		sdktrace.WithResource(newResource()),
+	)
+	otel.SetTracerProvider(tp)
+
 	mgr := &Manager{
-		log:  log,
-		ctx:  logger.ToContext(context.Background(), log),
-		port: util.Getenv("PORT", "14586"),
+		log:    log,
+		ctx:    logger.ToContext(context.Background(), log),
+		port:   util.Getenv("PORT", "14586"),
+		tracer: tp,
 	}
 
 	for _, opt := range opts {
@@ -82,6 +104,36 @@ func (mgr *Manager) Logger() logger.Logger {
 
 func (mgr *Manager) Context() context.Context {
 	return mgr.ctx
+}
+
+func (mgr *Manager) Shutdown() {
+	fmt.Println("CALLING SHUTDOWN")
+	mgr.tracer.Shutdown(mgr.ctx)
+}
+
+// Tracer setup
+func newExporter() (sdktrace.SpanExporter, error) {
+	return stdouttrace.New(
+	// stdouttrace.WithWriter(w),
+	// Use human-readable output.
+	// stdouttrace.WithPrettyPrint(),
+	// Do not print timestamps for the demo.
+	// stdouttrace.WithoutTimestamps(),
+	)
+}
+
+func newResource() *resource.Resource {
+	// r, _ := resource.Merge(
+	// 	resource.Default(),
+	// 	resource.NewWithAttributes(
+	// 		semconv.SchemaURL,
+	// 		semconv.ServiceName("fib"),
+	// 		semconv.ServiceVersion("v0.1.0"),
+	// 		attribute.String("environment", "demo"),
+	// 	),
+	// )
+	// return r
+	return resource.Default()
 }
 
 // func (mgr *Manager) Start(api http.Handler) {
@@ -108,13 +160,16 @@ func (mgr *Manager) Context() context.Context {
 // }
 
 func (mgr *Manager) Start(handler HandlerStart) {
-	if isLambda() {
-		handler.Start(mgr.ctx)
-	} else {
-		interrupt := make(chan os.Signal, 1)
-		signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
-		defer signal.Stop(interrupt)
+	interrupt := make(chan os.Signal, 1)
+	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
+	defer signal.Stop(interrupt)
 
+	if isLambda() {
+		// If we receive a SIGTERM call the shutdown
+		go handler.Start(mgr.ctx)
+
+		<-interrupt
+	} else {
 		// A little funky in that we're assuming this never returns until all messages are consumed
 		//
 		// It would probably be better to re-abstract this to a channel based system
