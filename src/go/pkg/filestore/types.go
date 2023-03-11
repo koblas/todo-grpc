@@ -14,11 +14,12 @@ import (
 // }
 
 type FilePutParams struct {
-	Bucket   string
-	Prefix   string
-	UserId   string
-	FileType string
-	Suffix   string
+	Bucket      string
+	Prefix      string
+	UserId      string
+	FileType    string
+	Suffix      string
+	ContentType string
 }
 type FilePutResponse struct {
 	Url string

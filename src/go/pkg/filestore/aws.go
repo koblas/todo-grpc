@@ -60,8 +60,9 @@ func (provider *AwsProvider) UploadUrl(ctx context.Context, params *FilePutParam
 	}
 
 	request, err := provider.presignClient.PresignPutObject(ctx, &s3.PutObjectInput{
-		Bucket: aws.String(params.Bucket),
-		Key:    aws.String(key),
+		Bucket:      aws.String(params.Bucket),
+		Key:         aws.String(key),
+		ContentType: aws.String(params.ContentType),
 	}, s3.WithPresignExpires(provider.expiresIn))
 	if err != nil {
 		return nil, errors.Wrapf(err, "Couldn't get a presigned request to put %v:%v. Here's why: %v\n",
