@@ -42,7 +42,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2 # setup the repository in the runner
       - name: Setup Golang
-        uses: actions/setup-go@v1
+        uses: actions/setup-go@v4
       - run: go mod download # install packages
       - run: make build-lambda  # make the packages
       - uses: actions/upload-artifact@v3
