@@ -73,11 +73,11 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: frontend
-          path: ts-client-react/dist
+          path: ../ts-client-react/dist
       - uses: actions/download-artifact@v3
         with:
           name: backend-go
-          path: src/go/build
+          path: ../src/go/build
       - name: Setup Node.js # setup Node.js in the runner
         uses: actions/setup-node@v1
         with:
@@ -85,6 +85,7 @@ jobs:
       - name: Generate module and provider bindings
         run: npx cdktf-cli get
       - run: npm ci
+      - run: ls
       - name: Run Terraform CDK
         uses: hashicorp/terraform-cdk-action@v0.1.0
         with:
