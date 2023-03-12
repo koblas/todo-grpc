@@ -82,6 +82,8 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: 18
+      - name: Generate module and provider bindings
+        run: npx cdktf-cli get
       - run: npm ci
       - name: Run Terraform CDK
         uses: hashicorp/terraform-cdk-action@v0.1.0
