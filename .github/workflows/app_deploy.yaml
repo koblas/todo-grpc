@@ -96,7 +96,7 @@ jobs:
           #mode: auto-approve-apply
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           terraformCloudToken: ${{ secrets.TF_API_TOKEN }}
-          working-directory: cdk-tf
+          workingDirectory: cdk-tf
 
       #- run: npm run test:unit # run the tests
       # deploy site to netlify using secrets created on repository
