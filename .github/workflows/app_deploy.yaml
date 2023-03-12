@@ -30,6 +30,7 @@ jobs:
           retention-days: 1
           name: frontend
           path: dist
+          if-no-files-found: error
 
   build-go:
     environment: production
@@ -53,6 +54,7 @@ jobs:
           retention-days: 1
           name: backend-go
           path: build
+          if-no-files-found: error
 
   deploy:
     environment: production
