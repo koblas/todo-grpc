@@ -86,6 +86,8 @@ jobs:
         run: npx cdktf-cli get
       - run: npm ci
       - run: ls
+      - run: ls ..
+      - run: ls ../src/go
       - run: ls ../src/go/build
       - name: Run Terraform CDK
         uses: hashicorp/terraform-cdk-action@v0.1.0
