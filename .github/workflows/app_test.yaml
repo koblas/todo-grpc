@@ -17,7 +17,7 @@ jobs:
         with:
           node-version: 18
       - run: npm ci # install dependencies
-      - npm: npm test
+      - run: npm test
 
   test-go:
     environment: test
