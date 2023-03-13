@@ -6,11 +6,13 @@ on:
       - main
 
 jobs:
-  test:
+  tests:
     uses: ./.github/workflows/app_test.yaml
   assets:
+    needs: tests
     uses: ./.github/workflows/app_build.yaml
   infra:
+    needs: assets
     uses: ./.github/workflows/terraform_apply.yaml
     with:
       environment: production
