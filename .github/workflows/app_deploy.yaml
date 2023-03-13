@@ -17,7 +17,7 @@ jobs:
         working-directory: ts-client-react
     
     steps:
-      - uses: actions/checkout@v2 # setup the repository in the runner
+      - uses: actions/checkout@v3 # setup the repository in the runner
       - name: Setup Node.js # setup Node.js in the runner
         uses: actions/setup-node@v3
         with:
@@ -80,11 +80,9 @@ jobs:
           name: backend-go
           path: src/go/build
       - name: Setup Node.js # setup Node.js in the runner
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: 18
-      - name: Output
-        run: echo ${{steps.frontend.outputs.download-path}}
       - name: Generate module and provider bindings
         run: npx cdktf-cli get
       - run: npm ci
@@ -99,8 +97,8 @@ jobs:
           terraformVersion: 1.3.9
           cdktfVersion: 0.15.5
           stackName: aws-tf
-          mode: plan-only
-          #mode: auto-approve-apply
+          # mode: plan-only
+          mode: auto-approve-apply
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           terraformCloudToken: ${{ secrets.TF_API_TOKEN }}
           workingDirectory: aws-tf
