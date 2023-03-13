@@ -12,9 +12,9 @@ import { FetchError } from "../../rpc/utils";
 // };
 
 type FormFields = {
-  oldPassword: string;
-  newPassword: string;
-  passwordAgain: string;
+  email: string;
+  name: string;
+  passwordNew: string;
 };
 
 export function NotificationSettings() {

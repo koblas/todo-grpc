@@ -127,7 +127,7 @@ export function buildCallbacksTypedQuery<
         defaultOptions.queries?.onError?.(error);
       }
     },
-    useErrorBoundary(error: TError, query: Query<TQueryFnData, TError, TQueryData, TQueryKey>) {
+    useErrorBoundary() {
       return false;
     },
   };

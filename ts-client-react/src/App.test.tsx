@@ -22,19 +22,20 @@ async function renderWait(ui: React.ReactElement) {
 test("smoke", async () => {
   await renderWait(<App />);
 
-  const linkElement = screen.getByText(/Add Todo/i);
+  const linkElement = screen.getByText(/Sign in to your account/i);
   expect(linkElement).toBeInTheDocument();
 });
 
 test("add", async () => {
   await renderWait(<App />);
 
-  const input = await waitFor(() => screen.getByRole("textbox"));
-  const button = screen.getByRole("button");
+  const input = await waitFor(() => screen.getByRole("textbox", { name: "Email address" }));
+  const button = screen.getByRole("button", { name: "Sign in" });
 
-  fireEvent.change(input, { target: { value: "First Item" } });
+  fireEvent.change(input, { target: { value: "user@example.com" } });
   fireEvent.click(button);
 
-  const items = await waitFor(() => screen.findAllByRole("listitem"));
+  // const items = await waitFor(() => screen.findAllByRole("error"));
+  const items = await waitFor(() => screen.findAllByText("Password is required"));
   expect(items).toHaveLength(1);
 });

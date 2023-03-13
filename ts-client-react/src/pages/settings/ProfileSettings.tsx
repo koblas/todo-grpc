@@ -45,8 +45,8 @@ export function ProfileSettings() {
     formState: { errors },
   } = useForm<FormFields>({
     defaultValues: {
-      name: user.name,
-      email: user.email,
+      name: user?.name ?? "",
+      email: user?.email ?? "",
     },
   });
 

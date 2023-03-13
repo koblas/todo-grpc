@@ -12,10 +12,12 @@ const UserNetwork = z.object({
   user: User,
 });
 
-type UpdateUserParam = Pick<UserType, "email" | "name"> & {
-  password?: string;
-  passwordNew: string;
-};
+type UpdateUserParam = Partial<
+  Pick<UserType, "email" | "name"> & {
+    password?: string;
+    passwordNew: string;
+  }
+>;
 
 export function useUser() {
   const { token } = useAuth();

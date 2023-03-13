@@ -19,7 +19,9 @@ type UploadFileParam = {
   file: File;
 };
 
-const UploadFileResponse = z.unknown();
+const UploadFileResponse = z.object({
+  id: z.string(),
+});
 
 type UploadFile = z.infer<typeof UploadFileResponse>;
 type UploadUrl = z.infer<typeof UploadUrlResponse>;

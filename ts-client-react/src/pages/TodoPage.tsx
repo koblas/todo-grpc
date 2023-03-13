@@ -68,7 +68,7 @@ export function TodoDetail() {
         </form>
       </Box>
       <Box p="5" bgColor="white">
-        <List todos={todos} />
+        <List todos={todos ?? []} />
       </Box>
     </Box>
   );
