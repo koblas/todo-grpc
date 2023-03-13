@@ -1,3 +1,5 @@
+name: "Deploy production"
+
 on:
   push:
     branches:
@@ -8,5 +10,5 @@ jobs:
     uses: ./github/workflows/app_test.yaml
   deploy:
     uses: ./github/workflows/app_build.yaml
-  deploy:
+  infra:
     uses: ./github/workflows/terraform_apply.yaml
