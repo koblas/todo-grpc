@@ -7,12 +7,16 @@ on:
 
 jobs:
   test:
-    uses: ./.github/workflows/app_test.yaml
+    steps:
+    - uses: ./.github/workflows/app_test.yaml
   assets:
     needs:
       - test
-    uses: ./.github/workflows/app_build.yaml
+    steps:
+    - uses: ./.github/workflows/app_build.yaml
   infra:
+    environment: production
     needs:
       - assets
-    uses: ./.github/workflows/terraform_apply.yaml
+    steps:
+    - uses: ./.github/workflows/terraform_apply.yaml
