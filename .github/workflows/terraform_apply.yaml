@@ -1,9 +1,19 @@
 name: "Terraform Deploy"
-on: workflow_call
+on: 
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+    secrets: 
+      TOKEN: 
+        required: true
+      TF_API_TOKEN: 
+        required: true
 
 jobs:
   deploy:
-    environment: production
+    environment: ${{ environment }}
     runs-on: ubuntu-latest
 
     defaults:

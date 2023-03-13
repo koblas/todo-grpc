@@ -7,16 +7,11 @@ on:
 
 jobs:
   test:
-    steps:
-    - uses: ./.github/workflows/app_test.yaml
+    uses: ./.github/workflows/app_test.yaml
   assets:
-    needs:
-      - test
-    steps:
-    - uses: ./.github/workflows/app_build.yaml
+    uses: ./.github/workflows/app_build.yaml
   infra:
-    environment: production
-    needs:
-      - assets
-    steps:
-    - uses: ./.github/workflows/terraform_apply.yaml
+    uses: ./.github/workflows/terraform_apply.yaml
+    with:
+      environment: production
+      secrets: inherit
