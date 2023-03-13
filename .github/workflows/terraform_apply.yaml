@@ -6,7 +6,7 @@ on:
         required: true
         type: string
     secrets: 
-      TOKEN: 
+      GITHUB_TOKEN: 
         required: true
       TF_API_TOKEN: 
         required: true
