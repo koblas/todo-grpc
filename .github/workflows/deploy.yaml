@@ -1,0 +1,12 @@
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    uses: ./github/workflows/app_test.yaml
+  deploy:
+    uses: ./github/workflows/app_build.yaml
+  deploy:
+    uses: ./github/workflows/terraform_apply.yaml

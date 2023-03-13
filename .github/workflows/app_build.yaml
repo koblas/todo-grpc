@@ -1,13 +1,5 @@
 name: Build Artifacts
-on: 
-  push:
-    branches:
-      - main
-  workflow_run:
-    workflows:
-      - "Run Tests"
-    types:
-      - completed
+on: workflow_call
 
 
 jobs:
