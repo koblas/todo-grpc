@@ -2,6 +2,11 @@ on:
   push:
     branches:
       - main
+  workflow_run:
+    workflows:
+      - Build Artifacts
+    types:
+      - completed
     # paths:
       # - "ts-client-react/**"
       # - .github/workflows/app_deploy.yaml
@@ -14,10 +19,6 @@ jobs:
     defaults:
       run:
         working-directory: aws-tf
-
-    needs:
-      - build-go
-      - build-app
 
     steps:
       - uses: actions/checkout@v3 # setup the repository in the runner

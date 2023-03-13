@@ -76,5 +76,9 @@ minikube:
 	minikube image build -f ./cmd/compose/core/send_email/Dockerfile --tag todo-grpc/core-send-email .
 	minikube image build -f ./cmd/compose/workers/workers_user/Dockerfile --tag todo-grpc/workers-user .
 
+test:
+	#go test ./...
+	echo "NEED TO FINISH"
+
 
 .PHONY: deploy

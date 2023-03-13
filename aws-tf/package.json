@@ -20,11 +20,11 @@
     "node": ">=14.0"
   },
   "dependencies": {
-    "@cdktf/provider-aws": "12.0.6",
     "cdktf": "^0.15.5",
     "constructs": "^10.1.264"
   },
   "devDependencies": {
+    "@cdktf/provider-aws": "^12.0.9",
     "@cdktf/provider-null": "^5.0.0",
     "@cdktf/provider-random": "^5.0.0",
     "@types/adm-zip": "^0.5.0",

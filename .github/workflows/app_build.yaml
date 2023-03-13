@@ -1,13 +1,14 @@
+name: Build Artifacts
 on: 
   push:
     branches:
       - main
+  workflow_run:
+    workflows:
+      - "Run Tests"
 
 jobs:
   build-app:
-    needs:
-      - test-app
-
     environment: production
     runs-on: ubuntu-latest
 
@@ -32,9 +33,6 @@ jobs:
           if-no-files-found: error
 
   build-go:
-    needs:
-      - test-go
-
     environment: production
     runs-on: ubuntu-latest
 
