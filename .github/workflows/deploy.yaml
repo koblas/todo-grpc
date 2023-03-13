@@ -14,4 +14,4 @@ jobs:
     uses: ./.github/workflows/terraform_apply.yaml
     with:
       environment: production
-      secrets: inherit
+    secrets: inherit
