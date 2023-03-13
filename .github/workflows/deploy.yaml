@@ -7,8 +7,8 @@ on:
 
 jobs:
   test:
-    uses: ./.github/workflows/app_test.yaml@v1
+    uses: ./.github/workflows/app_test.yaml
   deploy:
-    uses: ./.github/workflows/app_build.yaml@v1
+    uses: ./.github/workflows/app_build.yaml
   infra:
-    uses: ./.github/workflows/terraform_apply.yaml@v1
+    uses: ./.github/workflows/terraform_apply.yaml
