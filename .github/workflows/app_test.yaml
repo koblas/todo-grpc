@@ -1,11 +1,8 @@
-on: 
-  push:
-    branches:
-      - main
+on: push
 
 jobs:
-  build-app:
-    environment: production
+  test-app:
+    environment: test
     runs-on: ubuntu-latest
 
     defaults:
@@ -19,17 +16,10 @@ jobs:
         with:
           node-version: 18
       - run: npm ci # install dependencies
-      - run: npm run build --if-present # build the project
+      - npm: npm test
 
-      - uses: actions/upload-artifact@v3
-        with:
-          retention-days: 1
-          name: frontend
-          path: ts-client-react/dist
-          if-no-files-found: error
-
-  build-go:
-    environment: production
+  test-go:
+    environment: test
     runs-on: ubuntu-latest
 
     defaults:
@@ -44,10 +34,4 @@ jobs:
           go-version: '^1.19'
       - run: go version
       - run: go mod download # install packages
-      - run: make build-lambda  # make the packages
-      - uses: actions/upload-artifact@v3
-        with:
-          retention-days: 1
-          name: backend-go
-          path: src/go/build
-          if-no-files-found: error
+      - run: make test
