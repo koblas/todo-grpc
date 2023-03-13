@@ -8,7 +8,11 @@ on:
 jobs:
   test:
     uses: ./.github/workflows/app_test.yaml
-  deploy:
+  assets:
+    needs:
+      - test
     uses: ./.github/workflows/app_build.yaml
   infra:
+    needs:
+      - assets
     uses: ./.github/workflows/terraform_apply.yaml
