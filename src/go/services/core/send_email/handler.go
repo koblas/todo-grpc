@@ -50,12 +50,21 @@ func NewSendEmailServer(producer corepbv1.SendEmailEvents, sender Sender) []mana
 
 	return []manager.MsgHandler{
 		Handler{
-			handler: corepbv1.NewSendEmailServiceServer(&SendEmailServer{
-				pubsub: producer,
-				sender: sender,
-			}),
+			handler: corepbv1.NewSendEmailServiceServer(
+				NewSendEmailServerServer(producer, sender),
+			),
 		},
 	}
+}
+
+func NewSendEmailServerServer(producer corepbv1.SendEmailEvents, sender Sender) corepbv1.SendEmailService {
+	server := SendEmailServer{
+		pubsub: producer,
+		sender: sender,
+	}
+
+	return &server
+
 }
 
 func (s *SendEmailServer) RegisterMessage(ctx context.Context, params *corepbv1.EmailRegisterParam) (*corepbv1.EmailOkResponse, error) {

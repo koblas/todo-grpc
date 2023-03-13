@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
+	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/manager"
@@ -68,8 +69,8 @@ func (h *handler) Start(ctx context.Context) error {
 			log = log.With(zap.String("bucket", bucket), zap.String("key", key))
 			log.Info("translating event")
 			// got message
-			h.producer.FileUploaded(ctx, &corepbv1.FileUploadEvent{
-				Info: &corepbv1.FileUploadInfo{
+			h.producer.FileUploaded(ctx, &corepbv1.FileServiceUploadEvent{
+				Info: &corepbv1.FileServiceUploadInfo{
 					UserId:   &parts[1],
 					FileType: parts[0],
 					Url:      "s3://" + bucket + "/" + key,

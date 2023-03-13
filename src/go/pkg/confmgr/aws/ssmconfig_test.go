@@ -71,8 +71,8 @@ func TestBaseCase(t *testing.T) {
 	}
 
 	err := confmgr.NewLoader(
-		ssmconfig.NewLoaderSsm("/base", ssmconfig.WithClient(mc)),
-	).Parse(&s)
+		ssmconfig.NewLoaderSsm(context.TODO(), "/base", ssmconfig.WithClient(mc)),
+	).Parse(context.TODO(), &s)
 
 	if err != nil {
 		t.Errorf("LoadConfig() unexpected error: %q", err.Error())
@@ -239,8 +239,8 @@ func TestProvider_LoadSsmConfig(t *testing.T) {
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			err := confmgr.NewLoader(
-				ssmconfig.NewLoaderSsm(tt.configPath, ssmconfig.WithClient(tt.client)),
-			).Parse(tt.c)
+				ssmconfig.NewLoaderSsm(context.TODO(), tt.configPath, ssmconfig.WithClient(tt.client)),
+			).Parse(context.TODO(), tt.c)
 
 			if tt.shouldErr {
 				assert.Error(t, err)

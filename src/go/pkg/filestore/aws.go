@@ -65,7 +65,7 @@ func (provider *AwsProvider) UploadUrl(ctx context.Context, params *FilePutParam
 		ContentType: aws.String(params.ContentType),
 	}, s3.WithPresignExpires(provider.expiresIn))
 	if err != nil {
-		return nil, errors.Wrapf(err, "Couldn't get a presigned request to put %v:%v. Here's why: %v\n",
+		return nil, errors.Wrapf(err, "Couldn't get a presigned request to put %v:%v\n",
 			params.Bucket, key)
 	}
 	logger.FromContext(ctx).With(

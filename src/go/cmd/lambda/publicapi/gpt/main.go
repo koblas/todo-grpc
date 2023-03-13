@@ -1,6 +1,7 @@
 package main
 
 import (
+	apipbv1 "github.com/koblas/grpc-todo/gen/apipb/v1"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
@@ -14,7 +15,7 @@ func main() {
 	log := mgr.Logger()
 
 	var config gpt.Config
-	if err := confmgr.Parse(&config, aws.NewLoaderSsm("/common/")); err != nil {
+	if err := confmgr.ParseWithContext(mgr.Context(), &config, aws.NewLoaderSsm(mgr.Context(), "/common/")); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 

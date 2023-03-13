@@ -1,6 +1,7 @@
 package confmgr
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -41,19 +42,19 @@ func TestBadInput(t *testing.T) {
 	item := struct{}{}
 	value := 7
 
-	err := NewLoader().Parse(item)
+	err := NewLoader().Parse(context.TODO(), item)
 	assert.Error(t, err)
 
-	err = NewLoader().Parse(value)
+	err = NewLoader().Parse(context.TODO(), value)
 	assert.Error(t, err)
 
-	err = NewLoader().Parse(&value)
+	err = NewLoader().Parse(context.TODO(), &value)
 	assert.Error(t, err)
 }
 
 func TestDefault(t *testing.T) {
 	item := baseTestCase{}
-	err := NewLoader().Parse(&item)
+	err := NewLoader().Parse(context.TODO(), &item)
 
 	assert.NoError(t, err)
 
@@ -66,7 +67,7 @@ func TestEnvironment(t *testing.T) {
 	defer envSet("TEST_BAR", "99")()
 
 	item := baseTestCase{}
-	err := NewLoader().Parse(&item)
+	err := NewLoader().Parse(context.TODO(), &item)
 
 	assert.NoError(t, err)
 

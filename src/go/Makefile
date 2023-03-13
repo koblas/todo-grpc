@@ -77,8 +77,7 @@ minikube:
 	minikube image build -f ./cmd/compose/workers/workers_user/Dockerfile --tag todo-grpc/workers-user .
 
 test:
-	#go test ./...
-	echo "NEED TO FINISH"
+	go test ./...
 
 
 .PHONY: deploy

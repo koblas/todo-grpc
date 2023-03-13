@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/jaswdr/faker"
+	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
 	"github.com/stretchr/testify/require"
 )
 
