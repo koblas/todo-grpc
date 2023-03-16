@@ -53,7 +53,7 @@ func (svc *UserServer) getUserId(ctx context.Context) (string, error) {
 }
 
 // SayHello generates response to a Ping request
-func (svc *UserServer) GetUser(ctx context.Context, _ *apipbv1.UserGetParams) (*apipbv1.UserResponse, error) {
+func (svc *UserServer) GetUser(ctx context.Context, _ *apipbv1.GetUserRequest) (*apipbv1.GetUserResponse, error) {
 	log := logger.FromContext(ctx)
 	log.Info("GetUser BEGIN")
 
@@ -65,8 +65,10 @@ func (svc *UserServer) GetUser(ctx context.Context, _ *apipbv1.UserGetParams) (*
 	log = log.With("userId", userId)
 	log.Info("Looking up user")
 
-	user, err := svc.user.FindBy(ctx, &corepbv1.UserFindParam{
-		UserId: userId,
+	user, err := svc.user.FindBy(ctx, &corepbv1.FindByRequest{
+		FindBy: &corepbv1.FindBy{
+			UserId: userId,
+		},
 	})
 
 	if err != nil {
@@ -80,10 +82,12 @@ func (svc *UserServer) GetUser(ctx context.Context, _ *apipbv1.UserGetParams) (*
 		return nil, twirp.InternalErrorWith(err)
 	}
 
-	return marshalUser(user), nil
+	return &apipbv1.GetUserResponse{
+		User: protoutil.UserCoreToApi(user.User),
+	}, nil
 }
 
-func (svc *UserServer) UpdateUser(ctx context.Context, update *apipbv1.UserUpdateParams) (*apipbv1.UserResponse, error) {
+func (svc *UserServer) UpdateUser(ctx context.Context, update *apipbv1.UpdateUserRequest) (*apipbv1.UpdateUserResponse, error) {
 	log := logger.FromContext(ctx)
 	log.Info("UserUpdate BEGIN")
 
@@ -93,13 +97,15 @@ func (svc *UserServer) UpdateUser(ctx context.Context, update *apipbv1.UserUpdat
 		return nil, twirp.Unauthenticated.Error("missing userid")
 	}
 
-	user, err := svc.user.FindBy(ctx, &corepbv1.UserFindParam{
-		UserId: userId,
+	found, err := svc.user.FindBy(ctx, &corepbv1.FindByRequest{
+		FindBy: &corepbv1.FindBy{
+			UserId: userId,
+		},
 	})
 	if err != nil {
 		return nil, twirp.InternalErrorWith(err)
 	}
-	if user == nil {
+	if found == nil {
 		return nil, twirp.InternalError("unable to locate user")
 	}
 
@@ -117,7 +123,7 @@ func (svc *UserServer) UpdateUser(ctx context.Context, update *apipbv1.UserUpdat
 		}
 	}
 
-	user, err = svc.user.Update(ctx, &corepbv1.UserUpdateParam{
+	user, err := svc.user.Update(ctx, &corepbv1.UserServiceUpdateRequest{
 		UserId:      userId,
 		Name:        update.Name,
 		Email:       update.Email,
@@ -129,11 +135,7 @@ func (svc *UserServer) UpdateUser(ctx context.Context, update *apipbv1.UserUpdat
 		return nil, twirp.InternalErrorWith(err)
 	}
 
-	return marshalUser(user), nil
-}
-
-func marshalUser(user *corepbv1.User) *apipbv1.UserResponse {
-	return &apipbv1.UserResponse{
-		User: protoutil.UserCoreToApi(user),
-	}
+	return &apipbv1.UpdateUserResponse{
+		User: protoutil.UserCoreToApi(user.User),
+	}, nil
 }

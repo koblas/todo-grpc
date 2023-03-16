@@ -7,18 +7,19 @@ package corepb.v1;
 option go_package = "./;corepbv1";
 
 enum UserStatus {
-  REGISTERED = 0;
-  INVITED = 1;
-  ACTIVE = 100;
-  DISABLED = 200;
+  USER_STATUS_UNSPECIFIED = 0;
+  USER_STATUS_REGISTERED = 1;
+  USER_STATUS_INVITED = 2;
+  USER_STATUS_ACTIVE = 100;
+  USER_STATUS_DISABLED = 200;
 }
 
 enum UserSecurity {
-  UNKNOWN = 0;
-  USER_PASSWORD_CHANGE = 1;
-  USER_FORGOT_REQUEST = 2;
-  USER_REGISTER_TOKEN = 3;
-  USER_INVITE_TOKEN = 4;
+  USER_SECURITY_UNSPECIFIED = 0;
+  USER_SECURITY_USER_PASSWORD_CHANGE = 1;
+  USER_SECURITY_USER_FORGOT_REQUEST = 2;
+  USER_SECURITY_USER_REGISTER_TOKEN = 3;
+  USER_SECURITY_USER_INVITE_TOKEN = 4;
 }
 
 message User {
@@ -71,9 +72,21 @@ message UserSettingsChangeEvent {
   UserSettings orig = 2;
 }
 
-message UserSettingsUpdate {
+message UserServiceGetSettingsRequest {
+  string user_id = 1;
+}
+
+message UserServiceSetSettingsRequest {
   string user_id = 1;
   map<string, UserSettingGroup> settings = 2;
+}
+
+message UserServiceGetSettingsResponse {
+  UserSettings settings = 1;
+}
+
+message UserServiceSetSettingsResponse {
+  UserSettings settings = 1;
 }
 
 message AuthInfo {
@@ -81,7 +94,7 @@ message AuthInfo {
   string provider_id = 2;
 }
 
-message UserFindParam {
+message FindBy {
   // Find by email address
   string email = 1;
   // Find by GUID
@@ -91,7 +104,15 @@ message UserFindParam {
   AuthInfo auth = 3;
 }
 
-message AuthenticateParam {
+message FindByRequest {
+  FindBy find_by = 1;
+}
+
+message ForgotSendRequest {
+  FindBy find_by = 1;
+}
+
+message ComparePasswordRequest {
   // User Identifier
   string email = 1;
   // Password
@@ -102,21 +123,21 @@ message AuthenticateParam {
 }
 
 // Associate an OAuth Identifier with a user
-message AuthAssociateParam {
+message AuthAssociateRequest {
   string user_id = 1;
 
   // OAuth authentication information
   AuthInfo auth = 2;
 }
 
-message UserCreateParam {
+message UserServiceCreateRequest {
   string email = 1;
   string password = 2;
   string name = 3;
   UserStatus status = 4;
 }
 
-message UserUpdateParam {
+message UserServiceUpdateRequest {
   string user_id = 1;
   optional string email = 2;
   optional string password = 3;
@@ -127,7 +148,7 @@ message UserUpdateParam {
   optional string avatar_url = 8;
 }
 
-message VerificationParam {
+message Verification{
   // The user identifier
   string user_id = 1;
   // Check to see if this token is present
@@ -136,25 +157,59 @@ message VerificationParam {
   string password = 3;
 }
 
-message UserIdParam { string user_id = 1; }
+message GetSettingsRequest { string user_id = 1; }
+message ComparePasswordResponse { string user_id = 1; }
+message AuthAssociateResponse { string user_id = 1; }
+
+message ForgotSendResponse {
+  User user = 1;
+}
+message ForgotVerifyResponse {
+  User user = 1;
+}
+message ForgotUpdateResponse {
+  User user = 1;
+}
+message VerificationVerifyResponse {
+  User user = 1;
+}
+message UserServiceCreateResponse {
+  User user = 1;
+}
+message FindByResponse {
+  User user = 1;
+}
+message UserServiceUpdateResponse {
+  User user = 1;
+}
+
+message VerificationVerifyRequest {
+  Verification verification = 1; 
+}
+message ForgotVerifyRequest {
+  Verification verification = 1; 
+}
+message ForgotUpdateRequest {
+  Verification verification = 1; 
+}
 
 service UserService {
-  rpc FindBy(UserFindParam) returns (User) {}
+  rpc FindBy(FindByRequest) returns (FindByResponse) {}
 
-  rpc Create(UserCreateParam) returns (User) {}
-  rpc Update(UserUpdateParam) returns (User) {}
+  rpc Create(UserServiceCreateRequest) returns (UserServiceCreateResponse) {}
+  rpc Update(UserServiceUpdateRequest) returns (UserServiceUpdateResponse) {}
 
-  rpc ComparePassword(AuthenticateParam) returns (UserIdParam) {}
-  rpc AuthAssociate(AuthAssociateParam) returns (UserIdParam) {}
+  rpc ComparePassword(ComparePasswordRequest) returns (ComparePasswordResponse) {}
+  rpc AuthAssociate(AuthAssociateRequest) returns (AuthAssociateResponse) {}
 
-  rpc GetSettings(UserIdParam) returns (UserSettings) {}
-  rpc SetSettings(UserSettingsUpdate) returns (UserSettings) {}
+  rpc GetSettings(UserServiceGetSettingsRequest) returns (UserServiceGetSettingsResponse) {}
+  rpc SetSettings(UserServiceSetSettingsRequest) returns (UserServiceSetSettingsResponse) {}
 
   // Email address verification
-  rpc VerificationVerify(VerificationParam) returns (User) {}
+  rpc VerificationVerify(VerificationVerifyRequest) returns (VerificationVerifyResponse) {}
 
   // Forgot password flow
-  rpc ForgotSend(UserFindParam) returns (User) {}
-  rpc ForgotVerify(VerificationParam) returns (User) {}
-  rpc ForgotUpdate(VerificationParam) returns (User) {}
+  rpc ForgotSend(ForgotSendRequest) returns (ForgotSendResponse) {}
+  rpc ForgotVerify(ForgotVerifyRequest) returns (ForgotVerifyResponse) {}
+  rpc ForgotUpdate(ForgotUpdateRequest) returns (ForgotUpdateResponse) {}
 }

@@ -27,9 +27,9 @@ const _ = twirp.TwirpPackageMinVersion_8_1_0
 // =====================
 
 type UserService interface {
-	GetUser(context.Context, *UserGetParams) (*UserResponse, error)
+	GetUser(context.Context, *GetUserRequest) (*GetUserResponse, error)
 
-	UpdateUser(context.Context, *UserUpdateParams) (*UserResponse, error)
+	UpdateUser(context.Context, *UpdateUserRequest) (*UpdateUserResponse, error)
 }
 
 // ===========================
@@ -85,26 +85,26 @@ func NewUserServiceProtobufClient(baseURL string, client HTTPClient, opts ...twi
 	}
 }
 
-func (c *userServiceProtobufClient) GetUser(ctx context.Context, in *UserGetParams) (*UserResponse, error) {
+func (c *userServiceProtobufClient) GetUser(ctx context.Context, in *GetUserRequest) (*GetUserResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "apipb.v1")
 	ctx = ctxsetters.WithServiceName(ctx, "UserService")
 	ctx = ctxsetters.WithMethodName(ctx, "GetUser")
 	caller := c.callGetUser
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *UserGetParams) (*UserResponse, error) {
+		caller = func(ctx context.Context, req *GetUserRequest) (*GetUserResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*UserGetParams)
+					typedReq, ok := req.(*GetUserRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*UserGetParams) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*GetUserRequest) when calling interceptor")
 					}
 					return c.callGetUser(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*UserResponse)
+				typedResp, ok := resp.(*GetUserResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*UserResponse) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*GetUserResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -114,8 +114,8 @@ func (c *userServiceProtobufClient) GetUser(ctx context.Context, in *UserGetPara
 	return caller(ctx, in)
 }
 
-func (c *userServiceProtobufClient) callGetUser(ctx context.Context, in *UserGetParams) (*UserResponse, error) {
-	out := new(UserResponse)
+func (c *userServiceProtobufClient) callGetUser(ctx context.Context, in *GetUserRequest) (*GetUserResponse, error) {
+	out := new(GetUserResponse)
 	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -131,26 +131,26 @@ func (c *userServiceProtobufClient) callGetUser(ctx context.Context, in *UserGet
 	return out, nil
 }
 
-func (c *userServiceProtobufClient) UpdateUser(ctx context.Context, in *UserUpdateParams) (*UserResponse, error) {
+func (c *userServiceProtobufClient) UpdateUser(ctx context.Context, in *UpdateUserRequest) (*UpdateUserResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "apipb.v1")
 	ctx = ctxsetters.WithServiceName(ctx, "UserService")
 	ctx = ctxsetters.WithMethodName(ctx, "UpdateUser")
 	caller := c.callUpdateUser
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *UserUpdateParams) (*UserResponse, error) {
+		caller = func(ctx context.Context, req *UpdateUserRequest) (*UpdateUserResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*UserUpdateParams)
+					typedReq, ok := req.(*UpdateUserRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*UserUpdateParams) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*UpdateUserRequest) when calling interceptor")
 					}
 					return c.callUpdateUser(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*UserResponse)
+				typedResp, ok := resp.(*UpdateUserResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*UserResponse) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*UpdateUserResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -160,8 +160,8 @@ func (c *userServiceProtobufClient) UpdateUser(ctx context.Context, in *UserUpda
 	return caller(ctx, in)
 }
 
-func (c *userServiceProtobufClient) callUpdateUser(ctx context.Context, in *UserUpdateParams) (*UserResponse, error) {
-	out := new(UserResponse)
+func (c *userServiceProtobufClient) callUpdateUser(ctx context.Context, in *UpdateUserRequest) (*UpdateUserResponse, error) {
+	out := new(UpdateUserResponse)
 	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[1], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -230,26 +230,26 @@ func NewUserServiceJSONClient(baseURL string, client HTTPClient, opts ...twirp.C
 	}
 }
 
-func (c *userServiceJSONClient) GetUser(ctx context.Context, in *UserGetParams) (*UserResponse, error) {
+func (c *userServiceJSONClient) GetUser(ctx context.Context, in *GetUserRequest) (*GetUserResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "apipb.v1")
 	ctx = ctxsetters.WithServiceName(ctx, "UserService")
 	ctx = ctxsetters.WithMethodName(ctx, "GetUser")
 	caller := c.callGetUser
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *UserGetParams) (*UserResponse, error) {
+		caller = func(ctx context.Context, req *GetUserRequest) (*GetUserResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*UserGetParams)
+					typedReq, ok := req.(*GetUserRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*UserGetParams) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*GetUserRequest) when calling interceptor")
 					}
 					return c.callGetUser(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*UserResponse)
+				typedResp, ok := resp.(*GetUserResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*UserResponse) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*GetUserResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -259,8 +259,8 @@ func (c *userServiceJSONClient) GetUser(ctx context.Context, in *UserGetParams) 
 	return caller(ctx, in)
 }
 
-func (c *userServiceJSONClient) callGetUser(ctx context.Context, in *UserGetParams) (*UserResponse, error) {
-	out := new(UserResponse)
+func (c *userServiceJSONClient) callGetUser(ctx context.Context, in *GetUserRequest) (*GetUserResponse, error) {
+	out := new(GetUserResponse)
 	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -276,26 +276,26 @@ func (c *userServiceJSONClient) callGetUser(ctx context.Context, in *UserGetPara
 	return out, nil
 }
 
-func (c *userServiceJSONClient) UpdateUser(ctx context.Context, in *UserUpdateParams) (*UserResponse, error) {
+func (c *userServiceJSONClient) UpdateUser(ctx context.Context, in *UpdateUserRequest) (*UpdateUserResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "apipb.v1")
 	ctx = ctxsetters.WithServiceName(ctx, "UserService")
 	ctx = ctxsetters.WithMethodName(ctx, "UpdateUser")
 	caller := c.callUpdateUser
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *UserUpdateParams) (*UserResponse, error) {
+		caller = func(ctx context.Context, req *UpdateUserRequest) (*UpdateUserResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*UserUpdateParams)
+					typedReq, ok := req.(*UpdateUserRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*UserUpdateParams) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*UpdateUserRequest) when calling interceptor")
 					}
 					return c.callUpdateUser(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*UserResponse)
+				typedResp, ok := resp.(*UpdateUserResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*UserResponse) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*UpdateUserResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -305,8 +305,8 @@ func (c *userServiceJSONClient) UpdateUser(ctx context.Context, in *UserUpdatePa
 	return caller(ctx, in)
 }
 
-func (c *userServiceJSONClient) callUpdateUser(ctx context.Context, in *UserUpdateParams) (*UserResponse, error) {
-	out := new(UserResponse)
+func (c *userServiceJSONClient) callUpdateUser(ctx context.Context, in *UpdateUserRequest) (*UpdateUserResponse, error) {
+	out := new(UpdateUserResponse)
 	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[1], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -465,7 +465,7 @@ func (s *userServiceServer) serveGetUserJSON(ctx context.Context, resp http.Resp
 		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
 		return
 	}
-	reqContent := new(UserGetParams)
+	reqContent := new(GetUserRequest)
 	unmarshaler := protojson.UnmarshalOptions{DiscardUnknown: true}
 	if err = unmarshaler.Unmarshal(rawReqBody, reqContent); err != nil {
 		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
@@ -474,20 +474,20 @@ func (s *userServiceServer) serveGetUserJSON(ctx context.Context, resp http.Resp
 
 	handler := s.UserService.GetUser
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *UserGetParams) (*UserResponse, error) {
+		handler = func(ctx context.Context, req *GetUserRequest) (*GetUserResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*UserGetParams)
+					typedReq, ok := req.(*GetUserRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*UserGetParams) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*GetUserRequest) when calling interceptor")
 					}
 					return s.UserService.GetUser(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*UserResponse)
+				typedResp, ok := resp.(*GetUserResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*UserResponse) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*GetUserResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -496,7 +496,7 @@ func (s *userServiceServer) serveGetUserJSON(ctx context.Context, resp http.Resp
 	}
 
 	// Call service method
-	var respContent *UserResponse
+	var respContent *GetUserResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -507,7 +507,7 @@ func (s *userServiceServer) serveGetUserJSON(ctx context.Context, resp http.Resp
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *UserResponse and nil error while calling GetUser. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *GetUserResponse and nil error while calling GetUser. nil responses are not supported"))
 		return
 	}
 
@@ -547,7 +547,7 @@ func (s *userServiceServer) serveGetUserProtobuf(ctx context.Context, resp http.
 		s.handleRequestBodyError(ctx, resp, "failed to read request body", err)
 		return
 	}
-	reqContent := new(UserGetParams)
+	reqContent := new(GetUserRequest)
 	if err = proto.Unmarshal(buf, reqContent); err != nil {
 		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
 		return
@@ -555,20 +555,20 @@ func (s *userServiceServer) serveGetUserProtobuf(ctx context.Context, resp http.
 
 	handler := s.UserService.GetUser
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *UserGetParams) (*UserResponse, error) {
+		handler = func(ctx context.Context, req *GetUserRequest) (*GetUserResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*UserGetParams)
+					typedReq, ok := req.(*GetUserRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*UserGetParams) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*GetUserRequest) when calling interceptor")
 					}
 					return s.UserService.GetUser(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*UserResponse)
+				typedResp, ok := resp.(*GetUserResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*UserResponse) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*GetUserResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -577,7 +577,7 @@ func (s *userServiceServer) serveGetUserProtobuf(ctx context.Context, resp http.
 	}
 
 	// Call service method
-	var respContent *UserResponse
+	var respContent *GetUserResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -588,7 +588,7 @@ func (s *userServiceServer) serveGetUserProtobuf(ctx context.Context, resp http.
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *UserResponse and nil error while calling GetUser. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *GetUserResponse and nil error while calling GetUser. nil responses are not supported"))
 		return
 	}
 
@@ -645,7 +645,7 @@ func (s *userServiceServer) serveUpdateUserJSON(ctx context.Context, resp http.R
 		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
 		return
 	}
-	reqContent := new(UserUpdateParams)
+	reqContent := new(UpdateUserRequest)
 	unmarshaler := protojson.UnmarshalOptions{DiscardUnknown: true}
 	if err = unmarshaler.Unmarshal(rawReqBody, reqContent); err != nil {
 		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
@@ -654,20 +654,20 @@ func (s *userServiceServer) serveUpdateUserJSON(ctx context.Context, resp http.R
 
 	handler := s.UserService.UpdateUser
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *UserUpdateParams) (*UserResponse, error) {
+		handler = func(ctx context.Context, req *UpdateUserRequest) (*UpdateUserResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*UserUpdateParams)
+					typedReq, ok := req.(*UpdateUserRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*UserUpdateParams) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*UpdateUserRequest) when calling interceptor")
 					}
 					return s.UserService.UpdateUser(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*UserResponse)
+				typedResp, ok := resp.(*UpdateUserResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*UserResponse) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*UpdateUserResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -676,7 +676,7 @@ func (s *userServiceServer) serveUpdateUserJSON(ctx context.Context, resp http.R
 	}
 
 	// Call service method
-	var respContent *UserResponse
+	var respContent *UpdateUserResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -687,7 +687,7 @@ func (s *userServiceServer) serveUpdateUserJSON(ctx context.Context, resp http.R
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *UserResponse and nil error while calling UpdateUser. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *UpdateUserResponse and nil error while calling UpdateUser. nil responses are not supported"))
 		return
 	}
 
@@ -727,7 +727,7 @@ func (s *userServiceServer) serveUpdateUserProtobuf(ctx context.Context, resp ht
 		s.handleRequestBodyError(ctx, resp, "failed to read request body", err)
 		return
 	}
-	reqContent := new(UserUpdateParams)
+	reqContent := new(UpdateUserRequest)
 	if err = proto.Unmarshal(buf, reqContent); err != nil {
 		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
 		return
@@ -735,20 +735,20 @@ func (s *userServiceServer) serveUpdateUserProtobuf(ctx context.Context, resp ht
 
 	handler := s.UserService.UpdateUser
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *UserUpdateParams) (*UserResponse, error) {
+		handler = func(ctx context.Context, req *UpdateUserRequest) (*UpdateUserResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*UserUpdateParams)
+					typedReq, ok := req.(*UpdateUserRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*UserUpdateParams) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*UpdateUserRequest) when calling interceptor")
 					}
 					return s.UserService.UpdateUser(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*UserResponse)
+				typedResp, ok := resp.(*UpdateUserResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*UserResponse) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*UpdateUserResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -757,7 +757,7 @@ func (s *userServiceServer) serveUpdateUserProtobuf(ctx context.Context, resp ht
 	}
 
 	// Call service method
-	var respContent *UserResponse
+	var respContent *UpdateUserResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -768,7 +768,7 @@ func (s *userServiceServer) serveUpdateUserProtobuf(ctx context.Context, resp ht
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *UserResponse and nil error while calling UpdateUser. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *UpdateUserResponse and nil error while calling UpdateUser. nil responses are not supported"))
 		return
 	}
 
@@ -808,27 +808,28 @@ func (s *userServiceServer) PathPrefix() string {
 }
 
 var twirpFileDescriptor4 = []byte{
-	// 344 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x52, 0x4d, 0x4f, 0xc2, 0x40,
-	0x10, 0x65, 0x4b, 0xc1, 0x32, 0xe5, 0xc3, 0xac, 0x46, 0x2a, 0x17, 0x4d, 0x0f, 0xc6, 0x53, 0x09,
-	0x78, 0xe4, 0x64, 0x2f, 0x7a, 0x32, 0x66, 0x0d, 0x17, 0x2f, 0x9b, 0xc5, 0x4e, 0x4c, 0x13, 0xa0,
-	0xcd, 0x6e, 0x29, 0x7f, 0x81, 0x8b, 0xff, 0xc9, 0x9f, 0x66, 0x76, 0x4a, 0x11, 0x4c, 0x3c, 0xce,
-	0x7b, 0xaf, 0x6f, 0xde, 0xdb, 0x29, 0x5c, 0xa8, 0x3c, 0xcd, 0x17, 0xe3, 0x72, 0x32, 0xde, 0x18,
-	0xd4, 0x51, 0xae, 0xb3, 0x22, 0xe3, 0x1e, 0x81, 0x51, 0x39, 0x09, 0x07, 0xd0, 0x9b, 0x1b, 0xd4,
-	0x4f, 0x58, 0xbc, 0x2a, 0xad, 0x56, 0x26, 0xfc, 0x66, 0x70, 0x6e, 0x91, 0x79, 0x9e, 0xa8, 0x02,
-	0x2b, 0x90, 0x5f, 0x43, 0x0b, 0x57, 0x2a, 0x5d, 0x06, 0xec, 0x96, 0xdd, 0x77, 0x9e, 0x1b, 0xa2,
-	0x1a, 0x77, 0x8c, 0xf1, 0x21, 0xb8, 0x6b, 0xb5, 0xc2, 0xc0, 0x21, 0x86, 0x09, 0x9a, 0x2c, 0x71,
-	0x03, 0x5e, 0xae, 0x8c, 0xd9, 0x66, 0x3a, 0x09, 0x9a, 0x44, 0x3a, 0xe2, 0x80, 0x58, 0xc1, 0x1d,
-	0x74, 0xeb, 0x51, 0xae, 0x71, 0x1b, 0xb8, 0x24, 0x6a, 0x0a, 0xbf, 0x46, 0x5f, 0x70, 0xbb, 0x63,
-	0x2c, 0xf6, 0xa0, 0x2d, 0x69, 0x5d, 0x7c, 0x06, 0x2d, 0x69, 0xed, 0x63, 0x1f, 0x3a, 0xb2, 0x56,
-	0xc5, 0x03, 0xe8, 0xc9, 0x63, 0xa3, 0xd0, 0x80, 0x6b, 0x1b, 0xf0, 0x3e, 0x38, 0x69, 0x52, 0x45,
-	0x16, 0x4e, 0x9a, 0xf0, 0xcb, 0xba, 0x05, 0x65, 0xdd, 0x77, 0xe0, 0x7c, 0x5f, 0x80, 0x32, 0x56,
-	0xf1, 0x79, 0x08, 0xa0, 0x4a, 0x55, 0x28, 0x2d, 0x37, 0x7a, 0xb9, 0x0f, 0xd6, 0x10, 0x9d, 0x0a,
-	0x9b, 0x6b, 0x5b, 0x3c, 0xee, 0x81, 0x2f, 0x7f, 0x45, 0xe1, 0x14, 0xba, 0x76, 0xa9, 0x40, 0x93,
-	0x67, 0x6b, 0x63, 0x2d, 0x5c, 0xfb, 0xe0, 0xb4, 0xde, 0x9f, 0xf6, 0xa3, 0xfa, 0xc5, 0x23, 0x52,
-	0x11, 0x37, 0xfd, 0x62, 0xe0, 0xdb, 0xf1, 0x0d, 0x75, 0x99, 0x7e, 0x20, 0x9f, 0x81, 0xf7, 0x89,
-	0x85, 0xb4, 0x1c, 0x1f, 0x9e, 0x7e, 0x71, 0x38, 0xd0, 0xe8, 0xea, 0x8f, 0x55, 0xbd, 0xf0, 0x11,
-	0xfc, 0x0d, 0xdd, 0xac, 0xfa, 0x7e, 0x74, 0x2a, 0x3b, 0x3e, 0xe7, 0x7f, 0x16, 0x71, 0xf7, 0x1d,
-	0xa2, 0xf1, 0x8c, 0xb8, 0x72, 0xb2, 0x68, 0xd3, 0xbf, 0xf2, 0xf0, 0x13, 0x00, 0x00, 0xff, 0xff,
-	0x6b, 0x59, 0x1a, 0xc4, 0x42, 0x02, 0x00, 0x00,
+	// 359 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x52, 0x4d, 0x4f, 0xc2, 0x40,
+	0x10, 0x65, 0x4b, 0xc1, 0x32, 0xe5, 0x43, 0x57, 0x13, 0x0b, 0x9a, 0x68, 0x7a, 0x30, 0x9e, 0x4a,
+	0xc0, 0x98, 0x98, 0x78, 0x30, 0xe9, 0x45, 0x4e, 0x1e, 0x6a, 0xb8, 0x78, 0xd9, 0x2c, 0x76, 0x63,
+	0x9a, 0x00, 0xad, 0xbb, 0x6d, 0xf9, 0x0b, 0xfc, 0x04, 0xff, 0x8e, 0xff, 0xcc, 0xec, 0xb4, 0x85,
+	0x6a, 0x38, 0x78, 0x9c, 0xf7, 0xde, 0xbe, 0x79, 0x33, 0x3b, 0x70, 0xca, 0x93, 0x28, 0x59, 0x8c,
+	0xf3, 0xc9, 0x38, 0x53, 0x42, 0x7a, 0x89, 0x8c, 0xd3, 0x98, 0x5a, 0x08, 0x7a, 0xf9, 0xc4, 0x3d,
+	0x86, 0xfe, 0xb3, 0x48, 0xe7, 0x4a, 0xc8, 0x40, 0x7c, 0x66, 0x42, 0xa5, 0xee, 0x37, 0x81, 0x93,
+	0x79, 0x12, 0xf2, 0x54, 0xd4, 0x50, 0x3a, 0x84, 0x96, 0x58, 0xf1, 0x68, 0xe9, 0x90, 0x6b, 0x72,
+	0xdb, 0x99, 0x35, 0x82, 0xa2, 0xdc, 0x12, 0x42, 0xcf, 0xc1, 0x5c, 0xf3, 0x95, 0x70, 0x0c, 0x64,
+	0x48, 0x80, 0x95, 0x26, 0xae, 0xc0, 0x4a, 0xb8, 0x52, 0x9b, 0x58, 0x86, 0x4e, 0x13, 0x49, 0x23,
+	0xd8, 0x21, 0x5a, 0x70, 0x03, 0xdd, 0xaa, 0x64, 0x6b, 0xb1, 0x71, 0x4c, 0x14, 0x35, 0x03, 0xbb,
+	0x42, 0x5f, 0xc4, 0x66, 0x4b, 0x88, 0x6f, 0x41, 0x9b, 0x61, 0x3b, 0xff, 0x08, 0x5a, 0x4c, 0xdb,
+	0xfb, 0x36, 0x74, 0x58, 0xa5, 0xf2, 0x07, 0xd0, 0x63, 0x75, 0x23, 0x57, 0x81, 0xa9, 0xc3, 0xd3,
+	0x3e, 0x18, 0x51, 0x58, 0x44, 0x0e, 0x8c, 0x28, 0xa4, 0x67, 0xd5, 0x14, 0x98, 0xb5, 0x9c, 0x81,
+	0xd2, 0x72, 0x00, 0xcc, 0x58, 0xc4, 0xa7, 0x2e, 0x00, 0xcf, 0x79, 0xca, 0x25, 0xcb, 0xe4, 0xb2,
+	0x0c, 0xd6, 0x08, 0x3a, 0x05, 0x36, 0x97, 0x7a, 0x70, 0xbf, 0x07, 0x36, 0xdb, 0x8b, 0xdc, 0x7b,
+	0x18, 0xec, 0x56, 0xa9, 0x92, 0x78, 0xad, 0xb4, 0x8b, 0xa9, 0xb7, 0x8e, 0x09, 0xec, 0x69, 0xdf,
+	0xab, 0xd6, 0xee, 0xa1, 0x0a, 0x39, 0xf7, 0x01, 0x68, 0x7d, 0xdd, 0xff, 0x7f, 0x39, 0xfd, 0x22,
+	0x60, 0xeb, 0xf2, 0x55, 0xc8, 0x3c, 0x7a, 0x17, 0xf4, 0x09, 0xac, 0x0f, 0x91, 0x32, 0xcd, 0x51,
+	0x67, 0xff, 0xe2, 0xf7, 0xff, 0x8e, 0x86, 0x07, 0x98, 0xb2, 0xe9, 0x0c, 0xec, 0x0c, 0xa3, 0x14,
+	0x1e, 0x17, 0xb5, 0xae, 0x7f, 0x0f, 0x62, 0x74, 0x79, 0x98, 0x2c, 0x9c, 0xfc, 0xee, 0x1b, 0x78,
+	0xe3, 0x47, 0x54, 0xe4, 0x93, 0x45, 0x1b, 0xaf, 0xee, 0xee, 0x27, 0x00, 0x00, 0xff, 0xff, 0x7d,
+	0x92, 0x5b, 0xd5, 0x8c, 0x02, 0x00, 0x00,
 }

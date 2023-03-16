@@ -38,6 +38,10 @@ func (h *handler) Start(ctx context.Context) error {
 		return err
 	}
 
+	logger.FromContext(ctx).With(
+		zap.String("bus", MINIO_EVENT_BUS),
+		zap.String("group", EVENT_GROUP),
+	).Info("Subscribing to NATS events")
 	h.nats.Conn.QueueSubscribe(MINIO_EVENT_BUS, EVENT_GROUP, func(msg *nats.Msg) {
 		log := logger.FromContext(ctx)
 

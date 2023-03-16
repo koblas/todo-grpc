@@ -37,7 +37,7 @@ func main() {
 		}
 
 		nats = natsutil.NewNatsClient(config.NatsAddr)
-		producer := corepbv1.NewFileEventbusProtobufClient("", nats)
+		producer := corepbv1.NewFileEventbusServiceProtobufClient("", nats)
 
 		opts = []workers_file.Option{
 			workers_file.WithProducer(producer),
@@ -55,6 +55,6 @@ func main() {
 	}
 
 	mgr.Start(nats.TopicConsumer(mgr.Context(),
-		natsutil.TwirpPathToNatsTopic(corepbv1.FileEventbusPathPrefix),
+		natsutil.TwirpPathToNatsTopic(corepbv1.FileEventbusServicePathPrefix),
 		workers_file.BuildHandlers(config, opts...)))
 }

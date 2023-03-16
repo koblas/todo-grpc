@@ -25,15 +25,15 @@ type userEmailInvite struct {
 func NewUserEmailInvite(config WorkerConfig) corepbv1.TwirpServer {
 	svc := &userEmailInvite{WorkerConfig: config}
 
-	return corepbv1.NewUserEventbusServer(svc)
+	return corepbv1.NewUserEventbusServiceServer(svc)
 }
 
-func (cfg *userEmailInvite) SecurityInviteToken(ctx context.Context, msg *corepbv1.UserSecurityEvent) (*corepbv1.EventbusEmpty, error) {
+func (cfg *userEmailInvite) SecurityInviteToken(ctx context.Context, msg *corepbv1.UserSecurityEvent) (*corepbv1.UserEventbusSecurityInviteTokenResponse, error) {
 	log := logger.FromContext(ctx).With(zap.Int32("action", int32(msg.Action))).With(zap.String("email", msg.User.Email))
 
 	log.Info("processing message")
-	if msg.Action != corepbv1.UserSecurity_USER_INVITE_TOKEN {
-		return &corepbv1.EventbusEmpty{}, nil
+	if msg.Action != corepbv1.UserSecurity_USER_SECURITY_USER_INVITE_TOKEN {
+		return &corepbv1.UserEventbusSecurityInviteTokenResponse{}, nil
 	}
 
 	tokenValue, err := decodeSecure(log, msg.Token)
@@ -41,7 +41,7 @@ func (cfg *userEmailInvite) SecurityInviteToken(ctx context.Context, msg *corepb
 		return nil, err
 	}
 
-	params := corepbv1.EmailInviteUserParam{
+	params := corepbv1.InviteUserMessageRequest{
 		AppInfo: buildAppInfo(cfg.config),
 		Sender: &corepbv1.EmailUser{
 			UserId: msg.Sender.Id,
@@ -64,5 +64,5 @@ func (cfg *userEmailInvite) SecurityInviteToken(ctx context.Context, msg *corepb
 		}
 	}
 
-	return &corepbv1.EventbusEmpty{}, nil
+	return &corepbv1.UserEventbusSecurityInviteTokenResponse{}, nil
 }

@@ -34,16 +34,15 @@ const _ = twirp.TwirpPackageMinVersion_8_1_0
 
 type AuthUserService interface {
 	// Get an authentiction url
-	GetAuthURL(context.Context, *AuthOAuthGetUrlParams) (*AuthUserGetUrlResult, error)
+	GetAuthUrl(context.Context, *AuthUserServiceGetAuthUrlRequest) (*AuthUserServiceGetAuthUrlResponse, error)
 
 	// List all associations for this user
-	ListAssociations(context.Context, *AuthUserGetParams) (*AuthUserListAssoicationsResponse, error)
+	ListAssociations(context.Context, *AuthUserServiceListAssociationsRequest) (*AuthUserServiceListAssociationsResponse, error)
 
 	// Remove this token from the system
-	RemoveAssociation(context.Context, *AuthUserGetParams) (*Empty, error)
+	RemoveAssociation(context.Context, *AuthUserServiceRemoveAssociationRequest) (*AuthUserServiceRemoveAssociationResponse, error)
 
-	// Assoicate or create the user as needed
-	UpsertUser(context.Context, *AuthUserUpsertParams) (*AuthUserUpsertResult, error)
+	UpsertUser(context.Context, *AuthUserServiceUpsertUserRequest) (*AuthUserServiceUpsertUserResponse, error)
 }
 
 // ===============================
@@ -81,7 +80,7 @@ func NewAuthUserServiceProtobufClient(baseURL string, client HTTPClient, opts ..
 	serviceURL := sanitizeBaseURL(baseURL)
 	serviceURL += baseServicePath(pathPrefix, "corepb.v1", "AuthUserService")
 	urls := [4]string{
-		serviceURL + "GetAuthURL",
+		serviceURL + "GetAuthUrl",
 		serviceURL + "ListAssociations",
 		serviceURL + "RemoveAssociation",
 		serviceURL + "UpsertUser",
@@ -95,26 +94,26 @@ func NewAuthUserServiceProtobufClient(baseURL string, client HTTPClient, opts ..
 	}
 }
 
-func (c *authUserServiceProtobufClient) GetAuthURL(ctx context.Context, in *AuthOAuthGetUrlParams) (*AuthUserGetUrlResult, error) {
+func (c *authUserServiceProtobufClient) GetAuthUrl(ctx context.Context, in *AuthUserServiceGetAuthUrlRequest) (*AuthUserServiceGetAuthUrlResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
 	ctx = ctxsetters.WithServiceName(ctx, "AuthUserService")
-	ctx = ctxsetters.WithMethodName(ctx, "GetAuthURL")
-	caller := c.callGetAuthURL
+	ctx = ctxsetters.WithMethodName(ctx, "GetAuthUrl")
+	caller := c.callGetAuthUrl
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *AuthOAuthGetUrlParams) (*AuthUserGetUrlResult, error) {
+		caller = func(ctx context.Context, req *AuthUserServiceGetAuthUrlRequest) (*AuthUserServiceGetAuthUrlResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*AuthOAuthGetUrlParams)
+					typedReq, ok := req.(*AuthUserServiceGetAuthUrlRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*AuthOAuthGetUrlParams) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*AuthUserServiceGetAuthUrlRequest) when calling interceptor")
 					}
-					return c.callGetAuthURL(ctx, typedReq)
+					return c.callGetAuthUrl(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*AuthUserGetUrlResult)
+				typedResp, ok := resp.(*AuthUserServiceGetAuthUrlResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*AuthUserGetUrlResult) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*AuthUserServiceGetAuthUrlResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -124,8 +123,8 @@ func (c *authUserServiceProtobufClient) GetAuthURL(ctx context.Context, in *Auth
 	return caller(ctx, in)
 }
 
-func (c *authUserServiceProtobufClient) callGetAuthURL(ctx context.Context, in *AuthOAuthGetUrlParams) (*AuthUserGetUrlResult, error) {
-	out := new(AuthUserGetUrlResult)
+func (c *authUserServiceProtobufClient) callGetAuthUrl(ctx context.Context, in *AuthUserServiceGetAuthUrlRequest) (*AuthUserServiceGetAuthUrlResponse, error) {
+	out := new(AuthUserServiceGetAuthUrlResponse)
 	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -141,26 +140,26 @@ func (c *authUserServiceProtobufClient) callGetAuthURL(ctx context.Context, in *
 	return out, nil
 }
 
-func (c *authUserServiceProtobufClient) ListAssociations(ctx context.Context, in *AuthUserGetParams) (*AuthUserListAssoicationsResponse, error) {
+func (c *authUserServiceProtobufClient) ListAssociations(ctx context.Context, in *AuthUserServiceListAssociationsRequest) (*AuthUserServiceListAssociationsResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
 	ctx = ctxsetters.WithServiceName(ctx, "AuthUserService")
 	ctx = ctxsetters.WithMethodName(ctx, "ListAssociations")
 	caller := c.callListAssociations
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *AuthUserGetParams) (*AuthUserListAssoicationsResponse, error) {
+		caller = func(ctx context.Context, req *AuthUserServiceListAssociationsRequest) (*AuthUserServiceListAssociationsResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*AuthUserGetParams)
+					typedReq, ok := req.(*AuthUserServiceListAssociationsRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*AuthUserGetParams) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*AuthUserServiceListAssociationsRequest) when calling interceptor")
 					}
 					return c.callListAssociations(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*AuthUserListAssoicationsResponse)
+				typedResp, ok := resp.(*AuthUserServiceListAssociationsResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*AuthUserListAssoicationsResponse) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*AuthUserServiceListAssociationsResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -170,8 +169,8 @@ func (c *authUserServiceProtobufClient) ListAssociations(ctx context.Context, in
 	return caller(ctx, in)
 }
 
-func (c *authUserServiceProtobufClient) callListAssociations(ctx context.Context, in *AuthUserGetParams) (*AuthUserListAssoicationsResponse, error) {
-	out := new(AuthUserListAssoicationsResponse)
+func (c *authUserServiceProtobufClient) callListAssociations(ctx context.Context, in *AuthUserServiceListAssociationsRequest) (*AuthUserServiceListAssociationsResponse, error) {
+	out := new(AuthUserServiceListAssociationsResponse)
 	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[1], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -187,26 +186,26 @@ func (c *authUserServiceProtobufClient) callListAssociations(ctx context.Context
 	return out, nil
 }
 
-func (c *authUserServiceProtobufClient) RemoveAssociation(ctx context.Context, in *AuthUserGetParams) (*Empty, error) {
+func (c *authUserServiceProtobufClient) RemoveAssociation(ctx context.Context, in *AuthUserServiceRemoveAssociationRequest) (*AuthUserServiceRemoveAssociationResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
 	ctx = ctxsetters.WithServiceName(ctx, "AuthUserService")
 	ctx = ctxsetters.WithMethodName(ctx, "RemoveAssociation")
 	caller := c.callRemoveAssociation
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *AuthUserGetParams) (*Empty, error) {
+		caller = func(ctx context.Context, req *AuthUserServiceRemoveAssociationRequest) (*AuthUserServiceRemoveAssociationResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*AuthUserGetParams)
+					typedReq, ok := req.(*AuthUserServiceRemoveAssociationRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*AuthUserGetParams) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*AuthUserServiceRemoveAssociationRequest) when calling interceptor")
 					}
 					return c.callRemoveAssociation(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*Empty)
+				typedResp, ok := resp.(*AuthUserServiceRemoveAssociationResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*Empty) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*AuthUserServiceRemoveAssociationResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -216,8 +215,8 @@ func (c *authUserServiceProtobufClient) RemoveAssociation(ctx context.Context, i
 	return caller(ctx, in)
 }
 
-func (c *authUserServiceProtobufClient) callRemoveAssociation(ctx context.Context, in *AuthUserGetParams) (*Empty, error) {
-	out := new(Empty)
+func (c *authUserServiceProtobufClient) callRemoveAssociation(ctx context.Context, in *AuthUserServiceRemoveAssociationRequest) (*AuthUserServiceRemoveAssociationResponse, error) {
+	out := new(AuthUserServiceRemoveAssociationResponse)
 	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[2], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -233,26 +232,26 @@ func (c *authUserServiceProtobufClient) callRemoveAssociation(ctx context.Contex
 	return out, nil
 }
 
-func (c *authUserServiceProtobufClient) UpsertUser(ctx context.Context, in *AuthUserUpsertParams) (*AuthUserUpsertResult, error) {
+func (c *authUserServiceProtobufClient) UpsertUser(ctx context.Context, in *AuthUserServiceUpsertUserRequest) (*AuthUserServiceUpsertUserResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
 	ctx = ctxsetters.WithServiceName(ctx, "AuthUserService")
 	ctx = ctxsetters.WithMethodName(ctx, "UpsertUser")
 	caller := c.callUpsertUser
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *AuthUserUpsertParams) (*AuthUserUpsertResult, error) {
+		caller = func(ctx context.Context, req *AuthUserServiceUpsertUserRequest) (*AuthUserServiceUpsertUserResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*AuthUserUpsertParams)
+					typedReq, ok := req.(*AuthUserServiceUpsertUserRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*AuthUserUpsertParams) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*AuthUserServiceUpsertUserRequest) when calling interceptor")
 					}
 					return c.callUpsertUser(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*AuthUserUpsertResult)
+				typedResp, ok := resp.(*AuthUserServiceUpsertUserResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*AuthUserUpsertResult) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*AuthUserServiceUpsertUserResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -262,8 +261,8 @@ func (c *authUserServiceProtobufClient) UpsertUser(ctx context.Context, in *Auth
 	return caller(ctx, in)
 }
 
-func (c *authUserServiceProtobufClient) callUpsertUser(ctx context.Context, in *AuthUserUpsertParams) (*AuthUserUpsertResult, error) {
-	out := new(AuthUserUpsertResult)
+func (c *authUserServiceProtobufClient) callUpsertUser(ctx context.Context, in *AuthUserServiceUpsertUserRequest) (*AuthUserServiceUpsertUserResponse, error) {
+	out := new(AuthUserServiceUpsertUserResponse)
 	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[3], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -314,7 +313,7 @@ func NewAuthUserServiceJSONClient(baseURL string, client HTTPClient, opts ...twi
 	serviceURL := sanitizeBaseURL(baseURL)
 	serviceURL += baseServicePath(pathPrefix, "corepb.v1", "AuthUserService")
 	urls := [4]string{
-		serviceURL + "GetAuthURL",
+		serviceURL + "GetAuthUrl",
 		serviceURL + "ListAssociations",
 		serviceURL + "RemoveAssociation",
 		serviceURL + "UpsertUser",
@@ -328,26 +327,26 @@ func NewAuthUserServiceJSONClient(baseURL string, client HTTPClient, opts ...twi
 	}
 }
 
-func (c *authUserServiceJSONClient) GetAuthURL(ctx context.Context, in *AuthOAuthGetUrlParams) (*AuthUserGetUrlResult, error) {
+func (c *authUserServiceJSONClient) GetAuthUrl(ctx context.Context, in *AuthUserServiceGetAuthUrlRequest) (*AuthUserServiceGetAuthUrlResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
 	ctx = ctxsetters.WithServiceName(ctx, "AuthUserService")
-	ctx = ctxsetters.WithMethodName(ctx, "GetAuthURL")
-	caller := c.callGetAuthURL
+	ctx = ctxsetters.WithMethodName(ctx, "GetAuthUrl")
+	caller := c.callGetAuthUrl
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *AuthOAuthGetUrlParams) (*AuthUserGetUrlResult, error) {
+		caller = func(ctx context.Context, req *AuthUserServiceGetAuthUrlRequest) (*AuthUserServiceGetAuthUrlResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*AuthOAuthGetUrlParams)
+					typedReq, ok := req.(*AuthUserServiceGetAuthUrlRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*AuthOAuthGetUrlParams) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*AuthUserServiceGetAuthUrlRequest) when calling interceptor")
 					}
-					return c.callGetAuthURL(ctx, typedReq)
+					return c.callGetAuthUrl(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*AuthUserGetUrlResult)
+				typedResp, ok := resp.(*AuthUserServiceGetAuthUrlResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*AuthUserGetUrlResult) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*AuthUserServiceGetAuthUrlResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -357,8 +356,8 @@ func (c *authUserServiceJSONClient) GetAuthURL(ctx context.Context, in *AuthOAut
 	return caller(ctx, in)
 }
 
-func (c *authUserServiceJSONClient) callGetAuthURL(ctx context.Context, in *AuthOAuthGetUrlParams) (*AuthUserGetUrlResult, error) {
-	out := new(AuthUserGetUrlResult)
+func (c *authUserServiceJSONClient) callGetAuthUrl(ctx context.Context, in *AuthUserServiceGetAuthUrlRequest) (*AuthUserServiceGetAuthUrlResponse, error) {
+	out := new(AuthUserServiceGetAuthUrlResponse)
 	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -374,26 +373,26 @@ func (c *authUserServiceJSONClient) callGetAuthURL(ctx context.Context, in *Auth
 	return out, nil
 }
 
-func (c *authUserServiceJSONClient) ListAssociations(ctx context.Context, in *AuthUserGetParams) (*AuthUserListAssoicationsResponse, error) {
+func (c *authUserServiceJSONClient) ListAssociations(ctx context.Context, in *AuthUserServiceListAssociationsRequest) (*AuthUserServiceListAssociationsResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
 	ctx = ctxsetters.WithServiceName(ctx, "AuthUserService")
 	ctx = ctxsetters.WithMethodName(ctx, "ListAssociations")
 	caller := c.callListAssociations
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *AuthUserGetParams) (*AuthUserListAssoicationsResponse, error) {
+		caller = func(ctx context.Context, req *AuthUserServiceListAssociationsRequest) (*AuthUserServiceListAssociationsResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*AuthUserGetParams)
+					typedReq, ok := req.(*AuthUserServiceListAssociationsRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*AuthUserGetParams) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*AuthUserServiceListAssociationsRequest) when calling interceptor")
 					}
 					return c.callListAssociations(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*AuthUserListAssoicationsResponse)
+				typedResp, ok := resp.(*AuthUserServiceListAssociationsResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*AuthUserListAssoicationsResponse) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*AuthUserServiceListAssociationsResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -403,8 +402,8 @@ func (c *authUserServiceJSONClient) ListAssociations(ctx context.Context, in *Au
 	return caller(ctx, in)
 }
 
-func (c *authUserServiceJSONClient) callListAssociations(ctx context.Context, in *AuthUserGetParams) (*AuthUserListAssoicationsResponse, error) {
-	out := new(AuthUserListAssoicationsResponse)
+func (c *authUserServiceJSONClient) callListAssociations(ctx context.Context, in *AuthUserServiceListAssociationsRequest) (*AuthUserServiceListAssociationsResponse, error) {
+	out := new(AuthUserServiceListAssociationsResponse)
 	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[1], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -420,26 +419,26 @@ func (c *authUserServiceJSONClient) callListAssociations(ctx context.Context, in
 	return out, nil
 }
 
-func (c *authUserServiceJSONClient) RemoveAssociation(ctx context.Context, in *AuthUserGetParams) (*Empty, error) {
+func (c *authUserServiceJSONClient) RemoveAssociation(ctx context.Context, in *AuthUserServiceRemoveAssociationRequest) (*AuthUserServiceRemoveAssociationResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
 	ctx = ctxsetters.WithServiceName(ctx, "AuthUserService")
 	ctx = ctxsetters.WithMethodName(ctx, "RemoveAssociation")
 	caller := c.callRemoveAssociation
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *AuthUserGetParams) (*Empty, error) {
+		caller = func(ctx context.Context, req *AuthUserServiceRemoveAssociationRequest) (*AuthUserServiceRemoveAssociationResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*AuthUserGetParams)
+					typedReq, ok := req.(*AuthUserServiceRemoveAssociationRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*AuthUserGetParams) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*AuthUserServiceRemoveAssociationRequest) when calling interceptor")
 					}
 					return c.callRemoveAssociation(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*Empty)
+				typedResp, ok := resp.(*AuthUserServiceRemoveAssociationResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*Empty) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*AuthUserServiceRemoveAssociationResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -449,8 +448,8 @@ func (c *authUserServiceJSONClient) RemoveAssociation(ctx context.Context, in *A
 	return caller(ctx, in)
 }
 
-func (c *authUserServiceJSONClient) callRemoveAssociation(ctx context.Context, in *AuthUserGetParams) (*Empty, error) {
-	out := new(Empty)
+func (c *authUserServiceJSONClient) callRemoveAssociation(ctx context.Context, in *AuthUserServiceRemoveAssociationRequest) (*AuthUserServiceRemoveAssociationResponse, error) {
+	out := new(AuthUserServiceRemoveAssociationResponse)
 	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[2], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -466,26 +465,26 @@ func (c *authUserServiceJSONClient) callRemoveAssociation(ctx context.Context, i
 	return out, nil
 }
 
-func (c *authUserServiceJSONClient) UpsertUser(ctx context.Context, in *AuthUserUpsertParams) (*AuthUserUpsertResult, error) {
+func (c *authUserServiceJSONClient) UpsertUser(ctx context.Context, in *AuthUserServiceUpsertUserRequest) (*AuthUserServiceUpsertUserResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
 	ctx = ctxsetters.WithServiceName(ctx, "AuthUserService")
 	ctx = ctxsetters.WithMethodName(ctx, "UpsertUser")
 	caller := c.callUpsertUser
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *AuthUserUpsertParams) (*AuthUserUpsertResult, error) {
+		caller = func(ctx context.Context, req *AuthUserServiceUpsertUserRequest) (*AuthUserServiceUpsertUserResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*AuthUserUpsertParams)
+					typedReq, ok := req.(*AuthUserServiceUpsertUserRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*AuthUserUpsertParams) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*AuthUserServiceUpsertUserRequest) when calling interceptor")
 					}
 					return c.callUpsertUser(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*AuthUserUpsertResult)
+				typedResp, ok := resp.(*AuthUserServiceUpsertUserResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*AuthUserUpsertResult) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*AuthUserServiceUpsertUserResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -495,8 +494,8 @@ func (c *authUserServiceJSONClient) UpsertUser(ctx context.Context, in *AuthUser
 	return caller(ctx, in)
 }
 
-func (c *authUserServiceJSONClient) callUpsertUser(ctx context.Context, in *AuthUserUpsertParams) (*AuthUserUpsertResult, error) {
-	out := new(AuthUserUpsertResult)
+func (c *authUserServiceJSONClient) callUpsertUser(ctx context.Context, in *AuthUserServiceUpsertUserRequest) (*AuthUserServiceUpsertUserResponse, error) {
+	out := new(AuthUserServiceUpsertUserResponse)
 	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[3], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -609,8 +608,8 @@ func (s *authUserServiceServer) ServeHTTP(resp http.ResponseWriter, req *http.Re
 	}
 
 	switch method {
-	case "GetAuthURL":
-		s.serveGetAuthURL(ctx, resp, req)
+	case "GetAuthUrl":
+		s.serveGetAuthUrl(ctx, resp, req)
 		return
 	case "ListAssociations":
 		s.serveListAssociations(ctx, resp, req)
@@ -628,7 +627,7 @@ func (s *authUserServiceServer) ServeHTTP(resp http.ResponseWriter, req *http.Re
 	}
 }
 
-func (s *authUserServiceServer) serveGetAuthURL(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *authUserServiceServer) serveGetAuthUrl(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	header := req.Header.Get("Content-Type")
 	i := strings.Index(header, ";")
 	if i == -1 {
@@ -636,9 +635,9 @@ func (s *authUserServiceServer) serveGetAuthURL(ctx context.Context, resp http.R
 	}
 	switch strings.TrimSpace(strings.ToLower(header[:i])) {
 	case "application/json":
-		s.serveGetAuthURLJSON(ctx, resp, req)
+		s.serveGetAuthUrlJSON(ctx, resp, req)
 	case "application/protobuf":
-		s.serveGetAuthURLProtobuf(ctx, resp, req)
+		s.serveGetAuthUrlProtobuf(ctx, resp, req)
 	default:
 		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
 		twerr := badRouteError(msg, req.Method, req.URL.Path)
@@ -646,9 +645,9 @@ func (s *authUserServiceServer) serveGetAuthURL(ctx context.Context, resp http.R
 	}
 }
 
-func (s *authUserServiceServer) serveGetAuthURLJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *authUserServiceServer) serveGetAuthUrlJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	var err error
-	ctx = ctxsetters.WithMethodName(ctx, "GetAuthURL")
+	ctx = ctxsetters.WithMethodName(ctx, "GetAuthUrl")
 	ctx, err = callRequestRouted(ctx, s.hooks)
 	if err != nil {
 		s.writeError(ctx, resp, err)
@@ -661,29 +660,29 @@ func (s *authUserServiceServer) serveGetAuthURLJSON(ctx context.Context, resp ht
 		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
 		return
 	}
-	reqContent := new(AuthOAuthGetUrlParams)
+	reqContent := new(AuthUserServiceGetAuthUrlRequest)
 	unmarshaler := protojson.UnmarshalOptions{DiscardUnknown: true}
 	if err = unmarshaler.Unmarshal(rawReqBody, reqContent); err != nil {
 		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
 		return
 	}
 
-	handler := s.AuthUserService.GetAuthURL
+	handler := s.AuthUserService.GetAuthUrl
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *AuthOAuthGetUrlParams) (*AuthUserGetUrlResult, error) {
+		handler = func(ctx context.Context, req *AuthUserServiceGetAuthUrlRequest) (*AuthUserServiceGetAuthUrlResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*AuthOAuthGetUrlParams)
+					typedReq, ok := req.(*AuthUserServiceGetAuthUrlRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*AuthOAuthGetUrlParams) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*AuthUserServiceGetAuthUrlRequest) when calling interceptor")
 					}
-					return s.AuthUserService.GetAuthURL(ctx, typedReq)
+					return s.AuthUserService.GetAuthUrl(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*AuthUserGetUrlResult)
+				typedResp, ok := resp.(*AuthUserServiceGetAuthUrlResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*AuthUserGetUrlResult) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*AuthUserServiceGetAuthUrlResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -692,7 +691,7 @@ func (s *authUserServiceServer) serveGetAuthURLJSON(ctx context.Context, resp ht
 	}
 
 	// Call service method
-	var respContent *AuthUserGetUrlResult
+	var respContent *AuthUserServiceGetAuthUrlResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -703,7 +702,7 @@ func (s *authUserServiceServer) serveGetAuthURLJSON(ctx context.Context, resp ht
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *AuthUserGetUrlResult and nil error while calling GetAuthURL. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *AuthUserServiceGetAuthUrlResponse and nil error while calling GetAuthUrl. nil responses are not supported"))
 		return
 	}
 
@@ -729,9 +728,9 @@ func (s *authUserServiceServer) serveGetAuthURLJSON(ctx context.Context, resp ht
 	callResponseSent(ctx, s.hooks)
 }
 
-func (s *authUserServiceServer) serveGetAuthURLProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *authUserServiceServer) serveGetAuthUrlProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	var err error
-	ctx = ctxsetters.WithMethodName(ctx, "GetAuthURL")
+	ctx = ctxsetters.WithMethodName(ctx, "GetAuthUrl")
 	ctx, err = callRequestRouted(ctx, s.hooks)
 	if err != nil {
 		s.writeError(ctx, resp, err)
@@ -743,28 +742,28 @@ func (s *authUserServiceServer) serveGetAuthURLProtobuf(ctx context.Context, res
 		s.handleRequestBodyError(ctx, resp, "failed to read request body", err)
 		return
 	}
-	reqContent := new(AuthOAuthGetUrlParams)
+	reqContent := new(AuthUserServiceGetAuthUrlRequest)
 	if err = proto.Unmarshal(buf, reqContent); err != nil {
 		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
 		return
 	}
 
-	handler := s.AuthUserService.GetAuthURL
+	handler := s.AuthUserService.GetAuthUrl
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *AuthOAuthGetUrlParams) (*AuthUserGetUrlResult, error) {
+		handler = func(ctx context.Context, req *AuthUserServiceGetAuthUrlRequest) (*AuthUserServiceGetAuthUrlResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*AuthOAuthGetUrlParams)
+					typedReq, ok := req.(*AuthUserServiceGetAuthUrlRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*AuthOAuthGetUrlParams) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*AuthUserServiceGetAuthUrlRequest) when calling interceptor")
 					}
-					return s.AuthUserService.GetAuthURL(ctx, typedReq)
+					return s.AuthUserService.GetAuthUrl(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*AuthUserGetUrlResult)
+				typedResp, ok := resp.(*AuthUserServiceGetAuthUrlResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*AuthUserGetUrlResult) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*AuthUserServiceGetAuthUrlResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -773,7 +772,7 @@ func (s *authUserServiceServer) serveGetAuthURLProtobuf(ctx context.Context, res
 	}
 
 	// Call service method
-	var respContent *AuthUserGetUrlResult
+	var respContent *AuthUserServiceGetAuthUrlResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -784,7 +783,7 @@ func (s *authUserServiceServer) serveGetAuthURLProtobuf(ctx context.Context, res
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *AuthUserGetUrlResult and nil error while calling GetAuthURL. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *AuthUserServiceGetAuthUrlResponse and nil error while calling GetAuthUrl. nil responses are not supported"))
 		return
 	}
 
@@ -841,7 +840,7 @@ func (s *authUserServiceServer) serveListAssociationsJSON(ctx context.Context, r
 		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
 		return
 	}
-	reqContent := new(AuthUserGetParams)
+	reqContent := new(AuthUserServiceListAssociationsRequest)
 	unmarshaler := protojson.UnmarshalOptions{DiscardUnknown: true}
 	if err = unmarshaler.Unmarshal(rawReqBody, reqContent); err != nil {
 		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
@@ -850,20 +849,20 @@ func (s *authUserServiceServer) serveListAssociationsJSON(ctx context.Context, r
 
 	handler := s.AuthUserService.ListAssociations
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *AuthUserGetParams) (*AuthUserListAssoicationsResponse, error) {
+		handler = func(ctx context.Context, req *AuthUserServiceListAssociationsRequest) (*AuthUserServiceListAssociationsResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*AuthUserGetParams)
+					typedReq, ok := req.(*AuthUserServiceListAssociationsRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*AuthUserGetParams) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*AuthUserServiceListAssociationsRequest) when calling interceptor")
 					}
 					return s.AuthUserService.ListAssociations(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*AuthUserListAssoicationsResponse)
+				typedResp, ok := resp.(*AuthUserServiceListAssociationsResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*AuthUserListAssoicationsResponse) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*AuthUserServiceListAssociationsResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -872,7 +871,7 @@ func (s *authUserServiceServer) serveListAssociationsJSON(ctx context.Context, r
 	}
 
 	// Call service method
-	var respContent *AuthUserListAssoicationsResponse
+	var respContent *AuthUserServiceListAssociationsResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -883,7 +882,7 @@ func (s *authUserServiceServer) serveListAssociationsJSON(ctx context.Context, r
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *AuthUserListAssoicationsResponse and nil error while calling ListAssociations. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *AuthUserServiceListAssociationsResponse and nil error while calling ListAssociations. nil responses are not supported"))
 		return
 	}
 
@@ -923,7 +922,7 @@ func (s *authUserServiceServer) serveListAssociationsProtobuf(ctx context.Contex
 		s.handleRequestBodyError(ctx, resp, "failed to read request body", err)
 		return
 	}
-	reqContent := new(AuthUserGetParams)
+	reqContent := new(AuthUserServiceListAssociationsRequest)
 	if err = proto.Unmarshal(buf, reqContent); err != nil {
 		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
 		return
@@ -931,20 +930,20 @@ func (s *authUserServiceServer) serveListAssociationsProtobuf(ctx context.Contex
 
 	handler := s.AuthUserService.ListAssociations
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *AuthUserGetParams) (*AuthUserListAssoicationsResponse, error) {
+		handler = func(ctx context.Context, req *AuthUserServiceListAssociationsRequest) (*AuthUserServiceListAssociationsResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*AuthUserGetParams)
+					typedReq, ok := req.(*AuthUserServiceListAssociationsRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*AuthUserGetParams) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*AuthUserServiceListAssociationsRequest) when calling interceptor")
 					}
 					return s.AuthUserService.ListAssociations(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*AuthUserListAssoicationsResponse)
+				typedResp, ok := resp.(*AuthUserServiceListAssociationsResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*AuthUserListAssoicationsResponse) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*AuthUserServiceListAssociationsResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -953,7 +952,7 @@ func (s *authUserServiceServer) serveListAssociationsProtobuf(ctx context.Contex
 	}
 
 	// Call service method
-	var respContent *AuthUserListAssoicationsResponse
+	var respContent *AuthUserServiceListAssociationsResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -964,7 +963,7 @@ func (s *authUserServiceServer) serveListAssociationsProtobuf(ctx context.Contex
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *AuthUserListAssoicationsResponse and nil error while calling ListAssociations. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *AuthUserServiceListAssociationsResponse and nil error while calling ListAssociations. nil responses are not supported"))
 		return
 	}
 
@@ -1021,7 +1020,7 @@ func (s *authUserServiceServer) serveRemoveAssociationJSON(ctx context.Context, 
 		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
 		return
 	}
-	reqContent := new(AuthUserGetParams)
+	reqContent := new(AuthUserServiceRemoveAssociationRequest)
 	unmarshaler := protojson.UnmarshalOptions{DiscardUnknown: true}
 	if err = unmarshaler.Unmarshal(rawReqBody, reqContent); err != nil {
 		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
@@ -1030,20 +1029,20 @@ func (s *authUserServiceServer) serveRemoveAssociationJSON(ctx context.Context, 
 
 	handler := s.AuthUserService.RemoveAssociation
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *AuthUserGetParams) (*Empty, error) {
+		handler = func(ctx context.Context, req *AuthUserServiceRemoveAssociationRequest) (*AuthUserServiceRemoveAssociationResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*AuthUserGetParams)
+					typedReq, ok := req.(*AuthUserServiceRemoveAssociationRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*AuthUserGetParams) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*AuthUserServiceRemoveAssociationRequest) when calling interceptor")
 					}
 					return s.AuthUserService.RemoveAssociation(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*Empty)
+				typedResp, ok := resp.(*AuthUserServiceRemoveAssociationResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*Empty) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*AuthUserServiceRemoveAssociationResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -1052,7 +1051,7 @@ func (s *authUserServiceServer) serveRemoveAssociationJSON(ctx context.Context, 
 	}
 
 	// Call service method
-	var respContent *Empty
+	var respContent *AuthUserServiceRemoveAssociationResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -1063,7 +1062,7 @@ func (s *authUserServiceServer) serveRemoveAssociationJSON(ctx context.Context, 
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *Empty and nil error while calling RemoveAssociation. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *AuthUserServiceRemoveAssociationResponse and nil error while calling RemoveAssociation. nil responses are not supported"))
 		return
 	}
 
@@ -1103,7 +1102,7 @@ func (s *authUserServiceServer) serveRemoveAssociationProtobuf(ctx context.Conte
 		s.handleRequestBodyError(ctx, resp, "failed to read request body", err)
 		return
 	}
-	reqContent := new(AuthUserGetParams)
+	reqContent := new(AuthUserServiceRemoveAssociationRequest)
 	if err = proto.Unmarshal(buf, reqContent); err != nil {
 		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
 		return
@@ -1111,20 +1110,20 @@ func (s *authUserServiceServer) serveRemoveAssociationProtobuf(ctx context.Conte
 
 	handler := s.AuthUserService.RemoveAssociation
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *AuthUserGetParams) (*Empty, error) {
+		handler = func(ctx context.Context, req *AuthUserServiceRemoveAssociationRequest) (*AuthUserServiceRemoveAssociationResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*AuthUserGetParams)
+					typedReq, ok := req.(*AuthUserServiceRemoveAssociationRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*AuthUserGetParams) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*AuthUserServiceRemoveAssociationRequest) when calling interceptor")
 					}
 					return s.AuthUserService.RemoveAssociation(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*Empty)
+				typedResp, ok := resp.(*AuthUserServiceRemoveAssociationResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*Empty) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*AuthUserServiceRemoveAssociationResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -1133,7 +1132,7 @@ func (s *authUserServiceServer) serveRemoveAssociationProtobuf(ctx context.Conte
 	}
 
 	// Call service method
-	var respContent *Empty
+	var respContent *AuthUserServiceRemoveAssociationResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -1144,7 +1143,7 @@ func (s *authUserServiceServer) serveRemoveAssociationProtobuf(ctx context.Conte
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *Empty and nil error while calling RemoveAssociation. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *AuthUserServiceRemoveAssociationResponse and nil error while calling RemoveAssociation. nil responses are not supported"))
 		return
 	}
 
@@ -1201,7 +1200,7 @@ func (s *authUserServiceServer) serveUpsertUserJSON(ctx context.Context, resp ht
 		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
 		return
 	}
-	reqContent := new(AuthUserUpsertParams)
+	reqContent := new(AuthUserServiceUpsertUserRequest)
 	unmarshaler := protojson.UnmarshalOptions{DiscardUnknown: true}
 	if err = unmarshaler.Unmarshal(rawReqBody, reqContent); err != nil {
 		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
@@ -1210,20 +1209,20 @@ func (s *authUserServiceServer) serveUpsertUserJSON(ctx context.Context, resp ht
 
 	handler := s.AuthUserService.UpsertUser
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *AuthUserUpsertParams) (*AuthUserUpsertResult, error) {
+		handler = func(ctx context.Context, req *AuthUserServiceUpsertUserRequest) (*AuthUserServiceUpsertUserResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*AuthUserUpsertParams)
+					typedReq, ok := req.(*AuthUserServiceUpsertUserRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*AuthUserUpsertParams) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*AuthUserServiceUpsertUserRequest) when calling interceptor")
 					}
 					return s.AuthUserService.UpsertUser(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*AuthUserUpsertResult)
+				typedResp, ok := resp.(*AuthUserServiceUpsertUserResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*AuthUserUpsertResult) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*AuthUserServiceUpsertUserResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -1232,7 +1231,7 @@ func (s *authUserServiceServer) serveUpsertUserJSON(ctx context.Context, resp ht
 	}
 
 	// Call service method
-	var respContent *AuthUserUpsertResult
+	var respContent *AuthUserServiceUpsertUserResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -1243,7 +1242,7 @@ func (s *authUserServiceServer) serveUpsertUserJSON(ctx context.Context, resp ht
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *AuthUserUpsertResult and nil error while calling UpsertUser. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *AuthUserServiceUpsertUserResponse and nil error while calling UpsertUser. nil responses are not supported"))
 		return
 	}
 
@@ -1283,7 +1282,7 @@ func (s *authUserServiceServer) serveUpsertUserProtobuf(ctx context.Context, res
 		s.handleRequestBodyError(ctx, resp, "failed to read request body", err)
 		return
 	}
-	reqContent := new(AuthUserUpsertParams)
+	reqContent := new(AuthUserServiceUpsertUserRequest)
 	if err = proto.Unmarshal(buf, reqContent); err != nil {
 		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
 		return
@@ -1291,20 +1290,20 @@ func (s *authUserServiceServer) serveUpsertUserProtobuf(ctx context.Context, res
 
 	handler := s.AuthUserService.UpsertUser
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *AuthUserUpsertParams) (*AuthUserUpsertResult, error) {
+		handler = func(ctx context.Context, req *AuthUserServiceUpsertUserRequest) (*AuthUserServiceUpsertUserResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*AuthUserUpsertParams)
+					typedReq, ok := req.(*AuthUserServiceUpsertUserRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*AuthUserUpsertParams) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*AuthUserServiceUpsertUserRequest) when calling interceptor")
 					}
 					return s.AuthUserService.UpsertUser(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*AuthUserUpsertResult)
+				typedResp, ok := resp.(*AuthUserServiceUpsertUserResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*AuthUserUpsertResult) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*AuthUserServiceUpsertUserResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -1313,7 +1312,7 @@ func (s *authUserServiceServer) serveUpsertUserProtobuf(ctx context.Context, res
 	}
 
 	// Call service method
-	var respContent *AuthUserUpsertResult
+	var respContent *AuthUserServiceUpsertUserResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -1324,7 +1323,7 @@ func (s *authUserServiceServer) serveUpsertUserProtobuf(ctx context.Context, res
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *AuthUserUpsertResult and nil error while calling UpsertUser. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *AuthUserServiceUpsertUserResponse and nil error while calling UpsertUser. nil responses are not supported"))
 		return
 	}
 
@@ -1926,35 +1925,36 @@ func callClientError(ctx context.Context, h *twirp.ClientHooks, err twirp.Error)
 }
 
 var twirpFileDescriptor0 = []byte{
-	// 477 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x54, 0x51, 0x6b, 0x13, 0x41,
-	0x10, 0x26, 0x49, 0xaf, 0x69, 0x27, 0x8a, 0xe9, 0x12, 0x31, 0x06, 0xa1, 0xf1, 0x9e, 0x0a, 0xc2,
-	0xc5, 0xd4, 0x47, 0x41, 0xa8, 0xa5, 0xd4, 0x40, 0xb1, 0x72, 0x92, 0x17, 0x41, 0xc2, 0xe6, 0x6e,
-	0xa0, 0x0b, 0x97, 0xee, 0x31, 0xbb, 0x77, 0xe2, 0x7f, 0xf4, 0xd9, 0xdf, 0x23, 0xbb, 0x7b, 0x1b,
-	0x2f, 0xe7, 0xc5, 0xf6, 0x25, 0xec, 0xec, 0xcc, 0xce, 0x37, 0xdf, 0x37, 0xdf, 0x05, 0x5e, 0x26,
-	0x92, 0x30, 0x5f, 0xcf, 0xca, 0xf9, 0x8c, 0x17, 0xfa, 0x6e, 0x55, 0x28, 0xa4, 0x28, 0x27, 0xa9,
-	0x25, 0x3b, 0x76, 0xa9, 0xa8, 0x9c, 0x87, 0x7d, 0x08, 0xae, 0x36, 0xb9, 0xfe, 0x19, 0x66, 0xf0,
-	0xfc, 0xa2, 0xd0, 0x77, 0xb7, 0xe6, 0xe7, 0x1a, 0xf5, 0x92, 0xb2, 0x2f, 0x9c, 0xf8, 0x46, 0xb1,
-	0x09, 0x1c, 0xe5, 0x24, 0x4b, 0x91, 0x22, 0x8d, 0x3b, 0xd3, 0xce, 0xd9, 0x71, 0xbc, 0x8d, 0xd9,
-	0x6b, 0x78, 0x42, 0x98, 0x0a, 0xc2, 0x44, 0xaf, 0x0a, 0xca, 0xc6, 0x5d, 0x9b, 0x1f, 0xf8, 0xbb,
-	0x25, 0x65, 0x6c, 0x04, 0x81, 0xd2, 0x5c, 0xe3, 0xb8, 0x67, 0x73, 0x2e, 0x08, 0xcf, 0x60, 0x64,
-	0x80, 0x96, 0x0a, 0xc9, 0x81, 0xc5, 0xa8, 0x8a, 0x4c, 0xb3, 0x21, 0xf4, 0x4c, 0x1f, 0x87, 0x63,
-	0x8e, 0xe1, 0x27, 0x38, 0xa9, 0x55, 0x56, 0x33, 0xbd, 0x80, 0xbe, 0xa1, 0xb3, 0x12, 0x69, 0x55,
-	0x7a, 0x68, 0xc2, 0x45, 0xba, 0x33, 0x6c, 0x77, 0x77, 0xd8, 0x70, 0x0d, 0xcf, 0x2c, 0x43, 0xa3,
-	0xc6, 0x23, 0xb8, 0x9d, 0xc2, 0xc0, 0x9f, 0x0d, 0x8e, 0xeb, 0x06, 0xfe, 0x6a, 0x91, 0x32, 0x06,
-	0x07, 0x89, 0x4c, 0x3d, 0x31, 0x7b, 0x0e, 0x2f, 0x1d, 0xc6, 0xd5, 0x86, 0x0b, 0xaf, 0xdf, 0x08,
-	0x02, 0x34, 0x61, 0x05, 0xe0, 0x02, 0x8b, 0xcc, 0x95, 0xfa, 0x21, 0x29, 0xdd, 0x0e, 0x5a, 0xc5,
-	0xe1, 0x07, 0x98, 0x7a, 0xca, 0x37, 0x42, 0xe9, 0x0b, 0xa5, 0xa4, 0x48, 0xb8, 0x16, 0xf2, 0x5e,
-	0xc5, 0xa8, 0x72, 0x79, 0xaf, 0xb0, 0x31, 0x79, 0x6f, 0x87, 0xe8, 0xaf, 0xce, 0x5f, 0x75, 0x97,
-	0xb9, 0x42, 0x7a, 0x50, 0xb6, 0xb7, 0x10, 0x48, 0x23, 0x8b, 0x1d, 0x65, 0x70, 0x3e, 0x89, 0xb6,
-	0x06, 0x89, 0x1a, 0x92, 0xc5, 0xae, 0xd0, 0xbc, 0x70, 0xac, 0x7a, 0xad, 0x2f, 0x6a, 0x02, 0x78,
-	0xc6, 0x4d, 0xaf, 0x1c, 0xfc, 0xc7, 0x2b, 0x41, 0xdd, 0x2b, 0x8b, 0x26, 0x9b, 0xca, 0x2b, 0x7b,
-	0xd9, 0x8c, 0xa1, 0x9f, 0x10, 0x72, 0x8d, 0x4e, 0xda, 0xa3, 0xd8, 0x87, 0xe7, 0xbf, 0xbb, 0x6e,
-	0x3f, 0xa6, 0xd7, 0x57, 0xa4, 0x52, 0x24, 0xc8, 0x6e, 0x01, 0xae, 0x51, 0xdb, 0xdb, 0xf8, 0x86,
-	0x4d, 0x9b, 0xd4, 0x9b, 0xdf, 0xc3, 0xe4, 0xb4, 0x51, 0xf1, 0x8f, 0x87, 0xbf, 0xc3, 0xd0, 0xaf,
-	0x2d, 0x11, 0x6e, 0x6d, 0xec, 0x55, 0xfb, 0xa3, 0xaa, 0xe5, 0x9b, 0x96, 0xec, 0xde, 0xcd, 0x5f,
-	0xc2, 0x49, 0x8c, 0x1b, 0x59, 0x62, 0x0d, 0xe0, 0x81, 0xfe, 0xc3, 0x5a, 0xd6, 0x7e, 0xed, 0xec,
-	0x33, 0x80, 0xd3, 0xd2, 0x14, 0xb2, 0x36, 0x4a, 0x75, 0xe3, 0x4c, 0xf6, 0x17, 0x38, 0xce, 0x1f,
-	0x9f, 0x7e, 0x1b, 0x44, 0xb3, 0xf7, 0xae, 0xa8, 0x9c, 0xaf, 0x0f, 0xed, 0xff, 0xcc, 0xbb, 0x3f,
-	0x01, 0x00, 0x00, 0xff, 0xff, 0x4d, 0x28, 0xa8, 0x7f, 0x84, 0x04, 0x00, 0x00,
+	// 495 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x54, 0xdf, 0x6b, 0xd4, 0x40,
+	0x10, 0xe6, 0x9a, 0x5e, 0x7f, 0xcc, 0x29, 0xd6, 0xa5, 0xe0, 0x99, 0x17, 0xdb, 0x3c, 0x68, 0x51,
+	0xc9, 0x79, 0x57, 0x7c, 0xf2, 0xa9, 0x4a, 0x91, 0x82, 0xa0, 0x44, 0xce, 0x07, 0x41, 0x8f, 0xbd,
+	0x64, 0x68, 0x17, 0xee, 0xba, 0x71, 0x76, 0x93, 0x22, 0xf8, 0x87, 0xfa, 0xe0, 0x1f, 0x23, 0x9b,
+	0xdd, 0x5c, 0x73, 0x89, 0x49, 0x2d, 0x7d, 0xcb, 0xec, 0xee, 0x7c, 0xdf, 0x7c, 0xdf, 0xcc, 0x04,
+	0x1e, 0xc7, 0x92, 0x30, 0x9d, 0x8f, 0xf2, 0xf1, 0x88, 0x67, 0xfa, 0x62, 0x96, 0x29, 0xa4, 0x30,
+	0x25, 0xa9, 0x25, 0xdb, 0xb5, 0x57, 0x61, 0x3e, 0x0e, 0x9e, 0xc3, 0xd1, 0x49, 0xa6, 0x2f, 0xa6,
+	0x0a, 0xe9, 0x33, 0x52, 0x2e, 0x62, 0x8c, 0x70, 0x29, 0x73, 0x3c, 0x51, 0x4a, 0xc6, 0x82, 0x6b,
+	0x21, 0x2f, 0x23, 0x54, 0xa9, 0xbc, 0x54, 0x18, 0x5c, 0xc1, 0x41, 0xed, 0xed, 0x7b, 0xd4, 0xc5,
+	0x09, 0x2d, 0x22, 0xfc, 0x91, 0xa1, 0xd2, 0xcc, 0x87, 0x9d, 0x94, 0x64, 0x2e, 0x12, 0xa4, 0x61,
+	0xef, 0xa0, 0x77, 0xb4, 0x1b, 0xad, 0x62, 0x76, 0x08, 0xf7, 0x08, 0x13, 0x41, 0x18, 0xeb, 0x59,
+	0x46, 0x8b, 0xe1, 0x46, 0x71, 0x3f, 0x28, 0xcf, 0xa6, 0xb4, 0x60, 0xfb, 0xd0, 0x57, 0x9a, 0x6b,
+	0x1c, 0x7a, 0xc5, 0x9d, 0x0d, 0x82, 0xd7, 0x70, 0xd8, 0x41, 0x6c, 0xab, 0x63, 0x7b, 0xe0, 0x19,
+	0x50, 0x4b, 0x6a, 0x3e, 0x83, 0xef, 0xf0, 0xec, 0x66, 0x6d, 0xb6, 0xec, 0x47, 0xb0, 0x6d, 0xfc,
+	0x99, 0x89, 0xc4, 0x01, 0x6c, 0x99, 0xf0, 0x2c, 0x59, 0xd3, 0xb3, 0xb1, 0xae, 0x27, 0xf8, 0x06,
+	0x4f, 0x6b, 0xf8, 0x1f, 0x84, 0xd2, 0x15, 0x74, 0x75, 0x27, 0xf8, 0x39, 0x3c, 0x30, 0xf0, 0x1f,
+	0x4d, 0xf7, 0x3e, 0x71, 0xe2, 0x4b, 0xd5, 0xe9, 0xee, 0x13, 0x18, 0x94, 0xdf, 0x86, 0xc7, 0xa2,
+	0x41, 0x79, 0x74, 0x96, 0x30, 0x06, 0x9b, 0xb1, 0x4c, 0x4a, 0x6b, 0x8b, 0xef, 0xe0, 0x9d, 0xe5,
+	0x38, 0x5d, 0x72, 0xb1, 0x70, 0x1c, 0xfb, 0xd0, 0x47, 0x13, 0x3a, 0x02, 0x1b, 0x14, 0xcc, 0x5c,
+	0xa9, 0x2b, 0x49, 0xc9, 0xaa, 0x50, 0x17, 0x07, 0xa7, 0x0d, 0x9f, 0x9b, 0x3e, 0xb8, 0x26, 0xad,
+	0x0b, 0xf0, 0xd6, 0xf4, 0xfe, 0xee, 0x35, 0xe6, 0x6b, 0x9a, 0x2a, 0x24, 0x6d, 0x0e, 0x6e, 0x74,
+	0xf2, 0x15, 0xf4, 0xa5, 0x71, 0xaa, 0xa8, 0x6e, 0x30, 0xf1, 0xc3, 0xd5, 0x8c, 0x87, 0x35, 0x17,
+	0x23, 0xfb, 0xd0, 0x64, 0x58, 0xa1, 0xde, 0x3f, 0x33, 0x2a, 0x9e, 0x94, 0x26, 0xd4, 0x07, 0x78,
+	0xb3, 0x63, 0x80, 0xfb, 0xd5, 0x01, 0xfe, 0xd2, 0x18, 0xe0, 0xaa, 0x32, 0xe7, 0x4d, 0xab, 0xb4,
+	0x21, 0x6c, 0xc7, 0x84, 0x5c, 0xa3, 0xb5, 0x7e, 0x27, 0x2a, 0xc3, 0xc9, 0x1f, 0xcf, 0xf6, 0xaf,
+	0x02, 0xcc, 0xce, 0x01, 0xae, 0xb7, 0x83, 0xbd, 0xa8, 0xa9, 0xea, 0x5a, 0x5e, 0xff, 0xe5, 0xff,
+	0x3d, 0x76, 0xf5, 0xfe, 0x84, 0xbd, 0x7a, 0x9f, 0xd9, 0xb8, 0x1d, 0xa1, 0x65, 0x37, 0xfc, 0xc9,
+	0x6d, 0x52, 0x1c, 0xf5, 0x2f, 0x78, 0xd8, 0x58, 0x65, 0xd6, 0x01, 0xd4, 0xb6, 0xf7, 0xfe, 0xf1,
+	0xad, 0x72, 0x1c, 0xfb, 0x39, 0xc0, 0x75, 0xfb, 0xba, 0x1c, 0x6e, 0x8c, 0x6f, 0x97, 0xc3, 0xcd,
+	0x89, 0x78, 0x7b, 0xff, 0xeb, 0x20, 0x1c, 0xbd, 0xb1, 0x19, 0xf9, 0x78, 0xbe, 0x55, 0xfc, 0xbd,
+	0x8f, 0xff, 0x06, 0x00, 0x00, 0xff, 0xff, 0xab, 0xd8, 0x03, 0x88, 0xda, 0x05, 0x00, 0x00,
 }

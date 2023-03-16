@@ -52,7 +52,7 @@ func (svc *FileServer) getUserId(ctx context.Context) (string, error) {
 	return tokenmanager.UserIdFromContext(ctx, svc.jwtMaker)
 }
 
-func (svc *FileServer) UploadUrl(ctx context.Context, input *apipbv1.FileUploadUrlRequest) (*apipbv1.FileUploadUrlResponse, error) {
+func (svc *FileServer) UploadUrl(ctx context.Context, input *apipbv1.FileServiceUploadUrlRequest) (*apipbv1.FileServiceUploadUrlResponse, error) {
 	log := logger.FromContext(ctx)
 	log.Info("UploadUrl BEGIN")
 
@@ -76,7 +76,7 @@ func (svc *FileServer) UploadUrl(ctx context.Context, input *apipbv1.FileUploadU
 		return nil, twirp.InternalError("unable to construct url")
 	}
 
-	urlStr := res.Url
+	// urlStr := res.Url
 	// if true {
 	// 	u, err := url.Parse(urlStr)
 	// 	if err != nil {
@@ -86,7 +86,8 @@ func (svc *FileServer) UploadUrl(ctx context.Context, input *apipbv1.FileUploadU
 	// 	urlStr = "/minio_" + u.Path + "?" + u.RawQuery
 	// }
 
-	return &apipbv1.FileUploadUrlResponse{
-		Url: urlStr,
+	return &apipbv1.FileServiceUploadUrlResponse{
+		Url: res.Url,
+		Id:  res.Id,
 	}, nil
 }

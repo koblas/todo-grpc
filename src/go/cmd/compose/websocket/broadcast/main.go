@@ -31,5 +31,5 @@ func main() {
 	)
 	nats := natsutil.NewNatsClient(config.NatsAddr)
 
-	mgr.Start(nats.TopicConsumer(mgr.Context(), natsutil.TwirpPathToNatsTopic(corepbv1.BroadcastEventbusPathPrefix), s))
+	mgr.Start(nats.TopicConsumer(mgr.Context(), natsutil.TwirpPathToNatsTopic(corepbv1.BroadcastEventbusServicePathPrefix), s))
 }

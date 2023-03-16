@@ -22,7 +22,7 @@ func main() {
 	}
 
 	nats := natsutil.NewNatsClient(config.NatsAddr)
-	producer := corepbv1.NewBroadcastEventbusProtobufClient("", nats)
+	producer := corepbv1.NewBroadcastEventbusServiceProtobufClient("", nats)
 
 	s := todo.NewTodoChangeServer(
 		todo.WithProducer(producer),
@@ -30,6 +30,6 @@ func main() {
 
 	mgr.Start(nats.TopicConsumer(
 		mgr.Context(),
-		natsutil.TwirpPathToNatsTopic(corepbv1.TodoEventbusPathPrefix),
+		natsutil.TwirpPathToNatsTopic(corepbv1.TodoEventbusServicePathPrefix),
 		s))
 }

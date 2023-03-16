@@ -22,11 +22,11 @@ func main() {
 	}
 
 	nats := natsutil.NewNatsClient(config.NatsAddr)
-	producer := corepbv1.NewBroadcastEventbusProtobufClient("", nats)
+	producer := corepbv1.NewBroadcastEventbusServiceProtobufClient("", nats)
 
 	s := user.NewUserChangeServer(
 		user.WithProducer(producer),
 	)
 
-	mgr.Start(nats.TopicConsumer(mgr.Context(), natsutil.TwirpPathToNatsTopic(corepbv1.UserEventbusPathPrefix), s))
+	mgr.Start(nats.TopicConsumer(mgr.Context(), natsutil.TwirpPathToNatsTopic(corepbv1.UserEventbusServicePathPrefix), s))
 }

@@ -6,7 +6,7 @@ package apipb.v1;
 
 option go_package = "./;apipbv1";
 
-message RegisterParams {
+message RegisterRequest {
   // Required
   string email = 1;
   // Required
@@ -17,7 +17,7 @@ message RegisterParams {
   string invite = 5;
 }
 
-message LoginParams {
+message AuthenticateRequest {
   // Required
   string email = 1;
   // Required
@@ -28,19 +28,28 @@ message LoginParams {
   string tfa_type = 5;
 }
 
-message ConfirmParams {
+message VerifyEmailRequest {
   // Required: Verify and Update
   string user_id = 1;
   // Email confirmation token
   string token = 2;
 }
 
-message RecoverySendParams {
+message RecoverSendRequest {
   // Required: Send
   string email = 1;
 }
 
-message RecoveryUpdateParams {
+message RecoverUpdateRequest {
+  // Required: Verify and Update
+  string user_id = 1;
+  // Required: Verify and Update
+  string token = 2;
+  // Required: Update
+  string password = 3;
+}
+
+message RecoverVerifyRequest {
   // Required: Verify and Update
   string user_id = 1;
   // Required: Verify and Update
@@ -50,15 +59,15 @@ message RecoveryUpdateParams {
 }
 
 // Oauth
-message OauthUrlParams {
+message OauthUrlRequest {
   string provider = 1;
   string redirect_url = 2;
   string state = 3;
 }
 
-message OauthUrlResult { string url = 1; }
+message OauthUrlResponse { string url = 1; }
 
-message OauthAssociateParams {
+message OauthLoginRequest {
   string provider = 1;
   string redirect_url = 2;
   string code = 3;
@@ -74,7 +83,9 @@ message ValidationError {
   string message = 2;
 }
 
-message Success { bool success = 1; }
+message RecoverVerifyResponse { }
+message RecoverSendResponse { }
+message VerifyEmailResponse { }
 
 message Token {
   string access_token = 1;
@@ -83,7 +94,22 @@ message Token {
   string refresh_token = 4;
 }
 
-message TokenRegister {
+message AuthenticateResponse {
+  Token token = 1;
+}
+
+message RecoverUpdateResponse {
+  Token token = 1;
+}
+
+message RegisterResponse {
+  Token token = 1;
+
+  // More for the OAuth case to distingish between new account and old
+  bool created = 2;
+}
+
+message OauthLoginResponse {
   Token token = 1;
 
   // More for the OAuth case to distingish between new account and old
@@ -91,16 +117,16 @@ message TokenRegister {
 }
 
 service AuthenticationService {
-  rpc register(RegisterParams) returns (TokenRegister) ;
+  rpc register(RegisterRequest) returns (RegisterResponse) ;
 
-  rpc authenticate(LoginParams) returns (Token) ;
+  rpc authenticate(AuthenticateRequest) returns (AuthenticateResponse) ;
 
-  rpc verify_email(ConfirmParams) returns (Success) ;
+  rpc verify_email(VerifyEmailRequest) returns (VerifyEmailResponse) ;
 
-  rpc recover_send(RecoverySendParams) returns (Success) ;
-  rpc recover_verify(RecoveryUpdateParams) returns (Success) ;
-  rpc recover_update(RecoveryUpdateParams) returns (Token) ;
+  rpc recover_send(RecoverSendRequest) returns (RecoverSendResponse) ;
+  rpc recover_verify(RecoverVerifyRequest) returns (RecoverVerifyResponse) ;
+  rpc recover_update(RecoverUpdateRequest) returns (RecoverUpdateResponse) ;
 
-  rpc oauth_login(OauthAssociateParams) returns (TokenRegister) ;
-  rpc oauth_url(OauthUrlParams) returns (OauthUrlResult) ;
+  rpc oauth_login(OauthLoginRequest) returns (OauthLoginResponse) ;
+  rpc oauth_url(OauthUrlRequest) returns (OauthUrlResponse) ;
 }

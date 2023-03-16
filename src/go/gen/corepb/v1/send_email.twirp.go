@@ -27,13 +27,13 @@ const _ = twirp.TwirpPackageMinVersion_8_1_0
 // ==========================
 
 type SendEmailService interface {
-	RegisterMessage(context.Context, *EmailRegisterParam) (*EmailOkResponse, error)
+	RegisterMessage(context.Context, *RegisterMessageRequest) (*RegisterMessageResponse, error)
 
-	PasswordChangeMessage(context.Context, *EmailPasswordChangeParam) (*EmailOkResponse, error)
+	PasswordChangeMessage(context.Context, *PasswordChangeMessageRequest) (*PasswordChangeMessageResponse, error)
 
-	PasswordRecoveryMessage(context.Context, *EmailPasswordRecoveryParam) (*EmailOkResponse, error)
+	PasswordRecoveryMessage(context.Context, *PasswordRecoveryMessageRequest) (*PasswordRecoveryMessageResponse, error)
 
-	InviteUserMessage(context.Context, *EmailInviteUserParam) (*EmailOkResponse, error)
+	InviteUserMessage(context.Context, *InviteUserMessageRequest) (*InviteUserMessageResponse, error)
 }
 
 // ================================
@@ -85,26 +85,26 @@ func NewSendEmailServiceProtobufClient(baseURL string, client HTTPClient, opts .
 	}
 }
 
-func (c *sendEmailServiceProtobufClient) RegisterMessage(ctx context.Context, in *EmailRegisterParam) (*EmailOkResponse, error) {
+func (c *sendEmailServiceProtobufClient) RegisterMessage(ctx context.Context, in *RegisterMessageRequest) (*RegisterMessageResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
 	ctx = ctxsetters.WithServiceName(ctx, "SendEmailService")
 	ctx = ctxsetters.WithMethodName(ctx, "RegisterMessage")
 	caller := c.callRegisterMessage
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *EmailRegisterParam) (*EmailOkResponse, error) {
+		caller = func(ctx context.Context, req *RegisterMessageRequest) (*RegisterMessageResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*EmailRegisterParam)
+					typedReq, ok := req.(*RegisterMessageRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*EmailRegisterParam) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*RegisterMessageRequest) when calling interceptor")
 					}
 					return c.callRegisterMessage(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EmailOkResponse)
+				typedResp, ok := resp.(*RegisterMessageResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EmailOkResponse) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*RegisterMessageResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -114,8 +114,8 @@ func (c *sendEmailServiceProtobufClient) RegisterMessage(ctx context.Context, in
 	return caller(ctx, in)
 }
 
-func (c *sendEmailServiceProtobufClient) callRegisterMessage(ctx context.Context, in *EmailRegisterParam) (*EmailOkResponse, error) {
-	out := new(EmailOkResponse)
+func (c *sendEmailServiceProtobufClient) callRegisterMessage(ctx context.Context, in *RegisterMessageRequest) (*RegisterMessageResponse, error) {
+	out := new(RegisterMessageResponse)
 	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -131,26 +131,26 @@ func (c *sendEmailServiceProtobufClient) callRegisterMessage(ctx context.Context
 	return out, nil
 }
 
-func (c *sendEmailServiceProtobufClient) PasswordChangeMessage(ctx context.Context, in *EmailPasswordChangeParam) (*EmailOkResponse, error) {
+func (c *sendEmailServiceProtobufClient) PasswordChangeMessage(ctx context.Context, in *PasswordChangeMessageRequest) (*PasswordChangeMessageResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
 	ctx = ctxsetters.WithServiceName(ctx, "SendEmailService")
 	ctx = ctxsetters.WithMethodName(ctx, "PasswordChangeMessage")
 	caller := c.callPasswordChangeMessage
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *EmailPasswordChangeParam) (*EmailOkResponse, error) {
+		caller = func(ctx context.Context, req *PasswordChangeMessageRequest) (*PasswordChangeMessageResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*EmailPasswordChangeParam)
+					typedReq, ok := req.(*PasswordChangeMessageRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*EmailPasswordChangeParam) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*PasswordChangeMessageRequest) when calling interceptor")
 					}
 					return c.callPasswordChangeMessage(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EmailOkResponse)
+				typedResp, ok := resp.(*PasswordChangeMessageResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EmailOkResponse) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*PasswordChangeMessageResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -160,8 +160,8 @@ func (c *sendEmailServiceProtobufClient) PasswordChangeMessage(ctx context.Conte
 	return caller(ctx, in)
 }
 
-func (c *sendEmailServiceProtobufClient) callPasswordChangeMessage(ctx context.Context, in *EmailPasswordChangeParam) (*EmailOkResponse, error) {
-	out := new(EmailOkResponse)
+func (c *sendEmailServiceProtobufClient) callPasswordChangeMessage(ctx context.Context, in *PasswordChangeMessageRequest) (*PasswordChangeMessageResponse, error) {
+	out := new(PasswordChangeMessageResponse)
 	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[1], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -177,26 +177,26 @@ func (c *sendEmailServiceProtobufClient) callPasswordChangeMessage(ctx context.C
 	return out, nil
 }
 
-func (c *sendEmailServiceProtobufClient) PasswordRecoveryMessage(ctx context.Context, in *EmailPasswordRecoveryParam) (*EmailOkResponse, error) {
+func (c *sendEmailServiceProtobufClient) PasswordRecoveryMessage(ctx context.Context, in *PasswordRecoveryMessageRequest) (*PasswordRecoveryMessageResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
 	ctx = ctxsetters.WithServiceName(ctx, "SendEmailService")
 	ctx = ctxsetters.WithMethodName(ctx, "PasswordRecoveryMessage")
 	caller := c.callPasswordRecoveryMessage
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *EmailPasswordRecoveryParam) (*EmailOkResponse, error) {
+		caller = func(ctx context.Context, req *PasswordRecoveryMessageRequest) (*PasswordRecoveryMessageResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*EmailPasswordRecoveryParam)
+					typedReq, ok := req.(*PasswordRecoveryMessageRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*EmailPasswordRecoveryParam) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*PasswordRecoveryMessageRequest) when calling interceptor")
 					}
 					return c.callPasswordRecoveryMessage(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EmailOkResponse)
+				typedResp, ok := resp.(*PasswordRecoveryMessageResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EmailOkResponse) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*PasswordRecoveryMessageResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -206,8 +206,8 @@ func (c *sendEmailServiceProtobufClient) PasswordRecoveryMessage(ctx context.Con
 	return caller(ctx, in)
 }
 
-func (c *sendEmailServiceProtobufClient) callPasswordRecoveryMessage(ctx context.Context, in *EmailPasswordRecoveryParam) (*EmailOkResponse, error) {
-	out := new(EmailOkResponse)
+func (c *sendEmailServiceProtobufClient) callPasswordRecoveryMessage(ctx context.Context, in *PasswordRecoveryMessageRequest) (*PasswordRecoveryMessageResponse, error) {
+	out := new(PasswordRecoveryMessageResponse)
 	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[2], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -223,26 +223,26 @@ func (c *sendEmailServiceProtobufClient) callPasswordRecoveryMessage(ctx context
 	return out, nil
 }
 
-func (c *sendEmailServiceProtobufClient) InviteUserMessage(ctx context.Context, in *EmailInviteUserParam) (*EmailOkResponse, error) {
+func (c *sendEmailServiceProtobufClient) InviteUserMessage(ctx context.Context, in *InviteUserMessageRequest) (*InviteUserMessageResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
 	ctx = ctxsetters.WithServiceName(ctx, "SendEmailService")
 	ctx = ctxsetters.WithMethodName(ctx, "InviteUserMessage")
 	caller := c.callInviteUserMessage
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *EmailInviteUserParam) (*EmailOkResponse, error) {
+		caller = func(ctx context.Context, req *InviteUserMessageRequest) (*InviteUserMessageResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*EmailInviteUserParam)
+					typedReq, ok := req.(*InviteUserMessageRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*EmailInviteUserParam) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*InviteUserMessageRequest) when calling interceptor")
 					}
 					return c.callInviteUserMessage(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EmailOkResponse)
+				typedResp, ok := resp.(*InviteUserMessageResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EmailOkResponse) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*InviteUserMessageResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -252,8 +252,8 @@ func (c *sendEmailServiceProtobufClient) InviteUserMessage(ctx context.Context, 
 	return caller(ctx, in)
 }
 
-func (c *sendEmailServiceProtobufClient) callInviteUserMessage(ctx context.Context, in *EmailInviteUserParam) (*EmailOkResponse, error) {
-	out := new(EmailOkResponse)
+func (c *sendEmailServiceProtobufClient) callInviteUserMessage(ctx context.Context, in *InviteUserMessageRequest) (*InviteUserMessageResponse, error) {
+	out := new(InviteUserMessageResponse)
 	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[3], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -318,26 +318,26 @@ func NewSendEmailServiceJSONClient(baseURL string, client HTTPClient, opts ...tw
 	}
 }
 
-func (c *sendEmailServiceJSONClient) RegisterMessage(ctx context.Context, in *EmailRegisterParam) (*EmailOkResponse, error) {
+func (c *sendEmailServiceJSONClient) RegisterMessage(ctx context.Context, in *RegisterMessageRequest) (*RegisterMessageResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
 	ctx = ctxsetters.WithServiceName(ctx, "SendEmailService")
 	ctx = ctxsetters.WithMethodName(ctx, "RegisterMessage")
 	caller := c.callRegisterMessage
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *EmailRegisterParam) (*EmailOkResponse, error) {
+		caller = func(ctx context.Context, req *RegisterMessageRequest) (*RegisterMessageResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*EmailRegisterParam)
+					typedReq, ok := req.(*RegisterMessageRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*EmailRegisterParam) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*RegisterMessageRequest) when calling interceptor")
 					}
 					return c.callRegisterMessage(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EmailOkResponse)
+				typedResp, ok := resp.(*RegisterMessageResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EmailOkResponse) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*RegisterMessageResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -347,8 +347,8 @@ func (c *sendEmailServiceJSONClient) RegisterMessage(ctx context.Context, in *Em
 	return caller(ctx, in)
 }
 
-func (c *sendEmailServiceJSONClient) callRegisterMessage(ctx context.Context, in *EmailRegisterParam) (*EmailOkResponse, error) {
-	out := new(EmailOkResponse)
+func (c *sendEmailServiceJSONClient) callRegisterMessage(ctx context.Context, in *RegisterMessageRequest) (*RegisterMessageResponse, error) {
+	out := new(RegisterMessageResponse)
 	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -364,26 +364,26 @@ func (c *sendEmailServiceJSONClient) callRegisterMessage(ctx context.Context, in
 	return out, nil
 }
 
-func (c *sendEmailServiceJSONClient) PasswordChangeMessage(ctx context.Context, in *EmailPasswordChangeParam) (*EmailOkResponse, error) {
+func (c *sendEmailServiceJSONClient) PasswordChangeMessage(ctx context.Context, in *PasswordChangeMessageRequest) (*PasswordChangeMessageResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
 	ctx = ctxsetters.WithServiceName(ctx, "SendEmailService")
 	ctx = ctxsetters.WithMethodName(ctx, "PasswordChangeMessage")
 	caller := c.callPasswordChangeMessage
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *EmailPasswordChangeParam) (*EmailOkResponse, error) {
+		caller = func(ctx context.Context, req *PasswordChangeMessageRequest) (*PasswordChangeMessageResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*EmailPasswordChangeParam)
+					typedReq, ok := req.(*PasswordChangeMessageRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*EmailPasswordChangeParam) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*PasswordChangeMessageRequest) when calling interceptor")
 					}
 					return c.callPasswordChangeMessage(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EmailOkResponse)
+				typedResp, ok := resp.(*PasswordChangeMessageResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EmailOkResponse) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*PasswordChangeMessageResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -393,8 +393,8 @@ func (c *sendEmailServiceJSONClient) PasswordChangeMessage(ctx context.Context, 
 	return caller(ctx, in)
 }
 
-func (c *sendEmailServiceJSONClient) callPasswordChangeMessage(ctx context.Context, in *EmailPasswordChangeParam) (*EmailOkResponse, error) {
-	out := new(EmailOkResponse)
+func (c *sendEmailServiceJSONClient) callPasswordChangeMessage(ctx context.Context, in *PasswordChangeMessageRequest) (*PasswordChangeMessageResponse, error) {
+	out := new(PasswordChangeMessageResponse)
 	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[1], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -410,26 +410,26 @@ func (c *sendEmailServiceJSONClient) callPasswordChangeMessage(ctx context.Conte
 	return out, nil
 }
 
-func (c *sendEmailServiceJSONClient) PasswordRecoveryMessage(ctx context.Context, in *EmailPasswordRecoveryParam) (*EmailOkResponse, error) {
+func (c *sendEmailServiceJSONClient) PasswordRecoveryMessage(ctx context.Context, in *PasswordRecoveryMessageRequest) (*PasswordRecoveryMessageResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
 	ctx = ctxsetters.WithServiceName(ctx, "SendEmailService")
 	ctx = ctxsetters.WithMethodName(ctx, "PasswordRecoveryMessage")
 	caller := c.callPasswordRecoveryMessage
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *EmailPasswordRecoveryParam) (*EmailOkResponse, error) {
+		caller = func(ctx context.Context, req *PasswordRecoveryMessageRequest) (*PasswordRecoveryMessageResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*EmailPasswordRecoveryParam)
+					typedReq, ok := req.(*PasswordRecoveryMessageRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*EmailPasswordRecoveryParam) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*PasswordRecoveryMessageRequest) when calling interceptor")
 					}
 					return c.callPasswordRecoveryMessage(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EmailOkResponse)
+				typedResp, ok := resp.(*PasswordRecoveryMessageResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EmailOkResponse) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*PasswordRecoveryMessageResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -439,8 +439,8 @@ func (c *sendEmailServiceJSONClient) PasswordRecoveryMessage(ctx context.Context
 	return caller(ctx, in)
 }
 
-func (c *sendEmailServiceJSONClient) callPasswordRecoveryMessage(ctx context.Context, in *EmailPasswordRecoveryParam) (*EmailOkResponse, error) {
-	out := new(EmailOkResponse)
+func (c *sendEmailServiceJSONClient) callPasswordRecoveryMessage(ctx context.Context, in *PasswordRecoveryMessageRequest) (*PasswordRecoveryMessageResponse, error) {
+	out := new(PasswordRecoveryMessageResponse)
 	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[2], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -456,26 +456,26 @@ func (c *sendEmailServiceJSONClient) callPasswordRecoveryMessage(ctx context.Con
 	return out, nil
 }
 
-func (c *sendEmailServiceJSONClient) InviteUserMessage(ctx context.Context, in *EmailInviteUserParam) (*EmailOkResponse, error) {
+func (c *sendEmailServiceJSONClient) InviteUserMessage(ctx context.Context, in *InviteUserMessageRequest) (*InviteUserMessageResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
 	ctx = ctxsetters.WithServiceName(ctx, "SendEmailService")
 	ctx = ctxsetters.WithMethodName(ctx, "InviteUserMessage")
 	caller := c.callInviteUserMessage
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *EmailInviteUserParam) (*EmailOkResponse, error) {
+		caller = func(ctx context.Context, req *InviteUserMessageRequest) (*InviteUserMessageResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*EmailInviteUserParam)
+					typedReq, ok := req.(*InviteUserMessageRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*EmailInviteUserParam) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*InviteUserMessageRequest) when calling interceptor")
 					}
 					return c.callInviteUserMessage(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EmailOkResponse)
+				typedResp, ok := resp.(*InviteUserMessageResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EmailOkResponse) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*InviteUserMessageResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -485,8 +485,8 @@ func (c *sendEmailServiceJSONClient) InviteUserMessage(ctx context.Context, in *
 	return caller(ctx, in)
 }
 
-func (c *sendEmailServiceJSONClient) callInviteUserMessage(ctx context.Context, in *EmailInviteUserParam) (*EmailOkResponse, error) {
-	out := new(EmailOkResponse)
+func (c *sendEmailServiceJSONClient) callInviteUserMessage(ctx context.Context, in *InviteUserMessageRequest) (*InviteUserMessageResponse, error) {
+	out := new(InviteUserMessageResponse)
 	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[3], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -651,7 +651,7 @@ func (s *sendEmailServiceServer) serveRegisterMessageJSON(ctx context.Context, r
 		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
 		return
 	}
-	reqContent := new(EmailRegisterParam)
+	reqContent := new(RegisterMessageRequest)
 	unmarshaler := protojson.UnmarshalOptions{DiscardUnknown: true}
 	if err = unmarshaler.Unmarshal(rawReqBody, reqContent); err != nil {
 		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
@@ -660,20 +660,20 @@ func (s *sendEmailServiceServer) serveRegisterMessageJSON(ctx context.Context, r
 
 	handler := s.SendEmailService.RegisterMessage
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *EmailRegisterParam) (*EmailOkResponse, error) {
+		handler = func(ctx context.Context, req *RegisterMessageRequest) (*RegisterMessageResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*EmailRegisterParam)
+					typedReq, ok := req.(*RegisterMessageRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*EmailRegisterParam) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*RegisterMessageRequest) when calling interceptor")
 					}
 					return s.SendEmailService.RegisterMessage(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EmailOkResponse)
+				typedResp, ok := resp.(*RegisterMessageResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EmailOkResponse) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*RegisterMessageResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -682,7 +682,7 @@ func (s *sendEmailServiceServer) serveRegisterMessageJSON(ctx context.Context, r
 	}
 
 	// Call service method
-	var respContent *EmailOkResponse
+	var respContent *RegisterMessageResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -693,7 +693,7 @@ func (s *sendEmailServiceServer) serveRegisterMessageJSON(ctx context.Context, r
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *EmailOkResponse and nil error while calling RegisterMessage. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *RegisterMessageResponse and nil error while calling RegisterMessage. nil responses are not supported"))
 		return
 	}
 
@@ -733,7 +733,7 @@ func (s *sendEmailServiceServer) serveRegisterMessageProtobuf(ctx context.Contex
 		s.handleRequestBodyError(ctx, resp, "failed to read request body", err)
 		return
 	}
-	reqContent := new(EmailRegisterParam)
+	reqContent := new(RegisterMessageRequest)
 	if err = proto.Unmarshal(buf, reqContent); err != nil {
 		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
 		return
@@ -741,20 +741,20 @@ func (s *sendEmailServiceServer) serveRegisterMessageProtobuf(ctx context.Contex
 
 	handler := s.SendEmailService.RegisterMessage
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *EmailRegisterParam) (*EmailOkResponse, error) {
+		handler = func(ctx context.Context, req *RegisterMessageRequest) (*RegisterMessageResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*EmailRegisterParam)
+					typedReq, ok := req.(*RegisterMessageRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*EmailRegisterParam) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*RegisterMessageRequest) when calling interceptor")
 					}
 					return s.SendEmailService.RegisterMessage(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EmailOkResponse)
+				typedResp, ok := resp.(*RegisterMessageResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EmailOkResponse) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*RegisterMessageResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -763,7 +763,7 @@ func (s *sendEmailServiceServer) serveRegisterMessageProtobuf(ctx context.Contex
 	}
 
 	// Call service method
-	var respContent *EmailOkResponse
+	var respContent *RegisterMessageResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -774,7 +774,7 @@ func (s *sendEmailServiceServer) serveRegisterMessageProtobuf(ctx context.Contex
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *EmailOkResponse and nil error while calling RegisterMessage. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *RegisterMessageResponse and nil error while calling RegisterMessage. nil responses are not supported"))
 		return
 	}
 
@@ -831,7 +831,7 @@ func (s *sendEmailServiceServer) servePasswordChangeMessageJSON(ctx context.Cont
 		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
 		return
 	}
-	reqContent := new(EmailPasswordChangeParam)
+	reqContent := new(PasswordChangeMessageRequest)
 	unmarshaler := protojson.UnmarshalOptions{DiscardUnknown: true}
 	if err = unmarshaler.Unmarshal(rawReqBody, reqContent); err != nil {
 		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
@@ -840,20 +840,20 @@ func (s *sendEmailServiceServer) servePasswordChangeMessageJSON(ctx context.Cont
 
 	handler := s.SendEmailService.PasswordChangeMessage
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *EmailPasswordChangeParam) (*EmailOkResponse, error) {
+		handler = func(ctx context.Context, req *PasswordChangeMessageRequest) (*PasswordChangeMessageResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*EmailPasswordChangeParam)
+					typedReq, ok := req.(*PasswordChangeMessageRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*EmailPasswordChangeParam) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*PasswordChangeMessageRequest) when calling interceptor")
 					}
 					return s.SendEmailService.PasswordChangeMessage(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EmailOkResponse)
+				typedResp, ok := resp.(*PasswordChangeMessageResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EmailOkResponse) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*PasswordChangeMessageResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -862,7 +862,7 @@ func (s *sendEmailServiceServer) servePasswordChangeMessageJSON(ctx context.Cont
 	}
 
 	// Call service method
-	var respContent *EmailOkResponse
+	var respContent *PasswordChangeMessageResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -873,7 +873,7 @@ func (s *sendEmailServiceServer) servePasswordChangeMessageJSON(ctx context.Cont
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *EmailOkResponse and nil error while calling PasswordChangeMessage. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *PasswordChangeMessageResponse and nil error while calling PasswordChangeMessage. nil responses are not supported"))
 		return
 	}
 
@@ -913,7 +913,7 @@ func (s *sendEmailServiceServer) servePasswordChangeMessageProtobuf(ctx context.
 		s.handleRequestBodyError(ctx, resp, "failed to read request body", err)
 		return
 	}
-	reqContent := new(EmailPasswordChangeParam)
+	reqContent := new(PasswordChangeMessageRequest)
 	if err = proto.Unmarshal(buf, reqContent); err != nil {
 		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
 		return
@@ -921,20 +921,20 @@ func (s *sendEmailServiceServer) servePasswordChangeMessageProtobuf(ctx context.
 
 	handler := s.SendEmailService.PasswordChangeMessage
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *EmailPasswordChangeParam) (*EmailOkResponse, error) {
+		handler = func(ctx context.Context, req *PasswordChangeMessageRequest) (*PasswordChangeMessageResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*EmailPasswordChangeParam)
+					typedReq, ok := req.(*PasswordChangeMessageRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*EmailPasswordChangeParam) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*PasswordChangeMessageRequest) when calling interceptor")
 					}
 					return s.SendEmailService.PasswordChangeMessage(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EmailOkResponse)
+				typedResp, ok := resp.(*PasswordChangeMessageResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EmailOkResponse) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*PasswordChangeMessageResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -943,7 +943,7 @@ func (s *sendEmailServiceServer) servePasswordChangeMessageProtobuf(ctx context.
 	}
 
 	// Call service method
-	var respContent *EmailOkResponse
+	var respContent *PasswordChangeMessageResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -954,7 +954,7 @@ func (s *sendEmailServiceServer) servePasswordChangeMessageProtobuf(ctx context.
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *EmailOkResponse and nil error while calling PasswordChangeMessage. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *PasswordChangeMessageResponse and nil error while calling PasswordChangeMessage. nil responses are not supported"))
 		return
 	}
 
@@ -1011,7 +1011,7 @@ func (s *sendEmailServiceServer) servePasswordRecoveryMessageJSON(ctx context.Co
 		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
 		return
 	}
-	reqContent := new(EmailPasswordRecoveryParam)
+	reqContent := new(PasswordRecoveryMessageRequest)
 	unmarshaler := protojson.UnmarshalOptions{DiscardUnknown: true}
 	if err = unmarshaler.Unmarshal(rawReqBody, reqContent); err != nil {
 		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
@@ -1020,20 +1020,20 @@ func (s *sendEmailServiceServer) servePasswordRecoveryMessageJSON(ctx context.Co
 
 	handler := s.SendEmailService.PasswordRecoveryMessage
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *EmailPasswordRecoveryParam) (*EmailOkResponse, error) {
+		handler = func(ctx context.Context, req *PasswordRecoveryMessageRequest) (*PasswordRecoveryMessageResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*EmailPasswordRecoveryParam)
+					typedReq, ok := req.(*PasswordRecoveryMessageRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*EmailPasswordRecoveryParam) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*PasswordRecoveryMessageRequest) when calling interceptor")
 					}
 					return s.SendEmailService.PasswordRecoveryMessage(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EmailOkResponse)
+				typedResp, ok := resp.(*PasswordRecoveryMessageResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EmailOkResponse) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*PasswordRecoveryMessageResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -1042,7 +1042,7 @@ func (s *sendEmailServiceServer) servePasswordRecoveryMessageJSON(ctx context.Co
 	}
 
 	// Call service method
-	var respContent *EmailOkResponse
+	var respContent *PasswordRecoveryMessageResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -1053,7 +1053,7 @@ func (s *sendEmailServiceServer) servePasswordRecoveryMessageJSON(ctx context.Co
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *EmailOkResponse and nil error while calling PasswordRecoveryMessage. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *PasswordRecoveryMessageResponse and nil error while calling PasswordRecoveryMessage. nil responses are not supported"))
 		return
 	}
 
@@ -1093,7 +1093,7 @@ func (s *sendEmailServiceServer) servePasswordRecoveryMessageProtobuf(ctx contex
 		s.handleRequestBodyError(ctx, resp, "failed to read request body", err)
 		return
 	}
-	reqContent := new(EmailPasswordRecoveryParam)
+	reqContent := new(PasswordRecoveryMessageRequest)
 	if err = proto.Unmarshal(buf, reqContent); err != nil {
 		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
 		return
@@ -1101,20 +1101,20 @@ func (s *sendEmailServiceServer) servePasswordRecoveryMessageProtobuf(ctx contex
 
 	handler := s.SendEmailService.PasswordRecoveryMessage
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *EmailPasswordRecoveryParam) (*EmailOkResponse, error) {
+		handler = func(ctx context.Context, req *PasswordRecoveryMessageRequest) (*PasswordRecoveryMessageResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*EmailPasswordRecoveryParam)
+					typedReq, ok := req.(*PasswordRecoveryMessageRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*EmailPasswordRecoveryParam) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*PasswordRecoveryMessageRequest) when calling interceptor")
 					}
 					return s.SendEmailService.PasswordRecoveryMessage(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EmailOkResponse)
+				typedResp, ok := resp.(*PasswordRecoveryMessageResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EmailOkResponse) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*PasswordRecoveryMessageResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -1123,7 +1123,7 @@ func (s *sendEmailServiceServer) servePasswordRecoveryMessageProtobuf(ctx contex
 	}
 
 	// Call service method
-	var respContent *EmailOkResponse
+	var respContent *PasswordRecoveryMessageResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -1134,7 +1134,7 @@ func (s *sendEmailServiceServer) servePasswordRecoveryMessageProtobuf(ctx contex
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *EmailOkResponse and nil error while calling PasswordRecoveryMessage. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *PasswordRecoveryMessageResponse and nil error while calling PasswordRecoveryMessage. nil responses are not supported"))
 		return
 	}
 
@@ -1191,7 +1191,7 @@ func (s *sendEmailServiceServer) serveInviteUserMessageJSON(ctx context.Context,
 		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
 		return
 	}
-	reqContent := new(EmailInviteUserParam)
+	reqContent := new(InviteUserMessageRequest)
 	unmarshaler := protojson.UnmarshalOptions{DiscardUnknown: true}
 	if err = unmarshaler.Unmarshal(rawReqBody, reqContent); err != nil {
 		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
@@ -1200,20 +1200,20 @@ func (s *sendEmailServiceServer) serveInviteUserMessageJSON(ctx context.Context,
 
 	handler := s.SendEmailService.InviteUserMessage
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *EmailInviteUserParam) (*EmailOkResponse, error) {
+		handler = func(ctx context.Context, req *InviteUserMessageRequest) (*InviteUserMessageResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*EmailInviteUserParam)
+					typedReq, ok := req.(*InviteUserMessageRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*EmailInviteUserParam) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*InviteUserMessageRequest) when calling interceptor")
 					}
 					return s.SendEmailService.InviteUserMessage(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EmailOkResponse)
+				typedResp, ok := resp.(*InviteUserMessageResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EmailOkResponse) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*InviteUserMessageResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -1222,7 +1222,7 @@ func (s *sendEmailServiceServer) serveInviteUserMessageJSON(ctx context.Context,
 	}
 
 	// Call service method
-	var respContent *EmailOkResponse
+	var respContent *InviteUserMessageResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -1233,7 +1233,7 @@ func (s *sendEmailServiceServer) serveInviteUserMessageJSON(ctx context.Context,
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *EmailOkResponse and nil error while calling InviteUserMessage. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *InviteUserMessageResponse and nil error while calling InviteUserMessage. nil responses are not supported"))
 		return
 	}
 
@@ -1273,7 +1273,7 @@ func (s *sendEmailServiceServer) serveInviteUserMessageProtobuf(ctx context.Cont
 		s.handleRequestBodyError(ctx, resp, "failed to read request body", err)
 		return
 	}
-	reqContent := new(EmailInviteUserParam)
+	reqContent := new(InviteUserMessageRequest)
 	if err = proto.Unmarshal(buf, reqContent); err != nil {
 		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
 		return
@@ -1281,20 +1281,20 @@ func (s *sendEmailServiceServer) serveInviteUserMessageProtobuf(ctx context.Cont
 
 	handler := s.SendEmailService.InviteUserMessage
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *EmailInviteUserParam) (*EmailOkResponse, error) {
+		handler = func(ctx context.Context, req *InviteUserMessageRequest) (*InviteUserMessageResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*EmailInviteUserParam)
+					typedReq, ok := req.(*InviteUserMessageRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*EmailInviteUserParam) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*InviteUserMessageRequest) when calling interceptor")
 					}
 					return s.SendEmailService.InviteUserMessage(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EmailOkResponse)
+				typedResp, ok := resp.(*InviteUserMessageResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EmailOkResponse) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*InviteUserMessageResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -1303,7 +1303,7 @@ func (s *sendEmailServiceServer) serveInviteUserMessageProtobuf(ctx context.Cont
 	}
 
 	// Call service method
-	var respContent *EmailOkResponse
+	var respContent *InviteUserMessageResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -1314,7 +1314,7 @@ func (s *sendEmailServiceServer) serveInviteUserMessageProtobuf(ctx context.Cont
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *EmailOkResponse and nil error while calling InviteUserMessage. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *InviteUserMessageResponse and nil error while calling InviteUserMessage. nil responses are not supported"))
 		return
 	}
 
@@ -1353,29 +1353,29 @@ func (s *sendEmailServiceServer) PathPrefix() string {
 	return baseServicePath(s.pathPrefix, "corepb.v1", "SendEmailService")
 }
 
-// =========================
-// SendEmailEvents Interface
-// =========================
+// ================================
+// SendEmailEventsService Interface
+// ================================
 
-type SendEmailEvents interface {
+type SendEmailEventsService interface {
 	// The notification channel
-	NotifySent(context.Context, *EmailSentEvent) (*EmailOkResponse, error)
+	NotifyEmailSent(context.Context, *NotifyEmailSentRequest) (*NotifyEmailSentResponse, error)
 }
 
-// ===============================
-// SendEmailEvents Protobuf Client
-// ===============================
+// ======================================
+// SendEmailEventsService Protobuf Client
+// ======================================
 
-type sendEmailEventsProtobufClient struct {
+type sendEmailEventsServiceProtobufClient struct {
 	client      HTTPClient
 	urls        [1]string
 	interceptor twirp.Interceptor
 	opts        twirp.ClientOptions
 }
 
-// NewSendEmailEventsProtobufClient creates a Protobuf client that implements the SendEmailEvents interface.
+// NewSendEmailEventsServiceProtobufClient creates a Protobuf client that implements the SendEmailEventsService interface.
 // It communicates using Protobuf and can be configured with a custom HTTPClient.
-func NewSendEmailEventsProtobufClient(baseURL string, client HTTPClient, opts ...twirp.ClientOption) SendEmailEvents {
+func NewSendEmailEventsServiceProtobufClient(baseURL string, client HTTPClient, opts ...twirp.ClientOption) SendEmailEventsService {
 	if c, ok := client.(*http.Client); ok {
 		client = withoutRedirects(c)
 	}
@@ -1395,12 +1395,12 @@ func NewSendEmailEventsProtobufClient(baseURL string, client HTTPClient, opts ..
 
 	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
 	serviceURL := sanitizeBaseURL(baseURL)
-	serviceURL += baseServicePath(pathPrefix, "corepb.v1", "SendEmailEvents")
+	serviceURL += baseServicePath(pathPrefix, "corepb.v1", "SendEmailEventsService")
 	urls := [1]string{
-		serviceURL + "NotifySent",
+		serviceURL + "NotifyEmailSent",
 	}
 
-	return &sendEmailEventsProtobufClient{
+	return &sendEmailEventsServiceProtobufClient{
 		client:      client,
 		urls:        urls,
 		interceptor: twirp.ChainInterceptors(clientOpts.Interceptors...),
@@ -1408,26 +1408,26 @@ func NewSendEmailEventsProtobufClient(baseURL string, client HTTPClient, opts ..
 	}
 }
 
-func (c *sendEmailEventsProtobufClient) NotifySent(ctx context.Context, in *EmailSentEvent) (*EmailOkResponse, error) {
+func (c *sendEmailEventsServiceProtobufClient) NotifyEmailSent(ctx context.Context, in *NotifyEmailSentRequest) (*NotifyEmailSentResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
-	ctx = ctxsetters.WithServiceName(ctx, "SendEmailEvents")
-	ctx = ctxsetters.WithMethodName(ctx, "NotifySent")
-	caller := c.callNotifySent
+	ctx = ctxsetters.WithServiceName(ctx, "SendEmailEventsService")
+	ctx = ctxsetters.WithMethodName(ctx, "NotifyEmailSent")
+	caller := c.callNotifyEmailSent
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *EmailSentEvent) (*EmailOkResponse, error) {
+		caller = func(ctx context.Context, req *NotifyEmailSentRequest) (*NotifyEmailSentResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*EmailSentEvent)
+					typedReq, ok := req.(*NotifyEmailSentRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*EmailSentEvent) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*NotifyEmailSentRequest) when calling interceptor")
 					}
-					return c.callNotifySent(ctx, typedReq)
+					return c.callNotifyEmailSent(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EmailOkResponse)
+				typedResp, ok := resp.(*NotifyEmailSentResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EmailOkResponse) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*NotifyEmailSentResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -1437,8 +1437,8 @@ func (c *sendEmailEventsProtobufClient) NotifySent(ctx context.Context, in *Emai
 	return caller(ctx, in)
 }
 
-func (c *sendEmailEventsProtobufClient) callNotifySent(ctx context.Context, in *EmailSentEvent) (*EmailOkResponse, error) {
-	out := new(EmailOkResponse)
+func (c *sendEmailEventsServiceProtobufClient) callNotifyEmailSent(ctx context.Context, in *NotifyEmailSentRequest) (*NotifyEmailSentResponse, error) {
+	out := new(NotifyEmailSentResponse)
 	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -1454,20 +1454,20 @@ func (c *sendEmailEventsProtobufClient) callNotifySent(ctx context.Context, in *
 	return out, nil
 }
 
-// ===========================
-// SendEmailEvents JSON Client
-// ===========================
+// ==================================
+// SendEmailEventsService JSON Client
+// ==================================
 
-type sendEmailEventsJSONClient struct {
+type sendEmailEventsServiceJSONClient struct {
 	client      HTTPClient
 	urls        [1]string
 	interceptor twirp.Interceptor
 	opts        twirp.ClientOptions
 }
 
-// NewSendEmailEventsJSONClient creates a JSON client that implements the SendEmailEvents interface.
+// NewSendEmailEventsServiceJSONClient creates a JSON client that implements the SendEmailEventsService interface.
 // It communicates using JSON and can be configured with a custom HTTPClient.
-func NewSendEmailEventsJSONClient(baseURL string, client HTTPClient, opts ...twirp.ClientOption) SendEmailEvents {
+func NewSendEmailEventsServiceJSONClient(baseURL string, client HTTPClient, opts ...twirp.ClientOption) SendEmailEventsService {
 	if c, ok := client.(*http.Client); ok {
 		client = withoutRedirects(c)
 	}
@@ -1487,12 +1487,12 @@ func NewSendEmailEventsJSONClient(baseURL string, client HTTPClient, opts ...twi
 
 	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
 	serviceURL := sanitizeBaseURL(baseURL)
-	serviceURL += baseServicePath(pathPrefix, "corepb.v1", "SendEmailEvents")
+	serviceURL += baseServicePath(pathPrefix, "corepb.v1", "SendEmailEventsService")
 	urls := [1]string{
-		serviceURL + "NotifySent",
+		serviceURL + "NotifyEmailSent",
 	}
 
-	return &sendEmailEventsJSONClient{
+	return &sendEmailEventsServiceJSONClient{
 		client:      client,
 		urls:        urls,
 		interceptor: twirp.ChainInterceptors(clientOpts.Interceptors...),
@@ -1500,26 +1500,26 @@ func NewSendEmailEventsJSONClient(baseURL string, client HTTPClient, opts ...twi
 	}
 }
 
-func (c *sendEmailEventsJSONClient) NotifySent(ctx context.Context, in *EmailSentEvent) (*EmailOkResponse, error) {
+func (c *sendEmailEventsServiceJSONClient) NotifyEmailSent(ctx context.Context, in *NotifyEmailSentRequest) (*NotifyEmailSentResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
-	ctx = ctxsetters.WithServiceName(ctx, "SendEmailEvents")
-	ctx = ctxsetters.WithMethodName(ctx, "NotifySent")
-	caller := c.callNotifySent
+	ctx = ctxsetters.WithServiceName(ctx, "SendEmailEventsService")
+	ctx = ctxsetters.WithMethodName(ctx, "NotifyEmailSent")
+	caller := c.callNotifyEmailSent
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *EmailSentEvent) (*EmailOkResponse, error) {
+		caller = func(ctx context.Context, req *NotifyEmailSentRequest) (*NotifyEmailSentResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*EmailSentEvent)
+					typedReq, ok := req.(*NotifyEmailSentRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*EmailSentEvent) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*NotifyEmailSentRequest) when calling interceptor")
 					}
-					return c.callNotifySent(ctx, typedReq)
+					return c.callNotifyEmailSent(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EmailOkResponse)
+				typedResp, ok := resp.(*NotifyEmailSentResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EmailOkResponse) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*NotifyEmailSentResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -1529,8 +1529,8 @@ func (c *sendEmailEventsJSONClient) NotifySent(ctx context.Context, in *EmailSen
 	return caller(ctx, in)
 }
 
-func (c *sendEmailEventsJSONClient) callNotifySent(ctx context.Context, in *EmailSentEvent) (*EmailOkResponse, error) {
-	out := new(EmailOkResponse)
+func (c *sendEmailEventsServiceJSONClient) callNotifyEmailSent(ctx context.Context, in *NotifyEmailSentRequest) (*NotifyEmailSentResponse, error) {
+	out := new(NotifyEmailSentResponse)
 	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -1546,12 +1546,12 @@ func (c *sendEmailEventsJSONClient) callNotifySent(ctx context.Context, in *Emai
 	return out, nil
 }
 
-// ==============================
-// SendEmailEvents Server Handler
-// ==============================
+// =====================================
+// SendEmailEventsService Server Handler
+// =====================================
 
-type sendEmailEventsServer struct {
-	SendEmailEvents
+type sendEmailEventsServiceServer struct {
+	SendEmailEventsService
 	interceptor      twirp.Interceptor
 	hooks            *twirp.ServerHooks
 	pathPrefix       string // prefix for routing
@@ -1559,10 +1559,10 @@ type sendEmailEventsServer struct {
 	jsonCamelCase    bool   // JSON fields are serialized as lowerCamelCase rather than keeping the original proto names
 }
 
-// NewSendEmailEventsServer builds a TwirpServer that can be used as an http.Handler to handle
+// NewSendEmailEventsServiceServer builds a TwirpServer that can be used as an http.Handler to handle
 // HTTP requests that are routed to the right method in the provided svc implementation.
 // The opts are twirp.ServerOption modifiers, for example twirp.WithServerHooks(hooks).
-func NewSendEmailEventsServer(svc SendEmailEvents, opts ...interface{}) TwirpServer {
+func NewSendEmailEventsServiceServer(svc SendEmailEventsService, opts ...interface{}) TwirpServer {
 	serverOpts := newServerOpts(opts)
 
 	// Using ReadOpt allows backwards and forwads compatibility with new options in the future
@@ -1575,24 +1575,24 @@ func NewSendEmailEventsServer(svc SendEmailEvents, opts ...interface{}) TwirpSer
 		pathPrefix = "/twirp" // default prefix
 	}
 
-	return &sendEmailEventsServer{
-		SendEmailEvents:  svc,
-		hooks:            serverOpts.Hooks,
-		interceptor:      twirp.ChainInterceptors(serverOpts.Interceptors...),
-		pathPrefix:       pathPrefix,
-		jsonSkipDefaults: jsonSkipDefaults,
-		jsonCamelCase:    jsonCamelCase,
+	return &sendEmailEventsServiceServer{
+		SendEmailEventsService: svc,
+		hooks:                  serverOpts.Hooks,
+		interceptor:            twirp.ChainInterceptors(serverOpts.Interceptors...),
+		pathPrefix:             pathPrefix,
+		jsonSkipDefaults:       jsonSkipDefaults,
+		jsonCamelCase:          jsonCamelCase,
 	}
 }
 
 // writeError writes an HTTP response with a valid Twirp error format, and triggers hooks.
 // If err is not a twirp.Error, it will get wrapped with twirp.InternalErrorWith(err)
-func (s *sendEmailEventsServer) writeError(ctx context.Context, resp http.ResponseWriter, err error) {
+func (s *sendEmailEventsServiceServer) writeError(ctx context.Context, resp http.ResponseWriter, err error) {
 	writeError(ctx, resp, err, s.hooks)
 }
 
 // handleRequestBodyError is used to handle error when the twirp server cannot read request
-func (s *sendEmailEventsServer) handleRequestBodyError(ctx context.Context, resp http.ResponseWriter, msg string, err error) {
+func (s *sendEmailEventsServiceServer) handleRequestBodyError(ctx context.Context, resp http.ResponseWriter, msg string, err error) {
 	if context.Canceled == ctx.Err() {
 		s.writeError(ctx, resp, twirp.NewError(twirp.Canceled, "failed to read request: context canceled"))
 		return
@@ -1604,16 +1604,16 @@ func (s *sendEmailEventsServer) handleRequestBodyError(ctx context.Context, resp
 	s.writeError(ctx, resp, twirp.WrapError(malformedRequestError(msg), err))
 }
 
-// SendEmailEventsPathPrefix is a convenience constant that may identify URL paths.
+// SendEmailEventsServicePathPrefix is a convenience constant that may identify URL paths.
 // Should be used with caution, it only matches routes generated by Twirp Go clients,
 // with the default "/twirp" prefix and default CamelCase service and method names.
 // More info: https://twitchtv.github.io/twirp/docs/routing.html
-const SendEmailEventsPathPrefix = "/twirp/corepb.v1.SendEmailEvents/"
+const SendEmailEventsServicePathPrefix = "/twirp/corepb.v1.SendEmailEventsService/"
 
-func (s *sendEmailEventsServer) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
+func (s *sendEmailEventsServiceServer) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
-	ctx = ctxsetters.WithServiceName(ctx, "SendEmailEvents")
+	ctx = ctxsetters.WithServiceName(ctx, "SendEmailEventsService")
 	ctx = ctxsetters.WithResponseWriter(ctx, resp)
 
 	var err error
@@ -1631,7 +1631,7 @@ func (s *sendEmailEventsServer) ServeHTTP(resp http.ResponseWriter, req *http.Re
 
 	// Verify path format: [<prefix>]/<package>.<Service>/<Method>
 	prefix, pkgService, method := parseTwirpPath(req.URL.Path)
-	if pkgService != "corepb.v1.SendEmailEvents" {
+	if pkgService != "corepb.v1.SendEmailEventsService" {
 		msg := fmt.Sprintf("no handler for path %q", req.URL.Path)
 		s.writeError(ctx, resp, badRouteError(msg, req.Method, req.URL.Path))
 		return
@@ -1643,8 +1643,8 @@ func (s *sendEmailEventsServer) ServeHTTP(resp http.ResponseWriter, req *http.Re
 	}
 
 	switch method {
-	case "NotifySent":
-		s.serveNotifySent(ctx, resp, req)
+	case "NotifyEmailSent":
+		s.serveNotifyEmailSent(ctx, resp, req)
 		return
 	default:
 		msg := fmt.Sprintf("no handler for path %q", req.URL.Path)
@@ -1653,7 +1653,7 @@ func (s *sendEmailEventsServer) ServeHTTP(resp http.ResponseWriter, req *http.Re
 	}
 }
 
-func (s *sendEmailEventsServer) serveNotifySent(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *sendEmailEventsServiceServer) serveNotifyEmailSent(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	header := req.Header.Get("Content-Type")
 	i := strings.Index(header, ";")
 	if i == -1 {
@@ -1661,9 +1661,9 @@ func (s *sendEmailEventsServer) serveNotifySent(ctx context.Context, resp http.R
 	}
 	switch strings.TrimSpace(strings.ToLower(header[:i])) {
 	case "application/json":
-		s.serveNotifySentJSON(ctx, resp, req)
+		s.serveNotifyEmailSentJSON(ctx, resp, req)
 	case "application/protobuf":
-		s.serveNotifySentProtobuf(ctx, resp, req)
+		s.serveNotifyEmailSentProtobuf(ctx, resp, req)
 	default:
 		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
 		twerr := badRouteError(msg, req.Method, req.URL.Path)
@@ -1671,9 +1671,9 @@ func (s *sendEmailEventsServer) serveNotifySent(ctx context.Context, resp http.R
 	}
 }
 
-func (s *sendEmailEventsServer) serveNotifySentJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *sendEmailEventsServiceServer) serveNotifyEmailSentJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	var err error
-	ctx = ctxsetters.WithMethodName(ctx, "NotifySent")
+	ctx = ctxsetters.WithMethodName(ctx, "NotifyEmailSent")
 	ctx, err = callRequestRouted(ctx, s.hooks)
 	if err != nil {
 		s.writeError(ctx, resp, err)
@@ -1686,29 +1686,29 @@ func (s *sendEmailEventsServer) serveNotifySentJSON(ctx context.Context, resp ht
 		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
 		return
 	}
-	reqContent := new(EmailSentEvent)
+	reqContent := new(NotifyEmailSentRequest)
 	unmarshaler := protojson.UnmarshalOptions{DiscardUnknown: true}
 	if err = unmarshaler.Unmarshal(rawReqBody, reqContent); err != nil {
 		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
 		return
 	}
 
-	handler := s.SendEmailEvents.NotifySent
+	handler := s.SendEmailEventsService.NotifyEmailSent
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *EmailSentEvent) (*EmailOkResponse, error) {
+		handler = func(ctx context.Context, req *NotifyEmailSentRequest) (*NotifyEmailSentResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*EmailSentEvent)
+					typedReq, ok := req.(*NotifyEmailSentRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*EmailSentEvent) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*NotifyEmailSentRequest) when calling interceptor")
 					}
-					return s.SendEmailEvents.NotifySent(ctx, typedReq)
+					return s.SendEmailEventsService.NotifyEmailSent(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EmailOkResponse)
+				typedResp, ok := resp.(*NotifyEmailSentResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EmailOkResponse) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*NotifyEmailSentResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -1717,7 +1717,7 @@ func (s *sendEmailEventsServer) serveNotifySentJSON(ctx context.Context, resp ht
 	}
 
 	// Call service method
-	var respContent *EmailOkResponse
+	var respContent *NotifyEmailSentResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -1728,7 +1728,7 @@ func (s *sendEmailEventsServer) serveNotifySentJSON(ctx context.Context, resp ht
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *EmailOkResponse and nil error while calling NotifySent. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *NotifyEmailSentResponse and nil error while calling NotifyEmailSent. nil responses are not supported"))
 		return
 	}
 
@@ -1754,9 +1754,9 @@ func (s *sendEmailEventsServer) serveNotifySentJSON(ctx context.Context, resp ht
 	callResponseSent(ctx, s.hooks)
 }
 
-func (s *sendEmailEventsServer) serveNotifySentProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *sendEmailEventsServiceServer) serveNotifyEmailSentProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	var err error
-	ctx = ctxsetters.WithMethodName(ctx, "NotifySent")
+	ctx = ctxsetters.WithMethodName(ctx, "NotifyEmailSent")
 	ctx, err = callRequestRouted(ctx, s.hooks)
 	if err != nil {
 		s.writeError(ctx, resp, err)
@@ -1768,28 +1768,28 @@ func (s *sendEmailEventsServer) serveNotifySentProtobuf(ctx context.Context, res
 		s.handleRequestBodyError(ctx, resp, "failed to read request body", err)
 		return
 	}
-	reqContent := new(EmailSentEvent)
+	reqContent := new(NotifyEmailSentRequest)
 	if err = proto.Unmarshal(buf, reqContent); err != nil {
 		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
 		return
 	}
 
-	handler := s.SendEmailEvents.NotifySent
+	handler := s.SendEmailEventsService.NotifyEmailSent
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *EmailSentEvent) (*EmailOkResponse, error) {
+		handler = func(ctx context.Context, req *NotifyEmailSentRequest) (*NotifyEmailSentResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*EmailSentEvent)
+					typedReq, ok := req.(*NotifyEmailSentRequest)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*EmailSentEvent) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*NotifyEmailSentRequest) when calling interceptor")
 					}
-					return s.SendEmailEvents.NotifySent(ctx, typedReq)
+					return s.SendEmailEventsService.NotifyEmailSent(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EmailOkResponse)
+				typedResp, ok := resp.(*NotifyEmailSentResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EmailOkResponse) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*NotifyEmailSentResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -1798,7 +1798,7 @@ func (s *sendEmailEventsServer) serveNotifySentProtobuf(ctx context.Context, res
 	}
 
 	// Call service method
-	var respContent *EmailOkResponse
+	var respContent *NotifyEmailSentResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -1809,7 +1809,7 @@ func (s *sendEmailEventsServer) serveNotifySentProtobuf(ctx context.Context, res
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *EmailOkResponse and nil error while calling NotifySent. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *NotifyEmailSentResponse and nil error while calling NotifyEmailSent. nil responses are not supported"))
 		return
 	}
 
@@ -1833,63 +1833,66 @@ func (s *sendEmailEventsServer) serveNotifySentProtobuf(ctx context.Context, res
 	callResponseSent(ctx, s.hooks)
 }
 
-func (s *sendEmailEventsServer) ServiceDescriptor() ([]byte, int) {
+func (s *sendEmailEventsServiceServer) ServiceDescriptor() ([]byte, int) {
 	return twirpFileDescriptor5, 1
 }
 
-func (s *sendEmailEventsServer) ProtocGenTwirpVersion() string {
+func (s *sendEmailEventsServiceServer) ProtocGenTwirpVersion() string {
 	return "v8.1.1"
 }
 
 // PathPrefix returns the base service path, in the form: "/<prefix>/<package>.<Service>/"
 // that is everything in a Twirp route except for the <Method>. This can be used for routing,
 // for example to identify the requests that are targeted to this service in a mux.
-func (s *sendEmailEventsServer) PathPrefix() string {
-	return baseServicePath(s.pathPrefix, "corepb.v1", "SendEmailEvents")
+func (s *sendEmailEventsServiceServer) PathPrefix() string {
+	return baseServicePath(s.pathPrefix, "corepb.v1", "SendEmailEventsService")
 }
 
 var twirpFileDescriptor5 = []byte{
-	// 667 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x95, 0xcd, 0x4e, 0xdb, 0x4a,
-	0x14, 0xc7, 0x71, 0xf8, 0xcc, 0x09, 0x24, 0x66, 0x2e, 0x88, 0x10, 0x09, 0x71, 0xf1, 0xd5, 0xd5,
-	0xbd, 0xaa, 0xaa, 0x20, 0xdc, 0xee, 0xba, 0x02, 0x32, 0xa5, 0x5e, 0xd4, 0xa0, 0x09, 0xd0, 0x96,
-	0x45, 0x2d, 0x13, 0x9f, 0x50, 0x2b, 0x89, 0xed, 0xce, 0x18, 0x57, 0xbc, 0x41, 0x5f, 0xa4, 0x0f,
-	0xd0, 0x45, 0x97, 0x7d, 0x9c, 0xbe, 0x40, 0x9f, 0xa0, 0x9a, 0x19, 0xc7, 0x10, 0xab, 0x40, 0xd5,
-	0x45, 0xd5, 0xee, 0x32, 0xe7, 0xe3, 0x37, 0xff, 0x73, 0x72, 0xce, 0x18, 0x5a, 0xbd, 0x98, 0x63,
-	0x72, 0xbe, 0x9d, 0xed, 0x6c, 0x0b, 0x8c, 0x02, 0x0f, 0x47, 0x7e, 0x38, 0x6c, 0x27, 0x3c, 0x4e,
-	0x63, 0x52, 0xd5, 0xbe, 0x76, 0xb6, 0x63, 0xb9, 0x50, 0xa5, 0xd2, 0x73, 0x22, 0x90, 0x93, 0x15,
-	0x98, 0x55, 0x61, 0x4d, 0xe3, 0x6f, 0xe3, 0xff, 0x2a, 0xd3, 0x07, 0x42, 0x60, 0x26, 0xf2, 0x47,
-	0xd8, 0xac, 0x28, 0xa3, 0xfa, 0x4d, 0xd6, 0x60, 0xfe, 0x52, 0x20, 0xf7, 0xc2, 0xa0, 0x39, 0xad,
-	0xcc, 0x73, 0xf2, 0xe8, 0x04, 0xd6, 0x7b, 0x03, 0x16, 0x15, 0x70, 0x37, 0x49, 0x9c, 0xa8, 0x1f,
-	0x93, 0x75, 0x58, 0xb8, 0xe4, 0x43, 0xef, 0xdc, 0x17, 0x98, 0x63, 0xe7, 0x2f, 0xf9, 0x70, 0xcf,
-	0x17, 0x28, 0x5d, 0x7e, 0x92, 0x78, 0x37, 0xe0, 0xf3, 0x7e, 0x92, 0xb8, 0x92, 0xbf, 0x05, 0x8b,
-	0x52, 0x35, 0x72, 0xad, 0x3b, 0xbf, 0xa4, 0xa6, 0x6d, 0x8a, 0x4f, 0x36, 0x21, 0x3f, 0x6a, 0xc0,
-	0x8c, 0x8a, 0x00, 0x6d, 0x92, 0x0c, 0xeb, 0x93, 0x01, 0x44, 0x85, 0x32, 0xbc, 0x08, 0x45, 0x8a,
-	0xfc, 0xc8, 0xe7, 0xfe, 0x88, 0xd8, 0xfa, 0xd6, 0x30, 0xea, 0xc7, 0x4a, 0x50, 0xcd, 0x5e, 0x6b,
-	0x17, 0xfd, 0x68, 0xdf, 0xd4, 0xae, 0xe4, 0xa8, 0x22, 0x6c, 0xa8, 0x72, 0xec, 0x85, 0x49, 0x88,
-	0x51, 0xaa, 0xb4, 0xd4, 0xec, 0x95, 0x72, 0x92, 0xec, 0x20, 0xbb, 0x0e, 0x93, 0x25, 0x70, 0xec,
-	0x23, 0xc7, 0xa8, 0x87, 0xb2, 0x4f, 0x5a, 0x60, 0xad, 0xb0, 0x39, 0x81, 0xec, 0x77, 0x1a, 0x0f,
-	0x30, 0x6a, 0xce, 0xea, 0x7e, 0xab, 0x83, 0xf5, 0xc1, 0x80, 0xa6, 0x22, 0x1e, 0xf9, 0x42, 0xbc,
-	0x8b, 0x79, 0xb0, 0xff, 0xc6, 0x8f, 0x2e, 0xf0, 0x77, 0x53, 0x6f, 0x7d, 0x36, 0xa0, 0x35, 0xa1,
-	0x93, 0x61, 0x2f, 0xce, 0x90, 0x5f, 0xfd, 0x21, 0x7d, 0xfe, 0x62, 0xc0, 0x8a, 0x22, 0x3a, 0x51,
-	0x16, 0xa6, 0x28, 0xb9, 0x3f, 0xaf, 0xfc, 0x21, 0xcc, 0xe9, 0xd1, 0x53, 0x93, 0x7c, 0x9b, 0xec,
-	0x3c, 0xe6, 0xd7, 0xd6, 0xb9, 0x05, 0x0d, 0x05, 0x3c, 0x1c, 0x30, 0x14, 0x49, 0x1c, 0x09, 0x24,
-	0x75, 0xa8, 0xc4, 0x03, 0x55, 0xdb, 0x02, 0xab, 0xc4, 0x03, 0xeb, 0xa3, 0x01, 0x75, 0x15, 0xd3,
-	0xc5, 0x28, 0xa5, 0x99, 0xbc, 0xee, 0x3f, 0x68, 0x14, 0x77, 0x7b, 0x37, 0x5f, 0x85, 0x7a, 0x61,
-	0xd6, 0x7b, 0xb8, 0x01, 0x30, 0x42, 0x21, 0xfc, 0x0b, 0xa5, 0x4a, 0xef, 0x71, 0x35, 0xb7, 0x38,
-	0x01, 0x79, 0x0c, 0x0b, 0x29, 0x8e, 0x92, 0xa1, 0x9f, 0xa2, 0xaa, 0xb4, 0x6e, 0x37, 0xcb, 0x95,
-	0x1e, 0xe7, 0x7e, 0x56, 0x44, 0xfe, 0x40, 0xb1, 0x0f, 0xde, 0xc2, 0xd2, 0x44, 0x36, 0x59, 0x82,
-	0xea, 0x89, 0xdb, 0xa1, 0x4f, 0x1d, 0x97, 0x76, 0xcc, 0x29, 0xf2, 0x17, 0x34, 0x4e, 0xba, 0x94,
-	0x79, 0x8c, 0x1e, 0x38, 0xdd, 0x63, 0xca, 0x68, 0xc7, 0x34, 0x88, 0x09, 0x8b, 0xca, 0xe8, 0xb8,
-	0xa7, 0xce, 0x31, 0xed, 0x98, 0x15, 0xb2, 0x0a, 0xcb, 0x47, 0xbb, 0xdd, 0xee, 0x8b, 0x43, 0xd6,
-	0xf1, 0x18, 0xdd, 0x3f, 0x3c, 0xa5, 0xec, 0x95, 0x39, 0x2d, 0xb3, 0x0b, 0xf3, 0xfe, 0xb3, 0x5d,
-	0xf7, 0x80, 0x9a, 0x33, 0xf6, 0xd7, 0x0a, 0x98, 0x5d, 0x8c, 0x82, 0xbc, 0x55, 0x3c, 0x0b, 0x7b,
-	0x48, 0x5c, 0x68, 0x8c, 0x1f, 0x98, 0xe7, 0xba, 0x6a, 0xb2, 0x51, 0xae, 0x70, 0xe2, 0x05, 0x6a,
-	0xb5, 0xca, 0xee, 0xeb, 0x7f, 0xc6, 0x9a, 0x22, 0x67, 0xb0, 0x3a, 0xb9, 0xf8, 0x63, 0xea, 0x3f,
-	0xe5, 0xb4, 0xef, 0xbc, 0x0f, 0xf7, 0xb0, 0x5f, 0xc3, 0x5a, 0x79, 0x59, 0xc7, 0xf4, 0x7f, 0x6f,
-	0xa3, 0x4f, 0x6c, 0xf5, 0x3d, 0x7c, 0x06, 0xcb, 0xd7, 0xcb, 0x34, 0x26, 0x6f, 0x96, 0x53, 0x4a,
-	0xfb, 0x76, 0x37, 0xd3, 0x7e, 0x09, 0x8d, 0xa2, 0xe7, 0x6a, 0x34, 0x05, 0xa1, 0x00, 0x6e, 0x9c,
-	0x86, 0xfd, 0x2b, 0x39, 0xae, 0x64, 0xbd, 0x9c, 0x5e, 0x0c, 0xf1, 0xdd, 0xe4, 0xbd, 0xa5, 0xb3,
-	0x5a, 0x7b, 0xfb, 0x89, 0x8e, 0xc8, 0x76, 0xce, 0xe7, 0xd4, 0xc7, 0xf1, 0xd1, 0xb7, 0x00, 0x00,
-	0x00, 0xff, 0xff, 0xe0, 0x1e, 0xd4, 0x8d, 0x3a, 0x07, 0x00, 0x00,
+	// 707 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x56, 0xcb, 0x4e, 0xdb, 0x5c,
+	0x10, 0xc6, 0xdc, 0x33, 0xe1, 0x92, 0xff, 0x88, 0x9f, 0x5c, 0xf8, 0x21, 0xe0, 0x1f, 0x09, 0x8a,
+	0xaa, 0x20, 0xd2, 0xee, 0xba, 0x0a, 0xc9, 0x29, 0xb5, 0x04, 0x21, 0x72, 0x02, 0x55, 0xd9, 0xb8,
+	0x26, 0x9e, 0x50, 0xab, 0x89, 0xed, 0x9e, 0xe3, 0xb8, 0xe2, 0x0d, 0xfa, 0x2a, 0xdd, 0x76, 0xd7,
+	0x4d, 0xa5, 0x3e, 0x4e, 0xdf, 0xa2, 0xf2, 0x39, 0xc6, 0x35, 0xc1, 0xa1, 0x2c, 0xaa, 0xaa, 0xdd,
+	0xe5, 0xcc, 0x7c, 0x9e, 0xf9, 0xe6, 0x9b, 0x8b, 0x02, 0xa5, 0xae, 0xcb, 0xd0, 0xbb, 0xdc, 0x0f,
+	0x0e, 0xf6, 0x39, 0x3a, 0x96, 0x81, 0x03, 0xd3, 0xee, 0x57, 0x3c, 0xe6, 0xfa, 0x2e, 0xc9, 0x48,
+	0x5f, 0x25, 0x38, 0x50, 0x9b, 0x90, 0xa1, 0xa1, 0xe7, 0x8c, 0x23, 0x23, 0x2b, 0x30, 0x23, 0x60,
+	0x05, 0x65, 0x53, 0xd9, 0xcd, 0xe8, 0xf2, 0x41, 0x08, 0x4c, 0x3b, 0xe6, 0x00, 0x0b, 0x93, 0xc2,
+	0x28, 0x7e, 0x93, 0x3c, 0xcc, 0x0d, 0x39, 0x32, 0xc3, 0xb6, 0x0a, 0x53, 0xc2, 0x3c, 0x1b, 0x3e,
+	0x35, 0x4b, 0xfd, 0xa0, 0xc0, 0x82, 0x08, 0x58, 0xf3, 0x3c, 0xcd, 0xe9, 0xb9, 0xa4, 0x08, 0xf3,
+	0x43, 0xd6, 0x37, 0x2e, 0x4d, 0x8e, 0x51, 0xd8, 0xb9, 0x21, 0xeb, 0x1f, 0x9a, 0x1c, 0x43, 0x97,
+	0xe9, 0x79, 0x46, 0x22, 0xf8, 0x9c, 0xe9, 0x79, 0xcd, 0x30, 0xfe, 0x16, 0x2c, 0x84, 0xac, 0x91,
+	0x49, 0xde, 0x51, 0x92, 0xac, 0xb4, 0x89, 0xf8, 0xa4, 0x0c, 0xd1, 0x53, 0x06, 0x98, 0x16, 0x08,
+	0x90, 0xa6, 0x30, 0x86, 0xfa, 0x59, 0x81, 0x55, 0x1d, 0xaf, 0x6c, 0xee, 0x23, 0x3b, 0x41, 0xce,
+	0xcd, 0x2b, 0xd4, 0xf1, 0xdd, 0x10, 0xb9, 0x4f, 0xaa, 0x32, 0xb3, 0xed, 0xf4, 0x5c, 0x41, 0x2a,
+	0x5b, 0xcd, 0x57, 0x62, 0x4d, 0x2a, 0x49, 0xfe, 0x82, 0x92, 0x28, 0xa4, 0x0a, 0x19, 0x86, 0x5d,
+	0xdb, 0xb3, 0xd1, 0xf1, 0x05, 0x9f, 0x6c, 0x75, 0x65, 0xf4, 0xa3, 0x50, 0x45, 0xfd, 0x07, 0x2c,
+	0x2c, 0x83, 0x61, 0x0f, 0x19, 0x3a, 0x5d, 0x0c, 0xb5, 0x92, 0x24, 0xb3, 0xb1, 0x4d, 0xb3, 0x42,
+	0xcd, 0x7d, 0xf7, 0x2d, 0x3a, 0x85, 0x19, 0xa9, 0xb9, 0x78, 0xa8, 0x1f, 0x15, 0xf8, 0xaf, 0x65,
+	0x72, 0xfe, 0xde, 0x65, 0x56, 0xfd, 0x8d, 0xe9, 0x5c, 0xe1, 0x1f, 0x5b, 0x81, 0xfa, 0x55, 0x81,
+	0x8d, 0x1b, 0xae, 0x3a, 0x76, 0xdd, 0x00, 0xd9, 0xf5, 0xdf, 0xa6, 0xf7, 0x37, 0x05, 0x0a, 0x9a,
+	0x13, 0xd8, 0x3e, 0x86, 0x21, 0x7f, 0x01, 0xfb, 0xc7, 0x30, 0x2b, 0x47, 0x51, 0x4c, 0xf6, 0x38,
+	0xea, 0x11, 0xe6, 0xf7, 0xd6, 0x5a, 0x84, 0xfc, 0x9d, 0xb5, 0xe0, 0x9e, 0xeb, 0x70, 0x54, 0xcb,
+	0xb0, 0x3e, 0x66, 0xea, 0x22, 0xc0, 0x16, 0x94, 0xc7, 0xb6, 0x3a, 0x82, 0xac, 0x41, 0x31, 0x45,
+	0xc9, 0xc8, 0x59, 0x84, 0x7c, 0xd3, 0xf5, 0xed, 0xde, 0xb5, 0x28, 0xa9, 0x8d, 0x8e, 0x1f, 0xbb,
+	0xc2, 0x75, 0xbd, 0xe3, 0x93, 0x0d, 0xd8, 0x81, 0xe5, 0xb8, 0x6e, 0x23, 0x79, 0xa1, 0x96, 0x62,
+	0xb3, 0xbc, 0x09, 0xeb, 0x00, 0x03, 0x99, 0x31, 0x54, 0x44, 0xde, 0x94, 0x4c, 0x64, 0xd1, 0x2c,
+	0xf2, 0x14, 0xe6, 0x7d, 0x1c, 0x78, 0x7d, 0xd3, 0x47, 0xa1, 0xf2, 0x52, 0xb5, 0x30, 0xaa, 0x72,
+	0x27, 0xf2, 0xeb, 0x31, 0xf2, 0x01, 0x42, 0xef, 0x7d, 0x51, 0x60, 0xf1, 0xd6, 0xe7, 0x64, 0x03,
+	0x4a, 0xf4, 0xa4, 0xa6, 0x1d, 0x1b, 0x1d, 0x7a, 0xd2, 0x3a, 0xae, 0x75, 0xa8, 0x71, 0xd6, 0x6c,
+	0xb7, 0x68, 0x5d, 0x7b, 0xae, 0xd1, 0x46, 0x6e, 0x82, 0xa8, 0xb0, 0x31, 0xea, 0x6f, 0x53, 0xdd,
+	0xd0, 0xe9, 0x91, 0xd6, 0xee, 0x50, 0x9d, 0x36, 0x72, 0x0a, 0x29, 0xc3, 0x5a, 0x1a, 0x46, 0x6b,
+	0x9e, 0x6b, 0x1d, 0xda, 0xc8, 0x4d, 0x92, 0x6d, 0xd8, 0x1c, 0x01, 0xb4, 0x6a, 0xed, 0xf6, 0xcb,
+	0x53, 0xbd, 0x61, 0xe8, 0xb4, 0x7e, 0x7a, 0x4e, 0xf5, 0x57, 0xb9, 0xa9, 0x94, 0x54, 0x31, 0xaa,
+	0xfe, 0xa2, 0xd6, 0x3c, 0xa2, 0xb9, 0xe9, 0xea, 0xa7, 0x29, 0xc8, 0xb5, 0xd1, 0xb1, 0x22, 0xe9,
+	0x59, 0x60, 0x77, 0x91, 0x5c, 0xc0, 0xf2, 0xc8, 0xa0, 0x90, 0xad, 0x84, 0x5e, 0xe9, 0xb7, 0xb5,
+	0xa4, 0xde, 0x07, 0x89, 0x7a, 0x3d, 0x41, 0xfa, 0xf0, 0x6f, 0xea, 0xa4, 0x91, 0x9d, 0xc4, 0xe7,
+	0xf7, 0x5d, 0xc0, 0xd2, 0xee, 0xcf, 0x81, 0x71, 0x36, 0x06, 0xf9, 0x31, 0x63, 0x4b, 0x1e, 0xa5,
+	0x84, 0x49, 0xbf, 0x62, 0xa5, 0xbd, 0x87, 0x40, 0xe3, 0x9c, 0xaf, 0xe1, 0x9f, 0x3b, 0x7b, 0x40,
+	0xfe, 0x4f, 0x84, 0x18, 0x77, 0x6f, 0x4a, 0xdb, 0xf7, 0x83, 0x6e, 0x32, 0x54, 0x7d, 0x58, 0x8d,
+	0x7b, 0x46, 0x03, 0x74, 0x7c, 0x9e, 0xe8, 0xdc, 0xc8, 0x2a, 0xdd, 0xea, 0x5c, 0xfa, 0x9a, 0xdd,
+	0xea, 0xdc, 0xb8, 0x2d, 0x9d, 0x38, 0x5c, 0xbc, 0xc8, 0x56, 0xf6, 0x9f, 0x49, 0x64, 0x70, 0x70,
+	0x39, 0x2b, 0xfe, 0x52, 0x3c, 0xf9, 0x1e, 0x00, 0x00, 0xff, 0xff, 0xc1, 0xec, 0x9a, 0xe1, 0x70,
+	0x08, 0x00, 0x00,
 }

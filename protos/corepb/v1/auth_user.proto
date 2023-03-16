@@ -4,17 +4,22 @@ package corepb.v1;
 
 option go_package = "./;corepbv1";
 
-message Empty {}
+message AuthUserServiceRemoveAssociationResponse {}
 
-message AuthOAuthGetUrlParams {
+message AuthUserServiceGetAuthUrlRequest {
   string provider = 1;
   string redirect_url = 2;
   string state = 3;
 }
 
-message AuthUserGetUrlResult { string url = 1; }
+message AuthUserServiceGetAuthUrlResponse { string url = 1; }
 
-message AuthUserGetParams {
+message AuthUserServiceRemoveAssociationRequest {
+  string user_id = 1;
+  string provider = 2;
+}
+
+message AuthUserServiceListAssociationsRequest {
   string user_id = 1;
   string provider = 2;
 }
@@ -30,9 +35,9 @@ message AuthEmailParams {
   string password = 2;
 }
 
-message AuthUserListAssoicationsResponse { repeated string provider = 1; }
+message AuthUserServiceListAssociationsResponse { repeated string provider = 1; }
 
-message AuthUserUpsertParams {
+message AuthUserServiceUpsertUserRequest {
   // If provide, then we're additing an association
   string user_id = 1;
   AuthOauthParams oauth = 2;
@@ -41,22 +46,23 @@ message AuthUserUpsertParams {
   string state = 5;
 }
 
-message AuthUserUpsertResult {
+message AuthUserServiceUpsertUserResponse {
   string user_id = 1;
   bool created = 2;
 }
 
 service AuthUserService {
   // Get an authentiction url
-  rpc GetAuthURL(AuthOAuthGetUrlParams) returns (AuthUserGetUrlResult);
+  rpc GetAuthUrl(AuthUserServiceGetAuthUrlRequest) returns (AuthUserServiceGetAuthUrlResponse);
 
   // List all associations for this user
-  rpc ListAssociations(AuthUserGetParams)
-      returns (AuthUserListAssoicationsResponse);
+  rpc ListAssociations(AuthUserServiceListAssociationsRequest)
+      returns (AuthUserServiceListAssociationsResponse);
   // Remove this token from the system
-  rpc RemoveAssociation(AuthUserGetParams) returns (Empty);
+  rpc RemoveAssociation(AuthUserServiceRemoveAssociationRequest) returns (AuthUserServiceRemoveAssociationResponse);
   // Assoicate or create the user as needed
-  rpc UpsertUser(AuthUserUpsertParams) returns (AuthUserUpsertResult);
+
+  rpc UpsertUser(AuthUserServiceUpsertUserRequest) returns (AuthUserServiceUpsertUserResponse);
 
   // TO make 3rd party calls we need a bearer token...
   //   GetTokenSource(ctx context.Context, userGUID entity.UserGUID, provider

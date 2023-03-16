@@ -25,19 +25,19 @@ type userEmailChanged struct {
 func NewUserEmailChanged(config WorkerConfig) corepbv1.TwirpServer {
 	svc := &userEmailChanged{WorkerConfig: config}
 
-	return corepbv1.NewUserEventbusServer(svc)
+	return corepbv1.NewUserEventbusServiceServer(svc)
 }
 
-func (cfg *userEmailChanged) SecurityPasswordChange(ctx context.Context, msg *corepbv1.UserSecurityEvent) (*corepbv1.EventbusEmpty, error) {
+func (cfg *userEmailChanged) SecurityPasswordChange(ctx context.Context, msg *corepbv1.UserSecurityEvent) (*corepbv1.UserEventbusSecurityPasswordChangeResponse, error) {
 	log := logger.FromContext(ctx).With(zap.Int32("action", int32(msg.Action))).With(zap.String("email", msg.User.Email))
 
 	log.Info("processing message")
-	if msg.Action != corepbv1.UserSecurity_USER_PASSWORD_CHANGE {
-		return &corepbv1.EventbusEmpty{}, nil
+	if msg.Action != corepbv1.UserSecurity_USER_SECURITY_USER_PASSWORD_CHANGE {
+		return &corepbv1.UserEventbusSecurityPasswordChangeResponse{}, nil
 	}
 	user := msg.User
 
-	params := corepbv1.EmailPasswordChangeParam{
+	params := corepbv1.PasswordChangeMessageRequest{
 		AppInfo: buildAppInfo(cfg.config),
 		Recipient: &corepbv1.EmailUser{
 			UserId: user.Id,
@@ -54,5 +54,5 @@ func (cfg *userEmailChanged) SecurityPasswordChange(ctx context.Context, msg *co
 		}
 	}
 
-	return &corepbv1.EventbusEmpty{}, nil
+	return &corepbv1.UserEventbusSecurityPasswordChangeResponse{}, nil
 }

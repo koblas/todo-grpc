@@ -59,7 +59,7 @@ func NewOauthUserServer(config Config, opts ...Option) *OauthUserServer {
 	return &svr
 }
 
-func (svc *OauthUserServer) GetAuthURL(ctx context.Context, params *corepbv1.AuthOAuthGetUrlParams) (*corepbv1.AuthUserGetUrlResult, error) {
+func (svc *OauthUserServer) GetAuthUrl(ctx context.Context, params *corepbv1.AuthUserServiceGetAuthUrlRequest) (*corepbv1.AuthUserServiceGetAuthUrlResponse, error) {
 	log := logger.FromContext(ctx).With("provider", params.Provider)
 	log.Info("Calling GetAuthURL")
 	oprovider, err := oauth_provider.GetOAuthProvider(params.GetProvider(), svc.smanager, log)
@@ -80,10 +80,10 @@ func (svc *OauthUserServer) GetAuthURL(ctx context.Context, params *corepbv1.Aut
 
 	url := oprovider.BuildRedirect(ctx, params.RedirectUrl, state)
 
-	return &corepbv1.AuthUserGetUrlResult{Url: url}, nil
+	return &corepbv1.AuthUserServiceGetAuthUrlResponse{Url: url}, nil
 }
 
-func (svc *OauthUserServer) UpsertUser(ctx context.Context, params *corepbv1.AuthUserUpsertParams) (*corepbv1.AuthUserUpsertResult, error) {
+func (svc *OauthUserServer) UpsertUser(ctx context.Context, params *corepbv1.AuthUserServiceUpsertUserRequest) (*corepbv1.AuthUserServiceUpsertUserResponse, error) {
 	log := logger.FromContext(ctx).With("provider", params.Oauth.Provider)
 	log.Info("Calling UpsertUser")
 	oprovider, err := oauth_provider.GetOAuthProvider(params.Oauth.Provider, svc.smanager, log)
@@ -119,10 +119,12 @@ func (svc *OauthUserServer) UpsertUser(ctx context.Context, params *corepbv1.Aut
 		return nil, twirp.InternalError("Unable to get ID from provider")
 	}
 
-	user, err := svc.user.FindBy(ctx, &corepbv1.UserFindParam{
-		Auth: &corepbv1.AuthInfo{
-			Provider:   params.Oauth.Provider,
-			ProviderId: info.Id,
+	findBy, err := svc.user.FindBy(ctx, &corepbv1.FindByRequest{
+		FindBy: &corepbv1.FindBy{
+			Auth: &corepbv1.AuthInfo{
+				Provider:   params.Oauth.Provider,
+				ProviderId: info.Id,
+			},
 		},
 	})
 	if err != nil {
@@ -132,8 +134,8 @@ func (svc *OauthUserServer) UpsertUser(ctx context.Context, params *corepbv1.Aut
 		}
 	}
 
-	if user != nil {
-		return &corepbv1.AuthUserUpsertResult{UserId: user.Id, Created: false}, nil
+	if findBy != nil {
+		return &corepbv1.AuthUserServiceUpsertUserResponse{UserId: findBy.User.Id, Created: false}, nil
 	}
 
 	if info.Email == "" {
@@ -141,18 +143,24 @@ func (svc *OauthUserServer) UpsertUser(ctx context.Context, params *corepbv1.Aut
 		return nil, twirp.InvalidArgumentError("email", "provider didn't send email address")
 	}
 
-	user, err = svc.user.FindBy(ctx, &corepbv1.UserFindParam{Email: info.Email})
+	findBy, err = svc.user.FindBy(ctx, &corepbv1.FindByRequest{
+		FindBy: &corepbv1.FindBy{
+			Email: info.Email,
+		},
+	})
 	if err != nil {
 		if e, ok := err.(twirp.Error); !ok || e.Code() != twirp.NotFound {
 			log.With("error", err).Info("Failed to lookup user")
 			return nil, twirp.InternalErrorWith(err)
 		}
 	}
+
+	userId := ""
 	created := false
-	if user == nil || user.Id == "" {
+	if findBy == nil || findBy.User.Id == "" {
 		log.With("email", info.Email).Info("Creating new user")
 		created = true
-		user, err = svc.user.Create(ctx, &corepbv1.UserCreateParam{
+		newUser, err := svc.user.Create(ctx, &corepbv1.UserServiceCreateRequest{
 			Email: info.Email,
 			Name:  info.Name,
 			// TODO - create as "ACTIVE" since we "know" the email is good
@@ -160,16 +168,17 @@ func (svc *OauthUserServer) UpsertUser(ctx context.Context, params *corepbv1.Aut
 		if err != nil {
 			log.With("error", err).Info("Unable to create user")
 			return nil, twirp.InternalErrorWith(err)
-
 		}
+		userId = newUser.User.Id
 	} else {
-		log.With("email", user.Email).Info("User already exists, associating")
+		userId = findBy.User.Id
+		log.With("email", findBy.User.Email).Info("User already exists, associating")
 	}
 
 	// Now associate the OAuth token and the UserId
 	// TODO - save the token!
-	_, err = svc.user.AuthAssociate(ctx, &corepbv1.AuthAssociateParam{
-		UserId: user.Id,
+	_, err = svc.user.AuthAssociate(ctx, &corepbv1.AuthAssociateRequest{
+		UserId: userId,
 		Auth: &corepbv1.AuthInfo{
 			Provider:   params.Oauth.Provider,
 			ProviderId: info.Id,
@@ -180,13 +189,13 @@ func (svc *OauthUserServer) UpsertUser(ctx context.Context, params *corepbv1.Aut
 		return nil, twirp.InternalErrorWith(err)
 	}
 
-	return &corepbv1.AuthUserUpsertResult{UserId: user.Id, Created: created}, nil
+	return &corepbv1.AuthUserServiceUpsertUserResponse{UserId: userId, Created: created}, nil
 }
 
-func (s *OauthUserServer) ListAssociations(ctx context.Context, params *corepbv1.AuthUserGetParams) (*corepbv1.AuthUserListAssoicationsResponse, error) {
-	return &corepbv1.AuthUserListAssoicationsResponse{}, nil
+func (s *OauthUserServer) ListAssociations(ctx context.Context, params *corepbv1.AuthUserServiceListAssociationsRequest) (*corepbv1.AuthUserServiceListAssociationsResponse, error) {
+	return &corepbv1.AuthUserServiceListAssociationsResponse{}, nil
 }
 
-func (s *OauthUserServer) RemoveAssociation(ctx context.Context, params *corepbv1.AuthUserGetParams) (*corepbv1.Empty, error) {
-	return &corepbv1.Empty{}, nil
+func (s *OauthUserServer) RemoveAssociation(ctx context.Context, params *corepbv1.AuthUserServiceRemoveAssociationRequest) (*corepbv1.AuthUserServiceRemoveAssociationResponse, error) {
+	return &corepbv1.AuthUserServiceRemoveAssociationResponse{}, nil
 }

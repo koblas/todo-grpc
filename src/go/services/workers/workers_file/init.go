@@ -19,7 +19,7 @@ type Worker struct {
 type WorkerConfig struct {
 	config      Config
 	onlyHandler string
-	pubsub      corepbv1.FileEventbus
+	pubsub      corepbv1.FileEventbusService
 	// fileService corepbv1.FileService
 	fileService filestore.Filestore
 	userService corepbv1.UserService
@@ -33,7 +33,7 @@ func WithOnly(item string) Option {
 	}
 }
 
-func WithProducer(bus corepbv1.FileEventbus) Option {
+func WithProducer(bus corepbv1.FileEventbusService) Option {
 	return func(cfg *WorkerConfig) {
 		cfg.pubsub = bus
 	}

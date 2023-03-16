@@ -21,7 +21,7 @@ func main() {
 
 	log.With(zap.String("eventArn", config.EventArn)).Info("Constructing producer")
 	// eventbus := corepbv1.NewTodoEventbusProtobufClient(config.EventArn, awsutil.NewTwirpCallLambda())
-	producer := corepbv1.NewTodoEventbusJSONClient(
+	producer := corepbv1.NewTodoEventbusServiceJSONClient(
 		config.EventArn,
 		awsutil.NewTwirpCallLambda(),
 	)

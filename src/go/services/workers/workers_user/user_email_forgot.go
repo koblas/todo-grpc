@@ -25,23 +25,23 @@ type userEmailForgot struct {
 func NewUserEmailForgot(config WorkerConfig) corepbv1.TwirpServer {
 	svc := &userEmailForgot{WorkerConfig: config}
 
-	return corepbv1.NewUserEventbusServer(svc)
+	return corepbv1.NewUserEventbusServiceServer(svc)
 }
 
-func (cfg *userEmailForgot) SecurityForgotRequest(ctx context.Context, msg *corepbv1.UserSecurityEvent) (*corepbv1.EventbusEmpty, error) {
+func (cfg *userEmailForgot) SecurityForgotRequest(ctx context.Context, msg *corepbv1.UserSecurityEvent) (*corepbv1.UserEventbusSecurityForgotRequestResponse, error) {
 	log := logger.FromContext(ctx).With(zap.Int32("action", int32(msg.Action))).With(zap.String("email", msg.User.Email))
 
 	log.Info("processing message")
-	if msg.Action != corepbv1.UserSecurity_USER_FORGOT_REQUEST {
-		return &corepbv1.EventbusEmpty{}, nil
+	if msg.Action != corepbv1.UserSecurity_USER_SECURITY_USER_FORGOT_REQUEST {
+		return &corepbv1.UserEventbusSecurityForgotRequestResponse{}, nil
 	}
 
 	tokenValue, err := decodeSecure(log, msg.Token)
 	if err != nil {
-		return &corepbv1.EventbusEmpty{}, err
+		return &corepbv1.UserEventbusSecurityForgotRequestResponse{}, err
 	}
 
-	params := corepbv1.EmailPasswordRecoveryParam{
+	params := corepbv1.PasswordRecoveryMessageRequest{
 		AppInfo: buildAppInfo(cfg.config),
 		Recipient: &corepbv1.EmailUser{
 			UserId: msg.User.Id,
@@ -59,5 +59,5 @@ func (cfg *userEmailForgot) SecurityForgotRequest(ctx context.Context, msg *core
 		}
 	}
 
-	return &corepbv1.EventbusEmpty{}, err
+	return &corepbv1.UserEventbusSecurityForgotRequestResponse{}, err
 }

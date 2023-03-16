@@ -35,6 +35,6 @@ func main() {
 
 	mgr.Start(nats.TopicConsumer(
 		mgr.Context(),
-		natsutil.TwirpPathToNatsTopic(corepbv1.UserEventbusPathPrefix),
+		natsutil.TwirpPathToNatsTopic(corepbv1.UserEventbusServicePathPrefix),
 		s))
 }

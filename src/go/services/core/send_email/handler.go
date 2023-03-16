@@ -11,17 +11,17 @@ import (
 
 type SendEmailServer struct {
 	sender Sender
-	pubsub corepbv1.SendEmailEvents
+	pubsub corepbv1.SendEmailEventsService
 }
 
 // This is really hear to make it easy to make sure that you've
 //
 //	tied the correct event to the template that will be sent
 var templates map[corepbv1.EmailTemplate]emailContent = map[corepbv1.EmailTemplate]emailContent{
-	corepbv1.EmailTemplate_USER_REGISTERED:   registerUser,
-	corepbv1.EmailTemplate_USER_INVITED:      inviteUser,
-	corepbv1.EmailTemplate_PASSWORD_CHANGE:   passwordChange,
-	corepbv1.EmailTemplate_PASSWORD_RECOVERY: passwordRecovery,
+	corepbv1.EmailTemplate_EMAIL_TEMPLATE_USER_REGISTERED:   registerUser,
+	corepbv1.EmailTemplate_EMAIL_TEMPLATE_USER_INVITED:      inviteUser,
+	corepbv1.EmailTemplate_EMAIL_TEMPLATE_PASSWORD_CHANGE:   passwordChange,
+	corepbv1.EmailTemplate_EMAIL_TEMPLATE_PASSWORD_RECOVERY: passwordRecovery,
 }
 
 type Handler struct {
@@ -36,7 +36,7 @@ func (h Handler) Handler() corepbv1.TwirpServer {
 	return h.handler
 }
 
-func NewSendEmailServer(producer corepbv1.SendEmailEvents, sender Sender) []manager.MsgHandler {
+func NewSendEmailServer(producer corepbv1.SendEmailEventsService, sender Sender) []manager.MsgHandler {
 	// pubsub, err := redisqueue.NewProducerWithOptions(&redisqueue.ProducerOptions{
 	// 	StreamMaxLength:      1000,
 	// 	ApproximateMaxLength: true,
@@ -57,7 +57,7 @@ func NewSendEmailServer(producer corepbv1.SendEmailEvents, sender Sender) []mana
 	}
 }
 
-func NewSendEmailServerServer(producer corepbv1.SendEmailEvents, sender Sender) corepbv1.SendEmailService {
+func NewSendEmailServerServer(producer corepbv1.SendEmailEventsService, sender Sender) corepbv1.SendEmailService {
 	server := SendEmailServer{
 		pubsub: producer,
 		sender: sender,
@@ -67,7 +67,7 @@ func NewSendEmailServerServer(producer corepbv1.SendEmailEvents, sender Sender) 
 
 }
 
-func (s *SendEmailServer) RegisterMessage(ctx context.Context, params *corepbv1.EmailRegisterParam) (*corepbv1.EmailOkResponse, error) {
+func (s *SendEmailServer) RegisterMessage(ctx context.Context, params *corepbv1.RegisterMessageRequest) (*corepbv1.RegisterMessageResponse, error) {
 	recipient := params.Recipient.Email
 	sender := params.Recipient.Email
 	data := Params{
@@ -81,14 +81,14 @@ func (s *SendEmailServer) RegisterMessage(ctx context.Context, params *corepbv1.
 		"Token":   params.Token,
 	}
 
-	if err := s.simpleSend(ctx, sender, recipient, data, corepbv1.EmailTemplate_USER_REGISTERED, params.ReferenceId); err != nil {
+	if err := s.simpleSend(ctx, sender, recipient, data, corepbv1.EmailTemplate_EMAIL_TEMPLATE_USER_REGISTERED, params.ReferenceId); err != nil {
 		return nil, err
 	}
 
-	return &corepbv1.EmailOkResponse{Ok: true}, nil
+	return &corepbv1.RegisterMessageResponse{}, nil
 }
 
-func (s *SendEmailServer) PasswordChangeMessage(ctx context.Context, params *corepbv1.EmailPasswordChangeParam) (*corepbv1.EmailOkResponse, error) {
+func (s *SendEmailServer) PasswordChangeMessage(ctx context.Context, params *corepbv1.PasswordChangeMessageRequest) (*corepbv1.PasswordChangeMessageResponse, error) {
 	recipient := params.Recipient.Email
 	sender := params.Recipient.Email
 	data := Params{
@@ -101,14 +101,14 @@ func (s *SendEmailServer) PasswordChangeMessage(ctx context.Context, params *cor
 		"URLBase": params.AppInfo.UrlBase,
 	}
 
-	if err := s.simpleSend(ctx, sender, recipient, data, corepbv1.EmailTemplate_PASSWORD_CHANGE, params.ReferenceId); err != nil {
+	if err := s.simpleSend(ctx, sender, recipient, data, corepbv1.EmailTemplate_EMAIL_TEMPLATE_PASSWORD_CHANGE, params.ReferenceId); err != nil {
 		return nil, err
 	}
 
-	return &corepbv1.EmailOkResponse{Ok: true}, nil
+	return &corepbv1.PasswordChangeMessageResponse{}, nil
 }
 
-func (s *SendEmailServer) PasswordRecoveryMessage(ctx context.Context, params *corepbv1.EmailPasswordRecoveryParam) (*corepbv1.EmailOkResponse, error) {
+func (s *SendEmailServer) PasswordRecoveryMessage(ctx context.Context, params *corepbv1.PasswordRecoveryMessageRequest) (*corepbv1.PasswordRecoveryMessageResponse, error) {
 	recipient := params.Recipient.Email
 	sender := params.Recipient.Email
 	data := Params{
@@ -122,14 +122,14 @@ func (s *SendEmailServer) PasswordRecoveryMessage(ctx context.Context, params *c
 		"Token":   params.Token,
 	}
 
-	if err := s.simpleSend(ctx, sender, recipient, data, corepbv1.EmailTemplate_PASSWORD_RECOVERY, params.ReferenceId); err != nil {
+	if err := s.simpleSend(ctx, sender, recipient, data, corepbv1.EmailTemplate_EMAIL_TEMPLATE_PASSWORD_RECOVERY, params.ReferenceId); err != nil {
 		return nil, err
 	}
 
-	return &corepbv1.EmailOkResponse{Ok: true}, nil
+	return &corepbv1.PasswordRecoveryMessageResponse{}, nil
 }
 
-func (s *SendEmailServer) InviteUserMessage(ctx context.Context, params *corepbv1.EmailInviteUserParam) (*corepbv1.EmailOkResponse, error) {
+func (s *SendEmailServer) InviteUserMessage(ctx context.Context, params *corepbv1.InviteUserMessageRequest) (*corepbv1.InviteUserMessageResponse, error) {
 	recipient := params.Recipient.Email
 	sender := params.Recipient.Email
 	data := Params{
@@ -148,11 +148,11 @@ func (s *SendEmailServer) InviteUserMessage(ctx context.Context, params *corepbv
 		"Token":   params.Token,
 	}
 
-	if err := s.simpleSend(ctx, sender, recipient, data, corepbv1.EmailTemplate_USER_INVITED, params.ReferenceId); err != nil {
+	if err := s.simpleSend(ctx, sender, recipient, data, corepbv1.EmailTemplate_EMAIL_TEMPLATE_USER_INVITED, params.ReferenceId); err != nil {
 		return nil, err
 	}
 
-	return &corepbv1.EmailOkResponse{Ok: true}, nil
+	return &corepbv1.InviteUserMessageResponse{}, nil
 }
 
 // One stop shop to send a message
@@ -178,7 +178,7 @@ func (svc *SendEmailServer) simpleSend(ctx context.Context, sender, recipient st
 }
 
 func (svc *SendEmailServer) notify(ctx context.Context, messageId string, recipient string, tmpl corepbv1.EmailTemplate, referenceId string) error {
-	_, err := svc.pubsub.NotifySent(ctx, &corepbv1.EmailSentEvent{
+	_, err := svc.pubsub.NotifyEmailSent(ctx, &corepbv1.NotifyEmailSentRequest{
 		RecipientEmail: recipient,
 		MessageId:      messageId,
 		Template:       tmpl,

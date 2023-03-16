@@ -58,7 +58,7 @@ func NewBroadcastServer(opts ...Option) []manager.MsgHandler {
 
 	return []manager.MsgHandler{
 		&BroadcastServerHandler{
-			handler: corepbv1.NewBroadcastEventbusServer(&svr),
+			handler: corepbv1.NewBroadcastEventbusServiceServer(&svr),
 		},
 	}
 }
@@ -71,7 +71,7 @@ func (svc *BroadcastServerHandler) Handler() corepbv1.TwirpServer {
 	return svc.handler
 }
 
-func (svc *BroadcastServer) Send(ctx context.Context, event *corepbv1.BroadcastEvent) (*corepbv1.EventbusEmpty, error) {
+func (svc *BroadcastServer) Send(ctx context.Context, event *corepbv1.BroadcastEvent) (*corepbv1.BroadcastEventbusSendResponse, error) {
 	log := logger.FromContext(ctx).With(zap.String("userId", event.Filter.UserId))
 	log.Info("received broadcast event")
 
@@ -118,5 +118,5 @@ func (svc *BroadcastServer) Send(ctx context.Context, event *corepbv1.BroadcastE
 		log.With("count", len(conns), "success", success).Info("send partial failure")
 	}
 
-	return &corepbv1.EventbusEmpty{}, nil
+	return &corepbv1.BroadcastEventbusSendResponse{}, nil
 }

@@ -6,13 +6,14 @@ import (
 	"github.com/oklog/ulid/v2"
 )
 
-func buildObjectKey(params *FilePutParams) string {
+func buildObjectKey(params *FilePutParams) (string, string) {
+	id := ulid.Make().String()
 	path := strings.Replace(strings.Join([]string{
 		params.Prefix,
 		params.FileType,
 		params.UserId,
-		ulid.Make().String() + params.Suffix,
+		id + params.Suffix,
 	}, "/"), "//", "/", -1)
 
-	return strings.TrimPrefix(path, "/")
+	return strings.TrimPrefix(path, "/"), id
 }

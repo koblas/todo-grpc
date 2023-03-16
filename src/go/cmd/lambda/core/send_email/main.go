@@ -19,7 +19,7 @@ func main() {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
-	producer := corepbv1.NewSendEmailEventsProtobufClient(
+	producer := corepbv1.NewSendEmailEventsServiceProtobufClient(
 		config.EventArn,
 		awsutil.NewTwirpCallLambda(),
 	)

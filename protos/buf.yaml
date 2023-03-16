@@ -5,3 +5,7 @@ breaking:
 lint:
   use:
     - DEFAULT
+  except:
+    - RPC_PASCAL_CASE
+    - SERVICE_PASCAL_CASE
+

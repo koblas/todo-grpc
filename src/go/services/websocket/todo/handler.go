@@ -13,7 +13,7 @@ import (
 )
 
 type TodoServer struct {
-	producer corepbv1.BroadcastEventbus
+	producer corepbv1.BroadcastEventbusService
 }
 
 type SocketMessage struct {
@@ -25,7 +25,7 @@ type SocketMessage struct {
 
 type Option func(*TodoServer)
 
-func WithProducer(producer corepbv1.BroadcastEventbus) Option {
+func WithProducer(producer corepbv1.BroadcastEventbusService) Option {
 	return func(conf *TodoServer) {
 		conf.producer = producer
 	}
@@ -44,7 +44,7 @@ func NewTodoChangeServer(opts ...Option) []manager.MsgHandler {
 
 	return []manager.MsgHandler{
 		&TodoServerHandler{
-			handler: corepbv1.NewTodoEventbusServer(&svr),
+			handler: corepbv1.NewTodoEventbusServiceServer(&svr),
 		},
 	}
 }
@@ -57,7 +57,7 @@ func (svc *TodoServerHandler) Handler() corepbv1.TwirpServer {
 	return svc.handler
 }
 
-func (svc *TodoServer) TodoChange(ctx context.Context, event *corepbv1.TodoChangeEvent) (*corepbv1.EventbusEmpty, error) {
+func (svc *TodoServer) TodoChange(ctx context.Context, event *corepbv1.TodoChangeEvent) (*corepbv1.TodoEventbusTodoChangeResponse, error) {
 	log := logger.FromContext(ctx)
 	log.Info("received todo event")
 
@@ -105,5 +105,5 @@ func (svc *TodoServer) TodoChange(ctx context.Context, event *corepbv1.TodoChang
 		log.With(zap.Error(err)).Error("failed to send to websocket")
 	}
 
-	return &corepbv1.EventbusEmpty{}, nil
+	return &corepbv1.TodoEventbusTodoChangeResponse{}, nil
 }

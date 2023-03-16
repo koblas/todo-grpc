@@ -67,7 +67,7 @@ func (provider *MinioProvider) UploadUrl(ctx context.Context, params *FilePutPar
 		return nil, err
 	}
 
-	key := buildObjectKey(params)
+	key, id := buildObjectKey(params)
 
 	policy := minio.NewPostPolicy()
 	policy.SetBucket(params.Bucket)
@@ -88,7 +88,7 @@ func (provider *MinioProvider) UploadUrl(ctx context.Context, params *FilePutPar
 		zap.String("objectKey", key),
 	).Info("generated S3 path")
 
-	return &FilePutResponse{result.String()}, nil
+	return &FilePutResponse{result.String(), id}, nil
 }
 
 func (provider *MinioProvider) GetFile(ctx context.Context, params *FileGetParams) (io.Reader, error) {
@@ -116,7 +116,7 @@ func (provider *MinioProvider) PutFile(ctx context.Context, params *FilePutParam
 		return nil, err
 	}
 
-	key := buildObjectKey(params)
+	key, _ := buildObjectKey(params)
 
 	if err := provider.verifyBucket(ctx, params.Bucket); err != nil {
 		return nil, err

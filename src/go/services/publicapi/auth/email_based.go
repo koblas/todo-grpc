@@ -12,7 +12,7 @@ import (
 )
 
 // Authenticate the user with email and password (aka Login)
-func (s AuthenticationServer) Authenticate(ctx context.Context, params *apipbv1.LoginParams) (*apipbv1.Token, error) {
+func (s AuthenticationServer) Authenticate(ctx context.Context, params *apipbv1.AuthenticateRequest) (*apipbv1.AuthenticateResponse, error) {
 	log := logger.FromContext(ctx).With("email", params.Email)
 	log.Info("Authenticate")
 
@@ -53,7 +53,7 @@ func (s AuthenticationServer) Authenticate(ctx context.Context, params *apipbv1.
 	// }
 
 	// log = log.With("user_id", user.Id)
-	userParam, err := s.userClient.ComparePassword(ctx, &corepbv1.AuthenticateParam{
+	userParam, err := s.userClient.ComparePassword(ctx, &corepbv1.ComparePasswordRequest{
 		Email:    params.Email,
 		Password: params.Password,
 	})
@@ -69,10 +69,14 @@ func (s AuthenticationServer) Authenticate(ctx context.Context, params *apipbv1.
 		s.attempts.Reset(ctx, "login", attemptsKey)
 	}
 
-	return s.returnToken(ctx, userParam.UserId)
+	token, err := s.returnToken(ctx, userParam.UserId)
+	if err != nil {
+		return nil, err
+	}
+	return &apipbv1.AuthenticateResponse{Token: token}, nil
 }
 
-func (s AuthenticationServer) Register(ctx context.Context, params *apipbv1.RegisterParams) (*apipbv1.TokenRegister, error) {
+func (s AuthenticationServer) Register(ctx context.Context, params *apipbv1.RegisterRequest) (*apipbv1.RegisterResponse, error) {
 	log := logger.FromContext(ctx).With("email", params.Email)
 	log.Info("Register")
 
@@ -80,8 +84,8 @@ func (s AuthenticationServer) Register(ctx context.Context, params *apipbv1.Regi
 		return nil, twirp.InvalidArgumentError("password", "password too short").WithMeta("password", "Password must be 8 characters")
 	}
 
-	user, err := s.userClient.Create(ctx, &corepbv1.UserCreateParam{
-		Status:   corepbv1.UserStatus_REGISTERED,
+	user, err := s.userClient.Create(ctx, &corepbv1.UserServiceCreateRequest{
+		Status:   corepbv1.UserStatus_USER_STATUS_REGISTERED,
 		Email:    params.Email,
 		Password: params.Password,
 		Name:     params.Name,
@@ -91,23 +95,25 @@ func (s AuthenticationServer) Register(ctx context.Context, params *apipbv1.Regi
 		return nil, twirp.InvalidArgumentError("email", "Unable to create").WithMeta("email", "Duplicate Email")
 	}
 
-	token, err := s.returnToken(ctx, user.Id)
+	token, err := s.returnToken(ctx, user.User.Id)
 	if err != nil {
 		return nil, err
 	}
-	return &apipbv1.TokenRegister{
+	return &apipbv1.RegisterResponse{
 		Token:   token,
 		Created: true,
 	}, nil
 }
 
-func (s AuthenticationServer) VerifyEmail(ctx context.Context, params *apipbv1.ConfirmParams) (*apipbv1.Success, error) {
+func (s AuthenticationServer) VerifyEmail(ctx context.Context, params *apipbv1.VerifyEmailRequest) (*apipbv1.VerifyEmailResponse, error) {
 	log := logger.FromContext(ctx)
 	log.Info("Verify register user")
 
-	user, err := s.userClient.VerificationVerify(ctx, &corepbv1.VerificationParam{
-		UserId: params.UserId,
-		Token:  params.Token,
+	user, err := s.userClient.VerificationVerify(ctx, &corepbv1.VerificationVerifyRequest{
+		Verification: &corepbv1.Verification{
+			UserId: params.UserId,
+			Token:  params.Token,
+		},
 	})
 	if err != nil {
 		log.With("error", err).Info("Recover Send")
@@ -116,12 +122,10 @@ func (s AuthenticationServer) VerifyEmail(ctx context.Context, params *apipbv1.C
 		return nil, twirp.InvalidArgumentError("token", "not found").WithMeta("token", "Not Found")
 	}
 
-	return &apipbv1.Success{
-		Success: true,
-	}, nil
+	return &apipbv1.VerifyEmailResponse{}, nil
 }
 
-func (s AuthenticationServer) RecoverSend(ctx context.Context, params *apipbv1.RecoverySendParams) (*apipbv1.Success, error) {
+func (s AuthenticationServer) RecoverSend(ctx context.Context, params *apipbv1.RecoverSendRequest) (*apipbv1.RecoverSendResponse, error) {
 	log := logger.FromContext(ctx).With("email", params.Email)
 	log.Info("Recover Send")
 
@@ -135,8 +139,10 @@ func (s AuthenticationServer) RecoverSend(ctx context.Context, params *apipbv1.R
 		log.With("error", err).Error("RecoverSend/redis unable to fetch attempts keys")
 	}
 
-	user, err := s.userClient.ForgotSend(ctx, &corepbv1.UserFindParam{
-		Email: params.Email,
+	user, err := s.userClient.ForgotSend(ctx, &corepbv1.ForgotSendRequest{
+		FindBy: &corepbv1.FindBy{
+			Email: params.Email,
+		},
 	})
 	if err != nil {
 		log.With("error", err).Info("Recover Send")
@@ -150,18 +156,18 @@ func (s AuthenticationServer) RecoverSend(ctx context.Context, params *apipbv1.R
 		}
 	}
 
-	return &apipbv1.Success{
-		Success: true,
-	}, nil
+	return &apipbv1.RecoverSendResponse{}, nil
 }
 
-func (s AuthenticationServer) RecoverVerify(ctx context.Context, params *apipbv1.RecoveryUpdateParams) (*apipbv1.Success, error) {
+func (s AuthenticationServer) RecoverVerify(ctx context.Context, params *apipbv1.RecoverVerifyRequest) (*apipbv1.RecoverVerifyResponse, error) {
 	log := logger.FromContext(ctx).With("user_id", params.UserId)
 	log.Info("Recover Verify")
 
-	user, err := s.userClient.ForgotVerify(ctx, &corepbv1.VerificationParam{
-		UserId: params.UserId,
-		Token:  params.Token,
+	user, err := s.userClient.ForgotVerify(ctx, &corepbv1.ForgotVerifyRequest{
+		Verification: &corepbv1.Verification{
+			UserId: params.UserId,
+			Token:  params.Token,
+		},
 	})
 	if err != nil {
 		log.With("error", err).Info("Recover Verify")
@@ -170,19 +176,19 @@ func (s AuthenticationServer) RecoverVerify(ctx context.Context, params *apipbv1
 		return nil, twirp.InvalidArgumentError("token", "not found").WithMeta("token", "Not found")
 	}
 
-	return &apipbv1.Success{
-		Success: true,
-	}, nil
+	return &apipbv1.RecoverVerifyResponse{}, nil
 }
 
-func (s AuthenticationServer) RecoverUpdate(ctx context.Context, params *apipbv1.RecoveryUpdateParams) (*apipbv1.Token, error) {
+func (s AuthenticationServer) RecoverUpdate(ctx context.Context, params *apipbv1.RecoverUpdateRequest) (*apipbv1.RecoverUpdateResponse, error) {
 	log := logger.FromContext(ctx)
 	log.Info("Recover Update password")
 
-	user, err := s.userClient.ForgotUpdate(ctx, &corepbv1.VerificationParam{
-		UserId:   params.UserId,
-		Token:    params.Token,
-		Password: params.Password,
+	user, err := s.userClient.ForgotUpdate(ctx, &corepbv1.ForgotUpdateRequest{
+		Verification: &corepbv1.Verification{
+			UserId:   params.UserId,
+			Token:    params.Token,
+			Password: params.Password,
+		},
 	})
 	if err != nil || user == nil {
 		log.With("error", err).Info("Recover Update")
@@ -190,5 +196,9 @@ func (s AuthenticationServer) RecoverUpdate(ctx context.Context, params *apipbv1
 		return nil, twirp.InvalidArgumentError("token", "not found").WithMeta("token", "Not found")
 	}
 
-	return s.returnToken(ctx, user.Id)
+	token, err := s.returnToken(ctx, user.User.Id)
+	if err != nil {
+		return nil, err
+	}
+	return &apipbv1.RecoverUpdateResponse{Token: token}, nil
 }

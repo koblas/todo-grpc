@@ -19,7 +19,7 @@ func main() {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
-	producer := corepbv1.NewBroadcastEventbusJSONClient(
+	producer := corepbv1.NewBroadcastEventbusServiceJSONClient(
 		conf.EventArn,
 		awsutil.NewTwirpCallLambda(),
 	)

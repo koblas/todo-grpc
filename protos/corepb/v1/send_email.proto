@@ -22,27 +22,27 @@ message EmailAppInfo {
 //
 //  Specific messages
 //
-message EmailRegisterParam {
+message RegisterMessageRequest {
   EmailAppInfo app_info = 1;
   EmailUser recipient = 3;
   string reference_id = 4;
   string token = 5;
 }
 
-message EmailPasswordChangeParam {
+message PasswordChangeMessageRequest {
   EmailAppInfo app_info = 1;
   EmailUser recipient = 3;
   string reference_id = 4;
 }
 
-message EmailPasswordRecoveryParam {
+message PasswordRecoveryMessageRequest {
   EmailAppInfo app_info = 1;
   EmailUser recipient = 3;
   string reference_id = 4;
   string token = 5;
 }
 
-message EmailInviteUserParam {
+message InviteUserMessageRequest {
   EmailAppInfo app_info = 1;
   EmailUser sender = 2;
   EmailUser recipient = 3;
@@ -50,18 +50,23 @@ message EmailInviteUserParam {
   string token = 5;
 }
 
-message EmailOkResponse { bool ok = 1; }
+// message EmailOkResponse { bool ok = 1; }
+message RegisterMessageResponse { }
+message PasswordChangeMessageResponse { }
+message PasswordRecoveryMessageResponse { }
+message InviteUserMessageResponse { }
+message NotifyEmailSentResponse { }
 
 // For pubsub listeners
 enum EmailTemplate {
-  UNDEFINED = 0;
-  USER_REGISTERED = 1;
-  USER_INVITED = 2;
-  PASSWORD_RECOVERY = 3;
-  PASSWORD_CHANGE = 4;
+  EMAIL_TEMPLATE_UNSPECIFIED = 0;
+  EMAIL_TEMPLATE_USER_REGISTERED = 1;
+  EMAIL_TEMPLATE_USER_INVITED = 2;
+  EMAIL_TEMPLATE_PASSWORD_RECOVERY = 3;
+  EMAIL_TEMPLATE_PASSWORD_CHANGE = 4;
 }
 
-message EmailSentEvent {
+message NotifyEmailSentRequest {
   string recipient_email = 1;
   string message_id = 2;
   EmailTemplate template = 3;
@@ -71,15 +76,15 @@ message EmailSentEvent {
 //
 
 service SendEmailService {
-  rpc RegisterMessage(EmailRegisterParam) returns (EmailOkResponse) {}
-  rpc PasswordChangeMessage(EmailPasswordChangeParam)
-      returns (EmailOkResponse) {}
-  rpc PasswordRecoveryMessage(EmailPasswordRecoveryParam)
-      returns (EmailOkResponse) {}
-  rpc InviteUserMessage(EmailInviteUserParam) returns (EmailOkResponse) {}
+  rpc RegisterMessage(RegisterMessageRequest) returns (RegisterMessageResponse) {}
+  rpc PasswordChangeMessage(PasswordChangeMessageRequest)
+      returns (PasswordChangeMessageResponse) {}
+  rpc PasswordRecoveryMessage(PasswordRecoveryMessageRequest)
+      returns (PasswordRecoveryMessageResponse) {}
+  rpc InviteUserMessage(InviteUserMessageRequest) returns (InviteUserMessageResponse) {}
 }
 
-service SendEmailEvents {
+service SendEmailEventsService {
   // The notification channel
-  rpc NotifySent(EmailSentEvent) returns (EmailOkResponse) {}
+  rpc NotifyEmailSent(NotifyEmailSentRequest) returns (NotifyEmailSentResponse) {}
 }

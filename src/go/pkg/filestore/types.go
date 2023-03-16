@@ -23,6 +23,7 @@ type FilePutParams struct {
 }
 type FilePutResponse struct {
 	Url string
+	Id  string
 }
 
 type FileGetParams struct {

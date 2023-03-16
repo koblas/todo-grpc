@@ -9,33 +9,46 @@ import "corepb/v1/websocket.proto";
 
 message EventbusEmpty {}
 
+message BroadcastEventbusSendResponse {}
+
 // Websocket broadcast event
-service BroadcastEventbus {
-  rpc Send(corepb.v1.BroadcastEvent) returns (EventbusEmpty);
+service BroadcastEventbusService {
+  rpc Send(corepb.v1.BroadcastEvent) returns (BroadcastEventbusSendResponse);
 }
 
-service UserEventbus {
-  rpc UserChange(corepb.v1.UserChangeEvent) returns (EventbusEmpty);
+message UserEventbusUserChangeResponse {}
+message UserEventbusSecurityPasswordChangeResponse {}
+message UserEventbusSecurityForgotRequestResponse {}
+message UserEventbusSecurityRegisterTokenResponse {}
+message UserEventbusSecurityInviteTokenResponse {}
+
+service UserEventbusService {
+  rpc UserChange(corepb.v1.UserChangeEvent) returns (UserEventbusUserChangeResponse);
 
   // Password change notification
   rpc SecurityPasswordChange(corepb.v1.UserSecurityEvent)
-      returns (EventbusEmpty);
+      returns (UserEventbusSecurityPasswordChangeResponse);
   // Forgot password request notfication
   rpc SecurityForgotRequest(corepb.v1.UserSecurityEvent)
-      returns (EventbusEmpty);
+      returns (UserEventbusSecurityForgotRequestResponse);
   // New user registration
   rpc SecurityRegisterToken(corepb.v1.UserSecurityEvent)
-      returns (EventbusEmpty);
+      returns (UserEventbusSecurityRegisterTokenResponse);
   // Invite sent
   rpc SecurityInviteToken(corepb.v1.UserSecurityEvent)
-      returns (EventbusEmpty);
+      returns (UserEventbusSecurityInviteTokenResponse);
 }
 
-service TodoEventbus {
-  rpc TodoChange(corepb.v1.TodoChangeEvent) returns (EventbusEmpty);
+message TodoEventbusTodoChangeResponse {}
+
+service TodoEventbusService {
+  rpc TodoChange(corepb.v1.TodoChangeEvent) returns (TodoEventbusTodoChangeResponse);
 }
 
-service FileEventbus {
-  rpc FileUploaded(corepb.v1.FileServiceUploadEvent) returns (EventbusEmpty);
-  rpc FileComplete(corepb.v1.FileServiceCompleteEvent) returns (EventbusEmpty);
+message FileEventbusFileUploadedResponse {}
+message FileEventbusFileCompleteResponse {}
+
+service FileEventbusService {
+  rpc FileUploaded(corepb.v1.FileServiceUploadEvent) returns (FileEventbusFileUploadedResponse);
+  rpc FileComplete(corepb.v1.FileServiceCompleteEvent) returns (FileEventbusFileCompleteResponse);
 }

@@ -21,7 +21,7 @@ type Config struct {
 }
 
 type Handler struct {
-	produer corepbv1.FileEventbus
+	produer corepbv1.FileEventbusService
 }
 
 func (state *Handler) Start(ctx context.Context) error {
@@ -66,7 +66,7 @@ func main() {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
-	producer := corepbv1.NewFileEventbusJSONClient(
+	producer := corepbv1.NewFileEventbusServiceJSONClient(
 		config.EventArn,
 		awsutil.NewTwirpCallLambda(),
 	)

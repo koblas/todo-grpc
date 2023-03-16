@@ -24,21 +24,21 @@ func (UserId) Prefix() string { return "U" }
 // Server represents the gRPC server
 type UserServer struct {
 	users  UserStore
-	pubsub corepbv1.UserEventbus
+	pubsub corepbv1.UserEventbusService
 	kms    key_manager.Encoder
 }
 
 var pbStatusToStatus = map[corepbv1.UserStatus]UserStatus{
-	corepbv1.UserStatus_ACTIVE:     UserStatus_ACTIVE,
-	corepbv1.UserStatus_INVITED:    UserStatus_INVITED,
-	corepbv1.UserStatus_DISABLED:   UserStatus_DISABLED,
-	corepbv1.UserStatus_REGISTERED: UserStatus_REGISTERED,
+	corepbv1.UserStatus_USER_STATUS_ACTIVE:     UserStatus_ACTIVE,
+	corepbv1.UserStatus_USER_STATUS_INVITED:    UserStatus_INVITED,
+	corepbv1.UserStatus_USER_STATUS_DISABLED:   UserStatus_DISABLED,
+	corepbv1.UserStatus_USER_STATUS_REGISTERED: UserStatus_REGISTERED,
 }
 var statusToPbStatus = map[UserStatus]corepbv1.UserStatus{
-	UserStatus_ACTIVE:     corepbv1.UserStatus_ACTIVE,
-	UserStatus_INVITED:    corepbv1.UserStatus_INVITED,
-	UserStatus_DISABLED:   corepbv1.UserStatus_DISABLED,
-	UserStatus_REGISTERED: corepbv1.UserStatus_REGISTERED,
+	UserStatus_ACTIVE:     corepbv1.UserStatus_USER_STATUS_ACTIVE,
+	UserStatus_INVITED:    corepbv1.UserStatus_USER_STATUS_INVITED,
+	UserStatus_DISABLED:   corepbv1.UserStatus_USER_STATUS_DISABLED,
+	UserStatus_REGISTERED: corepbv1.UserStatus_USER_STATUS_REGISTERED,
 }
 
 type Option func(*UserServer)
@@ -49,7 +49,7 @@ func WithUserStore(store UserStore) Option {
 	}
 }
 
-func WithProducer(bus corepbv1.UserEventbus) Option {
+func WithProducer(bus corepbv1.UserEventbusService) Option {
 	return func(cfg *UserServer) {
 		cfg.pubsub = bus
 	}
@@ -67,7 +67,8 @@ func NewUserServer(opts ...Option) *UserServer {
 	return &svr
 }
 
-func (s *UserServer) FindBy(ctx context.Context, params *corepbv1.UserFindParam) (*corepbv1.User, error) {
+func (s *UserServer) FindBy(ctx context.Context, request *corepbv1.FindByRequest) (*corepbv1.FindByResponse, error) {
+	params := request.FindBy
 	log := logger.FromContext(ctx).With(zap.String("email", params.Email)).With(zap.String("userId", params.UserId))
 	log.Info("FindBy")
 
@@ -98,14 +99,14 @@ func (s *UserServer) FindBy(ctx context.Context, params *corepbv1.UserFindParam)
 
 	log.With("ID", user.ID).Info("found")
 
-	return s.toProtoUser(user), nil
+	return &corepbv1.FindByResponse{User: s.toProtoUser(user)}, nil
 }
 
-func (s *UserServer) Create(ctx context.Context, params *corepbv1.UserCreateParam) (*corepbv1.User, error) {
+func (s *UserServer) Create(ctx context.Context, params *corepbv1.UserServiceCreateRequest) (*corepbv1.UserServiceCreateResponse, error) {
 	log := logger.FromContext(ctx).With(zap.String("email", params.Email))
 	log.Info("Received Create")
 
-	if params.Status != corepbv1.UserStatus_REGISTERED && params.Status != corepbv1.UserStatus_INVITED {
+	if params.Status != corepbv1.UserStatus_USER_STATUS_REGISTERED && params.Status != corepbv1.UserStatus_USER_STATUS_INVITED {
 		log.Error("Bad user status")
 		return nil, fmt.Errorf("invalid user status = %s", params.Status)
 	}
@@ -136,7 +137,7 @@ func (s *UserServer) Create(ctx context.Context, params *corepbv1.UserCreatePara
 	var vExpires time.Time
 	vToken := []byte{}
 	var secret string
-	if params.Status != corepbv1.UserStatus_ACTIVE {
+	if params.Status != corepbv1.UserStatus_USER_STATUS_ACTIVE {
 		var err error
 		vExpires = time.Now().Add(time.Duration(24 * time.Hour))
 		vToken, secret, err = hmacCreate(userId, shortuuid.New())
@@ -188,13 +189,13 @@ func (s *UserServer) Create(ctx context.Context, params *corepbv1.UserCreatePara
 				Token: token,
 			}
 
-			if params.Status == corepbv1.UserStatus_REGISTERED {
-				payload.Action = corepbv1.UserSecurity_USER_REGISTER_TOKEN
+			if params.Status == corepbv1.UserStatus_USER_STATUS_REGISTERED {
+				payload.Action = corepbv1.UserSecurity_USER_SECURITY_USER_REGISTER_TOKEN
 				if _, err := s.pubsub.SecurityRegisterToken(ctx, &payload); err != nil {
 					log.With(zap.Error(err)).Info("user security publish failed")
 				}
-			} else if params.Status == corepbv1.UserStatus_INVITED {
-				payload.Action = corepbv1.UserSecurity_USER_INVITE_TOKEN
+			} else if params.Status == corepbv1.UserStatus_USER_STATUS_INVITED {
+				payload.Action = corepbv1.UserSecurity_USER_SECURITY_USER_INVITE_TOKEN
 				if _, err := s.pubsub.SecurityInviteToken(ctx, &payload); err != nil {
 					log.With(zap.Error(err)).Info("user security publish failed")
 				}
@@ -203,10 +204,10 @@ func (s *UserServer) Create(ctx context.Context, params *corepbv1.UserCreatePara
 		}
 	}
 
-	return s.toProtoUser(&user), nil
+	return &corepbv1.UserServiceCreateResponse{User: s.toProtoUser(&user)}, nil
 }
 
-func (s *UserServer) Update(ctx context.Context, params *corepbv1.UserUpdateParam) (*corepbv1.User, error) {
+func (s *UserServer) Update(ctx context.Context, params *corepbv1.UserServiceUpdateRequest) (*corepbv1.UserServiceUpdateResponse, error) {
 	log := logger.FromContext(ctx).With(zap.String("userId", params.UserId))
 	log.Info("User Update")
 
@@ -301,17 +302,17 @@ func (s *UserServer) Update(ctx context.Context, params *corepbv1.UserUpdatePara
 
 	if params.PasswordNew != nil {
 		if _, err := s.pubsub.SecurityPasswordChange(ctx, &corepbv1.UserSecurityEvent{
-			Action: corepbv1.UserSecurity_USER_PASSWORD_CHANGE,
+			Action: corepbv1.UserSecurity_USER_SECURITY_USER_PASSWORD_CHANGE,
 			User:   s.toProtoUser(&updated),
 		}); err != nil {
 			log.With(zap.Error(err)).Info("user security publish failed")
 		}
 	}
 
-	return s.toProtoUser(&updated), nil
+	return &corepbv1.UserServiceUpdateResponse{User: s.toProtoUser(&updated)}, nil
 }
 
-func (s *UserServer) ComparePassword(ctx context.Context, params *corepbv1.AuthenticateParam) (*corepbv1.UserIdParam, error) {
+func (s *UserServer) ComparePassword(ctx context.Context, params *corepbv1.ComparePasswordRequest) (*corepbv1.ComparePasswordResponse, error) {
 	log := logger.FromContext(ctx).With("email", params.Email)
 	log.Info("check password")
 
@@ -329,12 +330,12 @@ func (s *UserServer) ComparePassword(ctx context.Context, params *corepbv1.Authe
 		return nil, twirp.InvalidArgument.Error("Password mismatch")
 	}
 
-	return &corepbv1.UserIdParam{
+	return &corepbv1.ComparePasswordResponse{
 		UserId: auth.UserID,
 	}, nil
 }
 
-func (s *UserServer) GetSettings(ctx context.Context, params *corepbv1.UserIdParam) (*corepbv1.UserSettings, error) {
+func (s *UserServer) GetSettings(ctx context.Context, params *corepbv1.UserServiceGetSettingsRequest) (*corepbv1.UserServiceGetSettingsResponse, error) {
 	log := logger.FromContext(ctx).With(zap.String("userId", params.UserId))
 	user, err := s.users.GetById(ctx, params.UserId)
 
@@ -347,10 +348,10 @@ func (s *UserServer) GetSettings(ctx context.Context, params *corepbv1.UserIdPar
 		return nil, twirp.NotFound.Error("user ID not found")
 	}
 
-	return s.toProtoSettings(user), nil
+	return &corepbv1.UserServiceGetSettingsResponse{Settings: s.toProtoSettings(user)}, nil
 }
 
-func (s *UserServer) SetSettings(ctx context.Context, params *corepbv1.UserSettingsUpdate) (*corepbv1.UserSettings, error) {
+func (s *UserServer) SetSettings(ctx context.Context, params *corepbv1.UserServiceSetSettingsRequest) (*corepbv1.UserServiceSetSettingsResponse, error) {
 	log := logger.FromContext(ctx).With(zap.String("userId", params.UserId))
 	orig, err := s.users.GetById(ctx, params.UserId)
 
@@ -385,10 +386,10 @@ func (s *UserServer) SetSettings(ctx context.Context, params *corepbv1.UserSetti
 		log.With(zap.Error(err)).Info("user entity publish failed")
 	}
 
-	return s.toProtoSettings(&updated), nil
+	return &corepbv1.UserServiceSetSettingsResponse{Settings: s.toProtoSettings(&updated)}, nil
 }
 
-func (s *UserServer) getUserByVerification(ctx context.Context, params *corepbv1.VerificationParam) (*UserAuth, error) {
+func (s *UserServer) getUserByVerification(ctx context.Context, params *corepbv1.Verification) (*UserAuth, error) {
 	log := logger.FromContext(ctx).With(zap.String("userId", params.UserId))
 	log.Info("getUserByVerification BEGIN")
 
@@ -419,7 +420,8 @@ func (s *UserServer) getUserByVerification(ctx context.Context, params *corepbv1
 }
 
 // Verify the email address is "owned" by you
-func (s *UserServer) VerificationVerify(ctx context.Context, params *corepbv1.VerificationParam) (*corepbv1.User, error) {
+func (s *UserServer) VerificationVerify(ctx context.Context, request *corepbv1.VerificationVerifyRequest) (*corepbv1.VerificationVerifyResponse, error) {
+	params := request.Verification
 	log := logger.FromContext(ctx).With(zap.String("userId", params.UserId))
 	log.Info("Verification email")
 
@@ -460,10 +462,11 @@ func (s *UserServer) VerificationVerify(ctx context.Context, params *corepbv1.Ve
 		log.With(zap.Error(err)).Info("user entity publish failed")
 	}
 
-	return s.toProtoUser(user), nil
+	return &corepbv1.VerificationVerifyResponse{User: s.toProtoUser(user)}, nil
 }
 
-func (s *UserServer) ForgotVerify(ctx context.Context, params *corepbv1.VerificationParam) (*corepbv1.User, error) {
+func (s *UserServer) ForgotVerify(ctx context.Context, request *corepbv1.ForgotVerifyRequest) (*corepbv1.ForgotVerifyResponse, error) {
+	params := request.Verification
 	log := logger.FromContext(ctx).With(zap.String("userId", params.UserId))
 	log.Info("START ForgotVerify")
 
@@ -479,10 +482,11 @@ func (s *UserServer) ForgotVerify(ctx context.Context, params *corepbv1.Verifica
 		return nil, twirp.NotFound.Error("user is disabled")
 	}
 
-	return s.toProtoUser(user), nil
+	return &corepbv1.ForgotVerifyResponse{User: s.toProtoUser(user)}, nil
 }
 
-func (s *UserServer) ForgotUpdate(ctx context.Context, params *corepbv1.VerificationParam) (*corepbv1.User, error) {
+func (s *UserServer) ForgotUpdate(ctx context.Context, request *corepbv1.ForgotUpdateRequest) (*corepbv1.ForgotUpdateResponse, error) {
+	params := request.Verification
 	log := logger.FromContext(ctx).With(zap.String("userId", params.UserId))
 	log.Info("START ForgotUpdate")
 
@@ -538,17 +542,18 @@ func (s *UserServer) ForgotUpdate(ctx context.Context, params *corepbv1.Verifica
 	}
 	if params.Password != "" {
 		if _, err := s.pubsub.SecurityPasswordChange(ctx, &corepbv1.UserSecurityEvent{
-			Action: corepbv1.UserSecurity_USER_PASSWORD_CHANGE,
+			Action: corepbv1.UserSecurity_USER_SECURITY_USER_PASSWORD_CHANGE,
 			User:   s.toProtoUser(user),
 		}); err != nil {
 			log.With(zap.Error(err)).Info("user security publish failed")
 		}
 	}
 
-	return s.toProtoUser(user), nil
+	return &corepbv1.ForgotUpdateResponse{User: s.toProtoUser(user)}, nil
 }
 
-func (s *UserServer) ForgotSend(ctx context.Context, params *corepbv1.UserFindParam) (*corepbv1.User, error) {
+func (s *UserServer) ForgotSend(ctx context.Context, request *corepbv1.ForgotSendRequest) (*corepbv1.ForgotSendResponse, error) {
+	params := request.FindBy
 	log := logger.FromContext(ctx).With(zap.String("userId", params.UserId))
 	log.Info("Forgot send")
 
@@ -585,17 +590,17 @@ func (s *UserServer) ForgotSend(ctx context.Context, params *corepbv1.UserFindPa
 	if token, err := protoutil.SecureValueEncode(s.kms, secret); err != nil {
 		log.With(zap.Error(err)).Info("failed to encrypt token")
 	} else if _, err := s.pubsub.SecurityForgotRequest(ctx, &corepbv1.UserSecurityEvent{
-		Action: corepbv1.UserSecurity_USER_FORGOT_REQUEST,
+		Action: corepbv1.UserSecurity_USER_SECURITY_USER_FORGOT_REQUEST,
 		User:   s.toProtoUser(user),
 		Token:  token,
 	}); err != nil {
 		log.With(zap.Error(err)).Info("user security publish failed")
 	}
 
-	return s.toProtoUser(user), nil
+	return &corepbv1.ForgotSendResponse{User: s.toProtoUser(user)}, nil
 }
 
-func (s *UserServer) AuthAssociate(ctx context.Context, params *corepbv1.AuthAssociateParam) (*corepbv1.UserIdParam, error) {
+func (s *UserServer) AuthAssociate(ctx context.Context, params *corepbv1.AuthAssociateRequest) (*corepbv1.AuthAssociateResponse, error) {
 	auth := UserAuth{
 		UserID: params.UserId,
 	}
@@ -604,5 +609,5 @@ func (s *UserServer) AuthAssociate(ctx context.Context, params *corepbv1.AuthAss
 		return nil, err
 	}
 
-	return &corepbv1.UserIdParam{UserId: params.UserId}, nil
+	return &corepbv1.AuthAssociateResponse{UserId: params.UserId}, nil
 }

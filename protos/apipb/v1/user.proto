@@ -3,9 +3,9 @@ package apipb.v1;
 
 option go_package = "./;apipbv1";
 
-message UserGetParams {}
+message GetUserRequest {}
 
-message UserUpdateParams {
+message UpdateUserRequest {
   optional string email = 1;
   optional string name = 2;
   optional string password = 3;
@@ -19,9 +19,10 @@ message User {
   optional string avatar_url = 4;
 }
 
-message UserResponse { User user = 1; }
+message GetUserResponse { User user = 1; }
+message UpdateUserResponse { User user = 1; }
 
 service UserService {
-  rpc get_user(UserGetParams) returns (UserResponse);
-  rpc update_user(UserUpdateParams) returns (UserResponse);
+  rpc get_user(GetUserRequest) returns (GetUserResponse);
+  rpc update_user(UpdateUserRequest) returns (UpdateUserResponse);
 }

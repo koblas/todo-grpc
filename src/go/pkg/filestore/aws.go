@@ -53,7 +53,7 @@ func (provider *AwsProvider) buildClient(ctx context.Context) error {
 }
 
 func (provider *AwsProvider) UploadUrl(ctx context.Context, params *FilePutParams) (*FilePutResponse, error) {
-	key := buildObjectKey(params)
+	key, id := buildObjectKey(params)
 
 	if err := provider.buildClient(ctx); err != nil {
 		return nil, err
@@ -73,7 +73,7 @@ func (provider *AwsProvider) UploadUrl(ctx context.Context, params *FilePutParam
 		zap.String("objectKey", key),
 	).Info("generated S3 path")
 
-	return &FilePutResponse{request.URL}, nil
+	return &FilePutResponse{request.URL, id}, nil
 }
 
 func (provider *AwsProvider) GetFile(ctx context.Context, params *FileGetParams) (io.Reader, error) {
@@ -104,7 +104,7 @@ func (provider *AwsProvider) PutFile(ctx context.Context, params *FilePutParams,
 		return nil, err
 	}
 
-	key := buildObjectKey(params)
+	key, _ := buildObjectKey(params)
 
 	var contentType *string
 	if value := mime.TypeByExtension(filepath.Ext(key)); value != "" {

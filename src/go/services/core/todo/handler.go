@@ -13,7 +13,7 @@ import (
 type TodoServer struct {
 	todos TodoStore
 	// producer corepbv1.TodoEventbus
-	pubsub corepbv1.TodoEventbus
+	pubsub corepbv1.TodoEventbusService
 }
 
 type Option func(*TodoServer)
@@ -24,7 +24,7 @@ func WithTodoStore(store TodoStore) Option {
 	}
 }
 
-func WithProducer(bus corepbv1.TodoEventbus) Option {
+func WithProducer(bus corepbv1.TodoEventbusService) Option {
 	return func(cfg *TodoServer) {
 		cfg.pubsub = bus
 	}

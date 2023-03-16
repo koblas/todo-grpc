@@ -28,7 +28,7 @@ func main() {
 
 		client := awsutil.NewTwirpCallLambda()
 		opts = []workers_file.Option{
-			workers_file.WithProducer(corepbv1.NewFileEventbusJSONClient(
+			workers_file.WithProducer(corepbv1.NewFileEventbusServiceJSONClient(
 				config.EventArn,
 				client,
 			)),

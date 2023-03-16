@@ -7,15 +7,15 @@ import (
 	"golang.org/x/net/context"
 )
 
-func (s AuthenticationServer) OauthAssociate(ctx context.Context, params *apipbv1.OauthAssociateParams) (*apipbv1.Success, error) {
-	return nil, nil
-}
+// func (s AuthenticationServer) OauthAssociate(ctx context.Context, params *apipbv1.OauthAssociateRequest) (*apipbv1.Oauth, error) {
+// return nil, nil
+// }
 
-func (s AuthenticationServer) OauthLogin(ctx context.Context, params *apipbv1.OauthAssociateParams) (*apipbv1.TokenRegister, error) {
+func (s AuthenticationServer) OauthLogin(ctx context.Context, params *apipbv1.OauthLoginRequest) (*apipbv1.OauthLoginResponse, error) {
 	log := logger.FromContext(ctx).With("provider", params.Provider)
 	log.Info("OauthLogin")
 
-	result, err := s.oauthClient.UpsertUser(ctx, &corepbv1.AuthUserUpsertParams{
+	result, err := s.oauthClient.UpsertUser(ctx, &corepbv1.AuthUserServiceUpsertUserRequest{
 		Oauth: &corepbv1.AuthOauthParams{
 			Provider: params.Provider,
 			Code:     params.Code,
@@ -29,30 +29,32 @@ func (s AuthenticationServer) OauthLogin(ctx context.Context, params *apipbv1.Oa
 		return nil, err
 	}
 
-	user, err := s.userClient.FindBy(ctx, &corepbv1.UserFindParam{
-		UserId: result.UserId,
+	user, err := s.userClient.FindBy(ctx, &corepbv1.FindByRequest{
+		FindBy: &corepbv1.FindBy{
+			UserId: result.UserId,
+		},
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	token, err := s.returnToken(ctx, user.Id)
+	token, err := s.returnToken(ctx, user.User.Id)
 	if err != nil {
 		return nil, err
 	}
-	return &apipbv1.TokenRegister{
+	return &apipbv1.OauthLoginResponse{
 		Token:   token,
 		Created: result.Created,
 	}, nil
 }
 
-func (s AuthenticationServer) OauthUrl(ctx context.Context, params *apipbv1.OauthUrlParams) (*apipbv1.OauthUrlResult, error) {
+func (s AuthenticationServer) OauthUrl(ctx context.Context, params *apipbv1.OauthUrlRequest) (*apipbv1.OauthUrlResponse, error) {
 	log := logger.FromContext(ctx).With("provider", params.Provider)
 	log.Info("OauthUrl")
 
 	// TODO -- basic validation on parameters
 
-	result, err := s.oauthClient.GetAuthURL(ctx, &corepbv1.AuthOAuthGetUrlParams{
+	result, err := s.oauthClient.GetAuthUrl(ctx, &corepbv1.AuthUserServiceGetAuthUrlRequest{
 		Provider:    params.Provider,
 		RedirectUrl: params.RedirectUrl,
 	})
@@ -61,7 +63,7 @@ func (s AuthenticationServer) OauthUrl(ctx context.Context, params *apipbv1.Oaut
 		return nil, err
 	}
 
-	return &apipbv1.OauthUrlResult{
+	return &apipbv1.OauthUrlResponse{
 		Url: result.GetUrl(),
 	}, nil
 }

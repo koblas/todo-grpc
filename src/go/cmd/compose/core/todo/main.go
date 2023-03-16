@@ -22,7 +22,7 @@ func main() {
 	}
 
 	nats := natsutil.NewNatsClient(config.NatsAddr)
-	eventbus := corepbv1.NewTodoEventbusJSONClient(
+	eventbus := corepbv1.NewTodoEventbusServiceJSONClient(
 		"topic://"+config.TodoEventsTopic,
 		nats,
 	)

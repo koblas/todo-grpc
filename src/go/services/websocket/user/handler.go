@@ -13,7 +13,7 @@ import (
 )
 
 type UserServer struct {
-	producer corepbv1.BroadcastEventbus
+	producer corepbv1.BroadcastEventbusService
 }
 
 type SocketMessage struct {
@@ -29,7 +29,7 @@ type UserServerHandler struct {
 	handler corepbv1.TwirpServer
 }
 
-func WithProducer(producer corepbv1.BroadcastEventbus) Option {
+func WithProducer(producer corepbv1.BroadcastEventbusService) Option {
 	return func(conf *UserServer) {
 		conf.producer = producer
 	}
@@ -44,7 +44,7 @@ func NewUserChangeServer(opts ...Option) []manager.MsgHandler {
 
 	return []manager.MsgHandler{
 		&UserServerHandler{
-			handler: corepbv1.NewUserEventbusServer(&svr),
+			handler: corepbv1.NewUserEventbusServiceServer(&svr),
 		},
 	}
 }
@@ -57,7 +57,7 @@ func (svc *UserServerHandler) Handler() corepbv1.TwirpServer {
 	return svc.handler
 }
 
-func (svc *UserServer) UserChange(ctx context.Context, event *corepbv1.UserChangeEvent) (*corepbv1.EventbusEmpty, error) {
+func (svc *UserServer) UserChange(ctx context.Context, event *corepbv1.UserChangeEvent) (*corepbv1.UserEventbusUserChangeResponse, error) {
 	log := logger.FromContext(ctx)
 	log.Info("received user event")
 
@@ -103,18 +103,18 @@ func (svc *UserServer) UserChange(ctx context.Context, event *corepbv1.UserChang
 		log.With(zap.Error(err)).Error("failed to send to websocket")
 	}
 
-	return &corepbv1.EventbusEmpty{}, nil
+	return &corepbv1.UserEventbusUserChangeResponse{}, nil
 }
 
-func (*UserServer) SecurityPasswordChange(context.Context, *corepbv1.UserSecurityEvent) (*corepbv1.EventbusEmpty, error) {
-	return &corepbv1.EventbusEmpty{}, nil
+func (*UserServer) SecurityPasswordChange(context.Context, *corepbv1.UserSecurityEvent) (*corepbv1.UserEventbusSecurityPasswordChangeResponse, error) {
+	return &corepbv1.UserEventbusSecurityPasswordChangeResponse{}, nil
 }
-func (*UserServer) SecurityForgotRequest(context.Context, *corepbv1.UserSecurityEvent) (*corepbv1.EventbusEmpty, error) {
-	return &corepbv1.EventbusEmpty{}, nil
+func (*UserServer) SecurityForgotRequest(context.Context, *corepbv1.UserSecurityEvent) (*corepbv1.UserEventbusSecurityForgotRequestResponse, error) {
+	return &corepbv1.UserEventbusSecurityForgotRequestResponse{}, nil
 }
-func (*UserServer) SecurityRegisterToken(context.Context, *corepbv1.UserSecurityEvent) (*corepbv1.EventbusEmpty, error) {
-	return &corepbv1.EventbusEmpty{}, nil
+func (*UserServer) SecurityRegisterToken(context.Context, *corepbv1.UserSecurityEvent) (*corepbv1.UserEventbusSecurityRegisterTokenResponse, error) {
+	return &corepbv1.UserEventbusSecurityRegisterTokenResponse{}, nil
 }
-func (*UserServer) SecurityInviteToken(context.Context, *corepbv1.UserSecurityEvent) (*corepbv1.EventbusEmpty, error) {
-	return &corepbv1.EventbusEmpty{}, nil
+func (*UserServer) SecurityInviteToken(context.Context, *corepbv1.UserSecurityEvent) (*corepbv1.UserEventbusSecurityInviteTokenResponse, error) {
+	return &corepbv1.UserEventbusSecurityInviteTokenResponse{}, nil
 }

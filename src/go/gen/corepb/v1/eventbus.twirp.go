@@ -22,29 +22,29 @@ import ctxsetters "github.com/twitchtv/twirp/ctxsetters"
 // See https://twitchtv.github.io/twirp/docs/version_matrix.html
 const _ = twirp.TwirpPackageMinVersion_8_1_0
 
-// ===========================
-// BroadcastEventbus Interface
-// ===========================
+// ==================================
+// BroadcastEventbusService Interface
+// ==================================
 
 // Websocket broadcast event
-type BroadcastEventbus interface {
-	Send(context.Context, *BroadcastEvent) (*EventbusEmpty, error)
+type BroadcastEventbusService interface {
+	Send(context.Context, *BroadcastEvent) (*BroadcastEventbusSendResponse, error)
 }
 
-// =================================
-// BroadcastEventbus Protobuf Client
-// =================================
+// ========================================
+// BroadcastEventbusService Protobuf Client
+// ========================================
 
-type broadcastEventbusProtobufClient struct {
+type broadcastEventbusServiceProtobufClient struct {
 	client      HTTPClient
 	urls        [1]string
 	interceptor twirp.Interceptor
 	opts        twirp.ClientOptions
 }
 
-// NewBroadcastEventbusProtobufClient creates a Protobuf client that implements the BroadcastEventbus interface.
+// NewBroadcastEventbusServiceProtobufClient creates a Protobuf client that implements the BroadcastEventbusService interface.
 // It communicates using Protobuf and can be configured with a custom HTTPClient.
-func NewBroadcastEventbusProtobufClient(baseURL string, client HTTPClient, opts ...twirp.ClientOption) BroadcastEventbus {
+func NewBroadcastEventbusServiceProtobufClient(baseURL string, client HTTPClient, opts ...twirp.ClientOption) BroadcastEventbusService {
 	if c, ok := client.(*http.Client); ok {
 		client = withoutRedirects(c)
 	}
@@ -64,12 +64,12 @@ func NewBroadcastEventbusProtobufClient(baseURL string, client HTTPClient, opts 
 
 	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
 	serviceURL := sanitizeBaseURL(baseURL)
-	serviceURL += baseServicePath(pathPrefix, "corepb.v1", "BroadcastEventbus")
+	serviceURL += baseServicePath(pathPrefix, "corepb.v1", "BroadcastEventbusService")
 	urls := [1]string{
 		serviceURL + "Send",
 	}
 
-	return &broadcastEventbusProtobufClient{
+	return &broadcastEventbusServiceProtobufClient{
 		client:      client,
 		urls:        urls,
 		interceptor: twirp.ChainInterceptors(clientOpts.Interceptors...),
@@ -77,13 +77,13 @@ func NewBroadcastEventbusProtobufClient(baseURL string, client HTTPClient, opts 
 	}
 }
 
-func (c *broadcastEventbusProtobufClient) Send(ctx context.Context, in *BroadcastEvent) (*EventbusEmpty, error) {
+func (c *broadcastEventbusServiceProtobufClient) Send(ctx context.Context, in *BroadcastEvent) (*BroadcastEventbusSendResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
-	ctx = ctxsetters.WithServiceName(ctx, "BroadcastEventbus")
+	ctx = ctxsetters.WithServiceName(ctx, "BroadcastEventbusService")
 	ctx = ctxsetters.WithMethodName(ctx, "Send")
 	caller := c.callSend
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *BroadcastEvent) (*EventbusEmpty, error) {
+		caller = func(ctx context.Context, req *BroadcastEvent) (*BroadcastEventbusSendResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*BroadcastEvent)
@@ -94,9 +94,9 @@ func (c *broadcastEventbusProtobufClient) Send(ctx context.Context, in *Broadcas
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EventbusEmpty)
+				typedResp, ok := resp.(*BroadcastEventbusSendResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EventbusEmpty) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*BroadcastEventbusSendResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -106,8 +106,8 @@ func (c *broadcastEventbusProtobufClient) Send(ctx context.Context, in *Broadcas
 	return caller(ctx, in)
 }
 
-func (c *broadcastEventbusProtobufClient) callSend(ctx context.Context, in *BroadcastEvent) (*EventbusEmpty, error) {
-	out := new(EventbusEmpty)
+func (c *broadcastEventbusServiceProtobufClient) callSend(ctx context.Context, in *BroadcastEvent) (*BroadcastEventbusSendResponse, error) {
+	out := new(BroadcastEventbusSendResponse)
 	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -123,20 +123,20 @@ func (c *broadcastEventbusProtobufClient) callSend(ctx context.Context, in *Broa
 	return out, nil
 }
 
-// =============================
-// BroadcastEventbus JSON Client
-// =============================
+// ====================================
+// BroadcastEventbusService JSON Client
+// ====================================
 
-type broadcastEventbusJSONClient struct {
+type broadcastEventbusServiceJSONClient struct {
 	client      HTTPClient
 	urls        [1]string
 	interceptor twirp.Interceptor
 	opts        twirp.ClientOptions
 }
 
-// NewBroadcastEventbusJSONClient creates a JSON client that implements the BroadcastEventbus interface.
+// NewBroadcastEventbusServiceJSONClient creates a JSON client that implements the BroadcastEventbusService interface.
 // It communicates using JSON and can be configured with a custom HTTPClient.
-func NewBroadcastEventbusJSONClient(baseURL string, client HTTPClient, opts ...twirp.ClientOption) BroadcastEventbus {
+func NewBroadcastEventbusServiceJSONClient(baseURL string, client HTTPClient, opts ...twirp.ClientOption) BroadcastEventbusService {
 	if c, ok := client.(*http.Client); ok {
 		client = withoutRedirects(c)
 	}
@@ -156,12 +156,12 @@ func NewBroadcastEventbusJSONClient(baseURL string, client HTTPClient, opts ...t
 
 	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
 	serviceURL := sanitizeBaseURL(baseURL)
-	serviceURL += baseServicePath(pathPrefix, "corepb.v1", "BroadcastEventbus")
+	serviceURL += baseServicePath(pathPrefix, "corepb.v1", "BroadcastEventbusService")
 	urls := [1]string{
 		serviceURL + "Send",
 	}
 
-	return &broadcastEventbusJSONClient{
+	return &broadcastEventbusServiceJSONClient{
 		client:      client,
 		urls:        urls,
 		interceptor: twirp.ChainInterceptors(clientOpts.Interceptors...),
@@ -169,13 +169,13 @@ func NewBroadcastEventbusJSONClient(baseURL string, client HTTPClient, opts ...t
 	}
 }
 
-func (c *broadcastEventbusJSONClient) Send(ctx context.Context, in *BroadcastEvent) (*EventbusEmpty, error) {
+func (c *broadcastEventbusServiceJSONClient) Send(ctx context.Context, in *BroadcastEvent) (*BroadcastEventbusSendResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
-	ctx = ctxsetters.WithServiceName(ctx, "BroadcastEventbus")
+	ctx = ctxsetters.WithServiceName(ctx, "BroadcastEventbusService")
 	ctx = ctxsetters.WithMethodName(ctx, "Send")
 	caller := c.callSend
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *BroadcastEvent) (*EventbusEmpty, error) {
+		caller = func(ctx context.Context, req *BroadcastEvent) (*BroadcastEventbusSendResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*BroadcastEvent)
@@ -186,9 +186,9 @@ func (c *broadcastEventbusJSONClient) Send(ctx context.Context, in *BroadcastEve
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EventbusEmpty)
+				typedResp, ok := resp.(*BroadcastEventbusSendResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EventbusEmpty) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*BroadcastEventbusSendResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -198,8 +198,8 @@ func (c *broadcastEventbusJSONClient) Send(ctx context.Context, in *BroadcastEve
 	return caller(ctx, in)
 }
 
-func (c *broadcastEventbusJSONClient) callSend(ctx context.Context, in *BroadcastEvent) (*EventbusEmpty, error) {
-	out := new(EventbusEmpty)
+func (c *broadcastEventbusServiceJSONClient) callSend(ctx context.Context, in *BroadcastEvent) (*BroadcastEventbusSendResponse, error) {
+	out := new(BroadcastEventbusSendResponse)
 	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -215,12 +215,12 @@ func (c *broadcastEventbusJSONClient) callSend(ctx context.Context, in *Broadcas
 	return out, nil
 }
 
-// ================================
-// BroadcastEventbus Server Handler
-// ================================
+// =======================================
+// BroadcastEventbusService Server Handler
+// =======================================
 
-type broadcastEventbusServer struct {
-	BroadcastEventbus
+type broadcastEventbusServiceServer struct {
+	BroadcastEventbusService
 	interceptor      twirp.Interceptor
 	hooks            *twirp.ServerHooks
 	pathPrefix       string // prefix for routing
@@ -228,10 +228,10 @@ type broadcastEventbusServer struct {
 	jsonCamelCase    bool   // JSON fields are serialized as lowerCamelCase rather than keeping the original proto names
 }
 
-// NewBroadcastEventbusServer builds a TwirpServer that can be used as an http.Handler to handle
+// NewBroadcastEventbusServiceServer builds a TwirpServer that can be used as an http.Handler to handle
 // HTTP requests that are routed to the right method in the provided svc implementation.
 // The opts are twirp.ServerOption modifiers, for example twirp.WithServerHooks(hooks).
-func NewBroadcastEventbusServer(svc BroadcastEventbus, opts ...interface{}) TwirpServer {
+func NewBroadcastEventbusServiceServer(svc BroadcastEventbusService, opts ...interface{}) TwirpServer {
 	serverOpts := newServerOpts(opts)
 
 	// Using ReadOpt allows backwards and forwads compatibility with new options in the future
@@ -244,24 +244,24 @@ func NewBroadcastEventbusServer(svc BroadcastEventbus, opts ...interface{}) Twir
 		pathPrefix = "/twirp" // default prefix
 	}
 
-	return &broadcastEventbusServer{
-		BroadcastEventbus: svc,
-		hooks:             serverOpts.Hooks,
-		interceptor:       twirp.ChainInterceptors(serverOpts.Interceptors...),
-		pathPrefix:        pathPrefix,
-		jsonSkipDefaults:  jsonSkipDefaults,
-		jsonCamelCase:     jsonCamelCase,
+	return &broadcastEventbusServiceServer{
+		BroadcastEventbusService: svc,
+		hooks:                    serverOpts.Hooks,
+		interceptor:              twirp.ChainInterceptors(serverOpts.Interceptors...),
+		pathPrefix:               pathPrefix,
+		jsonSkipDefaults:         jsonSkipDefaults,
+		jsonCamelCase:            jsonCamelCase,
 	}
 }
 
 // writeError writes an HTTP response with a valid Twirp error format, and triggers hooks.
 // If err is not a twirp.Error, it will get wrapped with twirp.InternalErrorWith(err)
-func (s *broadcastEventbusServer) writeError(ctx context.Context, resp http.ResponseWriter, err error) {
+func (s *broadcastEventbusServiceServer) writeError(ctx context.Context, resp http.ResponseWriter, err error) {
 	writeError(ctx, resp, err, s.hooks)
 }
 
 // handleRequestBodyError is used to handle error when the twirp server cannot read request
-func (s *broadcastEventbusServer) handleRequestBodyError(ctx context.Context, resp http.ResponseWriter, msg string, err error) {
+func (s *broadcastEventbusServiceServer) handleRequestBodyError(ctx context.Context, resp http.ResponseWriter, msg string, err error) {
 	if context.Canceled == ctx.Err() {
 		s.writeError(ctx, resp, twirp.NewError(twirp.Canceled, "failed to read request: context canceled"))
 		return
@@ -273,16 +273,16 @@ func (s *broadcastEventbusServer) handleRequestBodyError(ctx context.Context, re
 	s.writeError(ctx, resp, twirp.WrapError(malformedRequestError(msg), err))
 }
 
-// BroadcastEventbusPathPrefix is a convenience constant that may identify URL paths.
+// BroadcastEventbusServicePathPrefix is a convenience constant that may identify URL paths.
 // Should be used with caution, it only matches routes generated by Twirp Go clients,
 // with the default "/twirp" prefix and default CamelCase service and method names.
 // More info: https://twitchtv.github.io/twirp/docs/routing.html
-const BroadcastEventbusPathPrefix = "/twirp/corepb.v1.BroadcastEventbus/"
+const BroadcastEventbusServicePathPrefix = "/twirp/corepb.v1.BroadcastEventbusService/"
 
-func (s *broadcastEventbusServer) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
+func (s *broadcastEventbusServiceServer) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
-	ctx = ctxsetters.WithServiceName(ctx, "BroadcastEventbus")
+	ctx = ctxsetters.WithServiceName(ctx, "BroadcastEventbusService")
 	ctx = ctxsetters.WithResponseWriter(ctx, resp)
 
 	var err error
@@ -300,7 +300,7 @@ func (s *broadcastEventbusServer) ServeHTTP(resp http.ResponseWriter, req *http.
 
 	// Verify path format: [<prefix>]/<package>.<Service>/<Method>
 	prefix, pkgService, method := parseTwirpPath(req.URL.Path)
-	if pkgService != "corepb.v1.BroadcastEventbus" {
+	if pkgService != "corepb.v1.BroadcastEventbusService" {
 		msg := fmt.Sprintf("no handler for path %q", req.URL.Path)
 		s.writeError(ctx, resp, badRouteError(msg, req.Method, req.URL.Path))
 		return
@@ -322,7 +322,7 @@ func (s *broadcastEventbusServer) ServeHTTP(resp http.ResponseWriter, req *http.
 	}
 }
 
-func (s *broadcastEventbusServer) serveSend(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *broadcastEventbusServiceServer) serveSend(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	header := req.Header.Get("Content-Type")
 	i := strings.Index(header, ";")
 	if i == -1 {
@@ -340,7 +340,7 @@ func (s *broadcastEventbusServer) serveSend(ctx context.Context, resp http.Respo
 	}
 }
 
-func (s *broadcastEventbusServer) serveSendJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *broadcastEventbusServiceServer) serveSendJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	var err error
 	ctx = ctxsetters.WithMethodName(ctx, "Send")
 	ctx, err = callRequestRouted(ctx, s.hooks)
@@ -362,22 +362,22 @@ func (s *broadcastEventbusServer) serveSendJSON(ctx context.Context, resp http.R
 		return
 	}
 
-	handler := s.BroadcastEventbus.Send
+	handler := s.BroadcastEventbusService.Send
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *BroadcastEvent) (*EventbusEmpty, error) {
+		handler = func(ctx context.Context, req *BroadcastEvent) (*BroadcastEventbusSendResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*BroadcastEvent)
 					if !ok {
 						return nil, twirp.InternalError("failed type assertion req.(*BroadcastEvent) when calling interceptor")
 					}
-					return s.BroadcastEventbus.Send(ctx, typedReq)
+					return s.BroadcastEventbusService.Send(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EventbusEmpty)
+				typedResp, ok := resp.(*BroadcastEventbusSendResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EventbusEmpty) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*BroadcastEventbusSendResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -386,7 +386,7 @@ func (s *broadcastEventbusServer) serveSendJSON(ctx context.Context, resp http.R
 	}
 
 	// Call service method
-	var respContent *EventbusEmpty
+	var respContent *BroadcastEventbusSendResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -397,7 +397,7 @@ func (s *broadcastEventbusServer) serveSendJSON(ctx context.Context, resp http.R
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *EventbusEmpty and nil error while calling Send. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *BroadcastEventbusSendResponse and nil error while calling Send. nil responses are not supported"))
 		return
 	}
 
@@ -423,7 +423,7 @@ func (s *broadcastEventbusServer) serveSendJSON(ctx context.Context, resp http.R
 	callResponseSent(ctx, s.hooks)
 }
 
-func (s *broadcastEventbusServer) serveSendProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *broadcastEventbusServiceServer) serveSendProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	var err error
 	ctx = ctxsetters.WithMethodName(ctx, "Send")
 	ctx, err = callRequestRouted(ctx, s.hooks)
@@ -443,22 +443,22 @@ func (s *broadcastEventbusServer) serveSendProtobuf(ctx context.Context, resp ht
 		return
 	}
 
-	handler := s.BroadcastEventbus.Send
+	handler := s.BroadcastEventbusService.Send
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *BroadcastEvent) (*EventbusEmpty, error) {
+		handler = func(ctx context.Context, req *BroadcastEvent) (*BroadcastEventbusSendResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*BroadcastEvent)
 					if !ok {
 						return nil, twirp.InternalError("failed type assertion req.(*BroadcastEvent) when calling interceptor")
 					}
-					return s.BroadcastEventbus.Send(ctx, typedReq)
+					return s.BroadcastEventbusService.Send(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EventbusEmpty)
+				typedResp, ok := resp.(*BroadcastEventbusSendResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EventbusEmpty) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*BroadcastEventbusSendResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -467,7 +467,7 @@ func (s *broadcastEventbusServer) serveSendProtobuf(ctx context.Context, resp ht
 	}
 
 	// Call service method
-	var respContent *EventbusEmpty
+	var respContent *BroadcastEventbusSendResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -478,7 +478,7 @@ func (s *broadcastEventbusServer) serveSendProtobuf(ctx context.Context, resp ht
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *EventbusEmpty and nil error while calling Send. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *BroadcastEventbusSendResponse and nil error while calling Send. nil responses are not supported"))
 		return
 	}
 
@@ -502,55 +502,55 @@ func (s *broadcastEventbusServer) serveSendProtobuf(ctx context.Context, resp ht
 	callResponseSent(ctx, s.hooks)
 }
 
-func (s *broadcastEventbusServer) ServiceDescriptor() ([]byte, int) {
+func (s *broadcastEventbusServiceServer) ServiceDescriptor() ([]byte, int) {
 	return twirpFileDescriptor4, 0
 }
 
-func (s *broadcastEventbusServer) ProtocGenTwirpVersion() string {
+func (s *broadcastEventbusServiceServer) ProtocGenTwirpVersion() string {
 	return "v8.1.1"
 }
 
 // PathPrefix returns the base service path, in the form: "/<prefix>/<package>.<Service>/"
 // that is everything in a Twirp route except for the <Method>. This can be used for routing,
 // for example to identify the requests that are targeted to this service in a mux.
-func (s *broadcastEventbusServer) PathPrefix() string {
-	return baseServicePath(s.pathPrefix, "corepb.v1", "BroadcastEventbus")
+func (s *broadcastEventbusServiceServer) PathPrefix() string {
+	return baseServicePath(s.pathPrefix, "corepb.v1", "BroadcastEventbusService")
 }
 
-// ======================
-// UserEventbus Interface
-// ======================
+// =============================
+// UserEventbusService Interface
+// =============================
 
-type UserEventbus interface {
-	UserChange(context.Context, *UserChangeEvent) (*EventbusEmpty, error)
+type UserEventbusService interface {
+	UserChange(context.Context, *UserChangeEvent) (*UserEventbusUserChangeResponse, error)
 
 	// Password change notification
-	SecurityPasswordChange(context.Context, *UserSecurityEvent) (*EventbusEmpty, error)
+	SecurityPasswordChange(context.Context, *UserSecurityEvent) (*UserEventbusSecurityPasswordChangeResponse, error)
 
 	// Forgot password request notfication
-	SecurityForgotRequest(context.Context, *UserSecurityEvent) (*EventbusEmpty, error)
+	SecurityForgotRequest(context.Context, *UserSecurityEvent) (*UserEventbusSecurityForgotRequestResponse, error)
 
 	// New user registration
-	SecurityRegisterToken(context.Context, *UserSecurityEvent) (*EventbusEmpty, error)
+	SecurityRegisterToken(context.Context, *UserSecurityEvent) (*UserEventbusSecurityRegisterTokenResponse, error)
 
 	// Invite sent
-	SecurityInviteToken(context.Context, *UserSecurityEvent) (*EventbusEmpty, error)
+	SecurityInviteToken(context.Context, *UserSecurityEvent) (*UserEventbusSecurityInviteTokenResponse, error)
 }
 
-// ============================
-// UserEventbus Protobuf Client
-// ============================
+// ===================================
+// UserEventbusService Protobuf Client
+// ===================================
 
-type userEventbusProtobufClient struct {
+type userEventbusServiceProtobufClient struct {
 	client      HTTPClient
 	urls        [5]string
 	interceptor twirp.Interceptor
 	opts        twirp.ClientOptions
 }
 
-// NewUserEventbusProtobufClient creates a Protobuf client that implements the UserEventbus interface.
+// NewUserEventbusServiceProtobufClient creates a Protobuf client that implements the UserEventbusService interface.
 // It communicates using Protobuf and can be configured with a custom HTTPClient.
-func NewUserEventbusProtobufClient(baseURL string, client HTTPClient, opts ...twirp.ClientOption) UserEventbus {
+func NewUserEventbusServiceProtobufClient(baseURL string, client HTTPClient, opts ...twirp.ClientOption) UserEventbusService {
 	if c, ok := client.(*http.Client); ok {
 		client = withoutRedirects(c)
 	}
@@ -570,7 +570,7 @@ func NewUserEventbusProtobufClient(baseURL string, client HTTPClient, opts ...tw
 
 	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
 	serviceURL := sanitizeBaseURL(baseURL)
-	serviceURL += baseServicePath(pathPrefix, "corepb.v1", "UserEventbus")
+	serviceURL += baseServicePath(pathPrefix, "corepb.v1", "UserEventbusService")
 	urls := [5]string{
 		serviceURL + "UserChange",
 		serviceURL + "SecurityPasswordChange",
@@ -579,7 +579,7 @@ func NewUserEventbusProtobufClient(baseURL string, client HTTPClient, opts ...tw
 		serviceURL + "SecurityInviteToken",
 	}
 
-	return &userEventbusProtobufClient{
+	return &userEventbusServiceProtobufClient{
 		client:      client,
 		urls:        urls,
 		interceptor: twirp.ChainInterceptors(clientOpts.Interceptors...),
@@ -587,13 +587,13 @@ func NewUserEventbusProtobufClient(baseURL string, client HTTPClient, opts ...tw
 	}
 }
 
-func (c *userEventbusProtobufClient) UserChange(ctx context.Context, in *UserChangeEvent) (*EventbusEmpty, error) {
+func (c *userEventbusServiceProtobufClient) UserChange(ctx context.Context, in *UserChangeEvent) (*UserEventbusUserChangeResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
-	ctx = ctxsetters.WithServiceName(ctx, "UserEventbus")
+	ctx = ctxsetters.WithServiceName(ctx, "UserEventbusService")
 	ctx = ctxsetters.WithMethodName(ctx, "UserChange")
 	caller := c.callUserChange
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *UserChangeEvent) (*EventbusEmpty, error) {
+		caller = func(ctx context.Context, req *UserChangeEvent) (*UserEventbusUserChangeResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*UserChangeEvent)
@@ -604,9 +604,9 @@ func (c *userEventbusProtobufClient) UserChange(ctx context.Context, in *UserCha
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EventbusEmpty)
+				typedResp, ok := resp.(*UserEventbusUserChangeResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EventbusEmpty) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*UserEventbusUserChangeResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -616,8 +616,8 @@ func (c *userEventbusProtobufClient) UserChange(ctx context.Context, in *UserCha
 	return caller(ctx, in)
 }
 
-func (c *userEventbusProtobufClient) callUserChange(ctx context.Context, in *UserChangeEvent) (*EventbusEmpty, error) {
-	out := new(EventbusEmpty)
+func (c *userEventbusServiceProtobufClient) callUserChange(ctx context.Context, in *UserChangeEvent) (*UserEventbusUserChangeResponse, error) {
+	out := new(UserEventbusUserChangeResponse)
 	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -633,13 +633,13 @@ func (c *userEventbusProtobufClient) callUserChange(ctx context.Context, in *Use
 	return out, nil
 }
 
-func (c *userEventbusProtobufClient) SecurityPasswordChange(ctx context.Context, in *UserSecurityEvent) (*EventbusEmpty, error) {
+func (c *userEventbusServiceProtobufClient) SecurityPasswordChange(ctx context.Context, in *UserSecurityEvent) (*UserEventbusSecurityPasswordChangeResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
-	ctx = ctxsetters.WithServiceName(ctx, "UserEventbus")
+	ctx = ctxsetters.WithServiceName(ctx, "UserEventbusService")
 	ctx = ctxsetters.WithMethodName(ctx, "SecurityPasswordChange")
 	caller := c.callSecurityPasswordChange
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *UserSecurityEvent) (*EventbusEmpty, error) {
+		caller = func(ctx context.Context, req *UserSecurityEvent) (*UserEventbusSecurityPasswordChangeResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*UserSecurityEvent)
@@ -650,9 +650,9 @@ func (c *userEventbusProtobufClient) SecurityPasswordChange(ctx context.Context,
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EventbusEmpty)
+				typedResp, ok := resp.(*UserEventbusSecurityPasswordChangeResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EventbusEmpty) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*UserEventbusSecurityPasswordChangeResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -662,8 +662,8 @@ func (c *userEventbusProtobufClient) SecurityPasswordChange(ctx context.Context,
 	return caller(ctx, in)
 }
 
-func (c *userEventbusProtobufClient) callSecurityPasswordChange(ctx context.Context, in *UserSecurityEvent) (*EventbusEmpty, error) {
-	out := new(EventbusEmpty)
+func (c *userEventbusServiceProtobufClient) callSecurityPasswordChange(ctx context.Context, in *UserSecurityEvent) (*UserEventbusSecurityPasswordChangeResponse, error) {
+	out := new(UserEventbusSecurityPasswordChangeResponse)
 	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[1], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -679,13 +679,13 @@ func (c *userEventbusProtobufClient) callSecurityPasswordChange(ctx context.Cont
 	return out, nil
 }
 
-func (c *userEventbusProtobufClient) SecurityForgotRequest(ctx context.Context, in *UserSecurityEvent) (*EventbusEmpty, error) {
+func (c *userEventbusServiceProtobufClient) SecurityForgotRequest(ctx context.Context, in *UserSecurityEvent) (*UserEventbusSecurityForgotRequestResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
-	ctx = ctxsetters.WithServiceName(ctx, "UserEventbus")
+	ctx = ctxsetters.WithServiceName(ctx, "UserEventbusService")
 	ctx = ctxsetters.WithMethodName(ctx, "SecurityForgotRequest")
 	caller := c.callSecurityForgotRequest
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *UserSecurityEvent) (*EventbusEmpty, error) {
+		caller = func(ctx context.Context, req *UserSecurityEvent) (*UserEventbusSecurityForgotRequestResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*UserSecurityEvent)
@@ -696,9 +696,9 @@ func (c *userEventbusProtobufClient) SecurityForgotRequest(ctx context.Context, 
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EventbusEmpty)
+				typedResp, ok := resp.(*UserEventbusSecurityForgotRequestResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EventbusEmpty) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*UserEventbusSecurityForgotRequestResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -708,8 +708,8 @@ func (c *userEventbusProtobufClient) SecurityForgotRequest(ctx context.Context, 
 	return caller(ctx, in)
 }
 
-func (c *userEventbusProtobufClient) callSecurityForgotRequest(ctx context.Context, in *UserSecurityEvent) (*EventbusEmpty, error) {
-	out := new(EventbusEmpty)
+func (c *userEventbusServiceProtobufClient) callSecurityForgotRequest(ctx context.Context, in *UserSecurityEvent) (*UserEventbusSecurityForgotRequestResponse, error) {
+	out := new(UserEventbusSecurityForgotRequestResponse)
 	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[2], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -725,13 +725,13 @@ func (c *userEventbusProtobufClient) callSecurityForgotRequest(ctx context.Conte
 	return out, nil
 }
 
-func (c *userEventbusProtobufClient) SecurityRegisterToken(ctx context.Context, in *UserSecurityEvent) (*EventbusEmpty, error) {
+func (c *userEventbusServiceProtobufClient) SecurityRegisterToken(ctx context.Context, in *UserSecurityEvent) (*UserEventbusSecurityRegisterTokenResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
-	ctx = ctxsetters.WithServiceName(ctx, "UserEventbus")
+	ctx = ctxsetters.WithServiceName(ctx, "UserEventbusService")
 	ctx = ctxsetters.WithMethodName(ctx, "SecurityRegisterToken")
 	caller := c.callSecurityRegisterToken
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *UserSecurityEvent) (*EventbusEmpty, error) {
+		caller = func(ctx context.Context, req *UserSecurityEvent) (*UserEventbusSecurityRegisterTokenResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*UserSecurityEvent)
@@ -742,9 +742,9 @@ func (c *userEventbusProtobufClient) SecurityRegisterToken(ctx context.Context, 
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EventbusEmpty)
+				typedResp, ok := resp.(*UserEventbusSecurityRegisterTokenResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EventbusEmpty) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*UserEventbusSecurityRegisterTokenResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -754,8 +754,8 @@ func (c *userEventbusProtobufClient) SecurityRegisterToken(ctx context.Context, 
 	return caller(ctx, in)
 }
 
-func (c *userEventbusProtobufClient) callSecurityRegisterToken(ctx context.Context, in *UserSecurityEvent) (*EventbusEmpty, error) {
-	out := new(EventbusEmpty)
+func (c *userEventbusServiceProtobufClient) callSecurityRegisterToken(ctx context.Context, in *UserSecurityEvent) (*UserEventbusSecurityRegisterTokenResponse, error) {
+	out := new(UserEventbusSecurityRegisterTokenResponse)
 	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[3], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -771,13 +771,13 @@ func (c *userEventbusProtobufClient) callSecurityRegisterToken(ctx context.Conte
 	return out, nil
 }
 
-func (c *userEventbusProtobufClient) SecurityInviteToken(ctx context.Context, in *UserSecurityEvent) (*EventbusEmpty, error) {
+func (c *userEventbusServiceProtobufClient) SecurityInviteToken(ctx context.Context, in *UserSecurityEvent) (*UserEventbusSecurityInviteTokenResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
-	ctx = ctxsetters.WithServiceName(ctx, "UserEventbus")
+	ctx = ctxsetters.WithServiceName(ctx, "UserEventbusService")
 	ctx = ctxsetters.WithMethodName(ctx, "SecurityInviteToken")
 	caller := c.callSecurityInviteToken
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *UserSecurityEvent) (*EventbusEmpty, error) {
+		caller = func(ctx context.Context, req *UserSecurityEvent) (*UserEventbusSecurityInviteTokenResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*UserSecurityEvent)
@@ -788,9 +788,9 @@ func (c *userEventbusProtobufClient) SecurityInviteToken(ctx context.Context, in
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EventbusEmpty)
+				typedResp, ok := resp.(*UserEventbusSecurityInviteTokenResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EventbusEmpty) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*UserEventbusSecurityInviteTokenResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -800,8 +800,8 @@ func (c *userEventbusProtobufClient) SecurityInviteToken(ctx context.Context, in
 	return caller(ctx, in)
 }
 
-func (c *userEventbusProtobufClient) callSecurityInviteToken(ctx context.Context, in *UserSecurityEvent) (*EventbusEmpty, error) {
-	out := new(EventbusEmpty)
+func (c *userEventbusServiceProtobufClient) callSecurityInviteToken(ctx context.Context, in *UserSecurityEvent) (*UserEventbusSecurityInviteTokenResponse, error) {
+	out := new(UserEventbusSecurityInviteTokenResponse)
 	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[4], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -817,20 +817,20 @@ func (c *userEventbusProtobufClient) callSecurityInviteToken(ctx context.Context
 	return out, nil
 }
 
-// ========================
-// UserEventbus JSON Client
-// ========================
+// ===============================
+// UserEventbusService JSON Client
+// ===============================
 
-type userEventbusJSONClient struct {
+type userEventbusServiceJSONClient struct {
 	client      HTTPClient
 	urls        [5]string
 	interceptor twirp.Interceptor
 	opts        twirp.ClientOptions
 }
 
-// NewUserEventbusJSONClient creates a JSON client that implements the UserEventbus interface.
+// NewUserEventbusServiceJSONClient creates a JSON client that implements the UserEventbusService interface.
 // It communicates using JSON and can be configured with a custom HTTPClient.
-func NewUserEventbusJSONClient(baseURL string, client HTTPClient, opts ...twirp.ClientOption) UserEventbus {
+func NewUserEventbusServiceJSONClient(baseURL string, client HTTPClient, opts ...twirp.ClientOption) UserEventbusService {
 	if c, ok := client.(*http.Client); ok {
 		client = withoutRedirects(c)
 	}
@@ -850,7 +850,7 @@ func NewUserEventbusJSONClient(baseURL string, client HTTPClient, opts ...twirp.
 
 	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
 	serviceURL := sanitizeBaseURL(baseURL)
-	serviceURL += baseServicePath(pathPrefix, "corepb.v1", "UserEventbus")
+	serviceURL += baseServicePath(pathPrefix, "corepb.v1", "UserEventbusService")
 	urls := [5]string{
 		serviceURL + "UserChange",
 		serviceURL + "SecurityPasswordChange",
@@ -859,7 +859,7 @@ func NewUserEventbusJSONClient(baseURL string, client HTTPClient, opts ...twirp.
 		serviceURL + "SecurityInviteToken",
 	}
 
-	return &userEventbusJSONClient{
+	return &userEventbusServiceJSONClient{
 		client:      client,
 		urls:        urls,
 		interceptor: twirp.ChainInterceptors(clientOpts.Interceptors...),
@@ -867,13 +867,13 @@ func NewUserEventbusJSONClient(baseURL string, client HTTPClient, opts ...twirp.
 	}
 }
 
-func (c *userEventbusJSONClient) UserChange(ctx context.Context, in *UserChangeEvent) (*EventbusEmpty, error) {
+func (c *userEventbusServiceJSONClient) UserChange(ctx context.Context, in *UserChangeEvent) (*UserEventbusUserChangeResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
-	ctx = ctxsetters.WithServiceName(ctx, "UserEventbus")
+	ctx = ctxsetters.WithServiceName(ctx, "UserEventbusService")
 	ctx = ctxsetters.WithMethodName(ctx, "UserChange")
 	caller := c.callUserChange
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *UserChangeEvent) (*EventbusEmpty, error) {
+		caller = func(ctx context.Context, req *UserChangeEvent) (*UserEventbusUserChangeResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*UserChangeEvent)
@@ -884,9 +884,9 @@ func (c *userEventbusJSONClient) UserChange(ctx context.Context, in *UserChangeE
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EventbusEmpty)
+				typedResp, ok := resp.(*UserEventbusUserChangeResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EventbusEmpty) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*UserEventbusUserChangeResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -896,8 +896,8 @@ func (c *userEventbusJSONClient) UserChange(ctx context.Context, in *UserChangeE
 	return caller(ctx, in)
 }
 
-func (c *userEventbusJSONClient) callUserChange(ctx context.Context, in *UserChangeEvent) (*EventbusEmpty, error) {
-	out := new(EventbusEmpty)
+func (c *userEventbusServiceJSONClient) callUserChange(ctx context.Context, in *UserChangeEvent) (*UserEventbusUserChangeResponse, error) {
+	out := new(UserEventbusUserChangeResponse)
 	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -913,13 +913,13 @@ func (c *userEventbusJSONClient) callUserChange(ctx context.Context, in *UserCha
 	return out, nil
 }
 
-func (c *userEventbusJSONClient) SecurityPasswordChange(ctx context.Context, in *UserSecurityEvent) (*EventbusEmpty, error) {
+func (c *userEventbusServiceJSONClient) SecurityPasswordChange(ctx context.Context, in *UserSecurityEvent) (*UserEventbusSecurityPasswordChangeResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
-	ctx = ctxsetters.WithServiceName(ctx, "UserEventbus")
+	ctx = ctxsetters.WithServiceName(ctx, "UserEventbusService")
 	ctx = ctxsetters.WithMethodName(ctx, "SecurityPasswordChange")
 	caller := c.callSecurityPasswordChange
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *UserSecurityEvent) (*EventbusEmpty, error) {
+		caller = func(ctx context.Context, req *UserSecurityEvent) (*UserEventbusSecurityPasswordChangeResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*UserSecurityEvent)
@@ -930,9 +930,9 @@ func (c *userEventbusJSONClient) SecurityPasswordChange(ctx context.Context, in 
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EventbusEmpty)
+				typedResp, ok := resp.(*UserEventbusSecurityPasswordChangeResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EventbusEmpty) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*UserEventbusSecurityPasswordChangeResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -942,8 +942,8 @@ func (c *userEventbusJSONClient) SecurityPasswordChange(ctx context.Context, in 
 	return caller(ctx, in)
 }
 
-func (c *userEventbusJSONClient) callSecurityPasswordChange(ctx context.Context, in *UserSecurityEvent) (*EventbusEmpty, error) {
-	out := new(EventbusEmpty)
+func (c *userEventbusServiceJSONClient) callSecurityPasswordChange(ctx context.Context, in *UserSecurityEvent) (*UserEventbusSecurityPasswordChangeResponse, error) {
+	out := new(UserEventbusSecurityPasswordChangeResponse)
 	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[1], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -959,13 +959,13 @@ func (c *userEventbusJSONClient) callSecurityPasswordChange(ctx context.Context,
 	return out, nil
 }
 
-func (c *userEventbusJSONClient) SecurityForgotRequest(ctx context.Context, in *UserSecurityEvent) (*EventbusEmpty, error) {
+func (c *userEventbusServiceJSONClient) SecurityForgotRequest(ctx context.Context, in *UserSecurityEvent) (*UserEventbusSecurityForgotRequestResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
-	ctx = ctxsetters.WithServiceName(ctx, "UserEventbus")
+	ctx = ctxsetters.WithServiceName(ctx, "UserEventbusService")
 	ctx = ctxsetters.WithMethodName(ctx, "SecurityForgotRequest")
 	caller := c.callSecurityForgotRequest
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *UserSecurityEvent) (*EventbusEmpty, error) {
+		caller = func(ctx context.Context, req *UserSecurityEvent) (*UserEventbusSecurityForgotRequestResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*UserSecurityEvent)
@@ -976,9 +976,9 @@ func (c *userEventbusJSONClient) SecurityForgotRequest(ctx context.Context, in *
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EventbusEmpty)
+				typedResp, ok := resp.(*UserEventbusSecurityForgotRequestResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EventbusEmpty) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*UserEventbusSecurityForgotRequestResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -988,8 +988,8 @@ func (c *userEventbusJSONClient) SecurityForgotRequest(ctx context.Context, in *
 	return caller(ctx, in)
 }
 
-func (c *userEventbusJSONClient) callSecurityForgotRequest(ctx context.Context, in *UserSecurityEvent) (*EventbusEmpty, error) {
-	out := new(EventbusEmpty)
+func (c *userEventbusServiceJSONClient) callSecurityForgotRequest(ctx context.Context, in *UserSecurityEvent) (*UserEventbusSecurityForgotRequestResponse, error) {
+	out := new(UserEventbusSecurityForgotRequestResponse)
 	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[2], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -1005,13 +1005,13 @@ func (c *userEventbusJSONClient) callSecurityForgotRequest(ctx context.Context, 
 	return out, nil
 }
 
-func (c *userEventbusJSONClient) SecurityRegisterToken(ctx context.Context, in *UserSecurityEvent) (*EventbusEmpty, error) {
+func (c *userEventbusServiceJSONClient) SecurityRegisterToken(ctx context.Context, in *UserSecurityEvent) (*UserEventbusSecurityRegisterTokenResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
-	ctx = ctxsetters.WithServiceName(ctx, "UserEventbus")
+	ctx = ctxsetters.WithServiceName(ctx, "UserEventbusService")
 	ctx = ctxsetters.WithMethodName(ctx, "SecurityRegisterToken")
 	caller := c.callSecurityRegisterToken
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *UserSecurityEvent) (*EventbusEmpty, error) {
+		caller = func(ctx context.Context, req *UserSecurityEvent) (*UserEventbusSecurityRegisterTokenResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*UserSecurityEvent)
@@ -1022,9 +1022,9 @@ func (c *userEventbusJSONClient) SecurityRegisterToken(ctx context.Context, in *
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EventbusEmpty)
+				typedResp, ok := resp.(*UserEventbusSecurityRegisterTokenResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EventbusEmpty) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*UserEventbusSecurityRegisterTokenResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -1034,8 +1034,8 @@ func (c *userEventbusJSONClient) SecurityRegisterToken(ctx context.Context, in *
 	return caller(ctx, in)
 }
 
-func (c *userEventbusJSONClient) callSecurityRegisterToken(ctx context.Context, in *UserSecurityEvent) (*EventbusEmpty, error) {
-	out := new(EventbusEmpty)
+func (c *userEventbusServiceJSONClient) callSecurityRegisterToken(ctx context.Context, in *UserSecurityEvent) (*UserEventbusSecurityRegisterTokenResponse, error) {
+	out := new(UserEventbusSecurityRegisterTokenResponse)
 	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[3], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -1051,13 +1051,13 @@ func (c *userEventbusJSONClient) callSecurityRegisterToken(ctx context.Context, 
 	return out, nil
 }
 
-func (c *userEventbusJSONClient) SecurityInviteToken(ctx context.Context, in *UserSecurityEvent) (*EventbusEmpty, error) {
+func (c *userEventbusServiceJSONClient) SecurityInviteToken(ctx context.Context, in *UserSecurityEvent) (*UserEventbusSecurityInviteTokenResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
-	ctx = ctxsetters.WithServiceName(ctx, "UserEventbus")
+	ctx = ctxsetters.WithServiceName(ctx, "UserEventbusService")
 	ctx = ctxsetters.WithMethodName(ctx, "SecurityInviteToken")
 	caller := c.callSecurityInviteToken
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *UserSecurityEvent) (*EventbusEmpty, error) {
+		caller = func(ctx context.Context, req *UserSecurityEvent) (*UserEventbusSecurityInviteTokenResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*UserSecurityEvent)
@@ -1068,9 +1068,9 @@ func (c *userEventbusJSONClient) SecurityInviteToken(ctx context.Context, in *Us
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EventbusEmpty)
+				typedResp, ok := resp.(*UserEventbusSecurityInviteTokenResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EventbusEmpty) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*UserEventbusSecurityInviteTokenResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -1080,8 +1080,8 @@ func (c *userEventbusJSONClient) SecurityInviteToken(ctx context.Context, in *Us
 	return caller(ctx, in)
 }
 
-func (c *userEventbusJSONClient) callSecurityInviteToken(ctx context.Context, in *UserSecurityEvent) (*EventbusEmpty, error) {
-	out := new(EventbusEmpty)
+func (c *userEventbusServiceJSONClient) callSecurityInviteToken(ctx context.Context, in *UserSecurityEvent) (*UserEventbusSecurityInviteTokenResponse, error) {
+	out := new(UserEventbusSecurityInviteTokenResponse)
 	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[4], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -1097,12 +1097,12 @@ func (c *userEventbusJSONClient) callSecurityInviteToken(ctx context.Context, in
 	return out, nil
 }
 
-// ===========================
-// UserEventbus Server Handler
-// ===========================
+// ==================================
+// UserEventbusService Server Handler
+// ==================================
 
-type userEventbusServer struct {
-	UserEventbus
+type userEventbusServiceServer struct {
+	UserEventbusService
 	interceptor      twirp.Interceptor
 	hooks            *twirp.ServerHooks
 	pathPrefix       string // prefix for routing
@@ -1110,10 +1110,10 @@ type userEventbusServer struct {
 	jsonCamelCase    bool   // JSON fields are serialized as lowerCamelCase rather than keeping the original proto names
 }
 
-// NewUserEventbusServer builds a TwirpServer that can be used as an http.Handler to handle
+// NewUserEventbusServiceServer builds a TwirpServer that can be used as an http.Handler to handle
 // HTTP requests that are routed to the right method in the provided svc implementation.
 // The opts are twirp.ServerOption modifiers, for example twirp.WithServerHooks(hooks).
-func NewUserEventbusServer(svc UserEventbus, opts ...interface{}) TwirpServer {
+func NewUserEventbusServiceServer(svc UserEventbusService, opts ...interface{}) TwirpServer {
 	serverOpts := newServerOpts(opts)
 
 	// Using ReadOpt allows backwards and forwads compatibility with new options in the future
@@ -1126,24 +1126,24 @@ func NewUserEventbusServer(svc UserEventbus, opts ...interface{}) TwirpServer {
 		pathPrefix = "/twirp" // default prefix
 	}
 
-	return &userEventbusServer{
-		UserEventbus:     svc,
-		hooks:            serverOpts.Hooks,
-		interceptor:      twirp.ChainInterceptors(serverOpts.Interceptors...),
-		pathPrefix:       pathPrefix,
-		jsonSkipDefaults: jsonSkipDefaults,
-		jsonCamelCase:    jsonCamelCase,
+	return &userEventbusServiceServer{
+		UserEventbusService: svc,
+		hooks:               serverOpts.Hooks,
+		interceptor:         twirp.ChainInterceptors(serverOpts.Interceptors...),
+		pathPrefix:          pathPrefix,
+		jsonSkipDefaults:    jsonSkipDefaults,
+		jsonCamelCase:       jsonCamelCase,
 	}
 }
 
 // writeError writes an HTTP response with a valid Twirp error format, and triggers hooks.
 // If err is not a twirp.Error, it will get wrapped with twirp.InternalErrorWith(err)
-func (s *userEventbusServer) writeError(ctx context.Context, resp http.ResponseWriter, err error) {
+func (s *userEventbusServiceServer) writeError(ctx context.Context, resp http.ResponseWriter, err error) {
 	writeError(ctx, resp, err, s.hooks)
 }
 
 // handleRequestBodyError is used to handle error when the twirp server cannot read request
-func (s *userEventbusServer) handleRequestBodyError(ctx context.Context, resp http.ResponseWriter, msg string, err error) {
+func (s *userEventbusServiceServer) handleRequestBodyError(ctx context.Context, resp http.ResponseWriter, msg string, err error) {
 	if context.Canceled == ctx.Err() {
 		s.writeError(ctx, resp, twirp.NewError(twirp.Canceled, "failed to read request: context canceled"))
 		return
@@ -1155,16 +1155,16 @@ func (s *userEventbusServer) handleRequestBodyError(ctx context.Context, resp ht
 	s.writeError(ctx, resp, twirp.WrapError(malformedRequestError(msg), err))
 }
 
-// UserEventbusPathPrefix is a convenience constant that may identify URL paths.
+// UserEventbusServicePathPrefix is a convenience constant that may identify URL paths.
 // Should be used with caution, it only matches routes generated by Twirp Go clients,
 // with the default "/twirp" prefix and default CamelCase service and method names.
 // More info: https://twitchtv.github.io/twirp/docs/routing.html
-const UserEventbusPathPrefix = "/twirp/corepb.v1.UserEventbus/"
+const UserEventbusServicePathPrefix = "/twirp/corepb.v1.UserEventbusService/"
 
-func (s *userEventbusServer) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
+func (s *userEventbusServiceServer) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
-	ctx = ctxsetters.WithServiceName(ctx, "UserEventbus")
+	ctx = ctxsetters.WithServiceName(ctx, "UserEventbusService")
 	ctx = ctxsetters.WithResponseWriter(ctx, resp)
 
 	var err error
@@ -1182,7 +1182,7 @@ func (s *userEventbusServer) ServeHTTP(resp http.ResponseWriter, req *http.Reque
 
 	// Verify path format: [<prefix>]/<package>.<Service>/<Method>
 	prefix, pkgService, method := parseTwirpPath(req.URL.Path)
-	if pkgService != "corepb.v1.UserEventbus" {
+	if pkgService != "corepb.v1.UserEventbusService" {
 		msg := fmt.Sprintf("no handler for path %q", req.URL.Path)
 		s.writeError(ctx, resp, badRouteError(msg, req.Method, req.URL.Path))
 		return
@@ -1216,7 +1216,7 @@ func (s *userEventbusServer) ServeHTTP(resp http.ResponseWriter, req *http.Reque
 	}
 }
 
-func (s *userEventbusServer) serveUserChange(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *userEventbusServiceServer) serveUserChange(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	header := req.Header.Get("Content-Type")
 	i := strings.Index(header, ";")
 	if i == -1 {
@@ -1234,7 +1234,7 @@ func (s *userEventbusServer) serveUserChange(ctx context.Context, resp http.Resp
 	}
 }
 
-func (s *userEventbusServer) serveUserChangeJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *userEventbusServiceServer) serveUserChangeJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	var err error
 	ctx = ctxsetters.WithMethodName(ctx, "UserChange")
 	ctx, err = callRequestRouted(ctx, s.hooks)
@@ -1256,22 +1256,22 @@ func (s *userEventbusServer) serveUserChangeJSON(ctx context.Context, resp http.
 		return
 	}
 
-	handler := s.UserEventbus.UserChange
+	handler := s.UserEventbusService.UserChange
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *UserChangeEvent) (*EventbusEmpty, error) {
+		handler = func(ctx context.Context, req *UserChangeEvent) (*UserEventbusUserChangeResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*UserChangeEvent)
 					if !ok {
 						return nil, twirp.InternalError("failed type assertion req.(*UserChangeEvent) when calling interceptor")
 					}
-					return s.UserEventbus.UserChange(ctx, typedReq)
+					return s.UserEventbusService.UserChange(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EventbusEmpty)
+				typedResp, ok := resp.(*UserEventbusUserChangeResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EventbusEmpty) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*UserEventbusUserChangeResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -1280,7 +1280,7 @@ func (s *userEventbusServer) serveUserChangeJSON(ctx context.Context, resp http.
 	}
 
 	// Call service method
-	var respContent *EventbusEmpty
+	var respContent *UserEventbusUserChangeResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -1291,7 +1291,7 @@ func (s *userEventbusServer) serveUserChangeJSON(ctx context.Context, resp http.
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *EventbusEmpty and nil error while calling UserChange. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *UserEventbusUserChangeResponse and nil error while calling UserChange. nil responses are not supported"))
 		return
 	}
 
@@ -1317,7 +1317,7 @@ func (s *userEventbusServer) serveUserChangeJSON(ctx context.Context, resp http.
 	callResponseSent(ctx, s.hooks)
 }
 
-func (s *userEventbusServer) serveUserChangeProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *userEventbusServiceServer) serveUserChangeProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	var err error
 	ctx = ctxsetters.WithMethodName(ctx, "UserChange")
 	ctx, err = callRequestRouted(ctx, s.hooks)
@@ -1337,22 +1337,22 @@ func (s *userEventbusServer) serveUserChangeProtobuf(ctx context.Context, resp h
 		return
 	}
 
-	handler := s.UserEventbus.UserChange
+	handler := s.UserEventbusService.UserChange
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *UserChangeEvent) (*EventbusEmpty, error) {
+		handler = func(ctx context.Context, req *UserChangeEvent) (*UserEventbusUserChangeResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*UserChangeEvent)
 					if !ok {
 						return nil, twirp.InternalError("failed type assertion req.(*UserChangeEvent) when calling interceptor")
 					}
-					return s.UserEventbus.UserChange(ctx, typedReq)
+					return s.UserEventbusService.UserChange(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EventbusEmpty)
+				typedResp, ok := resp.(*UserEventbusUserChangeResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EventbusEmpty) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*UserEventbusUserChangeResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -1361,7 +1361,7 @@ func (s *userEventbusServer) serveUserChangeProtobuf(ctx context.Context, resp h
 	}
 
 	// Call service method
-	var respContent *EventbusEmpty
+	var respContent *UserEventbusUserChangeResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -1372,7 +1372,7 @@ func (s *userEventbusServer) serveUserChangeProtobuf(ctx context.Context, resp h
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *EventbusEmpty and nil error while calling UserChange. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *UserEventbusUserChangeResponse and nil error while calling UserChange. nil responses are not supported"))
 		return
 	}
 
@@ -1396,7 +1396,7 @@ func (s *userEventbusServer) serveUserChangeProtobuf(ctx context.Context, resp h
 	callResponseSent(ctx, s.hooks)
 }
 
-func (s *userEventbusServer) serveSecurityPasswordChange(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *userEventbusServiceServer) serveSecurityPasswordChange(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	header := req.Header.Get("Content-Type")
 	i := strings.Index(header, ";")
 	if i == -1 {
@@ -1414,7 +1414,7 @@ func (s *userEventbusServer) serveSecurityPasswordChange(ctx context.Context, re
 	}
 }
 
-func (s *userEventbusServer) serveSecurityPasswordChangeJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *userEventbusServiceServer) serveSecurityPasswordChangeJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	var err error
 	ctx = ctxsetters.WithMethodName(ctx, "SecurityPasswordChange")
 	ctx, err = callRequestRouted(ctx, s.hooks)
@@ -1436,22 +1436,22 @@ func (s *userEventbusServer) serveSecurityPasswordChangeJSON(ctx context.Context
 		return
 	}
 
-	handler := s.UserEventbus.SecurityPasswordChange
+	handler := s.UserEventbusService.SecurityPasswordChange
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *UserSecurityEvent) (*EventbusEmpty, error) {
+		handler = func(ctx context.Context, req *UserSecurityEvent) (*UserEventbusSecurityPasswordChangeResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*UserSecurityEvent)
 					if !ok {
 						return nil, twirp.InternalError("failed type assertion req.(*UserSecurityEvent) when calling interceptor")
 					}
-					return s.UserEventbus.SecurityPasswordChange(ctx, typedReq)
+					return s.UserEventbusService.SecurityPasswordChange(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EventbusEmpty)
+				typedResp, ok := resp.(*UserEventbusSecurityPasswordChangeResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EventbusEmpty) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*UserEventbusSecurityPasswordChangeResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -1460,7 +1460,7 @@ func (s *userEventbusServer) serveSecurityPasswordChangeJSON(ctx context.Context
 	}
 
 	// Call service method
-	var respContent *EventbusEmpty
+	var respContent *UserEventbusSecurityPasswordChangeResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -1471,7 +1471,7 @@ func (s *userEventbusServer) serveSecurityPasswordChangeJSON(ctx context.Context
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *EventbusEmpty and nil error while calling SecurityPasswordChange. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *UserEventbusSecurityPasswordChangeResponse and nil error while calling SecurityPasswordChange. nil responses are not supported"))
 		return
 	}
 
@@ -1497,7 +1497,7 @@ func (s *userEventbusServer) serveSecurityPasswordChangeJSON(ctx context.Context
 	callResponseSent(ctx, s.hooks)
 }
 
-func (s *userEventbusServer) serveSecurityPasswordChangeProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *userEventbusServiceServer) serveSecurityPasswordChangeProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	var err error
 	ctx = ctxsetters.WithMethodName(ctx, "SecurityPasswordChange")
 	ctx, err = callRequestRouted(ctx, s.hooks)
@@ -1517,22 +1517,22 @@ func (s *userEventbusServer) serveSecurityPasswordChangeProtobuf(ctx context.Con
 		return
 	}
 
-	handler := s.UserEventbus.SecurityPasswordChange
+	handler := s.UserEventbusService.SecurityPasswordChange
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *UserSecurityEvent) (*EventbusEmpty, error) {
+		handler = func(ctx context.Context, req *UserSecurityEvent) (*UserEventbusSecurityPasswordChangeResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*UserSecurityEvent)
 					if !ok {
 						return nil, twirp.InternalError("failed type assertion req.(*UserSecurityEvent) when calling interceptor")
 					}
-					return s.UserEventbus.SecurityPasswordChange(ctx, typedReq)
+					return s.UserEventbusService.SecurityPasswordChange(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EventbusEmpty)
+				typedResp, ok := resp.(*UserEventbusSecurityPasswordChangeResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EventbusEmpty) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*UserEventbusSecurityPasswordChangeResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -1541,7 +1541,7 @@ func (s *userEventbusServer) serveSecurityPasswordChangeProtobuf(ctx context.Con
 	}
 
 	// Call service method
-	var respContent *EventbusEmpty
+	var respContent *UserEventbusSecurityPasswordChangeResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -1552,7 +1552,7 @@ func (s *userEventbusServer) serveSecurityPasswordChangeProtobuf(ctx context.Con
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *EventbusEmpty and nil error while calling SecurityPasswordChange. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *UserEventbusSecurityPasswordChangeResponse and nil error while calling SecurityPasswordChange. nil responses are not supported"))
 		return
 	}
 
@@ -1576,7 +1576,7 @@ func (s *userEventbusServer) serveSecurityPasswordChangeProtobuf(ctx context.Con
 	callResponseSent(ctx, s.hooks)
 }
 
-func (s *userEventbusServer) serveSecurityForgotRequest(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *userEventbusServiceServer) serveSecurityForgotRequest(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	header := req.Header.Get("Content-Type")
 	i := strings.Index(header, ";")
 	if i == -1 {
@@ -1594,7 +1594,7 @@ func (s *userEventbusServer) serveSecurityForgotRequest(ctx context.Context, res
 	}
 }
 
-func (s *userEventbusServer) serveSecurityForgotRequestJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *userEventbusServiceServer) serveSecurityForgotRequestJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	var err error
 	ctx = ctxsetters.WithMethodName(ctx, "SecurityForgotRequest")
 	ctx, err = callRequestRouted(ctx, s.hooks)
@@ -1616,22 +1616,22 @@ func (s *userEventbusServer) serveSecurityForgotRequestJSON(ctx context.Context,
 		return
 	}
 
-	handler := s.UserEventbus.SecurityForgotRequest
+	handler := s.UserEventbusService.SecurityForgotRequest
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *UserSecurityEvent) (*EventbusEmpty, error) {
+		handler = func(ctx context.Context, req *UserSecurityEvent) (*UserEventbusSecurityForgotRequestResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*UserSecurityEvent)
 					if !ok {
 						return nil, twirp.InternalError("failed type assertion req.(*UserSecurityEvent) when calling interceptor")
 					}
-					return s.UserEventbus.SecurityForgotRequest(ctx, typedReq)
+					return s.UserEventbusService.SecurityForgotRequest(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EventbusEmpty)
+				typedResp, ok := resp.(*UserEventbusSecurityForgotRequestResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EventbusEmpty) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*UserEventbusSecurityForgotRequestResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -1640,7 +1640,7 @@ func (s *userEventbusServer) serveSecurityForgotRequestJSON(ctx context.Context,
 	}
 
 	// Call service method
-	var respContent *EventbusEmpty
+	var respContent *UserEventbusSecurityForgotRequestResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -1651,7 +1651,7 @@ func (s *userEventbusServer) serveSecurityForgotRequestJSON(ctx context.Context,
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *EventbusEmpty and nil error while calling SecurityForgotRequest. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *UserEventbusSecurityForgotRequestResponse and nil error while calling SecurityForgotRequest. nil responses are not supported"))
 		return
 	}
 
@@ -1677,7 +1677,7 @@ func (s *userEventbusServer) serveSecurityForgotRequestJSON(ctx context.Context,
 	callResponseSent(ctx, s.hooks)
 }
 
-func (s *userEventbusServer) serveSecurityForgotRequestProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *userEventbusServiceServer) serveSecurityForgotRequestProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	var err error
 	ctx = ctxsetters.WithMethodName(ctx, "SecurityForgotRequest")
 	ctx, err = callRequestRouted(ctx, s.hooks)
@@ -1697,22 +1697,22 @@ func (s *userEventbusServer) serveSecurityForgotRequestProtobuf(ctx context.Cont
 		return
 	}
 
-	handler := s.UserEventbus.SecurityForgotRequest
+	handler := s.UserEventbusService.SecurityForgotRequest
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *UserSecurityEvent) (*EventbusEmpty, error) {
+		handler = func(ctx context.Context, req *UserSecurityEvent) (*UserEventbusSecurityForgotRequestResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*UserSecurityEvent)
 					if !ok {
 						return nil, twirp.InternalError("failed type assertion req.(*UserSecurityEvent) when calling interceptor")
 					}
-					return s.UserEventbus.SecurityForgotRequest(ctx, typedReq)
+					return s.UserEventbusService.SecurityForgotRequest(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EventbusEmpty)
+				typedResp, ok := resp.(*UserEventbusSecurityForgotRequestResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EventbusEmpty) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*UserEventbusSecurityForgotRequestResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -1721,7 +1721,7 @@ func (s *userEventbusServer) serveSecurityForgotRequestProtobuf(ctx context.Cont
 	}
 
 	// Call service method
-	var respContent *EventbusEmpty
+	var respContent *UserEventbusSecurityForgotRequestResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -1732,7 +1732,7 @@ func (s *userEventbusServer) serveSecurityForgotRequestProtobuf(ctx context.Cont
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *EventbusEmpty and nil error while calling SecurityForgotRequest. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *UserEventbusSecurityForgotRequestResponse and nil error while calling SecurityForgotRequest. nil responses are not supported"))
 		return
 	}
 
@@ -1756,7 +1756,7 @@ func (s *userEventbusServer) serveSecurityForgotRequestProtobuf(ctx context.Cont
 	callResponseSent(ctx, s.hooks)
 }
 
-func (s *userEventbusServer) serveSecurityRegisterToken(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *userEventbusServiceServer) serveSecurityRegisterToken(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	header := req.Header.Get("Content-Type")
 	i := strings.Index(header, ";")
 	if i == -1 {
@@ -1774,7 +1774,7 @@ func (s *userEventbusServer) serveSecurityRegisterToken(ctx context.Context, res
 	}
 }
 
-func (s *userEventbusServer) serveSecurityRegisterTokenJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *userEventbusServiceServer) serveSecurityRegisterTokenJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	var err error
 	ctx = ctxsetters.WithMethodName(ctx, "SecurityRegisterToken")
 	ctx, err = callRequestRouted(ctx, s.hooks)
@@ -1796,22 +1796,22 @@ func (s *userEventbusServer) serveSecurityRegisterTokenJSON(ctx context.Context,
 		return
 	}
 
-	handler := s.UserEventbus.SecurityRegisterToken
+	handler := s.UserEventbusService.SecurityRegisterToken
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *UserSecurityEvent) (*EventbusEmpty, error) {
+		handler = func(ctx context.Context, req *UserSecurityEvent) (*UserEventbusSecurityRegisterTokenResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*UserSecurityEvent)
 					if !ok {
 						return nil, twirp.InternalError("failed type assertion req.(*UserSecurityEvent) when calling interceptor")
 					}
-					return s.UserEventbus.SecurityRegisterToken(ctx, typedReq)
+					return s.UserEventbusService.SecurityRegisterToken(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EventbusEmpty)
+				typedResp, ok := resp.(*UserEventbusSecurityRegisterTokenResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EventbusEmpty) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*UserEventbusSecurityRegisterTokenResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -1820,7 +1820,7 @@ func (s *userEventbusServer) serveSecurityRegisterTokenJSON(ctx context.Context,
 	}
 
 	// Call service method
-	var respContent *EventbusEmpty
+	var respContent *UserEventbusSecurityRegisterTokenResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -1831,7 +1831,7 @@ func (s *userEventbusServer) serveSecurityRegisterTokenJSON(ctx context.Context,
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *EventbusEmpty and nil error while calling SecurityRegisterToken. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *UserEventbusSecurityRegisterTokenResponse and nil error while calling SecurityRegisterToken. nil responses are not supported"))
 		return
 	}
 
@@ -1857,7 +1857,7 @@ func (s *userEventbusServer) serveSecurityRegisterTokenJSON(ctx context.Context,
 	callResponseSent(ctx, s.hooks)
 }
 
-func (s *userEventbusServer) serveSecurityRegisterTokenProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *userEventbusServiceServer) serveSecurityRegisterTokenProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	var err error
 	ctx = ctxsetters.WithMethodName(ctx, "SecurityRegisterToken")
 	ctx, err = callRequestRouted(ctx, s.hooks)
@@ -1877,22 +1877,22 @@ func (s *userEventbusServer) serveSecurityRegisterTokenProtobuf(ctx context.Cont
 		return
 	}
 
-	handler := s.UserEventbus.SecurityRegisterToken
+	handler := s.UserEventbusService.SecurityRegisterToken
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *UserSecurityEvent) (*EventbusEmpty, error) {
+		handler = func(ctx context.Context, req *UserSecurityEvent) (*UserEventbusSecurityRegisterTokenResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*UserSecurityEvent)
 					if !ok {
 						return nil, twirp.InternalError("failed type assertion req.(*UserSecurityEvent) when calling interceptor")
 					}
-					return s.UserEventbus.SecurityRegisterToken(ctx, typedReq)
+					return s.UserEventbusService.SecurityRegisterToken(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EventbusEmpty)
+				typedResp, ok := resp.(*UserEventbusSecurityRegisterTokenResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EventbusEmpty) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*UserEventbusSecurityRegisterTokenResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -1901,7 +1901,7 @@ func (s *userEventbusServer) serveSecurityRegisterTokenProtobuf(ctx context.Cont
 	}
 
 	// Call service method
-	var respContent *EventbusEmpty
+	var respContent *UserEventbusSecurityRegisterTokenResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -1912,7 +1912,7 @@ func (s *userEventbusServer) serveSecurityRegisterTokenProtobuf(ctx context.Cont
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *EventbusEmpty and nil error while calling SecurityRegisterToken. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *UserEventbusSecurityRegisterTokenResponse and nil error while calling SecurityRegisterToken. nil responses are not supported"))
 		return
 	}
 
@@ -1936,7 +1936,7 @@ func (s *userEventbusServer) serveSecurityRegisterTokenProtobuf(ctx context.Cont
 	callResponseSent(ctx, s.hooks)
 }
 
-func (s *userEventbusServer) serveSecurityInviteToken(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *userEventbusServiceServer) serveSecurityInviteToken(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	header := req.Header.Get("Content-Type")
 	i := strings.Index(header, ";")
 	if i == -1 {
@@ -1954,7 +1954,7 @@ func (s *userEventbusServer) serveSecurityInviteToken(ctx context.Context, resp 
 	}
 }
 
-func (s *userEventbusServer) serveSecurityInviteTokenJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *userEventbusServiceServer) serveSecurityInviteTokenJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	var err error
 	ctx = ctxsetters.WithMethodName(ctx, "SecurityInviteToken")
 	ctx, err = callRequestRouted(ctx, s.hooks)
@@ -1976,22 +1976,22 @@ func (s *userEventbusServer) serveSecurityInviteTokenJSON(ctx context.Context, r
 		return
 	}
 
-	handler := s.UserEventbus.SecurityInviteToken
+	handler := s.UserEventbusService.SecurityInviteToken
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *UserSecurityEvent) (*EventbusEmpty, error) {
+		handler = func(ctx context.Context, req *UserSecurityEvent) (*UserEventbusSecurityInviteTokenResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*UserSecurityEvent)
 					if !ok {
 						return nil, twirp.InternalError("failed type assertion req.(*UserSecurityEvent) when calling interceptor")
 					}
-					return s.UserEventbus.SecurityInviteToken(ctx, typedReq)
+					return s.UserEventbusService.SecurityInviteToken(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EventbusEmpty)
+				typedResp, ok := resp.(*UserEventbusSecurityInviteTokenResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EventbusEmpty) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*UserEventbusSecurityInviteTokenResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -2000,7 +2000,7 @@ func (s *userEventbusServer) serveSecurityInviteTokenJSON(ctx context.Context, r
 	}
 
 	// Call service method
-	var respContent *EventbusEmpty
+	var respContent *UserEventbusSecurityInviteTokenResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -2011,7 +2011,7 @@ func (s *userEventbusServer) serveSecurityInviteTokenJSON(ctx context.Context, r
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *EventbusEmpty and nil error while calling SecurityInviteToken. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *UserEventbusSecurityInviteTokenResponse and nil error while calling SecurityInviteToken. nil responses are not supported"))
 		return
 	}
 
@@ -2037,7 +2037,7 @@ func (s *userEventbusServer) serveSecurityInviteTokenJSON(ctx context.Context, r
 	callResponseSent(ctx, s.hooks)
 }
 
-func (s *userEventbusServer) serveSecurityInviteTokenProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *userEventbusServiceServer) serveSecurityInviteTokenProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	var err error
 	ctx = ctxsetters.WithMethodName(ctx, "SecurityInviteToken")
 	ctx, err = callRequestRouted(ctx, s.hooks)
@@ -2057,22 +2057,22 @@ func (s *userEventbusServer) serveSecurityInviteTokenProtobuf(ctx context.Contex
 		return
 	}
 
-	handler := s.UserEventbus.SecurityInviteToken
+	handler := s.UserEventbusService.SecurityInviteToken
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *UserSecurityEvent) (*EventbusEmpty, error) {
+		handler = func(ctx context.Context, req *UserSecurityEvent) (*UserEventbusSecurityInviteTokenResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*UserSecurityEvent)
 					if !ok {
 						return nil, twirp.InternalError("failed type assertion req.(*UserSecurityEvent) when calling interceptor")
 					}
-					return s.UserEventbus.SecurityInviteToken(ctx, typedReq)
+					return s.UserEventbusService.SecurityInviteToken(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EventbusEmpty)
+				typedResp, ok := resp.(*UserEventbusSecurityInviteTokenResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EventbusEmpty) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*UserEventbusSecurityInviteTokenResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -2081,7 +2081,7 @@ func (s *userEventbusServer) serveSecurityInviteTokenProtobuf(ctx context.Contex
 	}
 
 	// Call service method
-	var respContent *EventbusEmpty
+	var respContent *UserEventbusSecurityInviteTokenResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -2092,7 +2092,7 @@ func (s *userEventbusServer) serveSecurityInviteTokenProtobuf(ctx context.Contex
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *EventbusEmpty and nil error while calling SecurityInviteToken. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *UserEventbusSecurityInviteTokenResponse and nil error while calling SecurityInviteToken. nil responses are not supported"))
 		return
 	}
 
@@ -2116,43 +2116,43 @@ func (s *userEventbusServer) serveSecurityInviteTokenProtobuf(ctx context.Contex
 	callResponseSent(ctx, s.hooks)
 }
 
-func (s *userEventbusServer) ServiceDescriptor() ([]byte, int) {
+func (s *userEventbusServiceServer) ServiceDescriptor() ([]byte, int) {
 	return twirpFileDescriptor4, 1
 }
 
-func (s *userEventbusServer) ProtocGenTwirpVersion() string {
+func (s *userEventbusServiceServer) ProtocGenTwirpVersion() string {
 	return "v8.1.1"
 }
 
 // PathPrefix returns the base service path, in the form: "/<prefix>/<package>.<Service>/"
 // that is everything in a Twirp route except for the <Method>. This can be used for routing,
 // for example to identify the requests that are targeted to this service in a mux.
-func (s *userEventbusServer) PathPrefix() string {
-	return baseServicePath(s.pathPrefix, "corepb.v1", "UserEventbus")
+func (s *userEventbusServiceServer) PathPrefix() string {
+	return baseServicePath(s.pathPrefix, "corepb.v1", "UserEventbusService")
 }
 
-// ======================
-// TodoEventbus Interface
-// ======================
+// =============================
+// TodoEventbusService Interface
+// =============================
 
-type TodoEventbus interface {
-	TodoChange(context.Context, *TodoChangeEvent) (*EventbusEmpty, error)
+type TodoEventbusService interface {
+	TodoChange(context.Context, *TodoChangeEvent) (*TodoEventbusTodoChangeResponse, error)
 }
 
-// ============================
-// TodoEventbus Protobuf Client
-// ============================
+// ===================================
+// TodoEventbusService Protobuf Client
+// ===================================
 
-type todoEventbusProtobufClient struct {
+type todoEventbusServiceProtobufClient struct {
 	client      HTTPClient
 	urls        [1]string
 	interceptor twirp.Interceptor
 	opts        twirp.ClientOptions
 }
 
-// NewTodoEventbusProtobufClient creates a Protobuf client that implements the TodoEventbus interface.
+// NewTodoEventbusServiceProtobufClient creates a Protobuf client that implements the TodoEventbusService interface.
 // It communicates using Protobuf and can be configured with a custom HTTPClient.
-func NewTodoEventbusProtobufClient(baseURL string, client HTTPClient, opts ...twirp.ClientOption) TodoEventbus {
+func NewTodoEventbusServiceProtobufClient(baseURL string, client HTTPClient, opts ...twirp.ClientOption) TodoEventbusService {
 	if c, ok := client.(*http.Client); ok {
 		client = withoutRedirects(c)
 	}
@@ -2172,12 +2172,12 @@ func NewTodoEventbusProtobufClient(baseURL string, client HTTPClient, opts ...tw
 
 	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
 	serviceURL := sanitizeBaseURL(baseURL)
-	serviceURL += baseServicePath(pathPrefix, "corepb.v1", "TodoEventbus")
+	serviceURL += baseServicePath(pathPrefix, "corepb.v1", "TodoEventbusService")
 	urls := [1]string{
 		serviceURL + "TodoChange",
 	}
 
-	return &todoEventbusProtobufClient{
+	return &todoEventbusServiceProtobufClient{
 		client:      client,
 		urls:        urls,
 		interceptor: twirp.ChainInterceptors(clientOpts.Interceptors...),
@@ -2185,13 +2185,13 @@ func NewTodoEventbusProtobufClient(baseURL string, client HTTPClient, opts ...tw
 	}
 }
 
-func (c *todoEventbusProtobufClient) TodoChange(ctx context.Context, in *TodoChangeEvent) (*EventbusEmpty, error) {
+func (c *todoEventbusServiceProtobufClient) TodoChange(ctx context.Context, in *TodoChangeEvent) (*TodoEventbusTodoChangeResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
-	ctx = ctxsetters.WithServiceName(ctx, "TodoEventbus")
+	ctx = ctxsetters.WithServiceName(ctx, "TodoEventbusService")
 	ctx = ctxsetters.WithMethodName(ctx, "TodoChange")
 	caller := c.callTodoChange
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *TodoChangeEvent) (*EventbusEmpty, error) {
+		caller = func(ctx context.Context, req *TodoChangeEvent) (*TodoEventbusTodoChangeResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*TodoChangeEvent)
@@ -2202,9 +2202,9 @@ func (c *todoEventbusProtobufClient) TodoChange(ctx context.Context, in *TodoCha
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EventbusEmpty)
+				typedResp, ok := resp.(*TodoEventbusTodoChangeResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EventbusEmpty) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*TodoEventbusTodoChangeResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -2214,8 +2214,8 @@ func (c *todoEventbusProtobufClient) TodoChange(ctx context.Context, in *TodoCha
 	return caller(ctx, in)
 }
 
-func (c *todoEventbusProtobufClient) callTodoChange(ctx context.Context, in *TodoChangeEvent) (*EventbusEmpty, error) {
-	out := new(EventbusEmpty)
+func (c *todoEventbusServiceProtobufClient) callTodoChange(ctx context.Context, in *TodoChangeEvent) (*TodoEventbusTodoChangeResponse, error) {
+	out := new(TodoEventbusTodoChangeResponse)
 	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -2231,20 +2231,20 @@ func (c *todoEventbusProtobufClient) callTodoChange(ctx context.Context, in *Tod
 	return out, nil
 }
 
-// ========================
-// TodoEventbus JSON Client
-// ========================
+// ===============================
+// TodoEventbusService JSON Client
+// ===============================
 
-type todoEventbusJSONClient struct {
+type todoEventbusServiceJSONClient struct {
 	client      HTTPClient
 	urls        [1]string
 	interceptor twirp.Interceptor
 	opts        twirp.ClientOptions
 }
 
-// NewTodoEventbusJSONClient creates a JSON client that implements the TodoEventbus interface.
+// NewTodoEventbusServiceJSONClient creates a JSON client that implements the TodoEventbusService interface.
 // It communicates using JSON and can be configured with a custom HTTPClient.
-func NewTodoEventbusJSONClient(baseURL string, client HTTPClient, opts ...twirp.ClientOption) TodoEventbus {
+func NewTodoEventbusServiceJSONClient(baseURL string, client HTTPClient, opts ...twirp.ClientOption) TodoEventbusService {
 	if c, ok := client.(*http.Client); ok {
 		client = withoutRedirects(c)
 	}
@@ -2264,12 +2264,12 @@ func NewTodoEventbusJSONClient(baseURL string, client HTTPClient, opts ...twirp.
 
 	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
 	serviceURL := sanitizeBaseURL(baseURL)
-	serviceURL += baseServicePath(pathPrefix, "corepb.v1", "TodoEventbus")
+	serviceURL += baseServicePath(pathPrefix, "corepb.v1", "TodoEventbusService")
 	urls := [1]string{
 		serviceURL + "TodoChange",
 	}
 
-	return &todoEventbusJSONClient{
+	return &todoEventbusServiceJSONClient{
 		client:      client,
 		urls:        urls,
 		interceptor: twirp.ChainInterceptors(clientOpts.Interceptors...),
@@ -2277,13 +2277,13 @@ func NewTodoEventbusJSONClient(baseURL string, client HTTPClient, opts ...twirp.
 	}
 }
 
-func (c *todoEventbusJSONClient) TodoChange(ctx context.Context, in *TodoChangeEvent) (*EventbusEmpty, error) {
+func (c *todoEventbusServiceJSONClient) TodoChange(ctx context.Context, in *TodoChangeEvent) (*TodoEventbusTodoChangeResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
-	ctx = ctxsetters.WithServiceName(ctx, "TodoEventbus")
+	ctx = ctxsetters.WithServiceName(ctx, "TodoEventbusService")
 	ctx = ctxsetters.WithMethodName(ctx, "TodoChange")
 	caller := c.callTodoChange
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *TodoChangeEvent) (*EventbusEmpty, error) {
+		caller = func(ctx context.Context, req *TodoChangeEvent) (*TodoEventbusTodoChangeResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*TodoChangeEvent)
@@ -2294,9 +2294,9 @@ func (c *todoEventbusJSONClient) TodoChange(ctx context.Context, in *TodoChangeE
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EventbusEmpty)
+				typedResp, ok := resp.(*TodoEventbusTodoChangeResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EventbusEmpty) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*TodoEventbusTodoChangeResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -2306,8 +2306,8 @@ func (c *todoEventbusJSONClient) TodoChange(ctx context.Context, in *TodoChangeE
 	return caller(ctx, in)
 }
 
-func (c *todoEventbusJSONClient) callTodoChange(ctx context.Context, in *TodoChangeEvent) (*EventbusEmpty, error) {
-	out := new(EventbusEmpty)
+func (c *todoEventbusServiceJSONClient) callTodoChange(ctx context.Context, in *TodoChangeEvent) (*TodoEventbusTodoChangeResponse, error) {
+	out := new(TodoEventbusTodoChangeResponse)
 	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -2323,12 +2323,12 @@ func (c *todoEventbusJSONClient) callTodoChange(ctx context.Context, in *TodoCha
 	return out, nil
 }
 
-// ===========================
-// TodoEventbus Server Handler
-// ===========================
+// ==================================
+// TodoEventbusService Server Handler
+// ==================================
 
-type todoEventbusServer struct {
-	TodoEventbus
+type todoEventbusServiceServer struct {
+	TodoEventbusService
 	interceptor      twirp.Interceptor
 	hooks            *twirp.ServerHooks
 	pathPrefix       string // prefix for routing
@@ -2336,10 +2336,10 @@ type todoEventbusServer struct {
 	jsonCamelCase    bool   // JSON fields are serialized as lowerCamelCase rather than keeping the original proto names
 }
 
-// NewTodoEventbusServer builds a TwirpServer that can be used as an http.Handler to handle
+// NewTodoEventbusServiceServer builds a TwirpServer that can be used as an http.Handler to handle
 // HTTP requests that are routed to the right method in the provided svc implementation.
 // The opts are twirp.ServerOption modifiers, for example twirp.WithServerHooks(hooks).
-func NewTodoEventbusServer(svc TodoEventbus, opts ...interface{}) TwirpServer {
+func NewTodoEventbusServiceServer(svc TodoEventbusService, opts ...interface{}) TwirpServer {
 	serverOpts := newServerOpts(opts)
 
 	// Using ReadOpt allows backwards and forwads compatibility with new options in the future
@@ -2352,24 +2352,24 @@ func NewTodoEventbusServer(svc TodoEventbus, opts ...interface{}) TwirpServer {
 		pathPrefix = "/twirp" // default prefix
 	}
 
-	return &todoEventbusServer{
-		TodoEventbus:     svc,
-		hooks:            serverOpts.Hooks,
-		interceptor:      twirp.ChainInterceptors(serverOpts.Interceptors...),
-		pathPrefix:       pathPrefix,
-		jsonSkipDefaults: jsonSkipDefaults,
-		jsonCamelCase:    jsonCamelCase,
+	return &todoEventbusServiceServer{
+		TodoEventbusService: svc,
+		hooks:               serverOpts.Hooks,
+		interceptor:         twirp.ChainInterceptors(serverOpts.Interceptors...),
+		pathPrefix:          pathPrefix,
+		jsonSkipDefaults:    jsonSkipDefaults,
+		jsonCamelCase:       jsonCamelCase,
 	}
 }
 
 // writeError writes an HTTP response with a valid Twirp error format, and triggers hooks.
 // If err is not a twirp.Error, it will get wrapped with twirp.InternalErrorWith(err)
-func (s *todoEventbusServer) writeError(ctx context.Context, resp http.ResponseWriter, err error) {
+func (s *todoEventbusServiceServer) writeError(ctx context.Context, resp http.ResponseWriter, err error) {
 	writeError(ctx, resp, err, s.hooks)
 }
 
 // handleRequestBodyError is used to handle error when the twirp server cannot read request
-func (s *todoEventbusServer) handleRequestBodyError(ctx context.Context, resp http.ResponseWriter, msg string, err error) {
+func (s *todoEventbusServiceServer) handleRequestBodyError(ctx context.Context, resp http.ResponseWriter, msg string, err error) {
 	if context.Canceled == ctx.Err() {
 		s.writeError(ctx, resp, twirp.NewError(twirp.Canceled, "failed to read request: context canceled"))
 		return
@@ -2381,16 +2381,16 @@ func (s *todoEventbusServer) handleRequestBodyError(ctx context.Context, resp ht
 	s.writeError(ctx, resp, twirp.WrapError(malformedRequestError(msg), err))
 }
 
-// TodoEventbusPathPrefix is a convenience constant that may identify URL paths.
+// TodoEventbusServicePathPrefix is a convenience constant that may identify URL paths.
 // Should be used with caution, it only matches routes generated by Twirp Go clients,
 // with the default "/twirp" prefix and default CamelCase service and method names.
 // More info: https://twitchtv.github.io/twirp/docs/routing.html
-const TodoEventbusPathPrefix = "/twirp/corepb.v1.TodoEventbus/"
+const TodoEventbusServicePathPrefix = "/twirp/corepb.v1.TodoEventbusService/"
 
-func (s *todoEventbusServer) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
+func (s *todoEventbusServiceServer) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
-	ctx = ctxsetters.WithServiceName(ctx, "TodoEventbus")
+	ctx = ctxsetters.WithServiceName(ctx, "TodoEventbusService")
 	ctx = ctxsetters.WithResponseWriter(ctx, resp)
 
 	var err error
@@ -2408,7 +2408,7 @@ func (s *todoEventbusServer) ServeHTTP(resp http.ResponseWriter, req *http.Reque
 
 	// Verify path format: [<prefix>]/<package>.<Service>/<Method>
 	prefix, pkgService, method := parseTwirpPath(req.URL.Path)
-	if pkgService != "corepb.v1.TodoEventbus" {
+	if pkgService != "corepb.v1.TodoEventbusService" {
 		msg := fmt.Sprintf("no handler for path %q", req.URL.Path)
 		s.writeError(ctx, resp, badRouteError(msg, req.Method, req.URL.Path))
 		return
@@ -2430,7 +2430,7 @@ func (s *todoEventbusServer) ServeHTTP(resp http.ResponseWriter, req *http.Reque
 	}
 }
 
-func (s *todoEventbusServer) serveTodoChange(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *todoEventbusServiceServer) serveTodoChange(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	header := req.Header.Get("Content-Type")
 	i := strings.Index(header, ";")
 	if i == -1 {
@@ -2448,7 +2448,7 @@ func (s *todoEventbusServer) serveTodoChange(ctx context.Context, resp http.Resp
 	}
 }
 
-func (s *todoEventbusServer) serveTodoChangeJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *todoEventbusServiceServer) serveTodoChangeJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	var err error
 	ctx = ctxsetters.WithMethodName(ctx, "TodoChange")
 	ctx, err = callRequestRouted(ctx, s.hooks)
@@ -2470,22 +2470,22 @@ func (s *todoEventbusServer) serveTodoChangeJSON(ctx context.Context, resp http.
 		return
 	}
 
-	handler := s.TodoEventbus.TodoChange
+	handler := s.TodoEventbusService.TodoChange
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *TodoChangeEvent) (*EventbusEmpty, error) {
+		handler = func(ctx context.Context, req *TodoChangeEvent) (*TodoEventbusTodoChangeResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*TodoChangeEvent)
 					if !ok {
 						return nil, twirp.InternalError("failed type assertion req.(*TodoChangeEvent) when calling interceptor")
 					}
-					return s.TodoEventbus.TodoChange(ctx, typedReq)
+					return s.TodoEventbusService.TodoChange(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EventbusEmpty)
+				typedResp, ok := resp.(*TodoEventbusTodoChangeResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EventbusEmpty) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*TodoEventbusTodoChangeResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -2494,7 +2494,7 @@ func (s *todoEventbusServer) serveTodoChangeJSON(ctx context.Context, resp http.
 	}
 
 	// Call service method
-	var respContent *EventbusEmpty
+	var respContent *TodoEventbusTodoChangeResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -2505,7 +2505,7 @@ func (s *todoEventbusServer) serveTodoChangeJSON(ctx context.Context, resp http.
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *EventbusEmpty and nil error while calling TodoChange. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *TodoEventbusTodoChangeResponse and nil error while calling TodoChange. nil responses are not supported"))
 		return
 	}
 
@@ -2531,7 +2531,7 @@ func (s *todoEventbusServer) serveTodoChangeJSON(ctx context.Context, resp http.
 	callResponseSent(ctx, s.hooks)
 }
 
-func (s *todoEventbusServer) serveTodoChangeProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *todoEventbusServiceServer) serveTodoChangeProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	var err error
 	ctx = ctxsetters.WithMethodName(ctx, "TodoChange")
 	ctx, err = callRequestRouted(ctx, s.hooks)
@@ -2551,22 +2551,22 @@ func (s *todoEventbusServer) serveTodoChangeProtobuf(ctx context.Context, resp h
 		return
 	}
 
-	handler := s.TodoEventbus.TodoChange
+	handler := s.TodoEventbusService.TodoChange
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *TodoChangeEvent) (*EventbusEmpty, error) {
+		handler = func(ctx context.Context, req *TodoChangeEvent) (*TodoEventbusTodoChangeResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*TodoChangeEvent)
 					if !ok {
 						return nil, twirp.InternalError("failed type assertion req.(*TodoChangeEvent) when calling interceptor")
 					}
-					return s.TodoEventbus.TodoChange(ctx, typedReq)
+					return s.TodoEventbusService.TodoChange(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EventbusEmpty)
+				typedResp, ok := resp.(*TodoEventbusTodoChangeResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EventbusEmpty) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*TodoEventbusTodoChangeResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -2575,7 +2575,7 @@ func (s *todoEventbusServer) serveTodoChangeProtobuf(ctx context.Context, resp h
 	}
 
 	// Call service method
-	var respContent *EventbusEmpty
+	var respContent *TodoEventbusTodoChangeResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -2586,7 +2586,7 @@ func (s *todoEventbusServer) serveTodoChangeProtobuf(ctx context.Context, resp h
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *EventbusEmpty and nil error while calling TodoChange. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *TodoEventbusTodoChangeResponse and nil error while calling TodoChange. nil responses are not supported"))
 		return
 	}
 
@@ -2610,45 +2610,45 @@ func (s *todoEventbusServer) serveTodoChangeProtobuf(ctx context.Context, resp h
 	callResponseSent(ctx, s.hooks)
 }
 
-func (s *todoEventbusServer) ServiceDescriptor() ([]byte, int) {
+func (s *todoEventbusServiceServer) ServiceDescriptor() ([]byte, int) {
 	return twirpFileDescriptor4, 2
 }
 
-func (s *todoEventbusServer) ProtocGenTwirpVersion() string {
+func (s *todoEventbusServiceServer) ProtocGenTwirpVersion() string {
 	return "v8.1.1"
 }
 
 // PathPrefix returns the base service path, in the form: "/<prefix>/<package>.<Service>/"
 // that is everything in a Twirp route except for the <Method>. This can be used for routing,
 // for example to identify the requests that are targeted to this service in a mux.
-func (s *todoEventbusServer) PathPrefix() string {
-	return baseServicePath(s.pathPrefix, "corepb.v1", "TodoEventbus")
+func (s *todoEventbusServiceServer) PathPrefix() string {
+	return baseServicePath(s.pathPrefix, "corepb.v1", "TodoEventbusService")
 }
 
-// ======================
-// FileEventbus Interface
-// ======================
+// =============================
+// FileEventbusService Interface
+// =============================
 
-type FileEventbus interface {
-	FileUploaded(context.Context, *FileServiceUploadEvent) (*EventbusEmpty, error)
+type FileEventbusService interface {
+	FileUploaded(context.Context, *FileServiceUploadEvent) (*FileEventbusFileUploadedResponse, error)
 
-	FileComplete(context.Context, *FileServiceCompleteEvent) (*EventbusEmpty, error)
+	FileComplete(context.Context, *FileServiceCompleteEvent) (*FileEventbusFileCompleteResponse, error)
 }
 
-// ============================
-// FileEventbus Protobuf Client
-// ============================
+// ===================================
+// FileEventbusService Protobuf Client
+// ===================================
 
-type fileEventbusProtobufClient struct {
+type fileEventbusServiceProtobufClient struct {
 	client      HTTPClient
 	urls        [2]string
 	interceptor twirp.Interceptor
 	opts        twirp.ClientOptions
 }
 
-// NewFileEventbusProtobufClient creates a Protobuf client that implements the FileEventbus interface.
+// NewFileEventbusServiceProtobufClient creates a Protobuf client that implements the FileEventbusService interface.
 // It communicates using Protobuf and can be configured with a custom HTTPClient.
-func NewFileEventbusProtobufClient(baseURL string, client HTTPClient, opts ...twirp.ClientOption) FileEventbus {
+func NewFileEventbusServiceProtobufClient(baseURL string, client HTTPClient, opts ...twirp.ClientOption) FileEventbusService {
 	if c, ok := client.(*http.Client); ok {
 		client = withoutRedirects(c)
 	}
@@ -2668,13 +2668,13 @@ func NewFileEventbusProtobufClient(baseURL string, client HTTPClient, opts ...tw
 
 	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
 	serviceURL := sanitizeBaseURL(baseURL)
-	serviceURL += baseServicePath(pathPrefix, "corepb.v1", "FileEventbus")
+	serviceURL += baseServicePath(pathPrefix, "corepb.v1", "FileEventbusService")
 	urls := [2]string{
 		serviceURL + "FileUploaded",
 		serviceURL + "FileComplete",
 	}
 
-	return &fileEventbusProtobufClient{
+	return &fileEventbusServiceProtobufClient{
 		client:      client,
 		urls:        urls,
 		interceptor: twirp.ChainInterceptors(clientOpts.Interceptors...),
@@ -2682,13 +2682,13 @@ func NewFileEventbusProtobufClient(baseURL string, client HTTPClient, opts ...tw
 	}
 }
 
-func (c *fileEventbusProtobufClient) FileUploaded(ctx context.Context, in *FileServiceUploadEvent) (*EventbusEmpty, error) {
+func (c *fileEventbusServiceProtobufClient) FileUploaded(ctx context.Context, in *FileServiceUploadEvent) (*FileEventbusFileUploadedResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
-	ctx = ctxsetters.WithServiceName(ctx, "FileEventbus")
+	ctx = ctxsetters.WithServiceName(ctx, "FileEventbusService")
 	ctx = ctxsetters.WithMethodName(ctx, "FileUploaded")
 	caller := c.callFileUploaded
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *FileServiceUploadEvent) (*EventbusEmpty, error) {
+		caller = func(ctx context.Context, req *FileServiceUploadEvent) (*FileEventbusFileUploadedResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*FileServiceUploadEvent)
@@ -2699,9 +2699,9 @@ func (c *fileEventbusProtobufClient) FileUploaded(ctx context.Context, in *FileS
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EventbusEmpty)
+				typedResp, ok := resp.(*FileEventbusFileUploadedResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EventbusEmpty) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*FileEventbusFileUploadedResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -2711,8 +2711,8 @@ func (c *fileEventbusProtobufClient) FileUploaded(ctx context.Context, in *FileS
 	return caller(ctx, in)
 }
 
-func (c *fileEventbusProtobufClient) callFileUploaded(ctx context.Context, in *FileServiceUploadEvent) (*EventbusEmpty, error) {
-	out := new(EventbusEmpty)
+func (c *fileEventbusServiceProtobufClient) callFileUploaded(ctx context.Context, in *FileServiceUploadEvent) (*FileEventbusFileUploadedResponse, error) {
+	out := new(FileEventbusFileUploadedResponse)
 	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -2728,13 +2728,13 @@ func (c *fileEventbusProtobufClient) callFileUploaded(ctx context.Context, in *F
 	return out, nil
 }
 
-func (c *fileEventbusProtobufClient) FileComplete(ctx context.Context, in *FileServiceCompleteEvent) (*EventbusEmpty, error) {
+func (c *fileEventbusServiceProtobufClient) FileComplete(ctx context.Context, in *FileServiceCompleteEvent) (*FileEventbusFileCompleteResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
-	ctx = ctxsetters.WithServiceName(ctx, "FileEventbus")
+	ctx = ctxsetters.WithServiceName(ctx, "FileEventbusService")
 	ctx = ctxsetters.WithMethodName(ctx, "FileComplete")
 	caller := c.callFileComplete
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *FileServiceCompleteEvent) (*EventbusEmpty, error) {
+		caller = func(ctx context.Context, req *FileServiceCompleteEvent) (*FileEventbusFileCompleteResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*FileServiceCompleteEvent)
@@ -2745,9 +2745,9 @@ func (c *fileEventbusProtobufClient) FileComplete(ctx context.Context, in *FileS
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EventbusEmpty)
+				typedResp, ok := resp.(*FileEventbusFileCompleteResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EventbusEmpty) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*FileEventbusFileCompleteResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -2757,8 +2757,8 @@ func (c *fileEventbusProtobufClient) FileComplete(ctx context.Context, in *FileS
 	return caller(ctx, in)
 }
 
-func (c *fileEventbusProtobufClient) callFileComplete(ctx context.Context, in *FileServiceCompleteEvent) (*EventbusEmpty, error) {
-	out := new(EventbusEmpty)
+func (c *fileEventbusServiceProtobufClient) callFileComplete(ctx context.Context, in *FileServiceCompleteEvent) (*FileEventbusFileCompleteResponse, error) {
+	out := new(FileEventbusFileCompleteResponse)
 	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[1], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -2774,20 +2774,20 @@ func (c *fileEventbusProtobufClient) callFileComplete(ctx context.Context, in *F
 	return out, nil
 }
 
-// ========================
-// FileEventbus JSON Client
-// ========================
+// ===============================
+// FileEventbusService JSON Client
+// ===============================
 
-type fileEventbusJSONClient struct {
+type fileEventbusServiceJSONClient struct {
 	client      HTTPClient
 	urls        [2]string
 	interceptor twirp.Interceptor
 	opts        twirp.ClientOptions
 }
 
-// NewFileEventbusJSONClient creates a JSON client that implements the FileEventbus interface.
+// NewFileEventbusServiceJSONClient creates a JSON client that implements the FileEventbusService interface.
 // It communicates using JSON and can be configured with a custom HTTPClient.
-func NewFileEventbusJSONClient(baseURL string, client HTTPClient, opts ...twirp.ClientOption) FileEventbus {
+func NewFileEventbusServiceJSONClient(baseURL string, client HTTPClient, opts ...twirp.ClientOption) FileEventbusService {
 	if c, ok := client.(*http.Client); ok {
 		client = withoutRedirects(c)
 	}
@@ -2807,13 +2807,13 @@ func NewFileEventbusJSONClient(baseURL string, client HTTPClient, opts ...twirp.
 
 	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
 	serviceURL := sanitizeBaseURL(baseURL)
-	serviceURL += baseServicePath(pathPrefix, "corepb.v1", "FileEventbus")
+	serviceURL += baseServicePath(pathPrefix, "corepb.v1", "FileEventbusService")
 	urls := [2]string{
 		serviceURL + "FileUploaded",
 		serviceURL + "FileComplete",
 	}
 
-	return &fileEventbusJSONClient{
+	return &fileEventbusServiceJSONClient{
 		client:      client,
 		urls:        urls,
 		interceptor: twirp.ChainInterceptors(clientOpts.Interceptors...),
@@ -2821,13 +2821,13 @@ func NewFileEventbusJSONClient(baseURL string, client HTTPClient, opts ...twirp.
 	}
 }
 
-func (c *fileEventbusJSONClient) FileUploaded(ctx context.Context, in *FileServiceUploadEvent) (*EventbusEmpty, error) {
+func (c *fileEventbusServiceJSONClient) FileUploaded(ctx context.Context, in *FileServiceUploadEvent) (*FileEventbusFileUploadedResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
-	ctx = ctxsetters.WithServiceName(ctx, "FileEventbus")
+	ctx = ctxsetters.WithServiceName(ctx, "FileEventbusService")
 	ctx = ctxsetters.WithMethodName(ctx, "FileUploaded")
 	caller := c.callFileUploaded
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *FileServiceUploadEvent) (*EventbusEmpty, error) {
+		caller = func(ctx context.Context, req *FileServiceUploadEvent) (*FileEventbusFileUploadedResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*FileServiceUploadEvent)
@@ -2838,9 +2838,9 @@ func (c *fileEventbusJSONClient) FileUploaded(ctx context.Context, in *FileServi
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EventbusEmpty)
+				typedResp, ok := resp.(*FileEventbusFileUploadedResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EventbusEmpty) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*FileEventbusFileUploadedResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -2850,8 +2850,8 @@ func (c *fileEventbusJSONClient) FileUploaded(ctx context.Context, in *FileServi
 	return caller(ctx, in)
 }
 
-func (c *fileEventbusJSONClient) callFileUploaded(ctx context.Context, in *FileServiceUploadEvent) (*EventbusEmpty, error) {
-	out := new(EventbusEmpty)
+func (c *fileEventbusServiceJSONClient) callFileUploaded(ctx context.Context, in *FileServiceUploadEvent) (*FileEventbusFileUploadedResponse, error) {
+	out := new(FileEventbusFileUploadedResponse)
 	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -2867,13 +2867,13 @@ func (c *fileEventbusJSONClient) callFileUploaded(ctx context.Context, in *FileS
 	return out, nil
 }
 
-func (c *fileEventbusJSONClient) FileComplete(ctx context.Context, in *FileServiceCompleteEvent) (*EventbusEmpty, error) {
+func (c *fileEventbusServiceJSONClient) FileComplete(ctx context.Context, in *FileServiceCompleteEvent) (*FileEventbusFileCompleteResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
-	ctx = ctxsetters.WithServiceName(ctx, "FileEventbus")
+	ctx = ctxsetters.WithServiceName(ctx, "FileEventbusService")
 	ctx = ctxsetters.WithMethodName(ctx, "FileComplete")
 	caller := c.callFileComplete
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *FileServiceCompleteEvent) (*EventbusEmpty, error) {
+		caller = func(ctx context.Context, req *FileServiceCompleteEvent) (*FileEventbusFileCompleteResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*FileServiceCompleteEvent)
@@ -2884,9 +2884,9 @@ func (c *fileEventbusJSONClient) FileComplete(ctx context.Context, in *FileServi
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EventbusEmpty)
+				typedResp, ok := resp.(*FileEventbusFileCompleteResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EventbusEmpty) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*FileEventbusFileCompleteResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -2896,8 +2896,8 @@ func (c *fileEventbusJSONClient) FileComplete(ctx context.Context, in *FileServi
 	return caller(ctx, in)
 }
 
-func (c *fileEventbusJSONClient) callFileComplete(ctx context.Context, in *FileServiceCompleteEvent) (*EventbusEmpty, error) {
-	out := new(EventbusEmpty)
+func (c *fileEventbusServiceJSONClient) callFileComplete(ctx context.Context, in *FileServiceCompleteEvent) (*FileEventbusFileCompleteResponse, error) {
+	out := new(FileEventbusFileCompleteResponse)
 	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[1], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -2913,12 +2913,12 @@ func (c *fileEventbusJSONClient) callFileComplete(ctx context.Context, in *FileS
 	return out, nil
 }
 
-// ===========================
-// FileEventbus Server Handler
-// ===========================
+// ==================================
+// FileEventbusService Server Handler
+// ==================================
 
-type fileEventbusServer struct {
-	FileEventbus
+type fileEventbusServiceServer struct {
+	FileEventbusService
 	interceptor      twirp.Interceptor
 	hooks            *twirp.ServerHooks
 	pathPrefix       string // prefix for routing
@@ -2926,10 +2926,10 @@ type fileEventbusServer struct {
 	jsonCamelCase    bool   // JSON fields are serialized as lowerCamelCase rather than keeping the original proto names
 }
 
-// NewFileEventbusServer builds a TwirpServer that can be used as an http.Handler to handle
+// NewFileEventbusServiceServer builds a TwirpServer that can be used as an http.Handler to handle
 // HTTP requests that are routed to the right method in the provided svc implementation.
 // The opts are twirp.ServerOption modifiers, for example twirp.WithServerHooks(hooks).
-func NewFileEventbusServer(svc FileEventbus, opts ...interface{}) TwirpServer {
+func NewFileEventbusServiceServer(svc FileEventbusService, opts ...interface{}) TwirpServer {
 	serverOpts := newServerOpts(opts)
 
 	// Using ReadOpt allows backwards and forwads compatibility with new options in the future
@@ -2942,24 +2942,24 @@ func NewFileEventbusServer(svc FileEventbus, opts ...interface{}) TwirpServer {
 		pathPrefix = "/twirp" // default prefix
 	}
 
-	return &fileEventbusServer{
-		FileEventbus:     svc,
-		hooks:            serverOpts.Hooks,
-		interceptor:      twirp.ChainInterceptors(serverOpts.Interceptors...),
-		pathPrefix:       pathPrefix,
-		jsonSkipDefaults: jsonSkipDefaults,
-		jsonCamelCase:    jsonCamelCase,
+	return &fileEventbusServiceServer{
+		FileEventbusService: svc,
+		hooks:               serverOpts.Hooks,
+		interceptor:         twirp.ChainInterceptors(serverOpts.Interceptors...),
+		pathPrefix:          pathPrefix,
+		jsonSkipDefaults:    jsonSkipDefaults,
+		jsonCamelCase:       jsonCamelCase,
 	}
 }
 
 // writeError writes an HTTP response with a valid Twirp error format, and triggers hooks.
 // If err is not a twirp.Error, it will get wrapped with twirp.InternalErrorWith(err)
-func (s *fileEventbusServer) writeError(ctx context.Context, resp http.ResponseWriter, err error) {
+func (s *fileEventbusServiceServer) writeError(ctx context.Context, resp http.ResponseWriter, err error) {
 	writeError(ctx, resp, err, s.hooks)
 }
 
 // handleRequestBodyError is used to handle error when the twirp server cannot read request
-func (s *fileEventbusServer) handleRequestBodyError(ctx context.Context, resp http.ResponseWriter, msg string, err error) {
+func (s *fileEventbusServiceServer) handleRequestBodyError(ctx context.Context, resp http.ResponseWriter, msg string, err error) {
 	if context.Canceled == ctx.Err() {
 		s.writeError(ctx, resp, twirp.NewError(twirp.Canceled, "failed to read request: context canceled"))
 		return
@@ -2971,16 +2971,16 @@ func (s *fileEventbusServer) handleRequestBodyError(ctx context.Context, resp ht
 	s.writeError(ctx, resp, twirp.WrapError(malformedRequestError(msg), err))
 }
 
-// FileEventbusPathPrefix is a convenience constant that may identify URL paths.
+// FileEventbusServicePathPrefix is a convenience constant that may identify URL paths.
 // Should be used with caution, it only matches routes generated by Twirp Go clients,
 // with the default "/twirp" prefix and default CamelCase service and method names.
 // More info: https://twitchtv.github.io/twirp/docs/routing.html
-const FileEventbusPathPrefix = "/twirp/corepb.v1.FileEventbus/"
+const FileEventbusServicePathPrefix = "/twirp/corepb.v1.FileEventbusService/"
 
-func (s *fileEventbusServer) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
+func (s *fileEventbusServiceServer) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 	ctx = ctxsetters.WithPackageName(ctx, "corepb.v1")
-	ctx = ctxsetters.WithServiceName(ctx, "FileEventbus")
+	ctx = ctxsetters.WithServiceName(ctx, "FileEventbusService")
 	ctx = ctxsetters.WithResponseWriter(ctx, resp)
 
 	var err error
@@ -2998,7 +2998,7 @@ func (s *fileEventbusServer) ServeHTTP(resp http.ResponseWriter, req *http.Reque
 
 	// Verify path format: [<prefix>]/<package>.<Service>/<Method>
 	prefix, pkgService, method := parseTwirpPath(req.URL.Path)
-	if pkgService != "corepb.v1.FileEventbus" {
+	if pkgService != "corepb.v1.FileEventbusService" {
 		msg := fmt.Sprintf("no handler for path %q", req.URL.Path)
 		s.writeError(ctx, resp, badRouteError(msg, req.Method, req.URL.Path))
 		return
@@ -3023,7 +3023,7 @@ func (s *fileEventbusServer) ServeHTTP(resp http.ResponseWriter, req *http.Reque
 	}
 }
 
-func (s *fileEventbusServer) serveFileUploaded(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *fileEventbusServiceServer) serveFileUploaded(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	header := req.Header.Get("Content-Type")
 	i := strings.Index(header, ";")
 	if i == -1 {
@@ -3041,7 +3041,7 @@ func (s *fileEventbusServer) serveFileUploaded(ctx context.Context, resp http.Re
 	}
 }
 
-func (s *fileEventbusServer) serveFileUploadedJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *fileEventbusServiceServer) serveFileUploadedJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	var err error
 	ctx = ctxsetters.WithMethodName(ctx, "FileUploaded")
 	ctx, err = callRequestRouted(ctx, s.hooks)
@@ -3063,22 +3063,22 @@ func (s *fileEventbusServer) serveFileUploadedJSON(ctx context.Context, resp htt
 		return
 	}
 
-	handler := s.FileEventbus.FileUploaded
+	handler := s.FileEventbusService.FileUploaded
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *FileServiceUploadEvent) (*EventbusEmpty, error) {
+		handler = func(ctx context.Context, req *FileServiceUploadEvent) (*FileEventbusFileUploadedResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*FileServiceUploadEvent)
 					if !ok {
 						return nil, twirp.InternalError("failed type assertion req.(*FileServiceUploadEvent) when calling interceptor")
 					}
-					return s.FileEventbus.FileUploaded(ctx, typedReq)
+					return s.FileEventbusService.FileUploaded(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EventbusEmpty)
+				typedResp, ok := resp.(*FileEventbusFileUploadedResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EventbusEmpty) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*FileEventbusFileUploadedResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -3087,7 +3087,7 @@ func (s *fileEventbusServer) serveFileUploadedJSON(ctx context.Context, resp htt
 	}
 
 	// Call service method
-	var respContent *EventbusEmpty
+	var respContent *FileEventbusFileUploadedResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -3098,7 +3098,7 @@ func (s *fileEventbusServer) serveFileUploadedJSON(ctx context.Context, resp htt
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *EventbusEmpty and nil error while calling FileUploaded. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *FileEventbusFileUploadedResponse and nil error while calling FileUploaded. nil responses are not supported"))
 		return
 	}
 
@@ -3124,7 +3124,7 @@ func (s *fileEventbusServer) serveFileUploadedJSON(ctx context.Context, resp htt
 	callResponseSent(ctx, s.hooks)
 }
 
-func (s *fileEventbusServer) serveFileUploadedProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *fileEventbusServiceServer) serveFileUploadedProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	var err error
 	ctx = ctxsetters.WithMethodName(ctx, "FileUploaded")
 	ctx, err = callRequestRouted(ctx, s.hooks)
@@ -3144,22 +3144,22 @@ func (s *fileEventbusServer) serveFileUploadedProtobuf(ctx context.Context, resp
 		return
 	}
 
-	handler := s.FileEventbus.FileUploaded
+	handler := s.FileEventbusService.FileUploaded
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *FileServiceUploadEvent) (*EventbusEmpty, error) {
+		handler = func(ctx context.Context, req *FileServiceUploadEvent) (*FileEventbusFileUploadedResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*FileServiceUploadEvent)
 					if !ok {
 						return nil, twirp.InternalError("failed type assertion req.(*FileServiceUploadEvent) when calling interceptor")
 					}
-					return s.FileEventbus.FileUploaded(ctx, typedReq)
+					return s.FileEventbusService.FileUploaded(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EventbusEmpty)
+				typedResp, ok := resp.(*FileEventbusFileUploadedResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EventbusEmpty) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*FileEventbusFileUploadedResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -3168,7 +3168,7 @@ func (s *fileEventbusServer) serveFileUploadedProtobuf(ctx context.Context, resp
 	}
 
 	// Call service method
-	var respContent *EventbusEmpty
+	var respContent *FileEventbusFileUploadedResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -3179,7 +3179,7 @@ func (s *fileEventbusServer) serveFileUploadedProtobuf(ctx context.Context, resp
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *EventbusEmpty and nil error while calling FileUploaded. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *FileEventbusFileUploadedResponse and nil error while calling FileUploaded. nil responses are not supported"))
 		return
 	}
 
@@ -3203,7 +3203,7 @@ func (s *fileEventbusServer) serveFileUploadedProtobuf(ctx context.Context, resp
 	callResponseSent(ctx, s.hooks)
 }
 
-func (s *fileEventbusServer) serveFileComplete(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *fileEventbusServiceServer) serveFileComplete(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	header := req.Header.Get("Content-Type")
 	i := strings.Index(header, ";")
 	if i == -1 {
@@ -3221,7 +3221,7 @@ func (s *fileEventbusServer) serveFileComplete(ctx context.Context, resp http.Re
 	}
 }
 
-func (s *fileEventbusServer) serveFileCompleteJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *fileEventbusServiceServer) serveFileCompleteJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	var err error
 	ctx = ctxsetters.WithMethodName(ctx, "FileComplete")
 	ctx, err = callRequestRouted(ctx, s.hooks)
@@ -3243,22 +3243,22 @@ func (s *fileEventbusServer) serveFileCompleteJSON(ctx context.Context, resp htt
 		return
 	}
 
-	handler := s.FileEventbus.FileComplete
+	handler := s.FileEventbusService.FileComplete
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *FileServiceCompleteEvent) (*EventbusEmpty, error) {
+		handler = func(ctx context.Context, req *FileServiceCompleteEvent) (*FileEventbusFileCompleteResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*FileServiceCompleteEvent)
 					if !ok {
 						return nil, twirp.InternalError("failed type assertion req.(*FileServiceCompleteEvent) when calling interceptor")
 					}
-					return s.FileEventbus.FileComplete(ctx, typedReq)
+					return s.FileEventbusService.FileComplete(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EventbusEmpty)
+				typedResp, ok := resp.(*FileEventbusFileCompleteResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EventbusEmpty) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*FileEventbusFileCompleteResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -3267,7 +3267,7 @@ func (s *fileEventbusServer) serveFileCompleteJSON(ctx context.Context, resp htt
 	}
 
 	// Call service method
-	var respContent *EventbusEmpty
+	var respContent *FileEventbusFileCompleteResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -3278,7 +3278,7 @@ func (s *fileEventbusServer) serveFileCompleteJSON(ctx context.Context, resp htt
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *EventbusEmpty and nil error while calling FileComplete. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *FileEventbusFileCompleteResponse and nil error while calling FileComplete. nil responses are not supported"))
 		return
 	}
 
@@ -3304,7 +3304,7 @@ func (s *fileEventbusServer) serveFileCompleteJSON(ctx context.Context, resp htt
 	callResponseSent(ctx, s.hooks)
 }
 
-func (s *fileEventbusServer) serveFileCompleteProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *fileEventbusServiceServer) serveFileCompleteProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	var err error
 	ctx = ctxsetters.WithMethodName(ctx, "FileComplete")
 	ctx, err = callRequestRouted(ctx, s.hooks)
@@ -3324,22 +3324,22 @@ func (s *fileEventbusServer) serveFileCompleteProtobuf(ctx context.Context, resp
 		return
 	}
 
-	handler := s.FileEventbus.FileComplete
+	handler := s.FileEventbusService.FileComplete
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *FileServiceCompleteEvent) (*EventbusEmpty, error) {
+		handler = func(ctx context.Context, req *FileServiceCompleteEvent) (*FileEventbusFileCompleteResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*FileServiceCompleteEvent)
 					if !ok {
 						return nil, twirp.InternalError("failed type assertion req.(*FileServiceCompleteEvent) when calling interceptor")
 					}
-					return s.FileEventbus.FileComplete(ctx, typedReq)
+					return s.FileEventbusService.FileComplete(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*EventbusEmpty)
+				typedResp, ok := resp.(*FileEventbusFileCompleteResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*EventbusEmpty) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*FileEventbusFileCompleteResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -3348,7 +3348,7 @@ func (s *fileEventbusServer) serveFileCompleteProtobuf(ctx context.Context, resp
 	}
 
 	// Call service method
-	var respContent *EventbusEmpty
+	var respContent *FileEventbusFileCompleteResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -3359,7 +3359,7 @@ func (s *fileEventbusServer) serveFileCompleteProtobuf(ctx context.Context, resp
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *EventbusEmpty and nil error while calling FileComplete. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *FileEventbusFileCompleteResponse and nil error while calling FileComplete. nil responses are not supported"))
 		return
 	}
 
@@ -3383,42 +3383,50 @@ func (s *fileEventbusServer) serveFileCompleteProtobuf(ctx context.Context, resp
 	callResponseSent(ctx, s.hooks)
 }
 
-func (s *fileEventbusServer) ServiceDescriptor() ([]byte, int) {
+func (s *fileEventbusServiceServer) ServiceDescriptor() ([]byte, int) {
 	return twirpFileDescriptor4, 3
 }
 
-func (s *fileEventbusServer) ProtocGenTwirpVersion() string {
+func (s *fileEventbusServiceServer) ProtocGenTwirpVersion() string {
 	return "v8.1.1"
 }
 
 // PathPrefix returns the base service path, in the form: "/<prefix>/<package>.<Service>/"
 // that is everything in a Twirp route except for the <Method>. This can be used for routing,
 // for example to identify the requests that are targeted to this service in a mux.
-func (s *fileEventbusServer) PathPrefix() string {
-	return baseServicePath(s.pathPrefix, "corepb.v1", "FileEventbus")
+func (s *fileEventbusServiceServer) PathPrefix() string {
+	return baseServicePath(s.pathPrefix, "corepb.v1", "FileEventbusService")
 }
 
 var twirpFileDescriptor4 = []byte{
-	// 329 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x93, 0xcd, 0x4a, 0xf3, 0x50,
-	0x10, 0x86, 0xf9, 0xf8, 0x44, 0x70, 0x6c, 0x11, 0x8f, 0x3f, 0xb4, 0xc5, 0x8d, 0xba, 0x4f, 0x69,
-	0x5d, 0x76, 0xd7, 0xd2, 0x82, 0x88, 0x58, 0xfa, 0xb3, 0x71, 0x97, 0xe4, 0x8c, 0xf5, 0xd0, 0x34,
-	0x13, 0xcf, 0x99, 0x9c, 0xd2, 0x0b, 0xf1, 0x26, 0xbc, 0x4a, 0x69, 0x93, 0x34, 0xa9, 0x16, 0x02,
-	0xea, 0x72, 0xde, 0xe7, 0x9d, 0x27, 0x21, 0x43, 0xa0, 0xe6, 0x93, 0xc6, 0xc8, 0x6b, 0xda, 0x56,
-	0x13, 0x2d, 0x86, 0xec, 0xc5, 0xc6, 0x89, 0x34, 0x31, 0x89, 0xa3, 0x84, 0x38, 0xb6, 0xd5, 0x38,
-	0xcf, 0x4b, 0xb1, 0x41, 0x9d, 0x14, 0x8a, 0x29, 0x93, 0xa4, 0xef, 0xe9, 0x8b, 0x0a, 0x30, 0x4d,
-	0xeb, 0x79, 0xba, 0x44, 0xcf, 0x90, 0x3f, 0x47, 0x4e, 0xd0, 0xcd, 0x09, 0x54, 0xfb, 0xe9, 0x93,
-	0xfb, 0x8b, 0x88, 0x57, 0xed, 0x21, 0x9c, 0x76, 0x35, 0xb9, 0xd2, 0x77, 0x0d, 0x67, 0x44, 0x74,
-	0xe0, 0x60, 0x8c, 0xa1, 0x14, 0x75, 0x67, 0xfb, 0x5a, 0xce, 0x6e, 0xab, 0x51, 0x2b, 0xa0, 0x5d,
-	0xe3, 0xfb, 0x7f, 0xa8, 0x4c, 0x0d, 0xea, 0xad, 0xad, 0x0b, 0xb0, 0x9e, 0x7b, 0xaf, 0x6e, 0x38,
-	0x43, 0xd1, 0x28, 0x2c, 0xe6, 0x71, 0x89, 0x54, 0x0c, 0xe1, 0x72, 0x8c, 0x7e, 0xac, 0x15, 0xaf,
-	0x86, 0xae, 0x31, 0x4b, 0xd2, 0x32, 0xf5, 0x5d, 0x7d, 0xf1, 0x65, 0xb5, 0x32, 0xe3, 0x13, 0x5c,
-	0x64, 0xd5, 0x01, 0xe9, 0x19, 0xf1, 0x08, 0xdf, 0x62, 0x34, 0xfc, 0x17, 0xc2, 0x11, 0xce, 0x94,
-	0x61, 0xd4, 0x13, 0x9a, 0x63, 0xf8, 0x63, 0xe1, 0x23, 0x9c, 0x65, 0xd5, 0xfb, 0xd0, 0x2a, 0xc6,
-	0x5f, 0xe9, 0xda, 0x23, 0xa8, 0x4c, 0x48, 0x52, 0xf1, 0x2c, 0xeb, 0x79, 0xcf, 0x59, 0xf2, 0xb8,
-	0xcc, 0xf9, 0xf1, 0x0f, 0x2a, 0x03, 0x15, 0xe0, 0x56, 0xfa, 0x90, 0xcc, 0xd3, 0x28, 0x20, 0x57,
-	0xa2, 0x14, 0xd7, 0x85, 0xd5, 0x35, 0x18, 0xa3, 0xb6, 0xca, 0x4f, 0x79, 0xf9, 0x07, 0xd8, 0xc8,
-	0x7a, 0xb4, 0x88, 0x02, 0x64, 0x14, 0xb7, 0xfb, 0x65, 0x19, 0x2f, 0xd1, 0x75, 0xab, 0xcf, 0xc7,
-	0x4e, 0xb3, 0x93, 0x50, 0xdb, 0xf2, 0x0e, 0x37, 0x7f, 0xc4, 0xdd, 0x67, 0x00, 0x00, 0x00, 0xff,
-	0xff, 0x41, 0x10, 0xb0, 0xff, 0x95, 0x03, 0x00, 0x00,
+	// 455 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x94, 0xcf, 0x6e, 0xd3, 0x40,
+	0x10, 0xc6, 0x85, 0x54, 0x21, 0x31, 0x50, 0x21, 0xad, 0x01, 0xb5, 0x11, 0x94, 0x60, 0x0e, 0x10,
+	0x8a, 0x1c, 0xc5, 0xc0, 0x89, 0x5b, 0xab, 0x56, 0x42, 0x5c, 0x50, 0xd2, 0x5e, 0x38, 0x20, 0xfc,
+	0x67, 0x30, 0x26, 0x8e, 0xc7, 0xec, 0xae, 0x5d, 0xf5, 0x5d, 0x78, 0x2f, 0x5e, 0x07, 0x99, 0xcd,
+	0xda, 0x6b, 0x77, 0x63, 0x1f, 0x7a, 0x5b, 0xcd, 0xf7, 0xf3, 0x7c, 0xf6, 0xce, 0x37, 0x86, 0x83,
+	0x88, 0x38, 0x16, 0xe1, 0xbc, 0x5a, 0xcc, 0xb1, 0xc2, 0x5c, 0x86, 0xa5, 0xf0, 0x0a, 0x4e, 0x92,
+	0xd8, 0x3d, 0xa5, 0x78, 0xd5, 0x62, 0xf2, 0xa8, 0x85, 0x4a, 0x81, 0x5c, 0x01, 0x66, 0x55, 0x52,
+	0x4c, 0x37, 0xab, 0x3f, 0xd2, 0x0c, 0xb7, 0xd5, 0xc3, 0xb6, 0x7a, 0x85, 0xa1, 0xa0, 0x68, 0x8d,
+	0x52, 0x49, 0xee, 0x43, 0xd8, 0x3f, 0xdb, 0x3a, 0x9f, 0x6d, 0x0a, 0x79, 0xed, 0x3e, 0x87, 0x67,
+	0x27, 0x9c, 0x82, 0x38, 0x0a, 0x84, 0xd4, 0xca, 0x0a, 0xf3, 0x78, 0x89, 0xa2, 0xa0, 0x5c, 0xa0,
+	0x3b, 0x85, 0xa3, 0x4b, 0x81, 0x5c, 0x6b, 0xf5, 0xf9, 0xf4, 0x67, 0x90, 0x27, 0xd8, 0x10, 0x6f,
+	0xe1, 0x8d, 0x49, 0xac, 0x30, 0x2a, 0x79, 0x2a, 0xaf, 0xbf, 0x04, 0x42, 0x5c, 0x11, 0x8f, 0x7b,
+	0xf4, 0x31, 0xcc, 0x6c, 0xf4, 0x39, 0xf1, 0x84, 0xe4, 0x12, 0x7f, 0x97, 0x28, 0xe4, 0x18, 0xbc,
+	0xc4, 0x24, 0x15, 0x12, 0xf9, 0x05, 0xad, 0x31, 0x6f, 0xe0, 0x19, 0xbc, 0xb2, 0xc1, 0x9f, 0xf2,
+	0x2a, 0x95, 0xd8, 0x45, 0xa7, 0x70, 0x74, 0x41, 0x31, 0x69, 0xb4, 0x3e, 0xf7, 0x5e, 0xd3, 0x85,
+	0xe9, 0x79, 0x9a, 0xa1, 0x26, 0xea, 0xf3, 0x65, 0x91, 0x51, 0x10, 0x63, 0x3c, 0xc4, 0x9c, 0xd2,
+	0xa6, 0xc8, 0x50, 0x36, 0x7d, 0xfc, 0x04, 0x0e, 0x2c, 0xf7, 0xcb, 0xab, 0x34, 0x42, 0xf6, 0x19,
+	0xf6, 0xea, 0xab, 0x66, 0x87, 0x5e, 0x33, 0x7d, 0xaf, 0x0b, 0x4f, 0x5e, 0xef, 0x94, 0x7a, 0x73,
+	0xf2, 0xff, 0xec, 0x81, 0xd3, 0xfd, 0x7c, 0x65, 0xb2, 0x02, 0x68, 0x67, 0xc6, 0x26, 0x46, 0xbf,
+	0xb6, 0xac, 0xbc, 0x66, 0x3d, 0x6d, 0xf7, 0xc8, 0xd9, 0x06, 0x9e, 0xd8, 0xc7, 0xcc, 0x9e, 0xf6,
+	0x9a, 0x68, 0x4c, 0x59, 0x7c, 0xd8, 0x61, 0x31, 0x9c, 0x19, 0xb6, 0x86, 0xc7, 0xd6, 0x9c, 0x8c,
+	0xb8, 0xbd, 0x1f, 0x71, 0xb3, 0x66, 0xce, 0x34, 0xeb, 0xe4, 0xec, 0x96, 0x66, 0xd6, 0xcc, 0xb2,
+	0x04, 0x1c, 0x4b, 0x4e, 0x47, 0xac, 0xfc, 0x11, 0x2b, 0x4b, 0xe2, 0xfd, 0x5f, 0xe0, 0x98, 0x89,
+	0x37, 0xd2, 0xd1, 0x86, 0xbf, 0x93, 0x8e, 0xb6, 0x7c, 0x33, 0x1d, 0xc3, 0xbb, 0xe3, 0xff, 0xbd,
+	0x03, 0x8e, 0xb9, 0x18, 0xda, 0xec, 0x1b, 0x3c, 0x30, 0xf7, 0x88, 0xbd, 0x30, 0x5a, 0xd6, 0xc2,
+	0x96, 0x53, 0xba, 0x72, 0x3d, 0xee, 0x21, 0x43, 0xfb, 0xc8, 0xbe, 0xab, 0xfe, 0x7a, 0x07, 0xd9,
+	0x4b, 0x7b, 0x7f, 0xad, 0x8f, 0x3b, 0xf4, 0xb7, 0xf9, 0x64, 0xff, 0xeb, 0x7d, 0x6f, 0xfe, 0x51,
+	0x3d, 0x50, 0x2d, 0xc2, 0xbb, 0xff, 0x7f, 0xaa, 0xef, 0xfe, 0x05, 0x00, 0x00, 0xff, 0xff, 0x30,
+	0x1f, 0x46, 0x95, 0xd8, 0x05, 0x00, 0x00,
 }

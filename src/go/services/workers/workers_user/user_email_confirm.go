@@ -25,15 +25,15 @@ type userEmailConfirm struct {
 func NewUserEmailConfirm(config WorkerConfig) corepbv1.TwirpServer {
 	svc := &userEmailConfirm{WorkerConfig: config}
 
-	return corepbv1.NewUserEventbusServer(svc)
+	return corepbv1.NewUserEventbusServiceServer(svc)
 }
 
-func (cfg *userEmailConfirm) SecurityRegisterToken(ctx context.Context, msg *corepbv1.UserSecurityEvent) (*corepbv1.EventbusEmpty, error) {
+func (cfg *userEmailConfirm) SecurityRegisterToken(ctx context.Context, msg *corepbv1.UserSecurityEvent) (*corepbv1.UserEventbusSecurityRegisterTokenResponse, error) {
 	log := logger.FromContext(ctx).With(zap.Int32("action", int32(msg.Action))).With(zap.String("email", msg.User.Email))
 
 	log.Info("processing message")
-	if msg.Action != corepbv1.UserSecurity_USER_REGISTER_TOKEN {
-		return &corepbv1.EventbusEmpty{}, nil
+	if msg.Action != corepbv1.UserSecurity_USER_SECURITY_USER_REGISTER_TOKEN {
+		return &corepbv1.UserEventbusSecurityRegisterTokenResponse{}, nil
 	}
 
 	tokenValue, err := decodeSecure(log, msg.Token)
@@ -43,7 +43,7 @@ func (cfg *userEmailConfirm) SecurityRegisterToken(ctx context.Context, msg *cor
 
 	log = log.With("email", msg.User.Email)
 
-	params := corepbv1.EmailRegisterParam{
+	params := corepbv1.RegisterMessageRequest{
 		AppInfo: buildAppInfo(cfg.config),
 		Recipient: &corepbv1.EmailUser{
 			UserId: msg.User.Id,
@@ -61,5 +61,5 @@ func (cfg *userEmailConfirm) SecurityRegisterToken(ctx context.Context, msg *cor
 		}
 	}
 
-	return &corepbv1.EventbusEmpty{}, err
+	return &corepbv1.UserEventbusSecurityRegisterTokenResponse{}, err
 }
