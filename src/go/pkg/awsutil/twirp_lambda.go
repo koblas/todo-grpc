@@ -351,6 +351,12 @@ func (svc twClient) Do(req *http.Request) (*http.Response, error) {
 			return nil, err
 		}
 
+		log.With(
+			zap.Int("status", lambdaResponse.StatusCode),
+		).With(
+			zap.Any("headers", lambdaResponse.MultiValueHeaders),
+		).Info("Lambda Info")
+
 		res = &http.Response{
 			StatusCode: lambdaResponse.StatusCode,
 			Header:     lambdaResponse.MultiValueHeaders,

@@ -21,7 +21,6 @@ func InvalidArgumentError(field, msg string) *connect.Error {
 	if detail, err := connect.NewErrorDetail(data); err == nil {
 		e.AddDetail(detail)
 	}
-	// e.Meta().Add(name, msg)
 
 	return e
 }
