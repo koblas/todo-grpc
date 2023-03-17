@@ -1,7 +1,7 @@
 package main
 
 import (
-	apipbv1 "github.com/koblas/grpc-todo/gen/apipb/v1"
+	"github.com/koblas/grpc-todo/gen/api/v1/apiv1connect"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
@@ -21,7 +21,7 @@ func main() {
 
 	opts := []gpt.Option{}
 
-	api := apipbv1.NewGptServiceServer(gpt.NewGptServer(config, opts...))
+	_, api := apiv1connect.NewGptServiceHandler(gpt.NewGptServer(config, opts...))
 
 	mgr.Start(awsutil.HandleApiLambda(api))
 }

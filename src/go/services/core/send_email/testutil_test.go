@@ -3,7 +3,8 @@ package send_email_test
 import (
 	"context"
 
-	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
+	"github.com/bufbuild/connect-go"
+	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
 	"github.com/koblas/grpc-todo/services/core/send_email"
 )
 
@@ -22,11 +23,11 @@ func (svc *stubSender) SendEmail(ctx context.Context, sender, to, subject, html 
 type stubBus struct {
 }
 
-func (svc *stubBus) NotifySent(context.Context, *corepbv1.EmailSentEvent) (*corepbv1.EmailOkResponse, error) {
+func (svc *stubBus) NotifyEmailSent(context.Context, *connect.Request[corev1.NotifyEmailSentRequest]) (*connect.Response[corev1.NotifyEmailSentResponse], error) {
 	return nil, nil
 }
 
-func buildTestService() (corepbv1.SendEmailService, *stubSender) {
+func buildTestService() (*send_email.SendEmailServer, *stubSender) {
 	senderData := &stubSender{}
 	bus := &stubBus{}
 	svc := send_email.NewSendEmailServerServer(bus, senderData)
