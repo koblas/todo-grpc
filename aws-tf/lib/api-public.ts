@@ -31,7 +31,7 @@ function createApi(
     payloadFormatVersion: "2.0",
 
     requestParameters: {
-      "overwrite:path": `/twirp/${targetPath}/$request.path.proxy`,
+      "overwrite:path": `/${targetPath}/$request.path.proxy`,
     },
   });
 
@@ -56,7 +56,7 @@ export class PublicAuth extends Construct {
       lambda,
       apigw,
       apiPath: "auth",
-      targetPath: "apipb.v1.AuthenticationService",
+      targetPath: "api.v1.AuthenticationService",
     });
   }
 }
@@ -85,7 +85,7 @@ export class PublicFile extends Construct {
       lambda,
       apigw,
       apiPath: "file",
-      targetPath: "apipb.v1.FileService",
+      targetPath: "api.v1.FileService",
     });
   }
 }
@@ -104,7 +104,7 @@ export class PublicTodo extends Construct {
       lambda,
       apigw,
       apiPath: "todo",
-      targetPath: "apipb.v1.TodoService",
+      targetPath: "api.v1.TodoService",
     });
   }
 }
@@ -123,7 +123,7 @@ export class PublicUser extends Construct {
       lambda,
       apigw,
       apiPath: "user",
-      targetPath: "apipb.v1.UserService",
+      targetPath: "api.v1.UserService",
     });
   }
 }
