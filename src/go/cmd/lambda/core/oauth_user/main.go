@@ -1,7 +1,7 @@
 package main
 
 import (
-	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
+	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
@@ -24,11 +24,14 @@ func main() {
 	}
 
 	opts := []ouser.Option{
-		ouser.WithUserService(corepbv1.NewUserServiceJSONClient("lambda://core-user", awsutil.NewTwirpCallLambda())),
+		ouser.WithUserService(corev1connect.NewUserServiceClient(
+			awsutil.NewTwirpCallLambda(),
+			"lambda://core-user",
+		)),
 		ouser.WithSecretManager(oauthConfig),
 	}
 
-	api := corepbv1.NewAuthUserServiceServer(ouser.NewOauthUserServer(config, opts...))
+	_, api := corev1connect.NewAuthUserServiceHandler(ouser.NewOauthUserServer(config, opts...))
 
 	mgr.Start(awsutil.HandleApiLambda(api))
 }

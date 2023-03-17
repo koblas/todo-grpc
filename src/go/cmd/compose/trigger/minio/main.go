@@ -7,7 +7,9 @@ import (
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
-	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
+	"github.com/bufbuild/connect-go"
+	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
+	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/manager"
@@ -26,10 +28,10 @@ type Config struct {
 
 type handler struct {
 	nats     *natsutil.Client
-	producer corepbv1.FileEventbus
+	producer corev1connect.FileEventbusServiceClient
 }
 
-func newHandler(nats *natsutil.Client, producer corepbv1.FileEventbus) *handler {
+func newHandler(nats *natsutil.Client, producer corev1connect.FileEventbusServiceClient) *handler {
 	return &handler{nats: nats, producer: producer}
 }
 
@@ -73,13 +75,13 @@ func (h *handler) Start(ctx context.Context) error {
 			log = log.With(zap.String("bucket", bucket), zap.String("key", key))
 			log.Info("translating event")
 			// got message
-			h.producer.FileUploaded(ctx, &corepbv1.FileServiceUploadEvent{
-				Info: &corepbv1.FileServiceUploadInfo{
+			h.producer.FileUploaded(ctx, connect.NewRequest(&corev1.FileServiceUploadEvent{
+				Info: &corev1.FileServiceUploadInfo{
 					UserId:   &parts[1],
 					FileType: parts[0],
 					Url:      "s3://" + bucket + "/" + key,
 				},
-			})
+			}))
 		}
 	})
 	return nil
@@ -97,9 +99,9 @@ func main() {
 
 	nats := natsutil.NewNatsClient(config.NatsAddr)
 
-	producer := corepbv1.NewFileEventbusProtobufClient(
-		"",
+	producer := corev1connect.NewFileEventbusServiceClient(
 		nats,
+		"",
 	)
 
 	mgr.Start(newHandler(nats, producer))

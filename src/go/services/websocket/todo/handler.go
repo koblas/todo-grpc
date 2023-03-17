@@ -4,16 +4,18 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"net/http"
 
-	apipbv1 "github.com/koblas/grpc-todo/gen/apipb/v1"
-	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
+	"github.com/bufbuild/connect-go"
+	apiv1 "github.com/koblas/grpc-todo/gen/api/v1"
+	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
+	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/logger"
-	"github.com/koblas/grpc-todo/pkg/manager"
 	"go.uber.org/zap"
 )
 
 type TodoServer struct {
-	producer corepbv1.BroadcastEventbusService
+	producer corev1connect.BroadcastEventbusServiceClient
 }
 
 type SocketMessage struct {
@@ -25,39 +27,25 @@ type SocketMessage struct {
 
 type Option func(*TodoServer)
 
-func WithProducer(producer corepbv1.BroadcastEventbusService) Option {
+func WithProducer(producer corev1connect.BroadcastEventbusServiceClient) Option {
 	return func(conf *TodoServer) {
 		conf.producer = producer
 	}
 }
 
-type TodoServerHandler struct {
-	handler corepbv1.TwirpServer
-}
-
-func NewTodoChangeServer(opts ...Option) []manager.MsgHandler {
+func NewTodoChangeServer(opts ...Option) []http.Handler {
 	svr := TodoServer{}
 
 	for _, opt := range opts {
 		opt(&svr)
 	}
 
-	return []manager.MsgHandler{
-		&TodoServerHandler{
-			handler: corepbv1.NewTodoEventbusServiceServer(&svr),
-		},
-	}
+	_, api := corev1connect.NewTodoEventbusServiceHandler(&svr)
+	return []http.Handler{api}
 }
 
-func (svc *TodoServerHandler) GroupName() string {
-	return "websocket.todo"
-}
-
-func (svc *TodoServerHandler) Handler() corepbv1.TwirpServer {
-	return svc.handler
-}
-
-func (svc *TodoServer) TodoChange(ctx context.Context, event *corepbv1.TodoChangeEvent) (*corepbv1.TodoEventbusTodoChangeResponse, error) {
+func (svc *TodoServer) TodoChange(ctx context.Context, eventIn *connect.Request[corev1.TodoChangeEvent]) (*connect.Response[corev1.TodoEventbusTodoChangeResponse], error) {
+	event := eventIn.Msg
 	log := logger.FromContext(ctx)
 	log.Info("received todo event")
 
@@ -86,7 +74,7 @@ func (svc *TodoServer) TodoChange(ctx context.Context, event *corepbv1.TodoChang
 		Topic:    "todo",
 		ObjectId: obj.Id,
 		Action:   action,
-		Body: apipbv1.TodoObject{
+		Body: apiv1.TodoObject{
 			Id:   obj.Id,
 			Task: obj.Task,
 		},
@@ -96,14 +84,14 @@ func (svc *TodoServer) TodoChange(ctx context.Context, event *corepbv1.TodoChang
 		return nil, err
 	}
 
-	if _, err := svc.producer.Send(ctx, &corepbv1.BroadcastEvent{
-		Filter: &corepbv1.BroadcastFilter{
+	if _, err := svc.producer.Send(ctx, connect.NewRequest(&corev1.BroadcastEvent{
+		Filter: &corev1.BroadcastFilter{
 			UserId: userId,
 		},
 		Data: data,
-	}); err != nil {
+	})); err != nil {
 		log.With(zap.Error(err)).Error("failed to send to websocket")
 	}
 
-	return &corepbv1.TodoEventbusTodoChangeResponse{}, nil
+	return connect.NewResponse(&corev1.TodoEventbusTodoChangeResponse{}), nil
 }

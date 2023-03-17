@@ -48,8 +48,13 @@
     "typescript": "^4.4.3"
   },
   "dependencies": {
+    "@chakra-ui/icons": "^2.0.17",
     "@chakra-ui/react": "^2.2.1",
+    "@chakra-ui/theme-tools": "^2.0.17",
     "@emotion/styled": "^11.3.0",
+    "@tiptap/pm": "^2.0.0-beta.220",
+    "@tiptap/react": "^2.0.0-beta.220",
+    "@tiptap/starter-kit": "^2.0.0-beta.220",
     "assert": "^2.0.0",
     "classnames": "^2.3.1",
     "jsdom": "^21.0.0",

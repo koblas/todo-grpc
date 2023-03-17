@@ -97,7 +97,7 @@ func HandleApiLambda(api http.Handler) manager.HandlerStart {
 type SqsHandlers map[string]http.Handler
 
 type SqsHandler struct {
-	handlers []manager.MsgHandler
+	handlers []http.Handler
 }
 
 func (sqsh *SqsHandler) Start(ctx context.Context) error {
@@ -120,7 +120,7 @@ func (sqsh *SqsHandler) Start(ctx context.Context) error {
 
 			oneSuccess := false
 			for _, item := range sqsh.handlers {
-				item.Handler().ServeHTTP(w, req.WithContext(ctx))
+				item.ServeHTTP(w, req.WithContext(ctx))
 
 				res := w.Result()
 				if res.StatusCode >= http.StatusOK || res.StatusCode < http.StatusBadRequest {
@@ -144,7 +144,7 @@ func (sqsh *SqsHandler) Start(ctx context.Context) error {
 	return nil
 }
 
-func HandleSqsLambda(handlers []manager.MsgHandler) *SqsHandler {
+func HandleSqsLambda(handlers []http.Handler) *SqsHandler {
 	return &SqsHandler{handlers}
 }
 

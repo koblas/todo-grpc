@@ -13,8 +13,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/logger"
-	"github.com/twitchtv/twirp"
 	"go.uber.org/zap"
 )
 
@@ -280,7 +280,7 @@ func (store *dynamoStore) AuthUpsert(ctx context.Context, provider, provider_id 
 		return err
 	}
 	if provider == "" || provider_id == "" {
-		return twirp.InvalidArgumentError("provider", "provider or provider_id is empty")
+		return bufcutil.InvalidArgumentError("provider", "provider or provider_id is empty")
 	}
 	av, err := attributevalue.MarshalMap(dynamoAuth{
 		Pk:       store.buildAuthKey(provider, provider_id).Value,
@@ -316,7 +316,7 @@ func (store *dynamoStore) AuthGet(ctx context.Context, provider, provider_id str
 		return nil, err
 	}
 	if provider == "" || provider_id == "" {
-		return nil, twirp.InvalidArgumentError("provider", "provider or provider_id is empty")
+		return nil, bufcutil.InvalidArgumentError("provider", "provider or provider_id is empty")
 	}
 	out, err := store.client.GetItem(ctx, &dynamodb.GetItemInput{
 		TableName: store.table,
@@ -343,7 +343,7 @@ func (store *dynamoStore) AuthDelete(ctx context.Context, provider, provider_id 
 		return err
 	}
 	if provider == "" || provider_id == "" {
-		return twirp.InvalidArgumentError("provider", "provider or provider_id is empty")
+		return bufcutil.InvalidArgumentError("provider", "provider or provider_id is empty")
 	}
 	_, err := store.client.DeleteItem(ctx, &dynamodb.DeleteItemInput{
 		TableName: store.table,

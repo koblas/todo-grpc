@@ -10,7 +10,6 @@ import (
 	"strings"
 	"sync"
 
-	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/nats-io/nats.go"
@@ -112,14 +111,15 @@ func (svc *Client) Do(req *http.Request) (*http.Response, error) {
 
 type TopicHandler interface {
 	GroupName() string
-	Handler() corepbv1.TwirpServer
+	Handler() http.Handler
 }
 
 type Consumer struct {
 	url      string
 	conn     *nats.Conn
 	Topic    string
-	handlers []manager.MsgHandler
+	group    string
+	handlers []http.Handler
 }
 
 func (svc *Consumer) Start(ctx context.Context) error {
@@ -128,10 +128,10 @@ func (svc *Consumer) Start(ctx context.Context) error {
 
 	for _, item := range svc.handlers {
 		wg.Add(1)
-		go func(handler manager.MsgHandler) {
-			log := log.With("group", handler.GroupName())
+		go func(handler http.Handler) {
+			log := log.With("group", svc.group)
 			log.Info("Creating queue subscription")
-			_, err := svc.conn.QueueSubscribe(svc.Topic, handler.GroupName(), func(msg *nats.Msg) {
+			_, err := svc.conn.QueueSubscribe(svc.Topic, svc.group, func(msg *nats.Msg) {
 				parts := strings.Split(msg.Subject, ".")
 				path := "/" + strings.Join(parts[0:len(parts)-1], ".") + "/" + parts[len(parts)-1]
 				if parts[0] == "twirp" {
@@ -153,7 +153,7 @@ func (svc *Consumer) Start(ctx context.Context) error {
 				}
 
 				w := httptest.NewRecorder()
-				handler.Handler().ServeHTTP(w, req.WithContext(ctx))
+				handler.ServeHTTP(w, req.WithContext(ctx))
 
 				res := w.Result()
 				if res.StatusCode != http.StatusOK {
@@ -176,7 +176,7 @@ func (svc *Consumer) Start(ctx context.Context) error {
 	return nil
 }
 
-func (svc *Client) TopicConsumer(ctx context.Context, topic string, handlers []manager.MsgHandler) manager.HandlerStart {
+func (svc *Client) TopicConsumer(ctx context.Context, topic string, group string, handlers []http.Handler) manager.HandlerStart {
 	log := logger.FromContext(ctx)
 
 	log.With(zap.String("topic", topic)).Info("Consuming on topic")
@@ -188,6 +188,7 @@ func (svc *Client) TopicConsumer(ctx context.Context, topic string, handlers []m
 		conn:     svc.Conn,
 		url:      svc.url,
 		Topic:    topic,
+		group:    group,
 		handlers: handlers,
 	}
 
@@ -200,4 +201,8 @@ func TwirpPathToNatsTopic(path string) string {
 
 func TwirpPathToNatsPath(path string) string {
 	return strings.Trim(strings.Replace(path, "/", ".", -1), ".")
+}
+
+func ConnectToTopic(path string) string {
+	return path + ".*"
 }

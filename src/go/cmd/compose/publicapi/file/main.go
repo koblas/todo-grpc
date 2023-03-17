@@ -3,8 +3,10 @@ package main
 import (
 	"strings"
 
+	"github.com/bufbuild/connect-go"
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
-	apipbv1 "github.com/koblas/grpc-todo/gen/apipb/v1"
+	"github.com/koblas/grpc-todo/gen/api/v1/apiv1connect"
+	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/filestore"
 	"github.com/koblas/grpc-todo/pkg/manager"
@@ -27,7 +29,10 @@ func main() {
 		),
 	}
 
-	api := apipbv1.NewFileServiceServer(file.NewFileServer(config, opts...))
+	_, api := apiv1connect.NewFileServiceHandler(
+		file.NewFileServer(config, opts...),
+		connect.WithCodec(bufcutil.NewJsonCodec()),
+	)
 
 	mgr.Start(mgr.WrapHttpHandler(api))
 }

@@ -1,14 +1,21 @@
 version: v1
+managed:
+  enabled: true
+  go_package_prefix:
+    default: github.com/koblas/grpc-todo/gen
 plugins:
-  - name: twirp
-    out: gen
-    opt: paths=source_relative
-      #- name: go
-      #out: gen/go
-      #opt: paths=source_relative
+  #  - name: twirp
+  #  out: gen
+  #  opt: paths=source_relative
+  #    #- name: go
+  #    #out: gen/go
+  #    #opt: paths=source_relative
   - name: go
     out: gen
     opt: paths=source_relative
       #- name: go
       #out: gen/go
       #opt: paths=source_relative
+  - name: connect-go
+    out: gen
+    opt: paths=source_relative

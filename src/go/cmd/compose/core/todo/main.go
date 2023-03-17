@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
-	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
+	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/pkg/natsutil"
@@ -22,9 +22,9 @@ func main() {
 	}
 
 	nats := natsutil.NewNatsClient(config.NatsAddr)
-	eventbus := corepbv1.NewTodoEventbusServiceJSONClient(
-		"topic://"+config.TodoEventsTopic,
+	eventbus := corev1connect.NewTodoEventbusServiceClient(
 		nats,
+		"topic://"+config.TodoEventsTopic,
 	)
 
 	opts := []todo.Option{
@@ -32,7 +32,7 @@ func main() {
 		todo.WithTodoStore(todo.NewTodoMemoryStore()),
 	}
 
-	api := corepbv1.NewTodoServiceServer(todo.NewTodoServer(opts...))
+	_, api := corev1connect.NewTodoServiceHandler(todo.NewTodoServer(opts...))
 
 	mgr.Start(mgr.WrapHttpHandler(api))
 }

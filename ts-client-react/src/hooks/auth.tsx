@@ -1,59 +1,11 @@
-import { z } from "zod";
 import { useMutation, useQueryClient } from "react-query";
 
 import { RpcMutation, RpcOptions } from "../rpc/errors";
-import {
-  LoginRegisterResponse,
-  AuthOk,
-  AuthToken,
-  LoginRegisterSuccess,
-  OauthLoginUrl,
-  AuthOkResponse,
-  AuthTokenResponse,
-  OauthLoginUrlResponse,
-} from "../rpc/auth";
+import * as rpcAuth from "../rpc/auth";
 import { useAuthStore } from "../store/useAuthStore";
 import { newFetchClient } from "../rpc/utils";
 import { buildCallbacksTyped } from "../rpc/utils/helper";
 import { Json } from "../types/json";
-
-export type LoginParams = {
-  email: string;
-  password: string;
-};
-
-export type RecoverSendParams = {
-  email: string;
-};
-
-export type RecoverVerifyParams = {
-  userId: string;
-  token: string;
-};
-
-export type RecoverUpdateParams = {
-  userId: string;
-  token: string;
-  password: string;
-};
-
-export type RegisterParams = {
-  name: string;
-  email: string;
-  password: string;
-};
-
-export type OauthUrlParams = {
-  provider: string;
-  redirect_url: string;
-};
-
-export type OauthAssociateParms = {
-  provider: string;
-  redirect_url: string;
-  code: string;
-  state: string;
-};
 
 export function useAuth() {
   const { token, setToken } = useAuthStore((s) => s);
@@ -66,22 +18,21 @@ export function useAuth() {
     isAuthenticated: !!token,
 
     mutations: {
-      useRegister(): RpcMutation<RegisterParams, LoginRegisterSuccess> {
-        // const mutation = useMutation<z.infer<typeof RegisterResponse>, unknown, RegisterParams>(
+      useRegister(): RpcMutation<rpcAuth.RegisterRequestT, rpcAuth.RegisterResponseT> {
         const mutation = useMutation(
-          (data: RegisterParams) => client.POST<LoginRegisterSuccess>("/v1/auth/register", data),
+          (data: rpcAuth.RegisterRequestT) => client.POST<rpcAuth.RegisterResponseT>("/v1/auth/register", data),
           {},
         );
 
-        function action(data: RegisterParams, handlers?: RpcOptions<z.infer<typeof LoginRegisterResponse>>) {
+        function action(data: rpcAuth.RegisterRequestT, handlers?: RpcOptions<rpcAuth.RegisterResponseT>) {
           mutation.mutate(
             data,
             buildCallbacksTyped(
               queryClient,
-              LoginRegisterResponse,
+              rpcAuth.RegisterResponse,
               {
                 onCompleted(result) {
-                  setToken(result.token.access_token);
+                  setToken(result.token.accessToken);
                 },
               },
               handlers,
@@ -91,36 +42,38 @@ export function useAuth() {
 
         return [action, { loading: mutation.isLoading }];
       },
-      useEmailConfirm(): RpcMutation<RecoverVerifyParams, AuthOk> {
-        const mutation = useMutation<AuthOk, unknown, RecoverVerifyParams>(
-          (data: RecoverVerifyParams) => client.POST("/v1/auth/verify_email", data as Json),
+      useEmailConfirm(): RpcMutation<rpcAuth.VerifyEmailRequestT, rpcAuth.VerifyEmailResponseT> {
+        const mutation = useMutation(
+          (data: rpcAuth.VerifyEmailRequestT) =>
+            client.POST<rpcAuth.VerifyEmailResponseT>("/v1/auth/verify_email", data),
           {},
         );
 
         // function action(data: RecoverVerifyParams, handlers?: RpcOptions<z.infer<typeof AuthOkResponse>>) {
-        function action(data: RecoverVerifyParams, handlers?: RpcOptions<AuthOk>) {
-          mutation.mutate(data, buildCallbacksTyped(queryClient, AuthOkResponse, handlers));
+        function action(data: rpcAuth.VerifyEmailRequestT, handlers?: RpcOptions<rpcAuth.VerifyEmailResponseT>) {
+          mutation.mutate(data, buildCallbacksTyped(queryClient, rpcAuth.VerifyEmailResponse, handlers));
         }
 
         return [action, { loading: mutation.isLoading }];
       },
 
-      useLogin(): RpcMutation<LoginParams, AuthToken> {
-        const mutation = useMutation<AuthToken, unknown, LoginParams>(
-          (data: LoginParams) => client.POST("/v1/auth/authenticate", data as Json),
+      useLogin(): RpcMutation<rpcAuth.AuthenticateRequestT, rpcAuth.AuthenticateResponseT> {
+        const mutation = useMutation(
+          (data: rpcAuth.AuthenticateRequestT) =>
+            client.POST<rpcAuth.AuthenticateResponseT>("/v1/auth/authenticate", data),
           {},
         );
 
         // function action(data: RecoverVerifyParams, handlers?: RpcOptions<z.infer<typeof AuthOkResponse>>) {
-        function action(data: LoginParams, handlers?: RpcOptions<AuthToken>) {
+        function action(data: rpcAuth.AuthenticateRequestT, handlers?: RpcOptions<rpcAuth.AuthenticateResponseT>) {
           mutation.mutate(
             data,
             buildCallbacksTyped(
               queryClient,
-              AuthTokenResponse,
+              rpcAuth.AuthenticateResponse,
               {
                 onCompleted(result) {
-                  setToken(result.access_token);
+                  setToken(result.token.accessToken);
                 },
               },
               handlers,
@@ -130,48 +83,51 @@ export function useAuth() {
 
         return [action, { loading: mutation.isLoading }];
       },
-      useRecoverSend(): RpcMutation<RecoverSendParams, void> {
-        const mutation = useMutation<void, unknown, RecoverSendParams>(
-          (data: RecoverSendParams) => client.POST("/v1/auth/recover_send", data as Json),
+      useRecoverSend(): RpcMutation<rpcAuth.RecoverSendRequestT, rpcAuth.RecoverSendResponseT> {
+        const mutation = useMutation(
+          (data: rpcAuth.RecoverSendRequestT) =>
+            client.POST<rpcAuth.RecoverSendResponseT>("/v1/auth/recover_send", data as Json),
           {},
         );
 
         // function action(data: RecoverVerifyParams, handlers?: RpcOptions<z.infer<typeof AuthOkResponse>>) {
-        function action(data: RecoverSendParams, handlers?: RpcOptions<void>) {
-          mutation.mutate(data, buildCallbacksTyped(queryClient, AuthOkResponse, handlers));
+        function action(data: rpcAuth.RecoverSendRequestT, handlers?: RpcOptions<rpcAuth.RecoverSendResponseT>) {
+          mutation.mutate(data, buildCallbacksTyped(queryClient, rpcAuth.RecoverSendResponse, handlers));
         }
 
         return [action, { loading: mutation.isLoading }];
       },
-      useRecoveryVerify(): RpcMutation<RecoverVerifyParams, void> {
-        const mutation = useMutation<void, unknown, RecoverVerifyParams>(
-          (data: RecoverVerifyParams) => client.POST("/v1/auth/recover_verify", data as Json),
+      useRecoveryVerify(): RpcMutation<rpcAuth.RecoverVerifyRequestT, rpcAuth.RecoverVerifyResponseT> {
+        const mutation = useMutation(
+          (data: rpcAuth.RecoverVerifyRequestT) =>
+            client.POST<rpcAuth.RecoverVerifyResponseT>("/v1/auth/recover_verify", data as Json),
           {},
         );
 
         // function action(data: RecoverVerifyParams, handlers?: RpcOptions<z.infer<typeof AuthOkResponse>>) {
-        function action(data: RecoverVerifyParams, handlers?: RpcOptions<void>) {
-          mutation.mutate(data, buildCallbacksTyped(queryClient, AuthOkResponse, handlers));
+        function action(data: rpcAuth.RecoverVerifyRequestT, handlers?: RpcOptions<rpcAuth.RecoverVerifyResponseT>) {
+          mutation.mutate(data, buildCallbacksTyped(queryClient, rpcAuth.RecoverVerifyResponse, handlers));
         }
 
         return [action, { loading: mutation.isLoading }];
       },
-      useRecoveryUpdate(): RpcMutation<RecoverUpdateParams, AuthToken> {
-        const mutation = useMutation<AuthToken, unknown, RecoverUpdateParams>(
-          (data: RecoverUpdateParams) => client.POST("/v1/auth/recover_update", data as Json),
+      useRecoveryUpdate(): RpcMutation<rpcAuth.RecoverUpdateRequestT, rpcAuth.RecoverUpdateResponseT> {
+        const mutation = useMutation(
+          (data: rpcAuth.RecoverUpdateRequestT) =>
+            client.POST<rpcAuth.RecoverUpdateResponseT>("/v1/auth/recover_update", data as Json),
           {},
         );
 
         // function action(data: RecoverVerifyParams, handlers?: RpcOptions<z.infer<typeof AuthOkResponse>>) {
-        function action(data: RecoverUpdateParams, handlers?: RpcOptions<AuthToken>) {
+        function action(data: rpcAuth.RecoverUpdateRequestT, handlers?: RpcOptions<rpcAuth.RecoverUpdateResponseT>) {
           mutation.mutate(
             data,
             buildCallbacksTyped(
               queryClient,
-              AuthTokenResponse,
+              rpcAuth.RecoverUpdateResponse,
               {
                 onCompleted(result) {
-                  setToken(result.access_token);
+                  setToken(result.token.accessToken);
                 },
               },
               handlers,
@@ -190,35 +146,36 @@ export function useAuth() {
         };
       },
 
-      useOauthRedirect(): RpcMutation<OauthUrlParams, OauthLoginUrl> {
-        const mutation = useMutation<OauthLoginUrl, unknown, OauthUrlParams>((data: OauthUrlParams) =>
-          client.POST<OauthLoginUrl>("/v1/auth/oauth_url", data),
+      useOauthRedirect(): RpcMutation<rpcAuth.OauthUrlRequestT, rpcAuth.OauthUrlResponseT> {
+        const mutation = useMutation((data: rpcAuth.OauthUrlRequestT) =>
+          client.POST<rpcAuth.OauthUrlResponseT>("/v1/auth/oauth_url", data),
         );
 
         // function action(data: RecoverVerifyParams, handlers?: RpcOptions<z.infer<typeof AuthOkResponse>>) {
-        function action(data: OauthUrlParams, handlers?: RpcOptions<OauthLoginUrl>) {
-          mutation.mutate(data, buildCallbacksTyped(queryClient, OauthLoginUrlResponse, handlers));
+        function action(data: rpcAuth.OauthUrlRequestT, handlers?: RpcOptions<rpcAuth.OauthUrlResponseT>) {
+          mutation.mutate(data, buildCallbacksTyped(queryClient, rpcAuth.OauthUrlResponse, handlers));
         }
 
         return [action, { loading: mutation.isLoading }];
       },
 
-      useOauthLogin(): RpcMutation<OauthAssociateParms, LoginRegisterSuccess> {
-        const mutation = useMutation<LoginRegisterSuccess, unknown, OauthAssociateParms>(
-          (data: OauthAssociateParms) => client.POST("/v1/auth/oauth_login", data as Json),
+      useOauthLogin(): RpcMutation<rpcAuth.OauthLoginRequestT, rpcAuth.OauthLoginResponseT> {
+        const mutation = useMutation(
+          (data: rpcAuth.OauthLoginRequestT) =>
+            client.POST<rpcAuth.OauthLoginResponseT>("/v1/auth/oauth_login", data as Json),
           {},
         );
 
         // function action(data: RecoverVerifyParams, handlers?: RpcOptions<z.infer<typeof AuthOkResponse>>) {
-        function action(data: OauthAssociateParms, handlers?: RpcOptions<LoginRegisterSuccess>) {
+        function action(data: rpcAuth.OauthLoginRequestT, handlers?: RpcOptions<rpcAuth.OauthLoginResponseT>) {
           mutation.mutate(
             data,
             buildCallbacksTyped(
               queryClient,
-              LoginRegisterResponse,
+              rpcAuth.OauthLoginResponse,
               {
                 onCompleted(result) {
-                  setToken(result.token.access_token);
+                  setToken(result.token.accessToken);
                 },
               },
               handlers,

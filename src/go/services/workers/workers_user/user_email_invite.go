@@ -2,10 +2,13 @@ package workers_user
 
 import (
 	"context"
+	"net/http"
 
-	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
+	"github.com/bufbuild/connect-go"
+	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
+	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
+	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/logger"
-	"github.com/twitchtv/twirp"
 	"go.uber.org/zap"
 )
 
@@ -22,33 +25,32 @@ type userEmailInvite struct {
 	WorkerConfig
 }
 
-func NewUserEmailInvite(config WorkerConfig) corepbv1.TwirpServer {
+func NewUserEmailInvite(config WorkerConfig) http.Handler {
 	svc := &userEmailInvite{WorkerConfig: config}
 
-	return corepbv1.NewUserEventbusServiceServer(svc)
+	_, api := corev1connect.NewUserEventbusServiceHandler(svc)
+	return api
 }
 
-func (cfg *userEmailInvite) SecurityInviteToken(ctx context.Context, msg *corepbv1.UserSecurityEvent) (*corepbv1.UserEventbusSecurityInviteTokenResponse, error) {
+func (cfg *userEmailInvite) SecurityInviteToken(ctx context.Context, msgIn *connect.Request[corev1.UserSecurityEvent]) (*connect.Response[corev1.UserEventbusSecurityInviteTokenResponse], error) {
+	msg := msgIn.Msg
 	log := logger.FromContext(ctx).With(zap.Int32("action", int32(msg.Action))).With(zap.String("email", msg.User.Email))
 
 	log.Info("processing message")
-	if msg.Action != corepbv1.UserSecurity_USER_SECURITY_USER_INVITE_TOKEN {
-		return &corepbv1.UserEventbusSecurityInviteTokenResponse{}, nil
-	}
 
 	tokenValue, err := decodeSecure(log, msg.Token)
 	if err != nil {
 		return nil, err
 	}
 
-	params := corepbv1.InviteUserMessageRequest{
+	params := corev1.InviteUserMessageRequest{
 		AppInfo: buildAppInfo(cfg.config),
-		Sender: &corepbv1.EmailUser{
+		Sender: &corev1.EmailUser{
 			UserId: msg.Sender.Id,
 			Name:   msg.Sender.Name,
 			Email:  msg.Sender.Email,
 		},
-		Recipient: &corepbv1.EmailUser{
+		Recipient: &corev1.EmailUser{
 			UserId: msg.User.Id,
 			Name:   msg.User.Name,
 			Email:  msg.User.Email,
@@ -58,11 +60,11 @@ func (cfg *userEmailInvite) SecurityInviteToken(ctx context.Context, msg *corepb
 
 	log.Info("Sending registration email")
 	if cfg.sendEmail != nil {
-		if _, err := cfg.sendEmail.InviteUserMessage(ctx, &params); err != nil {
+		if _, err := cfg.sendEmail.InviteUserMessage(ctx, connect.NewRequest(&params)); err != nil {
 			log.With(zap.Error(err)).Info("Failed to send")
-			return nil, twirp.WrapError(twirp.InternalError("failed to send"), err)
+			return nil, bufcutil.InternalError(err, "failed to send")
 		}
 	}
 
-	return &corepbv1.UserEventbusSecurityInviteTokenResponse{}, nil
+	return connect.NewResponse(&corev1.UserEventbusSecurityInviteTokenResponse{}), nil
 }

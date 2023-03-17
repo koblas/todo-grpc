@@ -1,7 +1,7 @@
 package main
 
 import (
-	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
+	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
@@ -19,14 +19,12 @@ func main() {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
-	producer := corepbv1.NewSendEmailEventsServiceProtobufClient(
-		config.EventArn,
+	producer := corev1connect.NewSendEmailEventsServiceClient(
 		awsutil.NewTwirpCallLambda(),
+		config.EventArn,
 	)
 
 	s := send_email.NewSendEmailServer(producer, send_email.NewSmtpService(config))
-	// mux := http.NewServeMux()
-	// mux.Handle(corepbv1.SendEmailServicePathPrefix, corepbv1.NewSendEmailServiceServer(s))
 
 	mgr.Start(awsutil.HandleSqsLambda(s))
 }

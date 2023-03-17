@@ -33,6 +33,6 @@ kubectl create secret generic common-secrets --from-env-file=../.env
 minikube start
 minikube addons enable ingress
 minikube tunnel
-kubectl port-forward service/minio 9000:9000
 tilt up
+kubectl port-forward service/minio 9000:9000
 ```

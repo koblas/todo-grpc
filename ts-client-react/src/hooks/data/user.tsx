@@ -1,52 +1,60 @@
 import { QueryClient, useMutation, useQuery, useQueryClient } from "react-query";
 import { useEffect } from "react";
 import { z } from "zod";
-import { User, UserType } from "../../rpc/user";
+import * as rpcUser from "../../rpc/user";
 import { useAuth } from "../auth";
 import { newFetchClient } from "../../rpc/utils";
 import { Json } from "../../types/json";
 import { useWebsocketUpdates } from "../../rpc/websocket";
 import { buildCallbacksTyped, buildCallbacksTypedQuery } from "../../rpc/utils/helper";
-
-const UserNetwork = z.object({
-  user: User,
-});
-
-type UpdateUserParam = Partial<
-  Pick<UserType, "email" | "name"> & {
-    password?: string;
-    passwordNew: string;
-  }
->;
+import { RpcMutation, RpcOptions } from "../../rpc/errors";
 
 export function useUser() {
   const { token } = useAuth();
   const client = newFetchClient({ token });
   const queryClient = useQueryClient();
 
-  const result = useQuery("user", () => client.POST("/v1/user/get_user", {}), {
+  const result = useQuery("user", () => client.POST<rpcUser.GetUserResponseT>("/v1/user/get_user", {}), {
     staleTime: 300_000,
-    ...buildCallbacksTypedQuery(queryClient, UserNetwork, {}),
+    ...buildCallbacksTypedQuery(queryClient, rpcUser.GetUserResponse, {}),
   });
 
-  const updateUser = useMutation<Json, unknown, UpdateUserParam, unknown>(
-    "user",
-    (data) => client.POST("/v1/user/update_user", data as unknown as Json),
-    buildCallbacksTyped(queryClient, UserNetwork, {
-      onCompleted(data) {
-        queryClient.setQueryData("user", data);
-      },
-    }),
-  );
+  // const updateUser = useMutation(
+  //   "user",
+  //   (data: rpcUser.UpdateUserRequestT) => client.POST<rpcUser.UpdateUserResponseT>("/v1/user/update_user", data),
 
-  const parsed = UserNetwork.safeParse(result.data);
+  //   function action(data: rpcUser.UpdateUserRequestT, handlers?: RpcOptions<rpcUser.UpdateUserResponseT>) {
+  //     updateUser.mutate(data, buildCallbacksTyped(queryClient, rpcAuth.UpdateUserResponse, handlers));
+  //   }
+
+  //   buildCallbacksTyped(queryClient, rpcUser.UpdateUserResponse, {
+  //     onCompleted(data) {
+  //       queryClient.setQueryData("user", data);
+  //     },
+  //   }),
+  // );
+
+  const parsed = rpcUser.GetUserResponse.safeParse(result.data);
 
   return {
     user: parsed.success ? parsed.data.user : null,
     isLoading: result.isLoading,
     isError: result.isError,
     mutations: {
-      updateUser,
+      useUpdateUser(): RpcMutation<rpcUser.UpdateUserRequestT, rpcUser.UpdateUserResponseT> {
+        const mutation = useMutation(
+          "user",
+          (data: rpcUser.UpdateUserRequestT) => client.POST<rpcUser.UpdateUserResponseT>("/v1/user/update_user", data),
+          {},
+        );
+
+        // function action(data: RecoverVerifyParams, handlers?: RpcOptions<z.infer<typeof AuthOkResponse>>) {
+        function action(data: rpcUser.UpdateUserRequestT, handlers?: RpcOptions<rpcUser.UpdateUserResponseT>) {
+          mutation.mutate(data, buildCallbacksTyped(queryClient, rpcUser.UpdateUserResponse, handlers));
+        }
+
+        return [action, { loading: mutation.isLoading }];
+      },
     },
   };
 }
@@ -55,7 +63,7 @@ const UserEvent = z.object({
   object_id: z.string(),
   action: z.enum(["delete", "create", "update"]),
   topic: z.literal("user"),
-  body: z.nullable(User),
+  body: z.nullable(rpcUser.User),
 });
 
 export function useUserListener(queryClient: QueryClient) {

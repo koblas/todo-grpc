@@ -2,10 +2,13 @@ package workers_user
 
 import (
 	"context"
+	"net/http"
 
-	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
+	"github.com/bufbuild/connect-go"
+	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
+	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
+	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/logger"
-	"github.com/twitchtv/twirp"
 	"go.uber.org/zap"
 )
 
@@ -22,28 +25,27 @@ type userEmailForgot struct {
 	WorkerConfig
 }
 
-func NewUserEmailForgot(config WorkerConfig) corepbv1.TwirpServer {
+func NewUserEmailForgot(config WorkerConfig) http.Handler {
 	svc := &userEmailForgot{WorkerConfig: config}
 
-	return corepbv1.NewUserEventbusServiceServer(svc)
+	_, api := corev1connect.NewUserEventbusServiceHandler(svc)
+	return api
 }
 
-func (cfg *userEmailForgot) SecurityForgotRequest(ctx context.Context, msg *corepbv1.UserSecurityEvent) (*corepbv1.UserEventbusSecurityForgotRequestResponse, error) {
+func (cfg *userEmailForgot) SecurityForgotRequest(ctx context.Context, msgIn *connect.Request[corev1.UserSecurityEvent]) (*connect.Response[corev1.UserEventbusSecurityForgotRequestResponse], error) {
+	msg := msgIn.Msg
 	log := logger.FromContext(ctx).With(zap.Int32("action", int32(msg.Action))).With(zap.String("email", msg.User.Email))
 
 	log.Info("processing message")
-	if msg.Action != corepbv1.UserSecurity_USER_SECURITY_USER_FORGOT_REQUEST {
-		return &corepbv1.UserEventbusSecurityForgotRequestResponse{}, nil
-	}
 
 	tokenValue, err := decodeSecure(log, msg.Token)
 	if err != nil {
-		return &corepbv1.UserEventbusSecurityForgotRequestResponse{}, err
+		return connect.NewResponse(&corev1.UserEventbusSecurityForgotRequestResponse{}), err
 	}
 
-	params := corepbv1.PasswordRecoveryMessageRequest{
+	params := corev1.PasswordRecoveryMessageRequest{
 		AppInfo: buildAppInfo(cfg.config),
-		Recipient: &corepbv1.EmailUser{
+		Recipient: &corev1.EmailUser{
 			UserId: msg.User.Id,
 			Name:   msg.User.Name,
 			Email:  msg.User.Email,
@@ -53,11 +55,11 @@ func (cfg *userEmailForgot) SecurityForgotRequest(ctx context.Context, msg *core
 
 	log.Info("Sending forgot email")
 	if cfg.sendEmail != nil {
-		if _, err := cfg.sendEmail.PasswordRecoveryMessage(ctx, &params); err != nil {
+		if _, err := cfg.sendEmail.PasswordRecoveryMessage(ctx, connect.NewRequest(&params)); err != nil {
 			log.With(zap.Error(err)).Info("Failed to send")
-			return nil, twirp.WrapError(twirp.InternalError("failed to send"), err)
+			return nil, bufcutil.InternalError(err, "failed to send")
 		}
 	}
 
-	return &corepbv1.UserEventbusSecurityForgotRequestResponse{}, err
+	return connect.NewResponse(&corev1.UserEventbusSecurityForgotRequestResponse{}), err
 }

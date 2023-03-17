@@ -4,7 +4,10 @@ import (
 	"log"
 	"time"
 
-	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
+	"github.com/bufbuild/connect-go"
+	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
+	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
+	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/key_manager"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/tokenmanager"
@@ -18,14 +21,14 @@ import (
 // Server represents the gRPC server
 type OauthUserServer struct {
 	kms      key_manager.Encoder
-	user     corepbv1.UserService
+	user     corev1connect.UserServiceClient
 	jwtMaker tokenmanager.Maker
 	smanager oauth_provider.SecretManager
 }
 
 type Option func(*OauthUserServer)
 
-func WithUserService(client corepbv1.UserService) Option {
+func WithUserService(client corev1connect.UserServiceClient) Option {
 	return func(cfg *OauthUserServer) {
 		cfg.user = client
 	}
@@ -59,46 +62,47 @@ func NewOauthUserServer(config Config, opts ...Option) *OauthUserServer {
 	return &svr
 }
 
-func (svc *OauthUserServer) GetAuthUrl(ctx context.Context, params *corepbv1.AuthUserServiceGetAuthUrlRequest) (*corepbv1.AuthUserServiceGetAuthUrlResponse, error) {
+func (svc *OauthUserServer) GetAuthUrl(ctx context.Context, request *connect.Request[corev1.AuthUserServiceGetAuthUrlRequest]) (*connect.Response[corev1.AuthUserServiceGetAuthUrlResponse], error) {
+	params := request.Msg
 	log := logger.FromContext(ctx).With("provider", params.Provider)
 	log.Info("Calling GetAuthURL")
 	oprovider, err := oauth_provider.GetOAuthProvider(params.GetProvider(), svc.smanager, log)
 	if err != nil {
 		log.With(zap.Error(err)).Info("failed to get provider")
-		return nil, twirp.InternalErrorWith(err)
+		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
 	// Build a "STATE" value
 	value, err := util.GenerateRandomString(20)
 	if err != nil {
-		return nil, twirp.InternalErrorWith(err)
+		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 	state, err := svc.jwtMaker.CreateToken(value, time.Minute*10)
 	if err != nil {
-		return nil, twirp.InternalErrorWith(err)
+		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
 	url := oprovider.BuildRedirect(ctx, params.RedirectUrl, state)
 
-	return &corepbv1.AuthUserServiceGetAuthUrlResponse{Url: url}, nil
+	return connect.NewResponse(&corev1.AuthUserServiceGetAuthUrlResponse{Url: url}), nil
 }
 
-func (svc *OauthUserServer) UpsertUser(ctx context.Context, params *corepbv1.AuthUserServiceUpsertUserRequest) (*corepbv1.AuthUserServiceUpsertUserResponse, error) {
+func (svc *OauthUserServer) UpsertUser(ctx context.Context, request *connect.Request[corev1.AuthUserServiceUpsertUserRequest]) (*connect.Response[corev1.AuthUserServiceUpsertUserResponse], error) {
+	params := request.Msg
 	log := logger.FromContext(ctx).With("provider", params.Oauth.Provider)
 	log.Info("Calling UpsertUser")
 	oprovider, err := oauth_provider.GetOAuthProvider(params.Oauth.Provider, svc.smanager, log)
 
 	if err != nil {
 		log.With(zap.Error(err)).Info("failed to get provider")
-		return nil, twirp.InternalErrorWith(err)
+		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
 	// Verify the state matches
 	_, err = svc.jwtMaker.VerifyToken(params.State)
 	if err != nil {
 		log.With("state", params.State).Info("Falied JWT validation")
-		// TODO - check it's invalid vs library failure
-		return nil, twirp.InvalidArgumentError("state", "state does not validate")
+		return nil, bufcutil.InvalidArgumentError("state", "state does not validate")
 	}
 
 	tokenResult, err := oprovider.GetAccessToken(ctx, params.Oauth.Code, params.RedirectUrl)
@@ -111,91 +115,91 @@ func (svc *OauthUserServer) UpsertUser(ctx context.Context, params *corepbv1.Aut
 	info, err := oprovider.GetInfo(ctx, tokenResult)
 	if err != nil {
 		log.With("error", err).Info("Failed to get user info")
-		return nil, twirp.InternalErrorWith(err)
+		return nil, bufcutil.InternalError(err)
 	}
 
 	if info.Id == "" {
 		log.Info("Unable to get ID from provider")
-		return nil, twirp.InternalError("Unable to get ID from provider")
+		return nil, bufcutil.InternalError(err, "Unable to get ID from provider")
 	}
 
-	findBy, err := svc.user.FindBy(ctx, &corepbv1.FindByRequest{
-		FindBy: &corepbv1.FindBy{
-			Auth: &corepbv1.AuthInfo{
+	findBy, err := svc.user.FindBy(ctx, connect.NewRequest(&corev1.FindByRequest{
+		FindBy: &corev1.FindBy{
+			Auth: &corev1.AuthInfo{
 				Provider:   params.Oauth.Provider,
 				ProviderId: info.Id,
 			},
 		},
-	})
+	}))
 	if err != nil {
 		if e, ok := err.(twirp.Error); !ok || e.Code() != twirp.NotFound {
 			log.With("error", err).Info("Failed to get oauth user")
-			return nil, twirp.InternalErrorWith(err)
+			return nil, bufcutil.InternalError(err)
 		}
 	}
 
-	if findBy != nil {
-		return &corepbv1.AuthUserServiceUpsertUserResponse{UserId: findBy.User.Id, Created: false}, nil
+	if findBy != nil && findBy.Msg != nil {
+		return connect.NewResponse(&corev1.AuthUserServiceUpsertUserResponse{UserId: findBy.Msg.User.Id, Created: false}), nil
 	}
 
 	if info.Email == "" {
 		log.With("error", err).Info("Failed to get user email")
-		return nil, twirp.InvalidArgumentError("email", "provider didn't send email address")
+		return nil, bufcutil.InvalidArgumentError("email", "provider didn't send email address")
 	}
 
-	findBy, err = svc.user.FindBy(ctx, &corepbv1.FindByRequest{
-		FindBy: &corepbv1.FindBy{
+	findBy, err = svc.user.FindBy(ctx, connect.NewRequest(&corev1.FindByRequest{
+		FindBy: &corev1.FindBy{
 			Email: info.Email,
 		},
-	})
+	}))
 	if err != nil {
 		if e, ok := err.(twirp.Error); !ok || e.Code() != twirp.NotFound {
 			log.With("error", err).Info("Failed to lookup user")
-			return nil, twirp.InternalErrorWith(err)
+			return nil, bufcutil.InternalError(err)
 		}
 	}
 
 	userId := ""
 	created := false
-	if findBy == nil || findBy.User.Id == "" {
+	if findBy == nil || findBy.Msg.User.Id == "" {
 		log.With("email", info.Email).Info("Creating new user")
 		created = true
-		newUser, err := svc.user.Create(ctx, &corepbv1.UserServiceCreateRequest{
+		newUser, err := svc.user.Create(ctx, connect.NewRequest(&corev1.UserServiceCreateRequest{
 			Email: info.Email,
 			Name:  info.Name,
 			// TODO - create as "ACTIVE" since we "know" the email is good
-		})
+		}))
 		if err != nil {
 			log.With("error", err).Info("Unable to create user")
-			return nil, twirp.InternalErrorWith(err)
+			return nil, connect.NewError(connect.CodeInternal, err)
 		}
-		userId = newUser.User.Id
+		userId = newUser.Msg.User.Id
 	} else {
-		userId = findBy.User.Id
-		log.With("email", findBy.User.Email).Info("User already exists, associating")
+		userId = findBy.Msg.User.Id
+		log.With("email", findBy.Msg.User.Email).Info("User already exists, associating")
 	}
 
 	// Now associate the OAuth token and the UserId
 	// TODO - save the token!
-	_, err = svc.user.AuthAssociate(ctx, &corepbv1.AuthAssociateRequest{
+	_, err = svc.user.AuthAssociate(ctx, connect.NewRequest(&corev1.AuthAssociateRequest{
 		UserId: userId,
-		Auth: &corepbv1.AuthInfo{
+		Auth: &corev1.AuthInfo{
 			Provider:   params.Oauth.Provider,
 			ProviderId: info.Id,
 		},
-	})
+	}))
 	if err != nil {
 		log.With("error", err).Info("Unable to associate")
-		return nil, twirp.InternalErrorWith(err)
+		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
-	return &corepbv1.AuthUserServiceUpsertUserResponse{UserId: userId, Created: created}, nil
+	return connect.NewResponse(&corev1.AuthUserServiceUpsertUserResponse{UserId: userId, Created: created}), nil
 }
 
-func (s *OauthUserServer) ListAssociations(ctx context.Context, params *corepbv1.AuthUserServiceListAssociationsRequest) (*corepbv1.AuthUserServiceListAssociationsResponse, error) {
-	return &corepbv1.AuthUserServiceListAssociationsResponse{}, nil
+func (s *OauthUserServer) ListAssociations(ctx context.Context, params *connect.Request[corev1.AuthUserServiceListAssociationsRequest]) (*connect.Response[corev1.AuthUserServiceListAssociationsResponse], error) {
+	return connect.NewResponse(&corev1.AuthUserServiceListAssociationsResponse{}), nil
 }
 
-func (s *OauthUserServer) RemoveAssociation(ctx context.Context, params *corepbv1.AuthUserServiceRemoveAssociationRequest) (*corepbv1.AuthUserServiceRemoveAssociationResponse, error) {
-	return &corepbv1.AuthUserServiceRemoveAssociationResponse{}, nil
+func (s *OauthUserServer) RemoveAssociation(ctx context.Context, params *connect.Request[corev1.AuthUserServiceRemoveAssociationRequest]) (*connect.Response[corev1.AuthUserServiceRemoveAssociationResponse], error) {
+	return connect.NewResponse(&corev1.AuthUserServiceRemoveAssociationResponse{}), nil
 }

@@ -2,8 +2,7 @@ package manager
 
 import (
 	"context"
-
-	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
+	"net/http"
 )
 
 type HandlerStart interface {
@@ -12,5 +11,5 @@ type HandlerStart interface {
 
 type MsgHandler interface {
 	GroupName() string
-	Handler() corepbv1.TwirpServer
+	Handler() http.Handler
 }

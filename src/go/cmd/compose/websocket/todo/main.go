@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
-	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
+	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/pkg/natsutil"
@@ -22,7 +22,7 @@ func main() {
 	}
 
 	nats := natsutil.NewNatsClient(config.NatsAddr)
-	producer := corepbv1.NewBroadcastEventbusServiceProtobufClient("", nats)
+	producer := corev1connect.NewBroadcastEventbusServiceClient(nats, "")
 
 	s := todo.NewTodoChangeServer(
 		todo.WithProducer(producer),
@@ -30,6 +30,7 @@ func main() {
 
 	mgr.Start(nats.TopicConsumer(
 		mgr.Context(),
-		natsutil.TwirpPathToNatsTopic(corepbv1.TodoEventbusServicePathPrefix),
+		natsutil.ConnectToTopic(corev1connect.TodoEventbusServiceName),
+		"websocket.todo",
 		s))
 }

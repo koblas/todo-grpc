@@ -6,7 +6,9 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	lambdaGo "github.com/aws/aws-lambda-go/lambda"
-	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
+	"github.com/bufbuild/connect-go"
+	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
+	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
@@ -21,7 +23,7 @@ type Config struct {
 }
 
 type Handler struct {
-	produer corepbv1.FileEventbusService
+	produer corev1connect.FileEventbusServiceClient
 }
 
 func (state *Handler) Start(ctx context.Context) error {
@@ -39,13 +41,13 @@ func (state *Handler) Start(ctx context.Context) error {
 				continue
 			}
 
-			_, err := state.produer.FileUploaded(ctx, &corepbv1.FileServiceUploadEvent{
-				Info: &corepbv1.FileServiceUploadInfo{
+			_, err := state.produer.FileUploaded(ctx, connect.NewRequest(&corev1.FileServiceUploadEvent{
+				Info: &corev1.FileServiceUploadInfo{
 					UserId:   &parts[1],
 					FileType: parts[0],
 					Url:      "s3://" + bucket + "/" + key,
 				},
-			})
+			}))
 			if err != nil {
 				log.With(zap.Error(err)).Info("failed to publish")
 			}
@@ -66,9 +68,9 @@ func main() {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
-	producer := corepbv1.NewFileEventbusServiceJSONClient(
-		config.EventArn,
+	producer := corev1connect.NewFileEventbusServiceClient(
 		awsutil.NewTwirpCallLambda(),
+		config.EventArn,
 	)
 
 	mgr.Start(&Handler{producer})

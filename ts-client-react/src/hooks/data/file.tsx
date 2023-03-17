@@ -12,6 +12,7 @@ type UploadUrlParam = {
 
 const UploadUrlResponse = z.object({
   url: z.string(),
+  id: z.string(),
 });
 
 type UploadFileParam = {
@@ -19,9 +20,12 @@ type UploadFileParam = {
   file: File;
 };
 
-const UploadFileResponse = z.object({
-  id: z.string(),
-});
+const UploadFileResponse = z.unknown();
+//   id: z.string(),
+// });
+// const UploadFileResponse = z.object({
+//   id: z.string(),
+// });
 
 type UploadFile = z.infer<typeof UploadFileResponse>;
 type UploadUrl = z.infer<typeof UploadUrlResponse>;

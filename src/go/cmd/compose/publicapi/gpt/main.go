@@ -3,8 +3,10 @@ package main
 import (
 	"strings"
 
+	"github.com/bufbuild/connect-go"
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
-	apipbv1 "github.com/koblas/grpc-todo/gen/apipb/v1"
+	"github.com/koblas/grpc-todo/gen/api/v1/apiv1connect"
+	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/services/publicapi/gpt"
@@ -22,7 +24,10 @@ func main() {
 
 	opts := []gpt.Option{}
 
-	api := apipbv1.NewGptServiceServer(gpt.NewGptServer(config, opts...))
+	_, api := apiv1connect.NewGptServiceHandler(
+		gpt.NewGptServer(config, opts...),
+		connect.WithCodec(bufcutil.NewJsonCodec()),
+	)
 
 	mgr.Start(mgr.WrapHttpHandler(api))
 }

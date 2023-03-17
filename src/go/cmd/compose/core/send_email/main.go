@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
-	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
+	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/pkg/natsutil"
@@ -21,9 +21,9 @@ func main() {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
-	producer := corepbv1.NewSendEmailEventsServiceProtobufClient(
-		"topic://"+config.EmailSentTopic,
+	producer := corev1connect.NewSendEmailEventsServiceClient(
 		natsutil.NewNatsClient(config.NatsAddr),
+		"topic://"+config.EmailSentTopic,
 	)
 
 	s := send_email.NewSendEmailServer(producer, send_email.NewSmtpService(config))
@@ -31,6 +31,7 @@ func main() {
 	nats := natsutil.NewNatsClient(config.NatsAddr)
 	mgr.Start(nats.TopicConsumer(
 		mgr.Context(),
-		natsutil.TwirpPathToNatsTopic(corepbv1.SendEmailServicePathPrefix),
+		natsutil.ConnectToTopic(corev1connect.SendEmailEventsServiceName),
+		"core.send_email",
 		s))
 }

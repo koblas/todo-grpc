@@ -3,13 +3,15 @@ package broadcast
 import (
 	"context"
 	"errors"
+	"net/http"
 
 	"github.com/aws/aws-sdk-go-v2/service/apigatewaymanagementapi"
 	"github.com/aws/aws-sdk-go/aws"
 	smithy "github.com/aws/smithy-go"
-	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
+	"github.com/bufbuild/connect-go"
+	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
+	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/logger"
-	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/pkg/store/websocket"
 	"go.uber.org/zap"
 )
@@ -45,37 +47,26 @@ func WithClient(client PostToConnectionAPI) Option {
 }
 
 type BroadcastServerHandler struct {
-	handler corepbv1.TwirpServer
 }
 
 // Convert websocket-broadcast events into per-connection events
-func NewBroadcastServer(opts ...Option) []manager.MsgHandler {
+func NewBroadcastServer(opts ...Option) []http.Handler {
 	svr := BroadcastServer{}
 
 	for _, opt := range opts {
 		opt(&svr)
 	}
 
-	return []manager.MsgHandler{
-		&BroadcastServerHandler{
-			handler: corepbv1.NewBroadcastEventbusServiceServer(&svr),
-		},
-	}
+	_, api := corev1connect.NewBroadcastEventbusServiceHandler(&svr)
+
+	return []http.Handler{api}
 }
 
-func (svc *BroadcastServerHandler) GroupName() string {
-	return "websocket.broadcast"
-}
-
-func (svc *BroadcastServerHandler) Handler() corepbv1.TwirpServer {
-	return svc.handler
-}
-
-func (svc *BroadcastServer) Send(ctx context.Context, event *corepbv1.BroadcastEvent) (*corepbv1.BroadcastEventbusSendResponse, error) {
-	log := logger.FromContext(ctx).With(zap.String("userId", event.Filter.UserId))
+func (svc *BroadcastServer) Send(ctx context.Context, event *connect.Request[corev1.BroadcastEvent]) (*connect.Response[corev1.BroadcastEventbusSendResponse], error) {
+	log := logger.FromContext(ctx).With(zap.String("userId", event.Msg.Filter.UserId))
 	log.Info("received broadcast event")
 
-	conns, err := svc.store.ForUser(ctx, event.Filter.UserId)
+	conns, err := svc.store.ForUser(ctx, event.Msg.Filter.UserId)
 	if err != nil {
 		log.With(zap.Error(err)).Info("Failed to lookup user")
 		return nil, err
@@ -87,7 +78,7 @@ func (svc *BroadcastServer) Send(ctx context.Context, event *corepbv1.BroadcastE
 		clog.Info("Sending to connection")
 		_, err = svc.client.PostToConnection(ctx, &apigatewaymanagementapi.PostToConnectionInput{
 			ConnectionId: aws.String(connection),
-			Data:         event.Data,
+			Data:         event.Msg.Data,
 		})
 		if err != nil {
 			var ae smithy.APIError
@@ -118,5 +109,5 @@ func (svc *BroadcastServer) Send(ctx context.Context, event *corepbv1.BroadcastE
 		log.With("count", len(conns), "success", success).Info("send partial failure")
 	}
 
-	return &corepbv1.BroadcastEventbusSendResponse{}, nil
+	return connect.NewResponse(&corev1.BroadcastEventbusSendResponse{}), nil
 }

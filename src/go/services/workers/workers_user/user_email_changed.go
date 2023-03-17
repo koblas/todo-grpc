@@ -2,10 +2,13 @@ package workers_user
 
 import (
 	"context"
+	"net/http"
 
-	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
+	"github.com/bufbuild/connect-go"
+	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
+	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
+	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/logger"
-	"github.com/twitchtv/twirp"
 	"go.uber.org/zap"
 )
 
@@ -22,24 +25,23 @@ type userEmailChanged struct {
 	WorkerConfig
 }
 
-func NewUserEmailChanged(config WorkerConfig) corepbv1.TwirpServer {
+func NewUserEmailChanged(config WorkerConfig) http.Handler {
 	svc := &userEmailChanged{WorkerConfig: config}
 
-	return corepbv1.NewUserEventbusServiceServer(svc)
+	_, api := corev1connect.NewUserEventbusServiceHandler(svc)
+
+	return api
 }
 
-func (cfg *userEmailChanged) SecurityPasswordChange(ctx context.Context, msg *corepbv1.UserSecurityEvent) (*corepbv1.UserEventbusSecurityPasswordChangeResponse, error) {
-	log := logger.FromContext(ctx).With(zap.Int32("action", int32(msg.Action))).With(zap.String("email", msg.User.Email))
+func (cfg *userEmailChanged) SecurityPasswordChange(ctx context.Context, msg *connect.Request[corev1.UserSecurityEvent]) (*connect.Response[corev1.UserEventbusSecurityPasswordChangeResponse], error) {
+	log := logger.FromContext(ctx).With(zap.Int32("action", int32(msg.Msg.Action))).With(zap.String("email", msg.Msg.User.Email))
 
 	log.Info("processing message")
-	if msg.Action != corepbv1.UserSecurity_USER_SECURITY_USER_PASSWORD_CHANGE {
-		return &corepbv1.UserEventbusSecurityPasswordChangeResponse{}, nil
-	}
-	user := msg.User
+	user := msg.Msg.User
 
-	params := corepbv1.PasswordChangeMessageRequest{
+	params := corev1.PasswordChangeMessageRequest{
 		AppInfo: buildAppInfo(cfg.config),
-		Recipient: &corepbv1.EmailUser{
+		Recipient: &corev1.EmailUser{
 			UserId: user.Id,
 			Name:   user.Name,
 			Email:  user.Email,
@@ -48,11 +50,11 @@ func (cfg *userEmailChanged) SecurityPasswordChange(ctx context.Context, msg *co
 
 	log.Info("Sending password change email")
 	if cfg.sendEmail != nil {
-		if _, err := cfg.sendEmail.PasswordChangeMessage(ctx, &params); err != nil {
+		if _, err := cfg.sendEmail.PasswordChangeMessage(ctx, connect.NewRequest(&params)); err != nil {
 			log.With(zap.Error(err)).Info("Failed to send")
-			return nil, twirp.WrapError(twirp.InternalError("failed to send"), err)
+			return nil, bufcutil.InternalError(err, "failed to send")
 		}
 	}
 
-	return &corepbv1.UserEventbusSecurityPasswordChangeResponse{}, nil
+	return connect.NewResponse(&corev1.UserEventbusSecurityPasswordChangeResponse{}), nil
 }

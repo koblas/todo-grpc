@@ -13,11 +13,11 @@ import (
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/util"
 	"go.uber.org/zap"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
 	"golang.org/x/sync/errgroup"
 
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/health"
-	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
+	grpchealth "github.com/bufbuild/connect-grpchealth-go"
 
 	// healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
 
@@ -40,7 +40,7 @@ type Manager struct {
 	grpcHealthPort string
 
 	//
-	grpcHealthServer *grpc.Server
+	grpcHealthServer *http.Server
 	httpServer       *http.Server
 }
 
@@ -180,13 +180,14 @@ func (mgr *Manager) Start(handler HandlerStart) {
 		mgr.ctx = ctx
 
 		group.Go(func() error { return mgr.startGrpcHealthCheck(ctx) })
-
 		group.Go(func() error { return handler.Start(ctx) })
 
 		select {
 		case <-interrupt:
+			mgr.log.Info("Got interrupt")
 			break
 		case <-ctx.Done():
+			mgr.log.Info("Got context done")
 			break
 		}
 
@@ -198,11 +199,17 @@ func (mgr *Manager) Start(handler HandlerStart) {
 		defer shutdownCancel()
 
 		if mgr.httpServer != nil {
-			mgr.httpServer.Shutdown(shutdownCtx)
+			mgr.log.Info("calling http Shutdown()")
+			go mgr.httpServer.Shutdown(shutdownCtx)
 		}
 		if mgr.grpcHealthServer != nil {
-			mgr.grpcHealthServer.GracefulStop()
+			mgr.log.Info("calling grpc Shutdown()")
+			go mgr.grpcHealthServer.Shutdown(shutdownCtx)
+			// mgr.grpcHealthServer.GracefulStop()
 		}
+		<-shutdownCtx.Done()
+
+		mgr.log.Info("waiting on group")
 
 		if err := group.Wait(); err != nil {
 			mgr.log.With(zap.Error(err)).Error("unable to shutdown")
@@ -220,9 +227,11 @@ func (wrap *WrapHttp) Start(ctx context.Context) error {
 	mgr.log.Info("starting service", zap.String("port", mgr.port))
 	server := &http.Server{
 		Addr:        ":" + mgr.port,
-		Handler:     mgr.withHeaders(wrap.api),
+		Handler:     h2c.NewHandler(mgr.withHeaders(wrap.api), &http2.Server{}),
 		BaseContext: func(net.Listener) context.Context { return mgr.ctx },
 	}
+
+	mgr.httpServer = server
 
 	return server.ListenAndServe()
 	// if err := server.ListenAndServe(); err != nil {
@@ -253,25 +262,38 @@ func (mgr *Manager) startGrpcHealthCheck(ctx context.Context) error {
 	}
 	log := mgr.log.With(zap.String("port", mgr.grpcHealthPort))
 
+	log.Info("Starting health service")
+
 	// server := grpcServer{mgr}
 
-	lis, err := net.Listen("tcp", ":"+mgr.grpcHealthPort)
-	if err != nil {
-		mgr.log.With(zap.Error(err)).Error("failed to listen on port")
-		return err
+	// lis, err := net.Listen("tcp", ":"+mgr.grpcHealthPort)
+	// if err != nil {
+	// 	mgr.log.With(zap.Error(err)).Error("failed to listen on port")
+	// 	return err
+	// }
+
+	mux := http.NewServeMux()
+	checker := grpchealth.NewStaticChecker()
+	mux.Handle(grpchealth.NewHandler(checker))
+	// healthcheck := health.NewServer()
+	// s := grpc.NewServer()
+	// healthgrpc.RegisterHealthServer(s, healthcheck)
+	// log.Info("gRPC healthcheck server is running")
+
+	server := &http.Server{
+		Addr:        ":" + mgr.grpcHealthPort,
+		Handler:     h2c.NewHandler(mux, &http2.Server{}),
+		BaseContext: func(net.Listener) context.Context { return mgr.ctx },
 	}
-	healthcheck := health.NewServer()
-	s := grpc.NewServer()
-	healthgrpc.RegisterHealthServer(s, healthcheck)
-	log.Info("gRPC healthcheck server is running")
 
-	mgr.grpcHealthServer = s
+	mgr.grpcHealthServer = server
+	return server.ListenAndServe()
 
-	if err := s.Serve(lis); err != http.ErrServerClosed {
-		log.With(zap.Error(err)).Error("failed to serve")
-	}
+	// if err := s.Serve(lis); err != http.ErrServerClosed {
+	// log.With(zap.Error(err)).Error("failed to serve")
+	// }
 
-	return nil
+	// return nil
 }
 
 func (mgr *Manager) withHeaders(base http.Handler) http.Handler {

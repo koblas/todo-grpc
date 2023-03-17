@@ -1,30 +1,33 @@
 package todo
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"strings"
 
-	apipbv1 "github.com/koblas/grpc-todo/gen/apipb/v1"
-	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
+	"github.com/bufbuild/connect-go"
+	apiv1 "github.com/koblas/grpc-todo/gen/api/v1"
+	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
+	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
+	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/pkg/tokenmanager"
-	"github.com/twitchtv/twirp"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 )
 
 // Server represents the gRPC server
 type TodoServer struct {
-	todos    corepbv1.TodoService
+	todos    corev1connect.TodoServiceClient
 	jwtMaker tokenmanager.Maker
 }
 
 type Option func(*TodoServer)
 
-func WithTodoService(client corepbv1.TodoService) Option {
+func WithTodoService(client corev1connect.TodoServiceClient) Option {
 	return func(svr *TodoServer) {
 		svr.todos = client
 	}
@@ -77,83 +80,83 @@ func (svc *TodoServer) getUserId(ctx context.Context) (string, error) {
 }
 
 // SayHello generates response to a Ping request
-func (svc *TodoServer) TodoAdd(ctx context.Context, newTodo *apipbv1.TodoAddRequest) (*apipbv1.TodoAddResponse, error) {
+func (svc *TodoServer) TodoAdd(ctx context.Context, newTodo *connect.Request[apiv1.TodoAddRequest]) (*connect.Response[apiv1.TodoAddResponse], error) {
 	log := logger.FromContext(ctx)
 	log.Info("AddTodo BEGIN")
 	userId, err := svc.getUserId(ctx)
 	if err != nil {
 		log.With("error", err).Info("No user id found")
-		return nil, twirp.Unauthenticated.Error("missing userid")
+		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("missing userid"))
 	}
 
-	task, err := svc.todos.TodoAdd(ctx, &corepbv1.TodoAddRequest{
+	task, err := svc.todos.TodoAdd(ctx, connect.NewRequest(&corev1.TodoAddRequest{
 		UserId: userId, // TODO
-		Task:   newTodo.Task,
-	})
+		Task:   newTodo.Msg.Task,
+	}))
 
 	if err != nil {
 		log.With(zap.Error(err)).Error("Unable to create todo")
-		return nil, twirp.InternalErrorWith(err)
+		return nil, bufcutil.InternalError(err)
 	}
-	log.With("task", newTodo.Task).Info("Received new task")
+	log.With("task", newTodo.Msg.Task).Info("Received new task")
 
-	return &apipbv1.TodoAddResponse{
-		Todo: &apipbv1.TodoObject{
-			Id:   task.Todo.Id,
-			Task: task.Todo.Task,
+	return connect.NewResponse(&apiv1.TodoAddResponse{
+		Todo: &apiv1.TodoObject{
+			Id:   task.Msg.Todo.Id,
+			Task: task.Msg.Todo.Task,
 		},
-	}, nil
+	}), nil
 }
 
-func (svc *TodoServer) TodoList(ctx context.Context, _ *apipbv1.TodoListRequest) (*apipbv1.TodoListResponse, error) {
+func (svc *TodoServer) TodoList(ctx context.Context, _ *connect.Request[apiv1.TodoListRequest]) (*connect.Response[apiv1.TodoListResponse], error) {
 	log := logger.FromContext(ctx)
 	log.Info("GetTodos BEGIN")
 
 	userId, err := svc.getUserId(ctx)
 	if err != nil {
 		log.With("error", err).Info("No user id found")
-		return nil, twirp.Unauthenticated.Error("missing userid")
+		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("missing userid"))
 	}
 
-	out, err := svc.todos.TodoList(ctx, &corepbv1.TodoListRequest{
+	out, err := svc.todos.TodoList(ctx, connect.NewRequest(&corev1.TodoListRequest{
 		UserId: userId,
-	})
+	}))
 
 	if err != nil {
-		return nil, twirp.InternalErrorWith(err)
+		return nil, bufcutil.InternalError(err)
 	}
 
-	todos := []*apipbv1.TodoObject{}
+	todos := []*apiv1.TodoObject{}
 	if out != nil {
-		for _, item := range out.Todos {
-			todos = append(todos, &apipbv1.TodoObject{
+		for _, item := range out.Msg.Todos {
+			todos = append(todos, &apiv1.TodoObject{
 				Id:   item.Id,
 				Task: item.Task,
 			})
 		}
 	}
 
-	return &apipbv1.TodoListResponse{Todos: todos}, nil
+	return connect.NewResponse(&apiv1.TodoListResponse{Todos: todos}), nil
 }
 
-func (svc *TodoServer) TodoDelete(ctx context.Context, delTodo *apipbv1.TodoDeleteRequest) (*apipbv1.TodoDeleteResponse, error) {
+func (svc *TodoServer) TodoDelete(ctx context.Context, delTodo *connect.Request[apiv1.TodoDeleteRequest]) (*connect.Response[apiv1.TodoDeleteResponse], error) {
 	log := logger.FromContext(ctx)
 	log.Info("DeleteTodo BEGIN")
 
 	userId, err := svc.getUserId(ctx)
 	if err != nil {
 		log.With("error", err).Info("No user id found")
-		return nil, twirp.Unauthenticated.Error("missing userid")
+		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("missing userid"))
 	}
 
-	_, err = svc.todos.TodoDelete(ctx, &corepbv1.TodoDeleteRequest{
+	_, err = svc.todos.TodoDelete(ctx, connect.NewRequest(&corev1.TodoDeleteRequest{
 		UserId: userId,
-		Id:     delTodo.Id,
-	})
+		Id:     delTodo.Msg.Id,
+	}))
 
 	if err != nil {
-		return nil, twirp.InternalErrorWith(err)
+		return nil, bufcutil.InternalError(err)
 	}
 
-	return &apipbv1.TodoDeleteResponse{Message: "success"}, nil
+	return connect.NewResponse(&apiv1.TodoDeleteResponse{Message: "success"}), nil
 }

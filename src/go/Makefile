@@ -41,10 +41,10 @@ build-lambda:
 build-compose:
 	go build -o build/publicapi-auth ./cmd/compose/publicapi/auth/main.go
 	go build -o build/publicapi-file ./cmd/compose/publicapi/file/main.go
-	go build -o build/publicapi-file ./cmd/compose/publicapi/gpt/main.go
+	go build -o build/publicapi-gpt ./cmd/compose/publicapi/gpt/main.go
 	go build -o build/publicapi-user ./cmd/compose/publicapi/user/main.go
 	go build -o build/publicapi-todo ./cmd/compose/publicapi/todo/main.go
-	go build -o build/publicapi-fileput ./cmd/compose/publicapi/fileput/main.go
+	# go build -o build/publicapi-fileput ./cmd/compose/publicapi/fileput/main.go
 	go build -o build/publicapi-websocket ./cmd/compose/publicapi/websocket/main.go
 	go build -o build/websocket-todo ./cmd/compose/websocket/todo/main.go
 	go build -o build/websocket-user ./cmd/compose/websocket/user/main.go

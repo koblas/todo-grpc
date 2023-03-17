@@ -1,12 +1,13 @@
 package workers_file
 
 import (
-	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
+	"net/http"
+
+	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/filestore"
-	"github.com/koblas/grpc-todo/pkg/manager"
 )
 
-type SqsConsumerBuilder func(WorkerConfig) corepbv1.TwirpServer
+type SqsConsumerBuilder func(WorkerConfig) http.Handler
 
 type Worker struct {
 	Stream    string
@@ -19,10 +20,10 @@ type Worker struct {
 type WorkerConfig struct {
 	config      Config
 	onlyHandler string
-	pubsub      corepbv1.FileEventbusService
+	pubsub      corev1connect.FileEventbusServiceClient
 	// fileService corepbv1.FileService
 	fileService filestore.Filestore
-	userService corepbv1.UserService
+	userService corev1connect.UserServiceClient
 }
 
 type Option func(*WorkerConfig)
@@ -33,7 +34,7 @@ func WithOnly(item string) Option {
 	}
 }
 
-func WithProducer(bus corepbv1.FileEventbusService) Option {
+func WithProducer(bus corev1connect.FileEventbusServiceClient) Option {
 	return func(cfg *WorkerConfig) {
 		cfg.pubsub = bus
 	}
@@ -45,7 +46,7 @@ func WithFileService(svc filestore.Filestore) Option {
 	}
 }
 
-func WithUserService(svc corepbv1.UserService) Option {
+func WithUserService(svc corev1connect.UserServiceClient) Option {
 	return func(cfg *WorkerConfig) {
 		cfg.userService = svc
 	}
@@ -65,25 +66,8 @@ func buildServiceConfig(config Config, opts ...Option) WorkerConfig {
 
 var workers = []Worker{}
 
-type HandlerData struct {
-	group   string
-	handler corepbv1.TwirpServer
-}
-
-type Handler interface {
-	GroupName() string
-	Handler() corepbv1.TwirpServer
-}
-
-func (h *HandlerData) GroupName() string {
-	return h.group
-}
-func (h *HandlerData) Handler() corepbv1.TwirpServer {
-	return h.handler
-}
-
-func BuildHandlers(config Config, opts ...Option) []manager.MsgHandler {
-	handlers := []manager.MsgHandler{}
+func BuildHandlers(config Config, opts ...Option) []http.Handler {
+	handlers := []http.Handler{}
 
 	cfg := buildServiceConfig(config, opts...)
 
@@ -91,56 +75,9 @@ func BuildHandlers(config Config, opts ...Option) []manager.MsgHandler {
 		if cfg.onlyHandler != "" && cfg.onlyHandler != worker.Stream {
 			continue
 		}
-		data := HandlerData{
-			group:   worker.GroupName,
-			handler: worker.Build(cfg),
-		}
 
-		handlers = append(handlers, manager.MsgHandler(&data))
+		handlers = append(handlers, worker.Build(cfg))
 	}
 
 	return handlers
 }
-
-// func GetHandlers(config Config, opts ...Option) http.HandlerFunc {
-// 	handlers := []corepbv1.TwirpServer{}
-
-// 	cfg := buildServiceConfig(config, opts...)
-
-// 	for _, worker := range workers {
-// 		if cfg.onlyHandler != "" && cfg.onlyHandler != worker.Stream {
-// 			continue
-// 		}
-
-// 		handlers = append(handlers, worker.Build(cfg))
-// 	}
-
-// 	return func(w http.ResponseWriter, req *http.Request) {
-// 		// We need to copy the input such that we can read multiple times
-// 		buf := bytes.Buffer{}
-// 		_, err := io.Copy(&buf, req.Body)
-// 		if err != nil {
-// 			// TODO
-// 			return
-// 		}
-
-// 		for _, handler := range handlers {
-// 			if !strings.HasPrefix(req.URL.Path, handler.PathPrefix()) {
-// 				continue
-// 			}
-
-// 			writer := httptest.NewRecorder()
-// 			reqCopy := *req
-// 			reqCopy.Body = io.NopCloser(bytes.NewReader(buf.Bytes()))
-
-// 			handler.ServeHTTP(writer, &reqCopy)
-
-// 			res := writer.Result()
-// 			if res.StatusCode != http.StatusOK {
-// 				log := logger.FromContext(req.Context())
-// 				buf, _ := io.ReadAll(io.LimitReader(res.Body, 1024))
-// 				log.With("statusCode", res.StatusCode).With("statusMsg", string(buf)).Info("handler invoke error")
-// 			}
-// 		}
-// 	}
-// }

@@ -1,7 +1,7 @@
 package main
 
 import (
-	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
+	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
@@ -20,9 +20,9 @@ func main() {
 
 	opts := []workers.Option{
 		workers.WithSendEmail(
-			corepbv1.NewSendEmailServiceProtobufClient(
-				"sqs://send-email",
+			corev1connect.NewSendEmailServiceClient(
 				awsutil.NewTwirpCallLambda(),
+				"sqs://send-email",
 			),
 		),
 	}

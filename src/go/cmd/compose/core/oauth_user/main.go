@@ -3,7 +3,7 @@ package main
 import (
 	"net/http"
 
-	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
+	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	ouser "github.com/koblas/grpc-todo/services/core/oauth_user"
@@ -25,15 +25,15 @@ func main() {
 
 	opts := []ouser.Option{
 		ouser.WithUserService(
-			corepbv1.NewUserServiceProtobufClient(
-				"http://"+config.UserServiceAddr,
+			corev1connect.NewUserServiceClient(
 				&http.Client{},
+				"http://"+config.UserServiceAddr,
 			),
 		),
 		ouser.WithSecretManager(oauthConfig),
 	}
 
-	api := corepbv1.NewAuthUserServiceServer(ouser.NewOauthUserServer(config, opts...))
+	_, api := corev1connect.NewAuthUserServiceHandler(ouser.NewOauthUserServer(config, opts...))
 
 	mgr.Start(mgr.WrapHttpHandler(api))
 }

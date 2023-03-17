@@ -1,0 +1,215 @@
+syntax = "proto3";
+package core.v1;
+
+option go_package = "github.com/koblas/grpc-todo/protos";
+
+import "google/protobuf/timestamp.proto";
+
+
+enum UserStatus {
+  USER_STATUS_UNSPECIFIED = 0;
+  USER_STATUS_REGISTERED = 1;
+  USER_STATUS_INVITED = 2;
+  USER_STATUS_ACTIVE = 100;
+  USER_STATUS_DISABLED = 200;
+}
+
+enum UserSecurity {
+  USER_SECURITY_UNSPECIFIED = 0;
+  USER_SECURITY_USER_PASSWORD_CHANGE = 1;
+  USER_SECURITY_USER_FORGOT_REQUEST = 2;
+  USER_SECURITY_USER_REGISTER_TOKEN = 3;
+  USER_SECURITY_USER_INVITE_TOKEN = 4;
+}
+
+message User {
+  string id = 1;
+  string name = 2;
+  string email = 3;
+  UserStatus status = 4;
+  google.protobuf.Timestamp updated_at = 5;
+  google.protobuf.Timestamp created_at = 6;
+  bool has_tfa = 7;
+  bool email_is_verified = 8;
+  optional string avatar_url = 9;
+}
+
+message SecureValue {
+  // e.g.
+  // "arn:aws:kms:us-east-1:111111111:key/abcdef00-0123-4567-7799-012345678990"
+  string key_uri = 1;
+  // opaque value that key encrypted
+  string data_key = 2;
+  // encrypted value
+  string data_value = 3;
+}
+
+// Used for ForgotPassword / Registration events
+message UserSecurityEvent {
+  UserSecurity action = 1;
+  User user = 2;
+  // SECURE -- For password recovery and email confirmation
+  SecureValue token = 3;
+  // Used for invitations
+  User sender = 4;
+}
+
+message UserChangeEvent {
+  // Since some changes (e.g. password) cannot be seen in the serialized version
+  User current = 1;
+  User original = 2;
+}
+
+message UserSettingGroup { map<string, string> values = 1; }
+
+message UserSettings {
+  string user_id = 1;
+  map<string, UserSettingGroup> settings = 2;
+}
+
+message UserSettingsChangeEvent {
+  UserSettings current = 1;
+  UserSettings orig = 2;
+}
+
+message UserServiceGetSettingsRequest {
+  string user_id = 1;
+}
+
+message UserServiceSetSettingsRequest {
+  string user_id = 1;
+  map<string, UserSettingGroup> settings = 2;
+}
+
+message UserServiceGetSettingsResponse {
+  UserSettings settings = 1;
+}
+
+message UserServiceSetSettingsResponse {
+  UserSettings settings = 1;
+}
+
+message AuthInfo {
+  string provider = 1;
+  string provider_id = 2;
+}
+
+message FindBy {
+  // Find by email address
+  string email = 1;
+  // Find by GUID
+  string user_id = 2;
+
+  // OAuth authentication information
+  AuthInfo auth = 3;
+}
+
+message FindByRequest {
+  FindBy find_by = 1;
+}
+
+message ForgotSendRequest {
+  FindBy find_by = 1;
+}
+
+message ComparePasswordRequest {
+  // User Identifier
+  string email = 1;
+  // Password
+  string password = 2;
+  // TFA
+  string tfa_type = 3;
+  string tfa_value = 4;
+}
+
+// Associate an OAuth Identifier with a user
+message AuthAssociateRequest {
+  string user_id = 1;
+
+  // OAuth authentication information
+  AuthInfo auth = 2;
+}
+
+message UserServiceCreateRequest {
+  string email = 1;
+  string password = 2;
+  string name = 3;
+  UserStatus status = 4;
+}
+
+message UserServiceUpdateRequest {
+  string user_id = 1;
+  optional string email = 2;
+  optional string password = 3;
+  optional string password_new = 4;
+  optional string name = 5;
+  optional UserStatus status = 6;
+  optional UserSettings settings = 7;
+  optional string avatar_url = 8;
+}
+
+message Verification{
+  // The user identifier
+  string user_id = 1;
+  // Check to see if this token is present
+  string token = 2;
+  // If we're setting the password
+  string password = 3;
+}
+
+message GetSettingsRequest { string user_id = 1; }
+message ComparePasswordResponse { string user_id = 1; }
+message AuthAssociateResponse { string user_id = 1; }
+
+message ForgotSendResponse {
+  User user = 1;
+}
+message ForgotVerifyResponse {
+  User user = 1;
+}
+message ForgotUpdateResponse {
+  User user = 1;
+}
+message VerificationVerifyResponse {
+  User user = 1;
+}
+message UserServiceCreateResponse {
+  User user = 1;
+}
+message FindByResponse {
+  User user = 1;
+}
+message UserServiceUpdateResponse {
+  User user = 1;
+}
+
+message VerificationVerifyRequest {
+  Verification verification = 1; 
+}
+message ForgotVerifyRequest {
+  Verification verification = 1; 
+}
+message ForgotUpdateRequest {
+  Verification verification = 1; 
+}
+
+service UserService {
+  rpc FindBy(FindByRequest) returns (FindByResponse) {}
+
+  rpc Create(UserServiceCreateRequest) returns (UserServiceCreateResponse) {}
+  rpc Update(UserServiceUpdateRequest) returns (UserServiceUpdateResponse) {}
+
+  rpc ComparePassword(ComparePasswordRequest) returns (ComparePasswordResponse) {}
+  rpc AuthAssociate(AuthAssociateRequest) returns (AuthAssociateResponse) {}
+
+  rpc GetSettings(UserServiceGetSettingsRequest) returns (UserServiceGetSettingsResponse) {}
+  rpc SetSettings(UserServiceSetSettingsRequest) returns (UserServiceSetSettingsResponse) {}
+
+  // Email address verification
+  rpc VerificationVerify(VerificationVerifyRequest) returns (VerificationVerifyResponse) {}
+
+  // Forgot password flow
+  rpc ForgotSend(ForgotSendRequest) returns (ForgotSendResponse) {}
+  rpc ForgotVerify(ForgotVerifyRequest) returns (ForgotVerifyResponse) {}
+  rpc ForgotUpdate(ForgotUpdateRequest) returns (ForgotUpdateResponse) {}
+}

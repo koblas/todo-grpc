@@ -3,14 +3,14 @@ import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { Heading, Box, Text, CloseButton, Grid, Flex, Input, Button, Spinner } from "@chakra-ui/react";
 import { useTodos } from "../hooks/data/todo";
-import { TodoItemType, TodoListType } from "../rpc/todo";
+import { TodoObjectT } from "../rpc/todo";
 import { useAuth } from "../hooks/auth";
 
 type FormFields = {
   text: string;
 };
 
-function Item({ todo }: { todo: TodoItemType }) {
+function Item({ todo }: { todo: TodoObjectT }) {
   const { mutations } = useTodos();
   const { task, id } = todo;
 
@@ -24,7 +24,7 @@ function Item({ todo }: { todo: TodoItemType }) {
   );
 }
 
-function List({ todos }: TodoListType) {
+function List({ todos }: { todos: TodoObjectT[] }) {
   return (
     <Grid justifyItems="center">
       {todos.map((todo) => (

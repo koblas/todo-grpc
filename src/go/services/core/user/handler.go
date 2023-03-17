@@ -5,7 +5,10 @@ import (
 	"strings"
 	"time"
 
-	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
+	"github.com/bufbuild/connect-go"
+	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
+	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
+	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/key_manager"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/protoutil"
@@ -24,21 +27,21 @@ func (UserId) Prefix() string { return "U" }
 // Server represents the gRPC server
 type UserServer struct {
 	users  UserStore
-	pubsub corepbv1.UserEventbusService
+	pubsub corev1connect.UserEventbusServiceClient
 	kms    key_manager.Encoder
 }
 
-var pbStatusToStatus = map[corepbv1.UserStatus]UserStatus{
-	corepbv1.UserStatus_USER_STATUS_ACTIVE:     UserStatus_ACTIVE,
-	corepbv1.UserStatus_USER_STATUS_INVITED:    UserStatus_INVITED,
-	corepbv1.UserStatus_USER_STATUS_DISABLED:   UserStatus_DISABLED,
-	corepbv1.UserStatus_USER_STATUS_REGISTERED: UserStatus_REGISTERED,
+var pbStatusToStatus = map[corev1.UserStatus]UserStatus{
+	corev1.UserStatus_USER_STATUS_ACTIVE:     UserStatus_ACTIVE,
+	corev1.UserStatus_USER_STATUS_INVITED:    UserStatus_INVITED,
+	corev1.UserStatus_USER_STATUS_DISABLED:   UserStatus_DISABLED,
+	corev1.UserStatus_USER_STATUS_REGISTERED: UserStatus_REGISTERED,
 }
-var statusToPbStatus = map[UserStatus]corepbv1.UserStatus{
-	UserStatus_ACTIVE:     corepbv1.UserStatus_USER_STATUS_ACTIVE,
-	UserStatus_INVITED:    corepbv1.UserStatus_USER_STATUS_INVITED,
-	UserStatus_DISABLED:   corepbv1.UserStatus_USER_STATUS_DISABLED,
-	UserStatus_REGISTERED: corepbv1.UserStatus_USER_STATUS_REGISTERED,
+var statusToPbStatus = map[UserStatus]corev1.UserStatus{
+	UserStatus_ACTIVE:     corev1.UserStatus_USER_STATUS_ACTIVE,
+	UserStatus_INVITED:    corev1.UserStatus_USER_STATUS_INVITED,
+	UserStatus_DISABLED:   corev1.UserStatus_USER_STATUS_DISABLED,
+	UserStatus_REGISTERED: corev1.UserStatus_USER_STATUS_REGISTERED,
 }
 
 type Option func(*UserServer)
@@ -49,7 +52,7 @@ func WithUserStore(store UserStore) Option {
 	}
 }
 
-func WithProducer(bus corepbv1.UserEventbusService) Option {
+func WithProducer(bus corev1connect.UserEventbusServiceClient) Option {
 	return func(cfg *UserServer) {
 		cfg.pubsub = bus
 	}
@@ -67,8 +70,8 @@ func NewUserServer(opts ...Option) *UserServer {
 	return &svr
 }
 
-func (s *UserServer) FindBy(ctx context.Context, request *corepbv1.FindByRequest) (*corepbv1.FindByResponse, error) {
-	params := request.FindBy
+func (s *UserServer) FindBy(ctx context.Context, request *connect.Request[corev1.FindByRequest]) (*connect.Response[corev1.FindByResponse], error) {
+	params := request.Msg.FindBy
 	log := logger.FromContext(ctx).With(zap.String("email", params.Email)).With(zap.String("userId", params.UserId))
 	log.Info("FindBy")
 
@@ -90,7 +93,7 @@ func (s *UserServer) FindBy(ctx context.Context, request *corepbv1.FindByRequest
 
 	if err != nil {
 		log.With(zap.Error(err)).Error("FindBy failed")
-		return nil, twirp.InternalErrorWith(err)
+		return nil, bufcutil.InternalError(err)
 	}
 
 	if user == nil {
@@ -99,14 +102,15 @@ func (s *UserServer) FindBy(ctx context.Context, request *corepbv1.FindByRequest
 
 	log.With("ID", user.ID).Info("found")
 
-	return &corepbv1.FindByResponse{User: s.toProtoUser(user)}, nil
+	return connect.NewResponse(&corev1.FindByResponse{User: s.toProtoUser(user)}), nil
 }
 
-func (s *UserServer) Create(ctx context.Context, params *corepbv1.UserServiceCreateRequest) (*corepbv1.UserServiceCreateResponse, error) {
+func (s *UserServer) Create(ctx context.Context, request *connect.Request[corev1.UserServiceCreateRequest]) (*connect.Response[corev1.UserServiceCreateResponse], error) {
+	params := request.Msg
 	log := logger.FromContext(ctx).With(zap.String("email", params.Email))
 	log.Info("Received Create")
 
-	if params.Status != corepbv1.UserStatus_USER_STATUS_REGISTERED && params.Status != corepbv1.UserStatus_USER_STATUS_INVITED {
+	if params.Status != corev1.UserStatus_USER_STATUS_REGISTERED && params.Status != corev1.UserStatus_USER_STATUS_INVITED {
 		log.Error("Bad user status")
 		return nil, fmt.Errorf("invalid user status = %s", params.Status)
 	}
@@ -114,7 +118,7 @@ func (s *UserServer) Create(ctx context.Context, params *corepbv1.UserServiceCre
 	log.Info("Checking for duplicate")
 	if u, err := s.users.GetByEmail(ctx, params.Email); err != nil {
 		log.With(zap.Error(err)).Error("GetByEmail failed")
-		return nil, twirp.InternalErrorWith(err)
+		return nil, bufcutil.InternalError(err)
 	} else if u != nil {
 		return nil, twirp.AlreadyExists.Error("Email address not found")
 	}
@@ -126,7 +130,7 @@ func (s *UserServer) Create(ctx context.Context, params *corepbv1.UserServiceCre
 
 		pass, errmsg = passwordEncrypt(params.Password)
 		if errmsg != "" {
-			return nil, twirp.InvalidArgument.Error(errmsg)
+			return nil, bufcutil.InvalidArgumentError("password", errmsg)
 		}
 	}
 	log.Info("DONE encrypt password")
@@ -137,7 +141,7 @@ func (s *UserServer) Create(ctx context.Context, params *corepbv1.UserServiceCre
 	var vExpires time.Time
 	vToken := []byte{}
 	var secret string
-	if params.Status != corepbv1.UserStatus_USER_STATUS_ACTIVE {
+	if params.Status != corev1.UserStatus_USER_STATUS_ACTIVE {
 		var err error
 		vExpires = time.Now().Add(time.Duration(24 * time.Hour))
 		vToken, secret, err = hmacCreate(userId, shortuuid.New())
@@ -174,9 +178,9 @@ func (s *UserServer) Create(ctx context.Context, params *corepbv1.UserServiceCre
 
 	log.Info("User Created")
 
-	if _, err := s.pubsub.UserChange(ctx, &corepbv1.UserChangeEvent{
+	if _, err := s.pubsub.UserChange(ctx, connect.NewRequest(&corev1.UserChangeEvent{
 		Current: s.toProtoUser(&user),
-	}); err != nil {
+	})); err != nil {
 		log.With(zap.Error(err)).Info("user entity publish failed")
 	}
 	if secret != "" {
@@ -184,19 +188,19 @@ func (s *UserServer) Create(ctx context.Context, params *corepbv1.UserServiceCre
 		if err != nil {
 			log.With(zap.Error(err)).Info("unable to create token")
 		} else {
-			payload := corepbv1.UserSecurityEvent{
+			payload := corev1.UserSecurityEvent{
 				User:  s.toProtoUser(&user),
 				Token: token,
 			}
 
-			if params.Status == corepbv1.UserStatus_USER_STATUS_REGISTERED {
-				payload.Action = corepbv1.UserSecurity_USER_SECURITY_USER_REGISTER_TOKEN
-				if _, err := s.pubsub.SecurityRegisterToken(ctx, &payload); err != nil {
+			if params.Status == corev1.UserStatus_USER_STATUS_REGISTERED {
+				payload.Action = corev1.UserSecurity_USER_SECURITY_USER_REGISTER_TOKEN
+				if _, err := s.pubsub.SecurityRegisterToken(ctx, connect.NewRequest(&payload)); err != nil {
 					log.With(zap.Error(err)).Info("user security publish failed")
 				}
-			} else if params.Status == corepbv1.UserStatus_USER_STATUS_INVITED {
-				payload.Action = corepbv1.UserSecurity_USER_SECURITY_USER_INVITE_TOKEN
-				if _, err := s.pubsub.SecurityInviteToken(ctx, &payload); err != nil {
+			} else if params.Status == corev1.UserStatus_USER_STATUS_INVITED {
+				payload.Action = corev1.UserSecurity_USER_SECURITY_USER_INVITE_TOKEN
+				if _, err := s.pubsub.SecurityInviteToken(ctx, connect.NewRequest(&payload)); err != nil {
 					log.With(zap.Error(err)).Info("user security publish failed")
 				}
 			}
@@ -204,17 +208,18 @@ func (s *UserServer) Create(ctx context.Context, params *corepbv1.UserServiceCre
 		}
 	}
 
-	return &corepbv1.UserServiceCreateResponse{User: s.toProtoUser(&user)}, nil
+	return connect.NewResponse(&corev1.UserServiceCreateResponse{User: s.toProtoUser(&user)}), nil
 }
 
-func (s *UserServer) Update(ctx context.Context, params *corepbv1.UserServiceUpdateRequest) (*corepbv1.UserServiceUpdateResponse, error) {
+func (s *UserServer) Update(ctx context.Context, request *connect.Request[corev1.UserServiceUpdateRequest]) (*connect.Response[corev1.UserServiceUpdateResponse], error) {
+	params := request.Msg
 	log := logger.FromContext(ctx).With(zap.String("userId", params.UserId))
 	log.Info("User Update")
 
 	orig, err := s.users.GetById(ctx, params.UserId)
 	if err != nil {
 		log.With(zap.Error(err)).Error("Update/GetById failed")
-		return nil, twirp.InternalErrorWith(err)
+		return nil, bufcutil.InternalError(err)
 	}
 
 	if orig == nil {
@@ -224,20 +229,20 @@ func (s *UserServer) Update(ctx context.Context, params *corepbv1.UserServiceUpd
 	if params.Password != nil || params.PasswordNew != nil {
 		auth, err := s.users.AuthGet(ctx, "email", strings.ToLower(orig.Email))
 		if err != nil {
-			return nil, twirp.InternalErrorWith(err)
+			return nil, bufcutil.InternalError(err)
 		}
 		if params.PasswordNew != nil && auth != nil {
 			// If you're setting a new password, you must provide the old
 			if params.Password == nil {
-				return nil, twirp.InvalidArgument.Error("Password missing")
+				return nil, bufcutil.InvalidArgumentError("password", "password missing")
 			}
 			if errmsg := validatePassword(*params.PasswordNew); errmsg != "" {
-				return nil, twirp.InvalidArgument.Error("Password too short")
+				return nil, bufcutil.InvalidArgumentError("password", "password too short")
 			}
 		}
 		// If you provided a password, we will check it...
 		if params.Password != nil && !passwordCompare(auth.Password, *params.Password) {
-			return nil, twirp.InvalidArgument.Error("Password mismatch")
+			return nil, bufcutil.InvalidArgumentError("password", "password mismatch")
 		}
 	}
 
@@ -264,7 +269,7 @@ func (s *UserServer) Update(ctx context.Context, params *corepbv1.UserServiceUpd
 		}
 		// Hmm... This is a good case where they both shouldn't be updated at the same time
 		if err := s.users.AuthUpsert(ctx, "email", strings.ToLower(updated.Email), auth); err != nil {
-			return nil, twirp.InternalErrorWith(err)
+			return nil, bufcutil.InternalError(err)
 		}
 	}
 	if params.AvatarUrl != nil {
@@ -293,33 +298,34 @@ func (s *UserServer) Update(ctx context.Context, params *corepbv1.UserServiceUpd
 		}
 	}
 
-	if _, err := s.pubsub.UserChange(ctx, &corepbv1.UserChangeEvent{
+	if _, err := s.pubsub.UserChange(ctx, connect.NewRequest(&corev1.UserChangeEvent{
 		Current:  s.toProtoUser(&updated),
 		Original: s.toProtoUser(orig),
-	}); err != nil {
+	})); err != nil {
 		log.With(zap.Error(err)).Info("user entity publish failed")
 	}
 
 	if params.PasswordNew != nil {
-		if _, err := s.pubsub.SecurityPasswordChange(ctx, &corepbv1.UserSecurityEvent{
-			Action: corepbv1.UserSecurity_USER_SECURITY_USER_PASSWORD_CHANGE,
+		if _, err := s.pubsub.SecurityPasswordChange(ctx, connect.NewRequest(&corev1.UserSecurityEvent{
+			Action: corev1.UserSecurity_USER_SECURITY_USER_PASSWORD_CHANGE,
 			User:   s.toProtoUser(&updated),
-		}); err != nil {
+		})); err != nil {
 			log.With(zap.Error(err)).Info("user security publish failed")
 		}
 	}
 
-	return &corepbv1.UserServiceUpdateResponse{User: s.toProtoUser(&updated)}, nil
+	return connect.NewResponse(&corev1.UserServiceUpdateResponse{User: s.toProtoUser(&updated)}), nil
 }
 
-func (s *UserServer) ComparePassword(ctx context.Context, params *corepbv1.ComparePasswordRequest) (*corepbv1.ComparePasswordResponse, error) {
+func (s *UserServer) ComparePassword(ctx context.Context, request *connect.Request[corev1.ComparePasswordRequest]) (*connect.Response[corev1.ComparePasswordResponse], error) {
+	params := request.Msg
 	log := logger.FromContext(ctx).With("email", params.Email)
 	log.Info("check password")
 
 	auth, err := s.users.AuthGet(ctx, "email", strings.ToLower(params.Email))
 	if err != nil {
 		log.With(zap.Error(err)).Error("AuthGet failed")
-		return nil, twirp.InternalErrorWith(err)
+		return nil, bufcutil.InternalError(err)
 	}
 
 	if auth == nil {
@@ -327,37 +333,38 @@ func (s *UserServer) ComparePassword(ctx context.Context, params *corepbv1.Compa
 	}
 
 	if !passwordCompare(auth.Password, params.Password) {
-		return nil, twirp.InvalidArgument.Error("Password mismatch")
+		return nil, bufcutil.InvalidArgumentError("password", "password mismatch")
 	}
 
-	return &corepbv1.ComparePasswordResponse{
+	return connect.NewResponse(&corev1.ComparePasswordResponse{
 		UserId: auth.UserID,
-	}, nil
+	}), nil
 }
 
-func (s *UserServer) GetSettings(ctx context.Context, params *corepbv1.UserServiceGetSettingsRequest) (*corepbv1.UserServiceGetSettingsResponse, error) {
-	log := logger.FromContext(ctx).With(zap.String("userId", params.UserId))
-	user, err := s.users.GetById(ctx, params.UserId)
+func (s *UserServer) GetSettings(ctx context.Context, params *connect.Request[corev1.UserServiceGetSettingsRequest]) (*connect.Response[corev1.UserServiceGetSettingsResponse], error) {
+	log := logger.FromContext(ctx).With(zap.String("userId", params.Msg.UserId))
+	user, err := s.users.GetById(ctx, params.Msg.UserId)
 
 	if err != nil {
 		log.With(zap.Error(err)).Error("GetSettings/GetById failed")
-		return nil, twirp.InternalErrorWith(err)
+		return nil, bufcutil.InternalError(err)
 	}
 
 	if user == nil {
 		return nil, twirp.NotFound.Error("user ID not found")
 	}
 
-	return &corepbv1.UserServiceGetSettingsResponse{Settings: s.toProtoSettings(user)}, nil
+	return connect.NewResponse(&corev1.UserServiceGetSettingsResponse{Settings: s.toProtoSettings(user)}), nil
 }
 
-func (s *UserServer) SetSettings(ctx context.Context, params *corepbv1.UserServiceSetSettingsRequest) (*corepbv1.UserServiceSetSettingsResponse, error) {
+func (s *UserServer) SetSettings(ctx context.Context, request *connect.Request[corev1.UserServiceSetSettingsRequest]) (*connect.Response[corev1.UserServiceSetSettingsResponse], error) {
+	params := request.Msg
 	log := logger.FromContext(ctx).With(zap.String("userId", params.UserId))
 	orig, err := s.users.GetById(ctx, params.UserId)
 
 	if err != nil {
 		log.With(zap.Error(err)).Error("SetSettings/GetById failed")
-		return nil, twirp.InternalErrorWith(err)
+		return nil, bufcutil.InternalError(err)
 	}
 	if orig == nil {
 		return nil, twirp.NotFound.Error("user ID not found")
@@ -379,23 +386,23 @@ func (s *UserServer) SetSettings(ctx context.Context, params *corepbv1.UserServi
 	}
 
 	s.users.UpdateUser(ctx, &updated)
-	if _, err := s.pubsub.UserChange(ctx, &corepbv1.UserChangeEvent{
+	if _, err := s.pubsub.UserChange(ctx, connect.NewRequest(&corev1.UserChangeEvent{
 		Current:  s.toProtoUser(&updated),
 		Original: s.toProtoUser(orig),
-	}); err != nil {
+	})); err != nil {
 		log.With(zap.Error(err)).Info("user entity publish failed")
 	}
 
-	return &corepbv1.UserServiceSetSettingsResponse{Settings: s.toProtoSettings(&updated)}, nil
+	return connect.NewResponse(&corev1.UserServiceSetSettingsResponse{Settings: s.toProtoSettings(&updated)}), nil
 }
 
-func (s *UserServer) getUserByVerification(ctx context.Context, params *corepbv1.Verification) (*UserAuth, error) {
+func (s *UserServer) getUserByVerification(ctx context.Context, params *corev1.Verification) (*UserAuth, error) {
 	log := logger.FromContext(ctx).With(zap.String("userId", params.UserId))
 	log.Info("getUserByVerification BEGIN")
 
 	auth, err := s.users.AuthGet(ctx, "forgot", params.UserId)
 	if err != nil {
-		return nil, twirp.InternalErrorWith(err)
+		return nil, bufcutil.InternalError(err)
 	}
 
 	if auth == nil {
@@ -404,24 +411,24 @@ func (s *UserServer) getUserByVerification(ctx context.Context, params *corepbv1
 	}
 	if len(auth.Password) == 0 || auth.ExpiresAt == nil {
 		log.Info("User has no verification token")
-		return nil, twirp.InvalidArgument.Error("user not found")
+		return nil, bufcutil.InvalidArgumentError("token", "user not found")
 	}
 	if auth.ExpiresAt.Before(time.Now()) {
 		log.Info("Token is expired")
 		// Should we remove it at this point?
-		return nil, twirp.InvalidArgument.Error("expired")
+		return nil, bufcutil.InvalidArgumentError("token", "expired")
 	}
 	if !passwordCompare(auth.Password, params.Token) {
 		log.Info("Token mismatch")
-		return nil, twirp.InvalidArgument.Error("bad token")
+		return nil, bufcutil.InvalidArgumentError("token", "bad match")
 	}
 
 	return auth, nil
 }
 
 // Verify the email address is "owned" by you
-func (s *UserServer) VerificationVerify(ctx context.Context, request *corepbv1.VerificationVerifyRequest) (*corepbv1.VerificationVerifyResponse, error) {
-	params := request.Verification
+func (s *UserServer) VerificationVerify(ctx context.Context, request *connect.Request[corev1.VerificationVerifyRequest]) (*connect.Response[corev1.VerificationVerifyResponse], error) {
+	params := request.Msg.Verification
 	log := logger.FromContext(ctx).With(zap.String("userId", params.UserId))
 	log.Info("Verification email")
 
@@ -435,13 +442,13 @@ func (s *UserServer) VerificationVerify(ctx context.Context, request *corepbv1.V
 	if user.EmailVerifyExpiresAt.Before(time.Now()) {
 		log.Info("Token is expired")
 		// Should we remove it at this point?
-		return nil, twirp.InvalidArgument.Error("expired")
+		return nil, bufcutil.InvalidArgumentError("token", "expired")
 	}
 	if ok, err := hmacCompare(user.ID, params.Token, user.EmailVerifyToken); err != nil {
-		return nil, twirp.InternalErrorWith(err)
+		return nil, bufcutil.InternalError(err)
 	} else if !ok {
 		log.Info("Token mismatch")
-		return nil, twirp.InvalidArgument.Error("bad token")
+		return nil, bufcutil.InvalidArgumentError("token", "bad token")
 	}
 
 	update := *user
@@ -455,18 +462,18 @@ func (s *UserServer) VerificationVerify(ctx context.Context, request *corepbv1.V
 	update.Status = UserStatus_ACTIVE
 	s.users.UpdateUser(ctx, &update)
 
-	if _, err := s.pubsub.UserChange(ctx, &corepbv1.UserChangeEvent{
+	if _, err := s.pubsub.UserChange(ctx, connect.NewRequest(&corev1.UserChangeEvent{
 		Current:  s.toProtoUser(&update),
 		Original: s.toProtoUser(user),
-	}); err != nil {
+	})); err != nil {
 		log.With(zap.Error(err)).Info("user entity publish failed")
 	}
 
-	return &corepbv1.VerificationVerifyResponse{User: s.toProtoUser(user)}, nil
+	return connect.NewResponse(&corev1.VerificationVerifyResponse{User: s.toProtoUser(user)}), nil
 }
 
-func (s *UserServer) ForgotVerify(ctx context.Context, request *corepbv1.ForgotVerifyRequest) (*corepbv1.ForgotVerifyResponse, error) {
-	params := request.Verification
+func (s *UserServer) ForgotVerify(ctx context.Context, request *connect.Request[corev1.ForgotVerifyRequest]) (*connect.Response[corev1.ForgotVerifyResponse], error) {
+	params := request.Msg.Verification
 	log := logger.FromContext(ctx).With(zap.String("userId", params.UserId))
 	log.Info("START ForgotVerify")
 
@@ -482,11 +489,11 @@ func (s *UserServer) ForgotVerify(ctx context.Context, request *corepbv1.ForgotV
 		return nil, twirp.NotFound.Error("user is disabled")
 	}
 
-	return &corepbv1.ForgotVerifyResponse{User: s.toProtoUser(user)}, nil
+	return connect.NewResponse(&corev1.ForgotVerifyResponse{User: s.toProtoUser(user)}), nil
 }
 
-func (s *UserServer) ForgotUpdate(ctx context.Context, request *corepbv1.ForgotUpdateRequest) (*corepbv1.ForgotUpdateResponse, error) {
-	params := request.Verification
+func (s *UserServer) ForgotUpdate(ctx context.Context, request *connect.Request[corev1.ForgotUpdateRequest]) (*connect.Response[corev1.ForgotUpdateResponse], error) {
+	params := request.Msg.Verification
 	log := logger.FromContext(ctx).With(zap.String("userId", params.UserId))
 	log.Info("START ForgotUpdate")
 
@@ -507,7 +514,7 @@ func (s *UserServer) ForgotUpdate(ctx context.Context, request *corepbv1.ForgotU
 	if params.Password != "" {
 		pass, errmsg := passwordEncrypt(params.Password)
 		if errmsg != "" {
-			return nil, twirp.InvalidArgument.Error(errmsg)
+			return nil, bufcutil.InvalidArgumentError("password", "no match")
 		}
 
 		auth := UserAuth{
@@ -515,13 +522,13 @@ func (s *UserServer) ForgotUpdate(ctx context.Context, request *corepbv1.ForgotU
 			Password: pass,
 		}
 		if err := s.users.AuthUpsert(ctx, "email", strings.ToLower(user.Email), auth); err != nil {
-			return nil, twirp.InternalErrorWith(err)
+			return nil, bufcutil.InternalError(err)
 		}
 		err = s.users.AuthDelete(ctx, "forgot", user.ID, UserAuth{
 			UserID: user.ID,
 		})
 		if err != nil {
-			return nil, twirp.InternalErrorWith(err)
+			return nil, bufcutil.InternalError(err)
 		}
 	}
 
@@ -530,39 +537,39 @@ func (s *UserServer) ForgotUpdate(ctx context.Context, request *corepbv1.ForgotU
 		update.Status = UserStatus_ACTIVE
 		err := s.users.UpdateUser(ctx, &update)
 		if err != nil {
-			return nil, twirp.InternalErrorWith(err)
+			return nil, bufcutil.InternalError(err)
 		}
 	}
 
-	if _, err := s.pubsub.UserChange(ctx, &corepbv1.UserChangeEvent{
+	if _, err := s.pubsub.UserChange(ctx, connect.NewRequest(&corev1.UserChangeEvent{
 		Current:  s.toProtoUser(&update),
 		Original: s.toProtoUser(user),
-	}); err != nil {
+	})); err != nil {
 		log.With(zap.Error(err)).Info("user entity publish failed")
 	}
 	if params.Password != "" {
-		if _, err := s.pubsub.SecurityPasswordChange(ctx, &corepbv1.UserSecurityEvent{
-			Action: corepbv1.UserSecurity_USER_SECURITY_USER_PASSWORD_CHANGE,
+		if _, err := s.pubsub.SecurityPasswordChange(ctx, connect.NewRequest(&corev1.UserSecurityEvent{
+			Action: corev1.UserSecurity_USER_SECURITY_USER_PASSWORD_CHANGE,
 			User:   s.toProtoUser(user),
-		}); err != nil {
+		})); err != nil {
 			log.With(zap.Error(err)).Info("user security publish failed")
 		}
 	}
 
-	return &corepbv1.ForgotUpdateResponse{User: s.toProtoUser(user)}, nil
+	return connect.NewResponse(&corev1.ForgotUpdateResponse{User: s.toProtoUser(user)}), nil
 }
 
-func (s *UserServer) ForgotSend(ctx context.Context, request *corepbv1.ForgotSendRequest) (*corepbv1.ForgotSendResponse, error) {
-	params := request.FindBy
+func (s *UserServer) ForgotSend(ctx context.Context, request *connect.Request[corev1.ForgotSendRequest]) (*connect.Response[corev1.ForgotSendResponse], error) {
+	params := request.Msg.FindBy
 	log := logger.FromContext(ctx).With(zap.String("userId", params.UserId))
 	log.Info("Forgot send")
 
 	if params.Email == "" {
-		return nil, twirp.InvalidArgument.Error("Must provide email")
+		return nil, bufcutil.InvalidArgumentError("email", "must provide email")
 	}
 	user, err := s.users.GetByEmail(ctx, params.Email)
 	if err != nil {
-		return nil, twirp.InternalErrorWith(err)
+		return nil, bufcutil.InternalError(err)
 	}
 	if user == nil {
 		return nil, twirp.NotFound.Errorf("user not found email=%s", params.Email)
@@ -572,7 +579,7 @@ func (s *UserServer) ForgotSend(ctx context.Context, request *corepbv1.ForgotSen
 	// use shortuuid rather than xid since it's less sequential
 	vToken, secret, err := tokenEncrypt(shortuuid.New())
 	if err != nil {
-		return nil, twirp.InternalErrorWith(err)
+		return nil, bufcutil.InternalError(err)
 	}
 	err = s.users.AuthUpsert(ctx, "forgot", user.ID, UserAuth{
 		UserID:    user.ID,
@@ -580,7 +587,7 @@ func (s *UserServer) ForgotSend(ctx context.Context, request *corepbv1.ForgotSen
 		ExpiresAt: &vExpires,
 	})
 	if err != nil {
-		return nil, twirp.InternalErrorWith(err)
+		return nil, bufcutil.InternalError(err)
 	}
 
 	// TODO?
@@ -589,25 +596,25 @@ func (s *UserServer) ForgotSend(ctx context.Context, request *corepbv1.ForgotSen
 	// }
 	if token, err := protoutil.SecureValueEncode(s.kms, secret); err != nil {
 		log.With(zap.Error(err)).Info("failed to encrypt token")
-	} else if _, err := s.pubsub.SecurityForgotRequest(ctx, &corepbv1.UserSecurityEvent{
-		Action: corepbv1.UserSecurity_USER_SECURITY_USER_FORGOT_REQUEST,
+	} else if _, err := s.pubsub.SecurityForgotRequest(ctx, connect.NewRequest(&corev1.UserSecurityEvent{
+		Action: corev1.UserSecurity_USER_SECURITY_USER_FORGOT_REQUEST,
 		User:   s.toProtoUser(user),
 		Token:  token,
-	}); err != nil {
+	})); err != nil {
 		log.With(zap.Error(err)).Info("user security publish failed")
 	}
 
-	return &corepbv1.ForgotSendResponse{User: s.toProtoUser(user)}, nil
+	return connect.NewResponse(&corev1.ForgotSendResponse{User: s.toProtoUser(user)}), nil
 }
 
-func (s *UserServer) AuthAssociate(ctx context.Context, params *corepbv1.AuthAssociateRequest) (*corepbv1.AuthAssociateResponse, error) {
+func (s *UserServer) AuthAssociate(ctx context.Context, params *connect.Request[corev1.AuthAssociateRequest]) (*connect.Response[corev1.AuthAssociateResponse], error) {
 	auth := UserAuth{
-		UserID: params.UserId,
+		UserID: params.Msg.UserId,
 	}
 
-	if err := s.users.AuthUpsert(ctx, params.Auth.Provider, params.Auth.ProviderId, auth); err != nil {
+	if err := s.users.AuthUpsert(ctx, params.Msg.Auth.Provider, params.Msg.Auth.ProviderId, auth); err != nil {
 		return nil, err
 	}
 
-	return &corepbv1.AuthAssociateResponse{UserId: params.UserId}, nil
+	return connect.NewResponse(&corev1.AuthAssociateResponse{UserId: params.Msg.UserId}), nil
 }

@@ -1,5 +1,7 @@
 import { RpcOptions } from "../errors";
 
+const VALID_TYPES = ["google.rpc.BadRequest", "type.googleapis.com/google.rpc.BadRequest"];
+
 export function handleJsonError<TData, TVar>(err: unknown, options?: RpcOptions<TData, TVar>): boolean {
   if (!options) {
     return false;
@@ -28,19 +30,37 @@ export function handleJsonError<TData, TVar>(err: unknown, options?: RpcOptions<
           }
         });
       } else if (Array.isArray(body?.details)) {
-        // this is the gRPC status response
-        body.details
-          .filter(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (item: any) =>
-              typeof item.field === "string" &&
-              typeof item.description === "string" &&
-              item["@type"] === "type.googleapis.com/google.rpc.BadRequest.FieldViolation",
-          )
-          .forEach(({ field, description }: { field: string; description: string }) => {
+        // Extract grpc status code from either grpc-web or buf-connect
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const items = body.details.filter((item: any) => {
+          if (typeof item !== "object" || item === null) {
+            return false;
+          }
+          if (!Object.prototype.hasOwnProperty.call(item, "type") || !VALID_TYPES.includes(item.type)) {
+            return false;
+          }
+          return true;
+        });
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        items.forEach((item: any) => {
+          const fieldList = item.fieldViolations ?? item.debug?.fieldViolations;
+
+          if (!Array.isArray(fieldList)) {
+            return;
+          }
+          fieldList.forEach((entry) => {
+            if (typeof entry !== "object" || entry === null) {
+              return;
+            }
+            const { field, description } = entry;
+            if (typeof description !== "string" || typeof field !== "string") {
+              return;
+            }
             const lcField = field.toLowerCase();
             fields[lcField] = (fields[lcField] ?? []).concat(description);
           });
+        });
       }
     }
 

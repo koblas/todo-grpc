@@ -21,6 +21,7 @@ type FormFields = {
 export function SecuritySettings() {
   const { mutations } = useUser();
   const toast = useToast();
+  const [updateUser] = mutations.useUpdateUser();
 
   const [isSubmitting, setSubmitting] = useState(false);
   const {
@@ -38,21 +39,20 @@ export function SecuritySettings() {
       return;
     }
     setSubmitting(true);
-    mutations.updateUser.mutate(data, {
-      onSettled() {
+    updateUser(data, {
+      onFinished() {
         setSubmitting(false);
       },
-      onError(error) {
-        if (error instanceof FetchError) {
-          const { code, msg, argument } = error.getInfo();
-
-          if (code === "invalid_argument" && msg && argument) {
-            setError(argument as keyof FormFields, { message: msg });
+      onErrorField(serror: Record<string, string[]>) {
+        const fields: (keyof FormFields)[] = ["password", "passwordAgain", "passwordNew"];
+        fields.forEach((key: keyof FormFields) => {
+          const message = serror[key]?.[0];
+          if (message) {
+            setError(key, { message });
           }
-        }
-        setSubmitting(false);
+        });
       },
-      onSuccess() {
+      onCompleted() {
         toast({
           position: "top",
           title: "Profile Updated",

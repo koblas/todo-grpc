@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
-	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
+	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/filestore"
 	"github.com/koblas/grpc-todo/pkg/manager"
@@ -37,7 +37,7 @@ func main() {
 		}
 
 		nats = natsutil.NewNatsClient(config.NatsAddr)
-		producer := corepbv1.NewFileEventbusServiceProtobufClient("", nats)
+		producer := corev1connect.NewFileEventbusServiceClient(nats, "")
 
 		opts = []workers_file.Option{
 			workers_file.WithProducer(producer),
@@ -45,9 +45,9 @@ func main() {
 				filestore.NewMinioProvider(config.MinioEndpoint),
 			),
 			workers_file.WithUserService(
-				corepbv1.NewUserServiceProtobufClient(
-					"http://"+config.UserServiceAddr,
+				corev1connect.NewUserServiceClient(
 					&http.Client{},
+					"http://"+config.UserServiceAddr,
 				),
 			),
 		}
@@ -55,6 +55,7 @@ func main() {
 	}
 
 	mgr.Start(nats.TopicConsumer(mgr.Context(),
-		natsutil.TwirpPathToNatsTopic(corepbv1.FileEventbusServicePathPrefix),
+		natsutil.ConnectToTopic(corev1connect.FileEventbusServiceName),
+		"workers.file",
 		workers_file.BuildHandlers(config, opts...)))
 }

@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package api.v1;
+
+option go_package = "github.com/koblas/grpc-todo/protos";
+
+message GetUserRequest {}
+
+message UpdateUserRequest {
+  optional string email = 1;
+  optional string name = 2;
+  optional string password = 3;
+  optional string password_new = 4;
+}
+
+message User {
+  string id = 1;
+  string email = 2;
+  string name = 3;
+  optional string avatar_url = 4;
+}
+
+message GetUserResponse { User user = 1; }
+message UpdateUserResponse { User user = 1; }
+
+service UserService {
+  rpc get_user(GetUserRequest) returns (GetUserResponse);
+  rpc update_user(UpdateUserRequest) returns (UpdateUserResponse);
+}

@@ -1,11 +1,12 @@
 package workers_user
 
 import (
-	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
-	"github.com/koblas/grpc-todo/pkg/manager"
+	"net/http"
+
+	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 )
 
-type SqsConsumerBuilder func(WorkerConfig) corepbv1.TwirpServer
+type SqsConsumerBuilder func(WorkerConfig) http.Handler
 
 type Worker struct {
 	Stream    string
@@ -18,7 +19,7 @@ type Worker struct {
 type WorkerConfig struct {
 	config      Config
 	onlyHandler string
-	sendEmail   corepbv1.SendEmailService
+	sendEmail   corev1connect.SendEmailServiceClient
 }
 
 type Option func(*WorkerConfig)
@@ -29,7 +30,7 @@ func WithOnly(item string) Option {
 	}
 }
 
-func WithSendEmail(sender corepbv1.SendEmailService) Option {
+func WithSendEmail(sender corev1connect.SendEmailServiceClient) Option {
 	return func(cfg *WorkerConfig) {
 		cfg.sendEmail = sender
 	}
@@ -50,20 +51,11 @@ func buildServiceConfig(config Config, opts ...Option) WorkerConfig {
 var workers = []Worker{}
 
 type WorkerHandler struct {
-	group   string
-	handler corepbv1.TwirpServer
+	group string
 }
 
-func (w *WorkerHandler) GroupName() string {
-	return w.group
-}
-
-func (w *WorkerHandler) Handler() corepbv1.TwirpServer {
-	return w.handler
-}
-
-func GetHandler(config Config, opts ...Option) []manager.MsgHandler {
-	handlers := []manager.MsgHandler{}
+func GetHandler(config Config, opts ...Option) []http.Handler {
+	handlers := []http.Handler{}
 
 	cfg := buildServiceConfig(config, opts...)
 
@@ -72,54 +64,8 @@ func GetHandler(config Config, opts ...Option) []manager.MsgHandler {
 			continue
 		}
 
-		handlers = append(handlers, &WorkerHandler{
-			group:   worker.GroupName,
-			handler: worker.Build(cfg),
-		})
+		handlers = append(handlers, worker.Build(cfg))
 	}
 
 	return handlers
 }
-
-// func XxGetHandler(config Config, opts ...Option) http.HandlerFunc {
-// 	handlers := []corepbv1.TwirpServer{}
-
-// 	cfg := buildServiceConfig(config, opts...)
-
-// 	for _, worker := range workers {
-// 		if cfg.onlyHandler != "" && cfg.onlyHandler != worker.Stream {
-// 			continue
-// 		}
-
-// 		handlers = append(handlers, worker.Build(cfg))
-// 	}
-
-// 	return func(w http.ResponseWriter, req *http.Request) {
-// 		// We need to copy the input such that we can read multiple times
-// 		buf := bytes.Buffer{}
-// 		_, err := io.Copy(&buf, req.Body)
-// 		if err != nil {
-// 			// TODO
-// 			return
-// 		}
-
-// 		for _, handler := range handlers {
-// 			if !strings.HasPrefix(req.URL.Path, handler.PathPrefix()) {
-// 				continue
-// 			}
-
-// 			writer := httptest.NewRecorder()
-// 			reqCopy := *req
-// 			reqCopy.Body = io.NopCloser(bytes.NewReader(buf.Bytes()))
-
-// 			handler.ServeHTTP(writer, &reqCopy)
-
-// 			res := writer.Result()
-// 			if res.StatusCode != http.StatusOK {
-// 				log := logger.FromContext(req.Context())
-// 				buf, _ := io.ReadAll(io.LimitReader(res.Body, 1024))
-// 				log.With("statusCode", res.StatusCode).With("statusMsg", string(buf)).Info("handler invoke error")
-// 			}
-// 		}
-// 	}
-// }

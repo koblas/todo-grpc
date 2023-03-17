@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "react-query";
 
 import { AuthPages } from "./pages/auth";
 import { SettingsPage } from "./pages/settings";
+import { ReportPage } from "./pages/report";
 import { TodoPage } from "./pages/TodoPage";
 import { GptPage } from "./pages/GptPage";
 import { UploadPage } from "./pages/UploadPage";
@@ -47,6 +48,7 @@ function SiteLayout() {
 function Site() {
   return (
     <Routes>
+      <Route path="/report" element={<ReportPage />} />
       <Route path="/" element={<SiteLayout />}>
         <Route index element={<HomePage />} />
         <Route
@@ -131,7 +133,7 @@ export default function App() {
 
         toast({
           status: "error",
-          title: "An unexpected error occured",
+          title: `An unexpected error occured ${error.code}`,
           isClosable: true,
         });
       }

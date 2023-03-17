@@ -1,0 +1,129 @@
+syntax = "proto3";
+package api.v1;
+
+option go_package = "github.com/koblas/grpc-todo/protos";
+
+message RegisterRequest {
+  // Required
+  string email = 1;
+  // Required
+  string password = 2;
+  // Username
+  string name = 4;
+  // invite code
+  string invite = 5;
+}
+
+message AuthenticateRequest {
+  // Required
+  string email = 1;
+  // Required
+  string password = 2;
+  // TFA One Time Token
+  string tfa_otp = 4;
+  // TFA Type
+  string tfa_type = 5;
+}
+
+message VerifyEmailRequest {
+  // Required: Verify and Update
+  string user_id = 1;
+  // Email confirmation token
+  string token = 2;
+}
+
+message RecoverSendRequest {
+  // Required: Send
+  string email = 1;
+}
+
+message RecoverUpdateRequest {
+  // Required: Verify and Update
+  string user_id = 1;
+  // Required: Verify and Update
+  string token = 2;
+  // Required: Update
+  string password = 3;
+}
+
+message RecoverVerifyRequest {
+  // Required: Verify and Update
+  string user_id = 1;
+  // Required: Verify and Update
+  string token = 2;
+  // Required: Update
+  string password = 3;
+}
+
+// Oauth
+message OauthUrlRequest {
+  string provider = 1;
+  string redirect_url = 2;
+  string state = 3;
+}
+
+message OauthUrlResponse { string url = 1; }
+
+message OauthLoginRequest {
+  string provider = 1;
+  string redirect_url = 2;
+  string code = 3;
+  string state = 4;
+}
+
+// Response structures
+
+message ValidationError {
+  // Field name
+  string field = 1;
+  // Human readable message
+  string message = 2;
+}
+
+message RecoverVerifyResponse { }
+message RecoverSendResponse { }
+message VerifyEmailResponse { }
+
+message Token {
+  string access_token = 1;
+  string token_type = 2;
+  int32 expires_in = 3;
+  string refresh_token = 4;
+}
+
+message AuthenticateResponse {
+  Token token = 1;
+}
+
+message RecoverUpdateResponse {
+  Token token = 1;
+}
+
+message RegisterResponse {
+  Token token = 1;
+
+  // More for the OAuth case to distingish between new account and old
+  bool created = 2;
+}
+
+message OauthLoginResponse {
+  Token token = 1;
+
+  // More for the OAuth case to distingish between new account and old
+  bool created = 2;
+}
+
+service AuthenticationService {
+  rpc register(RegisterRequest) returns (RegisterResponse) ;
+
+  rpc authenticate(AuthenticateRequest) returns (AuthenticateResponse) ;
+
+  rpc verify_email(VerifyEmailRequest) returns (VerifyEmailResponse) ;
+
+  rpc recover_send(RecoverSendRequest) returns (RecoverSendResponse) ;
+  rpc recover_verify(RecoverVerifyRequest) returns (RecoverVerifyResponse) ;
+  rpc recover_update(RecoverUpdateRequest) returns (RecoverUpdateResponse) ;
+
+  rpc oauth_login(OauthLoginRequest) returns (OauthLoginResponse) ;
+  rpc oauth_url(OauthUrlRequest) returns (OauthUrlResponse) ;
+}

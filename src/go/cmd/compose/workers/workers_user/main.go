@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
-	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
+	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/pkg/natsutil"
@@ -25,9 +25,9 @@ func main() {
 
 	opts := []workers_user.Option{
 		workers_user.WithSendEmail(
-			corepbv1.NewSendEmailServiceProtobufClient(
-				"topic://"+config.SendEmail,
+			corev1connect.NewSendEmailServiceClient(
 				nats,
+				"topic://"+config.SendEmail,
 			),
 		),
 	}
@@ -35,6 +35,7 @@ func main() {
 
 	mgr.Start(nats.TopicConsumer(
 		mgr.Context(),
-		natsutil.TwirpPathToNatsTopic(corepbv1.UserEventbusServicePathPrefix),
+		natsutil.ConnectToTopic(corev1connect.UserEventbusServiceName),
+		"workers.user",
 		s))
 }

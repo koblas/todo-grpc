@@ -4,8 +4,8 @@ import (
 	"log"
 	"time"
 
-	apipbv1 "github.com/koblas/grpc-todo/gen/apipb/v1"
-	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
+	apiv1 "github.com/koblas/grpc-todo/gen/api/v1"
+	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/tokenmanager"
 	"golang.org/x/net/context"
 )
@@ -15,23 +15,23 @@ const LOGIN_LOCKOUT_MINUTES = 15
 
 // Server represents the gRPC server
 type AuthenticationServer struct {
-	// apipbv1.UnimplementedAuthenticationServiceServer
+	// apiv1.UnimplementedAuthenticationServiceServer
 
 	jwtMaker    tokenmanager.Maker
-	userClient  corepbv1.UserService
-	oauthClient corepbv1.AuthUserService
+	userClient  corev1connect.UserServiceClient
+	oauthClient corev1connect.AuthUserServiceClient
 	attempts    AttemptService
 }
 
 type Option func(*AuthenticationServer)
 
-func WithUserClient(client corepbv1.UserService) Option {
+func WithUserClient(client corev1connect.UserServiceClient) Option {
 	return func(input *AuthenticationServer) {
 		input.userClient = client
 	}
 }
 
-func WithOAuthClient(client corepbv1.AuthUserService) Option {
+func WithOAuthClient(client corev1connect.AuthUserServiceClient) Option {
 	return func(input *AuthenticationServer) {
 		input.oauthClient = client
 	}
@@ -61,7 +61,7 @@ func NewAuthenticationServer(config Config, opts ...Option) AuthenticationServer
 	return svr
 }
 
-func (s AuthenticationServer) returnToken(ctx context.Context, userId string) (*apipbv1.Token, error) {
+func (s AuthenticationServer) returnToken(ctx context.Context, userId string) (*apiv1.Token, error) {
 	// TODO: This is an authentication event that should be pushed onto
 	//  the messagebus
 
@@ -70,7 +70,7 @@ func (s AuthenticationServer) returnToken(ctx context.Context, userId string) (*
 		return nil, err
 	}
 
-	return &apipbv1.Token{
+	return &apiv1.Token{
 		AccessToken: bearer,
 		TokenType:   "Bearer",
 		ExpiresIn:   24 * 3600,

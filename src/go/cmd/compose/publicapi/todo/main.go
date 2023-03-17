@@ -4,9 +4,11 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/bufbuild/connect-go"
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
-	apipbv1 "github.com/koblas/grpc-todo/gen/apipb/v1"
-	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
+	"github.com/koblas/grpc-todo/gen/api/v1/apiv1connect"
+	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
+	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/services/publicapi/todo"
@@ -24,14 +26,17 @@ func main() {
 
 	opts := []todo.Option{
 		todo.WithTodoService(
-			corepbv1.NewTodoServiceProtobufClient(
-				"http://"+config.TodoServiceAddr,
+			corev1connect.NewTodoServiceClient(
 				&http.Client{},
+				"http://"+config.TodoServiceAddr,
 			),
 		),
 	}
 
-	api := apipbv1.NewTodoServiceServer(todo.NewTodoServer(config, opts...))
+	_, api := apiv1connect.NewTodoServiceHandler(
+		todo.NewTodoServer(config, opts...),
+		connect.WithCodec(bufcutil.NewJsonCodec()),
+	)
 
 	mgr.Start(mgr.WrapHttpHandler(api))
 }

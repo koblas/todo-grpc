@@ -9,3 +9,5 @@ lint:
     - RPC_PASCAL_CASE
     - SERVICE_PASCAL_CASE
 
+#deps:
+#  - buf.build/googleapis/googleapis

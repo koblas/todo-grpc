@@ -1,7 +1,7 @@
 package main
 
 import (
-	apipbv1 "github.com/koblas/grpc-todo/gen/apipb/v1"
+	"github.com/koblas/grpc-todo/gen/api/v1/apiv1connect"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
@@ -25,7 +25,7 @@ func main() {
 		file.WithFileStore(filestore.NewAwsProvider()),
 	}
 
-	api := apipbv1.NewFileServiceServer(file.NewFileServer(config, opts...))
+	_, api := apiv1connect.NewFileServiceHandler(file.NewFileServer(config, opts...))
 
 	mgr.Start(awsutil.HandleApiLambda(api))
 }

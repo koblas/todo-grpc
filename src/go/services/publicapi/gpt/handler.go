@@ -4,7 +4,9 @@ import (
 	"log"
 
 	"github.com/PullRequestInc/go-gpt3"
-	apipbv1 "github.com/koblas/grpc-todo/gen/apipb/v1"
+	"github.com/bufbuild/connect-go"
+	apiv1 "github.com/koblas/grpc-todo/gen/api/v1"
+	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/tokenmanager"
 	"github.com/twitchtv/twirp"
@@ -43,7 +45,7 @@ func (svc *GptServer) getUserId(ctx context.Context) (string, error) {
 }
 
 // SayHello generates response to a Ping request
-func (svc *GptServer) Create(ctx context.Context, params *apipbv1.GptServiceCreateRequest) (*apipbv1.GptServiceCreateResponse, error) {
+func (svc *GptServer) Create(ctx context.Context, params *connect.Request[apiv1.GptServiceCreateRequest]) (*connect.Response[apiv1.GptServiceCreateResponse], error) {
 	log := logger.FromContext(ctx)
 	log.Info("GptCreate BEGIN")
 
@@ -73,7 +75,7 @@ Me:
 `
 
 	resp, err := svc.client.CompletionWithEngine(ctx, "text-davinci-003", gpt3.CompletionRequest{
-		Prompt: []string{prefix + params.Prompt + "/e"},
+		Prompt: []string{prefix + params.Msg.Prompt + "/e"},
 
 		MaxTokens: gpt3.IntPtr(256),
 		Stop:      []string{},
@@ -81,10 +83,10 @@ Me:
 	})
 	if err != nil {
 		log.With(zap.Error(err)).Info("Failed GPT api call")
-		return nil, twirp.InternalError("failed to create string")
+		return nil, bufcutil.InternalError(err, "failed to create string")
 	}
 
-	return &apipbv1.GptServiceCreateResponse{
+	return connect.NewResponse(&apiv1.GptServiceCreateResponse{
 		Text: resp.Choices[0].Text,
-	}, nil
+	}), nil
 }

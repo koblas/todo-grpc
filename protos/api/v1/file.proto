@@ -1,0 +1,12 @@
+syntax = "proto3";
+package api.v1;
+
+option go_package = "github.com/koblas/grpc-todo/protos";
+
+// Upload URL RPC
+message FileServiceUploadUrlRequest { string type = 1; string content_type = 2; }
+message FileServiceUploadUrlResponse { string url = 1; string id = 2; }
+
+service FileService {
+  rpc upload_url(FileServiceUploadUrlRequest) returns (FileServiceUploadUrlResponse);
+}

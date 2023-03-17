@@ -1,13 +1,15 @@
 package file
 
 import (
+	"errors"
 	"log"
 
-	apipbv1 "github.com/koblas/grpc-todo/gen/apipb/v1"
+	"github.com/bufbuild/connect-go"
+	apiv1 "github.com/koblas/grpc-todo/gen/api/v1"
+	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/filestore"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/tokenmanager"
-	"github.com/twitchtv/twirp"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 )
@@ -52,28 +54,28 @@ func (svc *FileServer) getUserId(ctx context.Context) (string, error) {
 	return tokenmanager.UserIdFromContext(ctx, svc.jwtMaker)
 }
 
-func (svc *FileServer) UploadUrl(ctx context.Context, input *apipbv1.FileServiceUploadUrlRequest) (*apipbv1.FileServiceUploadUrlResponse, error) {
+func (svc *FileServer) UploadUrl(ctx context.Context, input *connect.Request[apiv1.FileServiceUploadUrlRequest]) (*connect.Response[apiv1.FileServiceUploadUrlResponse], error) {
 	log := logger.FromContext(ctx)
 	log.Info("UploadUrl BEGIN")
 
 	userId, err := svc.getUserId(ctx)
 	if err != nil {
 		log.With("error", err).Info("No user id found")
-		return nil, twirp.Unauthenticated.Error("missing userid")
+		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("missing userid"))
 	}
 	log = log.With("userId", userId)
 
 	req := filestore.FilePutParams{
 		Bucket:      svc.uploadBucket,
 		UserId:      userId,
-		FileType:    input.Type + ".upload",
-		ContentType: input.ContentType,
+		FileType:    input.Msg.Type + ".upload",
+		ContentType: input.Msg.ContentType,
 	}
 
 	res, err := svc.file.UploadUrl(ctx, &req)
 	if err != nil {
 		log.With(zap.Error(err)).Error("Unable to build PUT url")
-		return nil, twirp.InternalError("unable to construct url")
+		return nil, bufcutil.InternalError(err, "unable to construct url")
 	}
 
 	// urlStr := res.Url
@@ -86,8 +88,8 @@ func (svc *FileServer) UploadUrl(ctx context.Context, input *apipbv1.FileService
 	// 	urlStr = "/minio_" + u.Path + "?" + u.RawQuery
 	// }
 
-	return &apipbv1.FileServiceUploadUrlResponse{
+	return connect.NewResponse(&apiv1.FileServiceUploadUrlResponse{
 		Url: res.Url,
 		Id:  res.Id,
-	}, nil
+	}), nil
 }

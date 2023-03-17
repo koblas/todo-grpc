@@ -1,33 +1,33 @@
 import { QueryClient, useMutation, useQuery, useQueryClient } from "react-query";
 import { useEffect } from "react";
 import { z } from "zod";
-import { TodoAdd, TodoAddType, TodoItemType, TodoList, TodoListType } from "../../rpc/todo";
+import * as rpcTodo from "../../rpc/todo";
 import { useAuth } from "../auth";
 import { newFetchClient } from "../../rpc/utils";
-import { Json } from "../../types/json";
 import { useWebsocketUpdates } from "../../rpc/websocket";
 import { buildCallbacksTyped } from "../../rpc/utils/helper";
 
-type AddTodoParam = Pick<TodoItemType, "task">;
-type DeleteTodoParam = Pick<TodoItemType, "id">;
+function cacheAddTodo(queryClient: QueryClient, item: rpcTodo.TodoObjectT) {
+  queryClient.setQueriesData<{ todos: rpcTodo.TodoObjectT[] }>("todos", (old) => {
+    if (!old) {
+      return { todos: [item] };
+    }
 
-function cacheAddTodo(queryClient: QueryClient, item: TodoItemType) {
-  queryClient.setQueriesData("todos", (old: TodoListType | undefined) => {
-    if (old?.todos?.find(({ id }) => id === item.id)) {
+    if (old.todos.some(({ id }) => id === item.id)) {
       return old;
     }
 
-    const updated = (old?.todos ?? []).concat([item]);
-
-    return { todos: updated };
+    return { todos: old.todos.concat(item) };
   });
 }
 
-function cacheDeleteTodo(queryClient: QueryClient, id: TodoItemType["id"]) {
-  queryClient.setQueriesData("todos", (old: TodoListType | undefined) => {
-    const updated = (old?.todos ?? []).filter(({ id: value }) => value !== id);
+function cacheDeleteTodo(queryClient: QueryClient, id: rpcTodo.TodoObjectT["id"]) {
+  queryClient.setQueriesData<{ todos: rpcTodo.TodoObjectT[] }>("todos", (old) => {
+    if (!old) {
+      return { todos: [] };
+    }
 
-    return { todos: updated };
+    return { todos: old.todos.filter((item) => item.id !== id) };
   });
 }
 
@@ -36,32 +36,32 @@ export function useTodos() {
   const client = newFetchClient({ token });
   const queryClient = useQueryClient();
 
-  const result = useQuery("todos", () => client.POST("/v1/todo/todo_list", {}), {
+  const result = useQuery("todos", () => client.POST<rpcTodo.TodoListResponseT>("/v1/todo/todo_list", {}), {
     staleTime: 300_000,
     enabled: !!token,
   });
 
-  const addTodo = useMutation<TodoAddType, unknown, AddTodoParam, unknown>(
+  const addTodo = useMutation(
     "todos",
-    (data) => client.POST<TodoAddType>("/v1/todo/todo_add", data as unknown as Json),
-    buildCallbacksTyped(queryClient, TodoAdd, {
+    (data: rpcTodo.TodoAddRequestT) => client.POST<rpcTodo.TodoAddResponseT>("/v1/todo/todo_add", data),
+    buildCallbacksTyped(queryClient, rpcTodo.TodoAddResponse, {
       onCompleted(data) {
         cacheAddTodo(queryClient, data.todo);
       },
     }),
   );
 
-  const deleteTodo = useMutation<Json, unknown, DeleteTodoParam, unknown>(
+  const deleteTodo = useMutation(
     "todos",
-    (data) => client.POST<Json>("/v1/todo/todo_delete", data),
-    buildCallbacksTyped<z.ZodUnknown, unknown, unknown, DeleteTodoParam>(queryClient, z.unknown(), {
+    (data: rpcTodo.TodoDeleteRequestT) => client.POST<rpcTodo.TodoDeleteResponseT>("/v1/todo/todo_delete", data),
+    buildCallbacksTyped(queryClient, rpcTodo.TodoDeleteResponse, {
       onCompleted(data, variables) {
         cacheDeleteTodo(queryClient, variables.id);
       },
     }),
   );
 
-  const parsed = TodoList.safeParse(result.data);
+  const parsed = rpcTodo.TodoListResponse.safeParse(result.data);
 
   return {
     todos: parsed.success ? parsed.data.todos : null,

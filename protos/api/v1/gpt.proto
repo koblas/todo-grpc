@@ -1,0 +1,10 @@
+syntax = "proto3";
+package api.v1;
+
+option go_package = "github.com/koblas/grpc-todo/protos";
+
+message GptServiceCreateRequest { string prompt = 1; }
+
+message GptServiceCreateResponse { string text = 1; }
+
+service GptService { rpc create(GptServiceCreateRequest) returns (GptServiceCreateResponse); }

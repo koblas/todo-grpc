@@ -37,22 +37,22 @@
 	import cors
 
 	handle_path /api/v1/auth/* {
-		rewrite * /twirp/api.AuthenticationService{path}
+		rewrite * /api.v1.AuthenticationService{path}
 		reverse_proxy public-auth:14586
 	}
 
 	handle_path /api/v1/todo/* {
-		rewrite * /twirp/api.TodoService{path}
+		rewrite * /api.v1.TodoService{path}
 		reverse_proxy public-todo:14586
 	}
 
 	handle_path /api/v1/user/* {
-		rewrite * /twirp/api.UserService{path}
+		rewrite * /api.v1.UserService{path}
 		reverse_proxy public-user:14586
 	}
 
 	handle_path /api/v1/file/* {
-		rewrite * /twirp/api.FileService{path}
+		rewrite * /api.v1.FileService{path}
 		reverse_proxy public-user:14586
 	}
 
@@ -61,11 +61,11 @@
 	#	reverse_proxy public-fileput:14586
 	#}
 
-	handle_path /minio_/* {
+	#handle_path /minio_/* {
 		# strip_path_prefix "/_minio"
-		rewrite * /{path}
-		reverse_proxy minio:9000
-	}
+		#rewrite * /{path}
+		#reverse_proxy minio:9000
+	#}
 
 	handle_path /wsapi/* {
 		reverse_proxy public-websocket:14586

@@ -1,8 +1,8 @@
 package main
 
 import (
-	apipbv1 "github.com/koblas/grpc-todo/gen/apipb/v1"
-	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
+	"github.com/koblas/grpc-todo/gen/api/v1/apiv1connect"
+	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
@@ -23,8 +23,14 @@ func main() {
 
 	// Connect to the user service
 	opts := []auth.Option{
-		auth.WithUserClient(corepbv1.NewUserServiceJSONClient("lambda://core-user", awsutil.NewTwirpCallLambda())),
-		auth.WithOAuthClient(corepbv1.NewAuthUserServiceJSONClient("lambda://core-oauth-user", awsutil.NewTwirpCallLambda())),
+		auth.WithUserClient(corev1connect.NewUserServiceClient(
+			awsutil.NewTwirpCallLambda(),
+			"lambda://core-user",
+		)),
+		auth.WithOAuthClient(corev1connect.NewAuthUserServiceClient(
+			awsutil.NewTwirpCallLambda(),
+			"lambda://core-oauth-user",
+		)),
 	}
 
 	rdb := redisutil.NewClient(config.RedisAddr)
@@ -34,7 +40,7 @@ func main() {
 		opts = append(opts, auth.WithAttemptService(auth.NewAttemptCounter("publicapi:authentication", rdb)))
 	}
 
-	api := apipbv1.NewAuthenticationServiceServer(auth.NewAuthenticationServer(config, opts...))
+	_, api := apiv1connect.NewAuthenticationServiceHandler(auth.NewAuthenticationServer(config, opts...))
 
 	mgr.Start(awsutil.HandleApiLambda(api))
 }

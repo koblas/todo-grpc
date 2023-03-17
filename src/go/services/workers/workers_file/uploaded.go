@@ -6,10 +6,13 @@ import (
 	"image"
 	"image/png"
 	"io"
+	"net/http"
 	"strings"
 
+	"github.com/bufbuild/connect-go"
 	"github.com/disintegration/imaging"
-	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
+	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
+	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/filestore"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/oklog/ulid/v2"
@@ -31,26 +34,29 @@ type fileUploaded struct {
 	WorkerConfig
 }
 
-func NewFileUploaded(config WorkerConfig) corepbv1.TwirpServer {
+func NewFileUploaded(config WorkerConfig) http.Handler {
 	svc := &fileUploaded{WorkerConfig: config}
 
-	return corepbv1.NewFileEventbusServiceServer(svc)
+	_, api := corev1connect.NewFileEventbusServiceHandler(svc)
+	return api
 }
 
-func (cfg *fileUploaded) FileUploaded(ctx context.Context, msg *corepbv1.FileServiceUploadEvent) (*corepbv1.FileEventbusFileUploadedResponse, error) {
+func (cfg *fileUploaded) FileUploaded(ctx context.Context, msg *connect.Request[corev1.FileServiceUploadEvent]) (*connect.Response[corev1.FileEventbusFileUploadedResponse], error) {
+	info := msg.Msg.Info
+
 	log := logger.FromContext(ctx).With(
-		zap.String("fileType", msg.Info.FileType),
-		zap.Stringp("userId", msg.Info.UserId),
-		zap.String("fileUrl", msg.Info.Url),
+		zap.String("fileType", info.FileType),
+		zap.Stringp("userId", info.UserId),
+		zap.String("fileUrl", info.Url),
 	)
 	log.Info("in uploaded event handler")
 
 	// We only handle profile images
-	if msg.Info.FileType != "profile_image.upload" || msg.Info.UserId == nil {
-		return &corepbv1.FileEventbusFileUploadedResponse{}, nil
+	if info.FileType != "profile_image.upload" || info.UserId == nil {
+		return connect.NewResponse(&corev1.FileEventbusFileUploadedResponse{}), nil
 	}
 
-	fileType := strings.TrimSuffix(msg.Info.FileType, ".upload")
+	fileType := strings.TrimSuffix(info.FileType, ".upload")
 
 	postComplete := func(errMsg string) {
 		msgPtr := &errMsg
@@ -59,50 +65,50 @@ func (cfg *fileUploaded) FileUploaded(ctx context.Context, msg *corepbv1.FileSer
 		} else {
 			log.Info(errMsg)
 		}
-		event := corepbv1.FileServiceCompleteEvent{
+		event := corev1.FileServiceCompleteEvent{
 			IdemponcyId:  ulid.Make().String(),
 			ErrorMessage: msgPtr,
-			Info: &corepbv1.FileServiceUploadInfo{
-				UserId:      msg.Info.UserId,
+			Info: &corev1.FileServiceUploadInfo{
+				UserId:      info.UserId,
 				FileType:    fileType,
 				ContentType: nil,
-				Url:         msg.Info.Url,
+				Url:         info.Url,
 			},
 		}
 
-		if _, err := cfg.pubsub.FileComplete(ctx, &event); err != nil {
+		if _, err := cfg.pubsub.FileComplete(ctx, connect.NewRequest(&event)); err != nil {
 			log.With(zap.Error(err)).Error("unable to send ready")
 		}
 	}
 
-	buf, err := cfg.fetchFromS3(ctx, log, msg)
+	buf, err := cfg.fetchFromS3(ctx, log, msg.Msg)
 	if err != nil {
 		postComplete("unable to get data")
-		return &corepbv1.FileEventbusFileUploadedResponse{}, nil
+		return connect.NewResponse(&corev1.FileEventbusFileUploadedResponse{}), nil
 	}
 
 	writer, err := cfg.resizeImage(ctx, log, buf)
 	if err != nil {
 		postComplete("unable to get data")
-		return &corepbv1.FileEventbusFileUploadedResponse{}, nil
+		return connect.NewResponse(&corev1.FileEventbusFileUploadedResponse{}), nil
 	}
 
-	avatarUrl, err := cfg.saveToS3(ctx, log, *msg.Info.UserId, fileType, writer)
+	avatarUrl, err := cfg.saveToS3(ctx, log, *info.UserId, fileType, writer)
 	if err != nil {
 		postComplete("unable to save data")
-		return &corepbv1.FileEventbusFileUploadedResponse{}, nil
+		return connect.NewResponse(&corev1.FileEventbusFileUploadedResponse{}), nil
 	}
 
-	if err := cfg.updateUser(ctx, log, *msg.Info.UserId, avatarUrl); err != nil {
+	if err := cfg.updateUser(ctx, log, *info.UserId, avatarUrl); err != nil {
 		postComplete("user update failed")
-		return &corepbv1.FileEventbusFileUploadedResponse{}, nil
+		return connect.NewResponse(&corev1.FileEventbusFileUploadedResponse{}), nil
 	}
 
 	postComplete("")
-	return &corepbv1.FileEventbusFileUploadedResponse{}, nil
+	return connect.NewResponse(&corev1.FileEventbusFileUploadedResponse{}), nil
 }
 
-func (cfg *fileUploaded) fetchFromS3(ctx context.Context, log logger.Logger, msg *corepbv1.FileServiceUploadEvent) (bytes.Buffer, error) {
+func (cfg *fileUploaded) fetchFromS3(ctx context.Context, log logger.Logger, msg *corev1.FileServiceUploadEvent) (bytes.Buffer, error) {
 	buf := bytes.Buffer{}
 
 	_, span := otel.Tracer("upload").Start(ctx, "fetch_s3")
@@ -176,19 +182,19 @@ func (cfg *fileUploaded) updateUser(ctx context.Context, log logger.Logger, user
 	_, span := otel.Tracer("upload").Start(ctx, "post_event")
 	defer span.End()
 
-	if _, err := cfg.userService.Update(ctx, &corepbv1.UserServiceUpdateRequest{
+	if _, err := cfg.userService.Update(ctx, connect.NewRequest(&corev1.UserServiceUpdateRequest{
 		UserId:    userId,
 		AvatarUrl: &avatarUrl,
-	}); err != nil {
+	})); err != nil {
 		return errors.Wrap(err, "user update failed")
 	}
 
 	return nil
 }
 
-func (cfg *fileUploaded) FileComplete(ctx context.Context, msg *corepbv1.FileServiceCompleteEvent) (*corepbv1.FileEventbusFileCompleteResponse, error) {
-	log := logger.FromContext(ctx).With(zap.String("fileType", msg.Info.FileType))
+func (cfg *fileUploaded) FileComplete(ctx context.Context, msg *connect.Request[corev1.FileServiceCompleteEvent]) (*connect.Response[corev1.FileEventbusFileCompleteResponse], error) {
+	log := logger.FromContext(ctx).With(zap.String("fileType", msg.Msg.Info.FileType))
 
 	log.Info("in ready handler")
-	return &corepbv1.FileEventbusFileCompleteResponse{}, nil
+	return connect.NewResponse(&corev1.FileEventbusFileCompleteResponse{}), nil
 }

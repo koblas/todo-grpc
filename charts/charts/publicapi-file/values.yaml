@@ -46,7 +46,7 @@ ingress:
   annotations: 
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
-    nginx.ingress.kubernetes.io/rewrite-target: /twirp/apipb.v1.FileService/$1
+    nginx.ingress.kubernetes.io/rewrite-target: /api.v1.FileService/$1
   hosts:
     - host: ""
       paths:

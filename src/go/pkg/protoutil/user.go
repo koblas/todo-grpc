@@ -3,11 +3,11 @@ package protoutil
 import (
 	"net/url"
 
-	apipbv1 "github.com/koblas/grpc-todo/gen/apipb/v1"
-	corepbv1 "github.com/koblas/grpc-todo/gen/corepb/v1"
+	apiv1 "github.com/koblas/grpc-todo/gen/api/v1"
+	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
 )
 
-func UserCoreToApi(user *corepbv1.User) *apipbv1.User {
+func UserCoreToApi(user *corev1.User) *apiv1.User {
 	if user == nil {
 		return nil
 	}
@@ -25,7 +25,7 @@ func UserCoreToApi(user *corepbv1.User) *apipbv1.User {
 		}
 	}
 
-	return &apipbv1.User{
+	return &apiv1.User{
 		Id:        user.Id,
 		Email:     user.Email,
 		Name:      user.Name,

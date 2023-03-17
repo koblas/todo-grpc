@@ -241,13 +241,13 @@ func buildRequestFromPayload(host string, payloadString string) (http.Request, e
 
 type topicConsumer struct {
 	client   *client
-	handlers []manager.MsgHandler
+	handlers []http.Handler
 	Topic    string
 }
 
 type queueConsumer struct {
 	client   *client
-	handlers []manager.MsgHandler
+	handlers []http.Handler
 	Queue    string
 }
 
@@ -278,7 +278,7 @@ func (con *topicConsumer) Start(ctx context.Context) error {
 
 		for _, item := range con.handlers {
 			w := httptest.NewRecorder()
-			item.Handler().ServeHTTP(w, req.WithContext(ctx))
+			item.ServeHTTP(w, req.WithContext(ctx))
 
 			res := w.Result()
 			if res.StatusCode >= http.StatusOK || res.StatusCode < http.StatusBadRequest {
@@ -304,7 +304,7 @@ func (con *topicConsumer) Start(ctx context.Context) error {
 	return nil
 }
 
-func (svc *client) TopicConsumer(ctx context.Context, topic string, handlers []manager.MsgHandler) manager.HandlerStart {
+func (svc *client) TopicConsumer(ctx context.Context, topic string, handlers []http.Handler) manager.HandlerStart {
 	consumer := topicConsumer{
 		client:   svc,
 		Topic:    topic,
@@ -314,7 +314,7 @@ func (svc *client) TopicConsumer(ctx context.Context, topic string, handlers []m
 	return &consumer
 }
 
-func (svc *client) QueueConsumer(ctx context.Context, queue string, handlers []manager.MsgHandler) manager.HandlerStart {
+func (svc *client) QueueConsumer(ctx context.Context, queue string, handlers []http.Handler) manager.HandlerStart {
 	consumer := queueConsumer{
 		client:   svc,
 		Queue:    queue,
@@ -356,7 +356,7 @@ func (con *queueConsumer) Start(ctx context.Context) error {
 		oneSuccess := false
 		for _, item := range con.handlers {
 			w := httptest.NewRecorder()
-			item.Handler().ServeHTTP(w, req.WithContext(ctx))
+			item.ServeHTTP(w, req.WithContext(ctx))
 
 			res := w.Result()
 			if res.StatusCode >= http.StatusOK || res.StatusCode < http.StatusBadRequest {

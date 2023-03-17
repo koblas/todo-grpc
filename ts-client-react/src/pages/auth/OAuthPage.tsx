@@ -35,7 +35,7 @@ export default function OAuthPage() {
     // No code, redice to the OAuth provider
     if (!code) {
       oauthRedirect(
-        { provider, redirect_url },
+        { provider, redirectUrl },
         {
           onCompleted({ url }) {
             setInterval(() => {
@@ -52,7 +52,7 @@ export default function OAuthPage() {
     }
 
     oauthLogin(
-      { provider, code, redirect_url, state },
+      { provider, code, redirectUrl, state },
       {
         onCompleted(data) {
           if (data.created) {
