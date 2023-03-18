@@ -114,7 +114,13 @@ export default function App() {
       if (error instanceof FetchError) {
         const { code } = error.getInfo();
 
-        if (code !== "invalid_argument" && code !== "unauthenticated") {
+        if (code === "internal") {
+          toast({
+            title: "Internal error",
+            status: "error",
+            isClosable: true,
+          });
+        } else if (code !== "invalid_argument" && code !== "unauthenticated") {
           toast({
             title: "Network error",
             status: "error",
