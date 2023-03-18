@@ -1,7 +1,6 @@
 package user
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -112,7 +111,7 @@ func (s *UserServer) Create(ctx context.Context, request *connect.Request[corev1
 
 	if params.Status != corev1.UserStatus_USER_STATUS_REGISTERED && params.Status != corev1.UserStatus_USER_STATUS_INVITED {
 		log.Error("Bad user status")
-		return nil, fmt.Errorf("invalid user status = %s", params.Status)
+		return nil, bufcutil.InvalidArgumentError("status", "invalid user status choice")
 	}
 
 	log.Info("Checking for duplicate")
@@ -120,7 +119,7 @@ func (s *UserServer) Create(ctx context.Context, request *connect.Request[corev1
 		log.With(zap.Error(err)).Error("GetByEmail failed")
 		return nil, bufcutil.InternalError(err)
 	} else if u != nil {
-		return nil, twirp.AlreadyExists.Error("Email address not found")
+		return nil, connect.NewError(connect.CodeAlreadyExists, nil)
 	}
 	log.Info("DONE Checking for duplicate")
 
@@ -146,7 +145,7 @@ func (s *UserServer) Create(ctx context.Context, request *connect.Request[corev1
 		vExpires = time.Now().Add(time.Duration(24 * time.Hour))
 		vToken, secret, err = hmacCreate(userId, shortuuid.New())
 		if err != nil {
-			return nil, err
+			return nil, bufcutil.InternalError(err, "failed to hash token")
 		}
 	}
 	log.Info("DONE token encrypt")
@@ -170,10 +169,10 @@ func (s *UserServer) Create(ctx context.Context, request *connect.Request[corev1
 	log.Info("Saving user to store")
 
 	if err := s.users.CreateUser(ctx, user); err != nil {
-		return nil, err
+		return nil, bufcutil.InternalError(err, "db create failed")
 	}
 	if err := s.users.AuthUpsert(ctx, "email", strings.ToLower(user.Email), auth); err != nil {
-		return nil, err
+		return nil, bufcutil.InternalError(err, "db authentication create failed")
 	}
 
 	log.Info("User Created")

@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/koblas/grpc-todo/pkg/awsutil"
 )
 
 type dynamoTodo struct {
@@ -80,17 +81,18 @@ func (store *dynamoStore) FindByUser(ctx context.Context, user_id string) ([]Tod
 		return nil, err
 	}
 
-	todos := []Todo{}
-	for _, item := range out.Items {
-		todo := Todo{}
-		if err := attributevalue.UnmarshalMap(item, &todo); err != nil {
-			return nil, err
-		}
+	return awsutil.UnmarshalList[Todo](out.Items)
 
-		todos = append(todos, todo)
-	}
+	// todos := []Todo{}
+	// for _, item := range out.Items {
+	// 	todo := Todo{}
+	// 	if err := attributevalue.UnmarshalMap(item, &todo); err != nil {
+	// 		return nil, err
+	// 	}
 
-	return todos, nil
+	// 	todos = append(todos, todo)
+	// }
+	// return todos, nil
 }
 
 func (store *dynamoStore) DeleteOne(ctx context.Context, user_id string, id string) (*Todo, error) {
@@ -107,10 +109,14 @@ func (store *dynamoStore) DeleteOne(ctx context.Context, user_id string, id stri
 		return nil, err
 	}
 
-	todo := Todo{}
-	if err := attributevalue.UnmarshalMap(item.Item, &todo); err != nil {
+	todo, err := awsutil.UnmarshalItem[Todo](item.Item)
+	if err != nil {
 		return nil, err
 	}
+	// todo := Todo{}
+	// if err := attributevalue.UnmarshalMap(item.Item, &todo); err != nil {
+	// 	return nil, err
+	// }
 
 	_, err = store.client.DeleteItem(ctx, &dynamodb.DeleteItemInput{
 		TableName: store.table,
@@ -120,7 +126,7 @@ func (store *dynamoStore) DeleteOne(ctx context.Context, user_id string, id stri
 		},
 	})
 
-	return &todo, err
+	return todo, err
 }
 
 func (store *dynamoStore) Create(ctx context.Context, todo Todo) (*Todo, error) {

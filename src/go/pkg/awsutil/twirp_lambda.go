@@ -12,6 +12,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/aws/aws-lambda-go/events"
 	lambdaGo "github.com/aws/aws-lambda-go/lambda"
@@ -61,6 +62,13 @@ func (l *LambdaStart) Start(ctx context.Context) error {
 
 		result := w.Result()
 
+		// log.With(
+		// 	zap.Bool("result.Uncompressed", result.Uncompressed),
+		// 	zap.Bool("result.Close", result.Close),
+		// 	zap.Int64("result.ContentLength", result.ContentLength),
+		// 	zap.Strings("result.TransferEncoding", result.TransferEncoding),
+		// )
+
 		buf := bytes.Buffer{}
 		if _, err := buf.ReadFrom(result.Body); err != nil {
 			log.With("error", err).Error("Unable to read buffer")
@@ -71,10 +79,26 @@ func (l *LambdaStart) Start(ctx context.Context) error {
 		for k, v := range result.Header {
 			simpleHeaders[k] = strings.Join(v, ",")
 		}
+		bdata := buf.Bytes()
+		// log.With(
+		// 	zap.Int("length", buf.Len()),
+		// 	zap.Binary("data", bdata),
+		// 	zap.Bool("validUtf8", utf8.Valid(bdata)),
+		// ).Info("Raw data")
+
+		strBody := ""
+		isBase64 := false
+		if utf8.Valid(bdata) {
+			strBody = string(bdata)
+		} else {
+			strBody = base64.StdEncoding.EncodeToString(bdata)
+			isBase64 = true
+		}
 
 		return events.APIGatewayV2HTTPResponse{
 			StatusCode:        result.StatusCode,
-			Body:              buf.String(),
+			IsBase64Encoded:   isBase64,
+			Body:              strBody,
 			Headers:           simpleHeaders,
 			MultiValueHeaders: result.Header,
 		}, nil
@@ -342,25 +366,39 @@ func (svc twClient) Do(req *http.Request) (*http.Response, error) {
 		log.With("durationInMs", elapsed).Info("END: calling twirp service")
 
 		if err != nil {
+			log.With(zap.Error(err)).Info("Received error from lambda call")
 			return nil, err
 		}
 
 		// Unmarshal
 		lambdaResponse := events.APIGatewayProxyResponse{}
 		if err := json.Unmarshal(output.Payload, &lambdaResponse); err != nil {
+			log.With(zap.Error(err)).Info("Received error unmarshal of json")
 			return nil, err
 		}
 
-		log.With(
-			zap.Int("status", lambdaResponse.StatusCode),
-		).With(
-			zap.Any("headers", lambdaResponse.MultiValueHeaders),
-		).Info("Lambda Info")
+		// log.With(
+		// 	zap.Int("status", lambdaResponse.StatusCode),
+		// ).With(
+		// 	zap.Bool("isBase64", (lambdaResponse.IsBase64Encoded)),
+		// ).With(
+		// 	zap.Int("length", len(lambdaResponse.Body)),
+		// ).With(
+		// 	zap.Binary("body", []byte(lambdaResponse.Body)),
+		// ).With(
+		// 	zap.Any("headers", lambdaResponse.MultiValueHeaders),
+		// ).Info("Lambda Info")
+
+		var reader io.Reader
+		reader = strings.NewReader(lambdaResponse.Body)
+		if lambdaResponse.IsBase64Encoded {
+			reader = base64.NewDecoder(base64.StdEncoding, reader)
+		}
 
 		res = &http.Response{
 			StatusCode: lambdaResponse.StatusCode,
 			Header:     lambdaResponse.MultiValueHeaders,
-			Body:       ioutil.NopCloser(strings.NewReader(lambdaResponse.Body)),
+			Body:       ioutil.NopCloser(reader),
 		}
 	} else if scheme == "sqs" {
 		if arn != "" {

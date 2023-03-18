@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"errors"
 	"strings"
 
 	"github.com/bufbuild/connect-go"
@@ -74,7 +75,10 @@ func (s AuthenticationServer) Register(ctx context.Context, paramsIn *connect.Re
 	}))
 	if err != nil {
 		log.With("error", err).Info("Unable to register new user")
-		return nil, bufcutil.InvalidArgumentError("email", "Unable to create account (duplicate_email)")
+		if connect.CodeOf(err) == connect.CodeAlreadyExists {
+			return nil, bufcutil.InvalidArgumentError("email", "Unable to create account (duplicate_email)")
+		}
+		return nil, bufcutil.InternalError(errors.New("unexpected error"))
 	}
 
 	token, err := s.returnToken(ctx, user.Msg.User.Id)
