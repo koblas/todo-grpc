@@ -13,7 +13,6 @@ import (
 	"github.com/koblas/grpc-todo/pkg/protoutil"
 	"github.com/koblas/grpc-todo/pkg/types"
 	"github.com/renstrom/shortuuid"
-	"github.com/twitchtv/twirp"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/net/context"
@@ -87,7 +86,7 @@ func (s *UserServer) FindBy(ctx context.Context, request *connect.Request[corev1
 			user, err = s.users.GetById(ctx, auth.UserID)
 		}
 	} else {
-		return nil, twirp.NotFoundError("no query provided")
+		return nil, bufcutil.NotFoundError("no query provided")
 	}
 
 	if err != nil {
@@ -96,7 +95,7 @@ func (s *UserServer) FindBy(ctx context.Context, request *connect.Request[corev1
 	}
 
 	if user == nil {
-		return nil, twirp.NotFound.Error("User not found")
+		return nil, bufcutil.NotFoundError("user not found")
 	}
 
 	log.With("ID", user.ID).Info("found")
@@ -222,7 +221,7 @@ func (s *UserServer) Update(ctx context.Context, request *connect.Request[corev1
 	}
 
 	if orig == nil {
-		return nil, twirp.NotFound.Error("User not found")
+		return nil, bufcutil.NotFoundError("User not found")
 	}
 	// Some basic validation
 	if params.Password != nil || params.PasswordNew != nil {
@@ -328,7 +327,7 @@ func (s *UserServer) ComparePassword(ctx context.Context, request *connect.Reque
 	}
 
 	if auth == nil {
-		return nil, twirp.NotFound.Error("user ID not found")
+		return nil, bufcutil.NotFoundError("User not found")
 	}
 
 	if !passwordCompare(auth.Password, params.Password) {
@@ -350,7 +349,7 @@ func (s *UserServer) GetSettings(ctx context.Context, params *connect.Request[co
 	}
 
 	if user == nil {
-		return nil, twirp.NotFound.Error("user ID not found")
+		return nil, bufcutil.NotFoundError("User not found")
 	}
 
 	return connect.NewResponse(&corev1.UserServiceGetSettingsResponse{Settings: s.toProtoSettings(user)}), nil
@@ -366,7 +365,7 @@ func (s *UserServer) SetSettings(ctx context.Context, request *connect.Request[c
 		return nil, bufcutil.InternalError(err)
 	}
 	if orig == nil {
-		return nil, twirp.NotFound.Error("user ID not found")
+		return nil, bufcutil.NotFoundError("User not found")
 	}
 
 	updated := *orig
@@ -406,7 +405,7 @@ func (s *UserServer) getUserByVerification(ctx context.Context, params *corev1.V
 
 	if auth == nil {
 		log.Info("User not found")
-		return nil, twirp.NotFound.Error("user ID not found")
+		return nil, bufcutil.NotFoundError("User not found")
 	}
 	if len(auth.Password) == 0 || auth.ExpiresAt == nil {
 		log.Info("User has no verification token")
@@ -433,10 +432,10 @@ func (s *UserServer) VerificationVerify(ctx context.Context, request *connect.Re
 
 	user, err := s.users.GetById(ctx, params.UserId)
 	if err != nil {
-		return nil, err
+		return nil, bufcutil.InternalError(err)
 	}
 	if len(user.EmailVerifyToken) == 0 || user.EmailVerifyExpiresAt == nil {
-		return nil, twirp.NotFoundError("email may already be verified")
+		return nil, bufcutil.NotFoundError("email may already be verified")
 	}
 	if user.EmailVerifyExpiresAt.Before(time.Now()) {
 		log.Info("Token is expired")
@@ -478,14 +477,14 @@ func (s *UserServer) ForgotVerify(ctx context.Context, request *connect.Request[
 
 	auth, err := s.getUserByVerification(ctx, params)
 	if err != nil {
-		return nil, err
+		return nil, bufcutil.InternalError(err)
 	}
 	user, err := s.users.GetById(ctx, auth.UserID)
 	if err != nil {
-		return nil, err
+		return nil, bufcutil.NotFoundError("user not found")
 	}
 	if user.Status == UserStatus_DISABLED {
-		return nil, twirp.NotFound.Error("user is disabled")
+		return nil, bufcutil.FailedPreconditionError("user is disabled")
 	}
 
 	return connect.NewResponse(&corev1.ForgotVerifyResponse{User: s.toProtoUser(user)}), nil
@@ -498,14 +497,14 @@ func (s *UserServer) ForgotUpdate(ctx context.Context, request *connect.Request[
 
 	auth, err := s.getUserByVerification(ctx, params)
 	if err != nil {
-		return nil, err
+		return nil, bufcutil.InternalError(err)
 	}
 	user, err := s.users.GetById(ctx, auth.UserID)
 	if err != nil {
-		return nil, err
+		return nil, bufcutil.NotFoundError("user not found")
 	}
 	if user.Status == UserStatus_DISABLED {
-		return nil, twirp.NotFound.Error("user is disabled")
+		return nil, bufcutil.FailedPreconditionError("user is disabled")
 	}
 
 	update := *user
@@ -571,7 +570,7 @@ func (s *UserServer) ForgotSend(ctx context.Context, request *connect.Request[co
 		return nil, bufcutil.InternalError(err)
 	}
 	if user == nil {
-		return nil, twirp.NotFound.Errorf("user not found email=%s", params.Email)
+		return nil, bufcutil.NotFoundError("user not found")
 	}
 
 	vExpires := time.Now().Add(time.Duration(24 * time.Hour))
@@ -612,7 +611,7 @@ func (s *UserServer) AuthAssociate(ctx context.Context, params *connect.Request[
 	}
 
 	if err := s.users.AuthUpsert(ctx, params.Msg.Auth.Provider, params.Msg.Auth.ProviderId, auth); err != nil {
-		return nil, err
+		return nil, bufcutil.InternalError(err)
 	}
 
 	return connect.NewResponse(&corev1.AuthAssociateResponse{UserId: params.Msg.UserId}), nil

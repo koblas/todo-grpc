@@ -9,6 +9,7 @@ import (
 	"github.com/bufbuild/connect-go"
 	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
 	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
+	"github.com/koblas/grpc-todo/pkg/bufcutil"
 )
 
 type SendEmailServer struct {
@@ -60,7 +61,7 @@ func (s *SendEmailServer) RegisterMessage(ctx context.Context, req *connect.Requ
 	}
 
 	if err := s.simpleSend(ctx, sender, recipient, data, corev1.EmailTemplate_EMAIL_TEMPLATE_USER_REGISTERED, params.ReferenceId); err != nil {
-		return nil, err
+		return nil, bufcutil.InternalError(err)
 	}
 
 	return connect.NewResponse(&corev1.RegisterMessageResponse{}), nil
@@ -81,7 +82,7 @@ func (s *SendEmailServer) PasswordChangeMessage(ctx context.Context, req *connec
 	}
 
 	if err := s.simpleSend(ctx, sender, recipient, data, corev1.EmailTemplate_EMAIL_TEMPLATE_PASSWORD_CHANGE, params.ReferenceId); err != nil {
-		return nil, err
+		return nil, bufcutil.InternalError(err)
 	}
 
 	return connect.NewResponse(&corev1.PasswordChangeMessageResponse{}), nil
@@ -103,7 +104,7 @@ func (s *SendEmailServer) PasswordRecoveryMessage(ctx context.Context, req *conn
 	}
 
 	if err := s.simpleSend(ctx, sender, recipient, data, corev1.EmailTemplate_EMAIL_TEMPLATE_PASSWORD_RECOVERY, params.ReferenceId); err != nil {
-		return nil, err
+		return nil, bufcutil.InternalError(err)
 	}
 
 	return connect.NewResponse(&corev1.PasswordRecoveryMessageResponse{}), nil
@@ -130,7 +131,7 @@ func (s *SendEmailServer) InviteUserMessage(ctx context.Context, req *connect.Re
 	}
 
 	if err := s.simpleSend(ctx, sender, recipient, data, corev1.EmailTemplate_EMAIL_TEMPLATE_USER_INVITED, params.ReferenceId); err != nil {
-		return nil, err
+		return nil, bufcutil.InternalError(err)
 	}
 
 	return connect.NewResponse(&corev1.InviteUserMessageResponse{}), nil

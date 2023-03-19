@@ -35,3 +35,19 @@ func InternalError(err error, msg ...string) *connect.Error {
 
 	return connect.NewError(connect.CodeInternal, errors.Wrap(err, msg[0]))
 }
+
+func NotFoundError(msg ...string) *connect.Error {
+	if len(msg) == 0 {
+		return connect.NewError(connect.CodeNotFound, nil)
+	}
+
+	return connect.NewError(connect.CodeNotFound, errors.New(msg[0]))
+}
+
+func FailedPreconditionError(msg ...string) *connect.Error {
+	if len(msg) == 0 {
+		return connect.NewError(connect.CodeFailedPrecondition, nil)
+	}
+
+	return connect.NewError(connect.CodeFailedPrecondition, errors.New(msg[0]))
+}

@@ -13,7 +13,6 @@ import (
 	"github.com/koblas/grpc-todo/pkg/tokenmanager"
 	"github.com/koblas/grpc-todo/pkg/util"
 	oauth_provider "github.com/koblas/grpc-todo/services/core/oauth_user/provider"
-	"github.com/twitchtv/twirp"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 )
@@ -69,17 +68,17 @@ func (svc *OauthUserServer) GetAuthUrl(ctx context.Context, request *connect.Req
 	oprovider, err := oauth_provider.GetOAuthProvider(params.GetProvider(), svc.smanager, log)
 	if err != nil {
 		log.With(zap.Error(err)).Info("failed to get provider")
-		return nil, connect.NewError(connect.CodeInternal, err)
+		return nil, bufcutil.InternalError(err)
 	}
 
 	// Build a "STATE" value
 	value, err := util.GenerateRandomString(20)
 	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, err)
+		return nil, bufcutil.InternalError(err)
 	}
 	state, err := svc.jwtMaker.CreateToken(value, time.Minute*10)
 	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, err)
+		return nil, bufcutil.InternalError(err)
 	}
 
 	url := oprovider.BuildRedirect(ctx, params.RedirectUrl, state)
@@ -95,7 +94,7 @@ func (svc *OauthUserServer) UpsertUser(ctx context.Context, request *connect.Req
 
 	if err != nil {
 		log.With(zap.Error(err)).Info("failed to get provider")
-		return nil, connect.NewError(connect.CodeInternal, err)
+		return nil, bufcutil.InternalError(err)
 	}
 
 	// Verify the state matches
@@ -108,7 +107,7 @@ func (svc *OauthUserServer) UpsertUser(ctx context.Context, request *connect.Req
 	tokenResult, err := oprovider.GetAccessToken(ctx, params.Oauth.Code, params.RedirectUrl)
 	if err != nil {
 		log.With("error", err).Info("Failed to get access token")
-		return nil, err
+		return nil, bufcutil.InternalError(err)
 	}
 	log.Info("Getting OAuth User information")
 
@@ -132,8 +131,7 @@ func (svc *OauthUserServer) UpsertUser(ctx context.Context, request *connect.Req
 		},
 	}))
 	if err != nil {
-		if e, ok := err.(twirp.Error); !ok || e.Code() != twirp.NotFound {
-			log.With("error", err).Info("Failed to get oauth user")
+		if connect.CodeOf(err) != connect.CodeNotFound {
 			return nil, bufcutil.InternalError(err)
 		}
 	}
@@ -153,7 +151,7 @@ func (svc *OauthUserServer) UpsertUser(ctx context.Context, request *connect.Req
 		},
 	}))
 	if err != nil {
-		if e, ok := err.(twirp.Error); !ok || e.Code() != twirp.NotFound {
+		if connect.CodeOf(err) != connect.CodeNotFound {
 			log.With("error", err).Info("Failed to lookup user")
 			return nil, bufcutil.InternalError(err)
 		}
@@ -171,7 +169,7 @@ func (svc *OauthUserServer) UpsertUser(ctx context.Context, request *connect.Req
 		}))
 		if err != nil {
 			log.With("error", err).Info("Unable to create user")
-			return nil, connect.NewError(connect.CodeInternal, err)
+			return nil, bufcutil.InternalError(err)
 		}
 		userId = newUser.Msg.User.Id
 	} else {
@@ -190,7 +188,7 @@ func (svc *OauthUserServer) UpsertUser(ctx context.Context, request *connect.Req
 	}))
 	if err != nil {
 		log.With("error", err).Info("Unable to associate")
-		return nil, connect.NewError(connect.CodeInternal, err)
+		return nil, bufcutil.InternalError(err)
 	}
 
 	return connect.NewResponse(&corev1.AuthUserServiceUpsertUserResponse{UserId: userId, Created: created}), nil

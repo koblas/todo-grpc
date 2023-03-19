@@ -5,6 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 )
 
@@ -67,7 +68,7 @@ func (p *Provider) Loader(ctx context.Context, conf interface{}, specs []*confmg
 
 	input := &ssm.GetParametersInput{
 		Names:          names,
-		WithDecryption: true,
+		WithDecryption: aws.Bool(true),
 	}
 
 	output, err := p.Client.GetParameters(ctx, input)

@@ -1,6 +1,7 @@
 package gpt
 
 import (
+	"errors"
 	"log"
 
 	"github.com/PullRequestInc/go-gpt3"
@@ -9,7 +10,6 @@ import (
 	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/tokenmanager"
-	"github.com/twitchtv/twirp"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 )
@@ -52,7 +52,7 @@ func (svc *GptServer) Create(ctx context.Context, params *connect.Request[apiv1.
 	userId, err := svc.getUserId(ctx)
 	if err != nil {
 		log.With("error", err).Info("No user id found")
-		return nil, twirp.Unauthenticated.Error("missing userid")
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("missing userid"))
 	}
 	log = log.With("userId", userId)
 
