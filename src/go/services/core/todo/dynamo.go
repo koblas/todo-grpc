@@ -65,7 +65,7 @@ func NewTodoDynamoStore(opts ...DynamoOption) TodoStore {
 	return &state
 }
 
-func (store *dynamoStore) FindByUser(ctx context.Context, user_id string) ([]Todo, error) {
+func (store *dynamoStore) FindByUser(ctx context.Context, user_id string) ([]*Todo, error) {
 	out, err := store.client.Query(ctx, &dynamodb.QueryInput{
 		TableName:              store.table,
 		KeyConditionExpression: aws.String("pk = :hashKey"),
@@ -81,18 +81,18 @@ func (store *dynamoStore) FindByUser(ctx context.Context, user_id string) ([]Tod
 		return nil, err
 	}
 
-	return awsutil.UnmarshalList[Todo](out.Items)
+	// return awsutil.UnmarshalList[*Todo](out.Items)
 
-	// todos := []Todo{}
-	// for _, item := range out.Items {
-	// 	todo := Todo{}
-	// 	if err := attributevalue.UnmarshalMap(item, &todo); err != nil {
-	// 		return nil, err
-	// 	}
+	todos := []*Todo{}
+	for _, item := range out.Items {
+		todo := Todo{}
+		if err := attributevalue.UnmarshalMap(item, &todo); err != nil {
+			return nil, err
+		}
 
-	// 	todos = append(todos, todo)
-	// }
-	// return todos, nil
+		todos = append(todos, &todo)
+	}
+	return todos, nil
 }
 
 func (store *dynamoStore) DeleteOne(ctx context.Context, user_id string, id string) (*Todo, error) {

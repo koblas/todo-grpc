@@ -9,7 +9,7 @@ type Todo struct {
 }
 
 type TodoStore interface {
-	FindByUser(ctx context.Context, user_id string) ([]Todo, error)
+	FindByUser(ctx context.Context, user_id string) ([]*Todo, error)
 	DeleteOne(ctx context.Context, user_id string, id string) (*Todo, error)
 	Create(ctx context.Context, todo Todo) (*Todo, error)
 }

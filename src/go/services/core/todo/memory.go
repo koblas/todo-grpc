@@ -7,57 +7,54 @@ import (
 )
 
 type memoryTodo struct {
-	todos map[string][]Todo
+	todos map[string][]*Todo
 }
 
 var _ TodoStore = (*memoryTodo)(nil)
 
 func NewTodoMemoryStore() *memoryTodo {
 	return &memoryTodo{
-		todos: map[string][]Todo{},
+		todos: map[string][]*Todo{},
 	}
 }
 
-func (store *memoryTodo) FindByUser(ctx context.Context, user_id string) ([]Todo, error) {
+func (store *memoryTodo) FindByUser(ctx context.Context, user_id string) ([]*Todo, error) {
 	if todos, found := store.todos[user_id]; found {
 		return todos, nil
 	}
 
-	return []Todo{}, nil
+	return []*Todo{}, nil
 }
 
 func (store *memoryTodo) DeleteOne(ctx context.Context, user_id string, id string) (*Todo, error) {
 	todos, found := store.todos[user_id]
 	if !found {
-		return &Todo{}, nil
-	}
-
-	replace := []Todo{}
-	matchIdx := -1
-	for idx, todo := range todos {
-		if todo.ID == id {
-			matchIdx = idx
-			continue
-		}
-		replace = append(replace, todo)
-	}
-	if matchIdx == -1 {
 		return nil, nil
 	}
 
-	store.todos[user_id] = replace
+	filtered := []*Todo{}
+	var matched *Todo
+	for _, todo := range todos {
+		if todo.ID == id {
+			matched = todo
+			continue
+		}
+		filtered = append(filtered, todo)
+	}
 
-	return &todos[matchIdx], nil
+	store.todos[user_id] = filtered
+
+	return matched, nil
 }
 
 func (store *memoryTodo) Create(ctx context.Context, todo Todo) (*Todo, error) {
 	todos, found := store.todos[todo.UserId]
 	if !found {
-		todos = []Todo{}
+		todos = []*Todo{}
 	}
 
 	todo.ID = ulid.Make().String()
-	store.todos[todo.UserId] = append(todos, todo)
+	store.todos[todo.UserId] = append(todos, &todo)
 
 	return &todo, nil
 }

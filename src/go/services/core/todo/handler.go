@@ -39,12 +39,23 @@ func NewTodoServer(opts ...Option) *TodoServer {
 		opt(&svr)
 	}
 
+	if svr.todos == nil {
+		panic("Must provide a store")
+	}
+
 	return &svr
 }
 
 func (svc *TodoServer) TodoAdd(ctx context.Context, newTodo *connect.Request[corev1.TodoAddRequest]) (*connect.Response[corev1.TodoAddResponse], error) {
 	log := logger.FromContext(ctx).With(zap.String("method", "AddTodo"))
 	log.Info("creating todo event")
+
+	if newTodo.Msg.UserId == "" {
+		return nil, bufcutil.InvalidArgumentError("userId", "missing")
+	}
+	if newTodo.Msg.Task == "" {
+		return nil, bufcutil.InvalidArgumentError("task", "empty")
+	}
 
 	task, err := svc.todos.Create(ctx, Todo{
 		ID:     xid.New().String(),
@@ -62,10 +73,12 @@ func (svc *TodoServer) TodoAdd(ctx context.Context, newTodo *connect.Request[cor
 		UserId: task.UserId,
 	}
 
-	if _, err := svc.pubsub.TodoChange(ctx, connect.NewRequest(&corev1.TodoChangeEvent{
-		Current: &todo,
-	})); err != nil {
-		log.With("error", err).Info("todo entity publish failed")
+	if svc.pubsub != nil {
+		if _, err := svc.pubsub.TodoChange(ctx, connect.NewRequest(&corev1.TodoChangeEvent{
+			Current: &todo,
+		})); err != nil {
+			log.With("error", err).Info("todo entity publish failed")
+		}
 	}
 
 	return connect.NewResponse(&corev1.TodoAddResponse{Todo: &todo}), nil
@@ -93,13 +106,20 @@ func (svc *TodoServer) TodoDelete(ctx context.Context, params *connect.Request[c
 	log := logger.FromContext(ctx).With(zap.String("method", "DeleteTodo"))
 	log.Info("delete todo event")
 
+	if params.Msg.UserId == "" {
+		return nil, bufcutil.InvalidArgumentError("userId", "missing")
+	}
+	if params.Msg.Id == "" {
+		return nil, bufcutil.InvalidArgumentError("id", "empty")
+	}
+
 	todo, err := svc.todos.DeleteOne(ctx, params.Msg.UserId, params.Msg.Id)
 
 	if err != nil {
 		return nil, bufcutil.InternalError(err)
 	}
 
-	if todo != nil {
+	if todo != nil && svc.pubsub != nil {
 		if _, err := svc.pubsub.TodoChange(ctx, connect.NewRequest(&corev1.TodoChangeEvent{
 			Original: &corev1.TodoObject{
 				Id:     todo.ID,
