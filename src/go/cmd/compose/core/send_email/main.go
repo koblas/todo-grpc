@@ -20,13 +20,17 @@ func main() {
 	if err := confmgr.Parse(&config, confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
+	smtpConfig := send_email.SmtpConfig{}
+	if err := confmgr.Parse(&config, confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
+		log.With(zap.Error(err)).Fatal("failed to load configuration")
+	}
 
 	producer := corev1connect.NewSendEmailEventsServiceClient(
 		natsutil.NewNatsClient(config.NatsAddr),
 		"topic://"+config.EmailSentTopic,
 	)
 
-	s := send_email.NewSendEmailServer(producer, send_email.NewSmtpService(config))
+	s := send_email.NewSendEmailServer(producer, send_email.NewSmtpService(smtpConfig))
 
 	nats := natsutil.NewNatsClient(config.NatsAddr)
 	mgr.Start(nats.TopicConsumer(
