@@ -33,8 +33,12 @@ func NewUserEmailConfirm(config WorkerConfig) http.Handler {
 }
 
 func (cfg *userEmailConfirm) SecurityRegisterToken(ctx context.Context, msgIn *connect.Request[corev1.UserSecurityEvent]) (*connect.Response[corev1.UserEventbusSecurityRegisterTokenResponse], error) {
+	log := logger.FromContext(ctx)
+	if msgIn.Msg.User == nil {
+		log.With(zap.Any("msg", msgIn.Msg)).Info("RAW MESSAGE")
+	}
 	msg := msgIn.Msg
-	log := logger.FromContext(ctx).With(zap.Int32("action", int32(msg.Action))).With(zap.String("email", msg.User.Email))
+	log = log.With(zap.Int32("action", int32(msg.Action))).With(zap.String("email", msg.User.Email))
 
 	log.Info("processing message")
 

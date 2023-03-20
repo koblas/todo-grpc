@@ -16,6 +16,7 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	lambdaGo "github.com/aws/aws-lambda-go/lambda"
+	lambdaGoContext "github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
@@ -45,9 +46,17 @@ type LambdaStart struct {
 func (l *LambdaStart) lambdaApiHandler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
 	log := logger.FromContext(ctx).With(
 		"awsHttpMethod", request.RequestContext.HTTP.Method,
-		"awsRequestID", request.RequestContext.RequestID,
 		"awsPath", request.RequestContext.HTTP.Path,
 	)
+	if lc, ok := lambdaGoContext.FromContext(ctx); ok && lc != nil {
+		log = log.With(
+			"awsRequestID", lc.AwsRequestID,
+		)
+	} else {
+		log = log.With(
+			"awsRequestID", request.RequestContext.RequestID,
+		)
+	}
 
 	log.Info("Processing Lambda request")
 
