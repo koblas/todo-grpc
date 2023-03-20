@@ -18,7 +18,7 @@ type smtpService struct {
 }
 
 // NewService construct a default email service
-func NewSmtpService(config Config) Sender {
+func NewSmtpService(config SmtpConfig) Sender {
 	parts := strings.Split(config.SmtpAddr, ":")
 	host := parts[0]
 	port := 587
@@ -29,6 +29,10 @@ func NewSmtpService(config Config) Sender {
 			log.Fatal(err)
 		}
 	}
+	if host == "" {
+		panic("No SMTP host configured")
+	}
+
 	return &smtpService{
 		host:     host,
 		port:     port,

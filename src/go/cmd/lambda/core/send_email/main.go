@@ -20,6 +20,10 @@ func main() {
 	if err := confmgr.Parse(&config, aws.NewLoaderSsm(mgr.Context(), "/common/")); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
+	smtpConfig := send_email.SmtpConfig{}
+	if err := confmgr.Parse(&smtpConfig, aws.NewLoaderSsm(mgr.Context(), "/smtp/")); err != nil {
+		log.With(zap.Error(err)).Fatal("failed to load configuration")
+	}
 
 	producer := corev1connect.NewSendEmailEventsServiceClient(
 		awsutil.NewTwirpCallLambda(),
@@ -27,7 +31,7 @@ func main() {
 		connect.WithInterceptors(interceptors.NewReqidInterceptor()),
 	)
 
-	s := send_email.NewSendEmailServer(producer, send_email.NewSmtpService(config))
+	s := send_email.NewSendEmailServer(producer, send_email.NewSmtpService(smtpConfig))
 
 	mgr.Start(awsutil.HandleSqsLambda(s))
 }

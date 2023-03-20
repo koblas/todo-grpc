@@ -8,7 +8,10 @@ type Config struct {
 	RedisAddr      string `environment:"REDIS_ADDR" default:"redis:6379"`
 	EmailSentTopic string `json:"send-email-events"`
 	// Shared
-	SmtpAddr string `ssm:"smtp/addr" environment:"SMTP_ADDR"`
-	SmtpUser string `ssm:"smtp/username" environment:"SMTP_USERNAME"`
-	SmtpPass string `ssm:"smtp/password" environment:"SMTP_PASSWORD"`
+}
+
+type SmtpConfig struct {
+	SmtpAddr string `ssm:"addr" environment:"SMTP_ADDR"`
+	SmtpUser string `ssm:"username" environment:"SMTP_USERNAME"`
+	SmtpPass string `ssm:"password" environment:"SMTP_PASSWORD"`
 }

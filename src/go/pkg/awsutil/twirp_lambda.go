@@ -144,17 +144,17 @@ func (sqsh *SqsHandler) lambdaSqsHandler(ctx context.Context, request events.SQS
 		log := parentLog.With("messageId", record.MessageId)
 		log.Info("Handling SQS Message")
 
-		req, err := SqsEventToHttpRequest(logger.ToContext(ctx, log), record)
-		if err != nil {
-			log.With(zap.Error(err)).Error("Unable to decode")
-			result.BatchItemFailures = append(result.BatchItemFailures, events.SQSBatchItemFailure{ItemIdentifier: record.MessageId})
-			continue
-		}
-
-		w := httptest.NewRecorder()
-
 		oneSuccess := false
 		for _, item := range sqsh.handlers {
+			req, err := SqsEventToHttpRequest(logger.ToContext(ctx, log), record)
+			if err != nil {
+				log.With(zap.Error(err)).Error("Unable to decode")
+				result.BatchItemFailures = append(result.BatchItemFailures, events.SQSBatchItemFailure{ItemIdentifier: record.MessageId})
+				break
+			}
+
+			w := httptest.NewRecorder()
+
 			item.ServeHTTP(w, req.WithContext(ctx))
 
 			res := w.Result()
