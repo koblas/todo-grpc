@@ -1,10 +1,12 @@
 package main
 
 import (
+	"github.com/bufbuild/connect-go"
 	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
+	"github.com/koblas/grpc-todo/pkg/interceptors"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/services/core/send_email"
 	"go.uber.org/zap"
@@ -22,6 +24,7 @@ func main() {
 	producer := corev1connect.NewSendEmailEventsServiceClient(
 		awsutil.NewTwirpCallLambda(),
 		config.EventArn,
+		connect.WithInterceptors(interceptors.NewReqidInterceptor()),
 	)
 
 	s := send_email.NewSendEmailServer(producer, send_email.NewSmtpService(config))

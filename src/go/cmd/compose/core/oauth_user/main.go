@@ -1,10 +1,11 @@
 package main
 
 import (
-	"net/http"
-
+	"github.com/bufbuild/connect-go"
 	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
+	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
+	"github.com/koblas/grpc-todo/pkg/interceptors"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	ouser "github.com/koblas/grpc-todo/services/core/oauth_user"
 	"go.uber.org/zap"
@@ -26,14 +27,17 @@ func main() {
 	opts := []ouser.Option{
 		ouser.WithUserService(
 			corev1connect.NewUserServiceClient(
-				&http.Client{},
+				bufcutil.NewHttpClient(),
 				"http://"+config.UserServiceAddr,
 			),
 		),
 		ouser.WithSecretManager(oauthConfig),
 	}
 
-	_, api := corev1connect.NewAuthUserServiceHandler(ouser.NewOauthUserServer(config, opts...))
+	_, api := corev1connect.NewAuthUserServiceHandler(
+		ouser.NewOauthUserServer(config, opts...),
+		connect.WithInterceptors(interceptors.NewReqidInterceptor()),
+	)
 
 	mgr.Start(mgr.WrapHttpHandler(api))
 }

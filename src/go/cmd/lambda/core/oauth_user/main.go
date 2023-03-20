@@ -1,10 +1,12 @@
 package main
 
 import (
+	"github.com/bufbuild/connect-go"
 	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
+	"github.com/koblas/grpc-todo/pkg/interceptors"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	ouser "github.com/koblas/grpc-todo/services/core/oauth_user"
 	"go.uber.org/zap"
@@ -31,7 +33,10 @@ func main() {
 		ouser.WithSecretManager(oauthConfig),
 	}
 
-	_, api := corev1connect.NewAuthUserServiceHandler(ouser.NewOauthUserServer(config, opts...))
+	_, api := corev1connect.NewAuthUserServiceHandler(
+		ouser.NewOauthUserServer(config, opts...),
+		connect.WithInterceptors(interceptors.NewReqidInterceptor()),
+	)
 
 	mgr.Start(awsutil.HandleApiLambda(api))
 }

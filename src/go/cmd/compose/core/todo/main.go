@@ -3,9 +3,11 @@ package main
 import (
 	"strings"
 
+	"github.com/bufbuild/connect-go"
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
 	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
+	"github.com/koblas/grpc-todo/pkg/interceptors"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/pkg/natsutil"
 	"github.com/koblas/grpc-todo/services/core/todo"
@@ -32,7 +34,10 @@ func main() {
 		todo.WithTodoStore(todo.NewTodoMemoryStore()),
 	}
 
-	_, api := corev1connect.NewTodoServiceHandler(todo.NewTodoServer(opts...))
+	_, api := corev1connect.NewTodoServiceHandler(
+		todo.NewTodoServer(opts...),
+		connect.WithInterceptors(interceptors.NewReqidInterceptor()),
+	)
 
 	mgr.Start(mgr.WrapHttpHandler(api))
 }

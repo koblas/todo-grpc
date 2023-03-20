@@ -1,7 +1,6 @@
 package main
 
 import (
-	"net/http"
 	"strings"
 
 	"github.com/bufbuild/connect-go"
@@ -10,6 +9,7 @@ import (
 	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
+	"github.com/koblas/grpc-todo/pkg/interceptors"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/services/publicapi/todo"
 	"go.uber.org/zap"
@@ -24,18 +24,22 @@ func main() {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
+	auth, authHelper := interceptors.NewAuthInterceptor(config.JwtSecret)
+
 	opts := []todo.Option{
 		todo.WithTodoService(
 			corev1connect.NewTodoServiceClient(
-				&http.Client{},
+				bufcutil.NewHttpClient(),
 				"http://"+config.TodoServiceAddr,
 			),
 		),
+		todo.WithGetUserId(authHelper),
 	}
 
 	_, api := apiv1connect.NewTodoServiceHandler(
-		todo.NewTodoServer(config, opts...),
+		todo.NewTodoServer(opts...),
 		connect.WithCodec(bufcutil.NewJsonCodec()),
+		connect.WithInterceptors(interceptors.NewReqidInterceptor(), auth),
 	)
 
 	mgr.Start(mgr.WrapHttpHandler(api))

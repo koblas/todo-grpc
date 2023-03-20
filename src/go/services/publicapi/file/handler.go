@@ -2,14 +2,13 @@ package file
 
 import (
 	"errors"
-	"log"
 
 	"github.com/bufbuild/connect-go"
 	apiv1 "github.com/koblas/grpc-todo/gen/api/v1"
 	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/filestore"
+	"github.com/koblas/grpc-todo/pkg/interceptors"
 	"github.com/koblas/grpc-todo/pkg/logger"
-	"github.com/koblas/grpc-todo/pkg/tokenmanager"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 )
@@ -21,7 +20,7 @@ type FileServer struct {
 	// file     corepbv1.FileService
 	uploadBucket string
 	file         filestore.Filestore
-	jwtMaker     tokenmanager.Maker
+	userHelper   interceptors.UserIdFromContext
 }
 
 type Option func(*FileServer)
@@ -32,14 +31,14 @@ func WithFileStore(client filestore.Filestore) Option {
 	}
 }
 
-func NewFileServer(config Config, opts ...Option) *FileServer {
-	maker, err := tokenmanager.NewJWTMaker(config.JwtSecret)
-	if err != nil {
-		log.Fatal(err)
+func WithGetUserId(helper interceptors.UserIdFromContext) Option {
+	return func(svr *FileServer) {
+		svr.userHelper = helper
 	}
+}
 
+func NewFileServer(config Config, opts ...Option) *FileServer {
 	svr := FileServer{
-		jwtMaker:     maker,
 		uploadBucket: config.UploadBucket,
 	}
 
@@ -47,18 +46,18 @@ func NewFileServer(config Config, opts ...Option) *FileServer {
 		opt(&svr)
 	}
 
-	return &svr
-}
+	if svr.userHelper == nil {
+		panic("no user helper provided")
+	}
 
-func (svc *FileServer) getUserId(ctx context.Context) (string, error) {
-	return tokenmanager.UserIdFromContext(ctx, svc.jwtMaker)
+	return &svr
 }
 
 func (svc *FileServer) UploadUrl(ctx context.Context, input *connect.Request[apiv1.FileServiceUploadUrlRequest]) (*connect.Response[apiv1.FileServiceUploadUrlResponse], error) {
 	log := logger.FromContext(ctx)
 	log.Info("UploadUrl BEGIN")
 
-	userId, err := svc.getUserId(ctx)
+	userId, err := svc.userHelper.GetUserId(ctx)
 	if err != nil {
 		log.With("error", err).Info("No user id found")
 		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("missing userid"))

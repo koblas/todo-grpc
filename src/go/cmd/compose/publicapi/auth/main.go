@@ -1,7 +1,6 @@
 package main
 
 import (
-	"net/http"
 	"strings"
 
 	"github.com/bufbuild/connect-go"
@@ -28,13 +27,13 @@ func main() {
 	opts := []auth.Option{
 		auth.WithUserClient(
 			corev1connect.NewUserServiceClient(
-				&http.Client{},
+				bufcutil.NewHttpClient(),
 				"http://"+config.UserServiceAddr,
 			),
 		),
 		auth.WithOAuthClient(
 			corev1connect.NewAuthUserServiceClient(
-				&http.Client{},
+				bufcutil.NewHttpClient(),
 				"http://"+config.OauthUserServiceAddr,
 			),
 		),

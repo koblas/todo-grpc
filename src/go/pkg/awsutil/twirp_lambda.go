@@ -23,6 +23,7 @@ import (
 	snstypes "github.com/aws/aws-sdk-go-v2/service/sns/types"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	sqstypes "github.com/aws/aws-sdk-go-v2/service/sqs/types"
+	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/pkg/errors"
@@ -41,68 +42,70 @@ type LambdaStart struct {
 	handler http.Handler
 }
 
+func (l *LambdaStart) lambdaApiHandler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
+	log := logger.FromContext(ctx).With(
+		"awsHttpMethod", request.RequestContext.HTTP.Method,
+		"awsRequestID", request.RequestContext.RequestID,
+		"awsPath", request.RequestContext.HTTP.Path,
+	)
+
+	log.Info("Processing Lambda request")
+
+	req, err := GatewayToHttpRequestV2(logger.ToContext(ctx, log), request, false)
+	if err != nil {
+		log.With("error", err).Error("Unable to build request")
+		return errorResponse, nil
+	}
+	w := httptest.NewRecorder()
+
+	l.handler.ServeHTTP(w, req)
+
+	result := w.Result()
+
+	// log.With(
+	// 	zap.Bool("result.Uncompressed", result.Uncompressed),
+	// 	zap.Bool("result.Close", result.Close),
+	// 	zap.Int64("result.ContentLength", result.ContentLength),
+	// 	zap.Strings("result.TransferEncoding", result.TransferEncoding),
+	// )
+
+	buf := bytes.Buffer{}
+	if _, err := buf.ReadFrom(result.Body); err != nil {
+		log.With("error", err).Error("Unable to read buffer")
+		return errorResponse, nil
+	}
+
+	simpleHeaders := map[string]string{}
+	for k, v := range result.Header {
+		simpleHeaders[k] = strings.Join(v, ",")
+	}
+	bdata := buf.Bytes()
+	// log.With(
+	// 	zap.Int("length", buf.Len()),
+	// 	zap.Binary("data", bdata),
+	// 	zap.Bool("validUtf8", utf8.Valid(bdata)),
+	// ).Info("Raw data")
+
+	strBody := ""
+	isBase64 := false
+	if utf8.Valid(bdata) {
+		strBody = string(bdata)
+	} else {
+		strBody = base64.StdEncoding.EncodeToString(bdata)
+		isBase64 = true
+	}
+
+	return events.APIGatewayV2HTTPResponse{
+		StatusCode:        result.StatusCode,
+		IsBase64Encoded:   isBase64,
+		Body:              strBody,
+		Headers:           simpleHeaders,
+		MultiValueHeaders: result.Header,
+	}, nil
+}
+
 func (l *LambdaStart) Start(ctx context.Context) error {
-	lambdaGo.StartWithContext(ctx, func(lambdaCtx context.Context, request events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
-		log := logger.FromContext(ctx).With(
-			"awsHttpMethod", request.RequestContext.HTTP.Method,
-			"awsRequestID", request.RequestContext.RequestID,
-			"awsPath", request.RequestContext.HTTP.Path,
-		)
-
-		log.Info("Processing Lambda request")
-
-		req, err := GatewayToHttpRequestV2(logger.ToContext(lambdaCtx, log), request, false)
-		if err != nil {
-			log.With("error", err).Error("Unable to build request")
-			return errorResponse, nil
-		}
-		w := httptest.NewRecorder()
-
-		l.handler.ServeHTTP(w, req)
-
-		result := w.Result()
-
-		// log.With(
-		// 	zap.Bool("result.Uncompressed", result.Uncompressed),
-		// 	zap.Bool("result.Close", result.Close),
-		// 	zap.Int64("result.ContentLength", result.ContentLength),
-		// 	zap.Strings("result.TransferEncoding", result.TransferEncoding),
-		// )
-
-		buf := bytes.Buffer{}
-		if _, err := buf.ReadFrom(result.Body); err != nil {
-			log.With("error", err).Error("Unable to read buffer")
-			return errorResponse, nil
-		}
-
-		simpleHeaders := map[string]string{}
-		for k, v := range result.Header {
-			simpleHeaders[k] = strings.Join(v, ",")
-		}
-		bdata := buf.Bytes()
-		// log.With(
-		// 	zap.Int("length", buf.Len()),
-		// 	zap.Binary("data", bdata),
-		// 	zap.Bool("validUtf8", utf8.Valid(bdata)),
-		// ).Info("Raw data")
-
-		strBody := ""
-		isBase64 := false
-		if utf8.Valid(bdata) {
-			strBody = string(bdata)
-		} else {
-			strBody = base64.StdEncoding.EncodeToString(bdata)
-			isBase64 = true
-		}
-
-		return events.APIGatewayV2HTTPResponse{
-			StatusCode:        result.StatusCode,
-			IsBase64Encoded:   isBase64,
-			Body:              strBody,
-			Headers:           simpleHeaders,
-			MultiValueHeaders: result.Header,
-		}, nil
-	})
+	lambdaGo.StartWithOptions(l.lambdaApiHandler, lambdaGo.WithContext(ctx))
 
 	// Not reached
 	return nil
@@ -124,45 +127,47 @@ type SqsHandler struct {
 	handlers []http.Handler
 }
 
-func (sqsh *SqsHandler) Start(ctx context.Context) error {
-	lambdaGo.StartWithContext(ctx, func(ctx context.Context, request events.SQSEvent) (events.SQSEventResponse, error) {
-		parentLog := logger.FromContext(ctx).With("eventItemCount", len(request.Records))
+func (sqsh *SqsHandler) lambdaSqsHandler(ctx context.Context, request events.SQSEvent) (events.SQSEventResponse, error) {
+	parentLog := logger.FromContext(ctx).With("eventItemCount", len(request.Records))
 
-		result := events.SQSEventResponse{}
-		for _, record := range request.Records {
-			log := parentLog.With("messageId", record.MessageId)
-			log.Info("Handling SQS Message")
+	result := events.SQSEventResponse{}
+	for _, record := range request.Records {
+		log := parentLog.With("messageId", record.MessageId)
+		log.Info("Handling SQS Message")
 
-			req, err := SqsEventToHttpRequest(logger.ToContext(ctx, log), record)
-			if err != nil {
-				log.With(zap.Error(err)).Error("Unable to decode")
-				result.BatchItemFailures = append(result.BatchItemFailures, events.SQSBatchItemFailure{ItemIdentifier: record.MessageId})
-				continue
-			}
+		req, err := SqsEventToHttpRequest(logger.ToContext(ctx, log), record)
+		if err != nil {
+			log.With(zap.Error(err)).Error("Unable to decode")
+			result.BatchItemFailures = append(result.BatchItemFailures, events.SQSBatchItemFailure{ItemIdentifier: record.MessageId})
+			continue
+		}
 
-			w := httptest.NewRecorder()
+		w := httptest.NewRecorder()
 
-			oneSuccess := false
-			for _, item := range sqsh.handlers {
-				item.ServeHTTP(w, req.WithContext(ctx))
+		oneSuccess := false
+		for _, item := range sqsh.handlers {
+			item.ServeHTTP(w, req.WithContext(ctx))
 
-				res := w.Result()
-				if res.StatusCode >= http.StatusOK || res.StatusCode < http.StatusBadRequest {
-					oneSuccess = true
-				} else {
-					buf, _ := io.ReadAll(io.LimitReader(res.Body, 256))
-					log.With("statusCode", res.StatusCode).With("statusMsg", string(buf)).Info("SQS Message error")
-				}
-			}
-
-			// All 2xx and 3xx responses are "good"
-			if !oneSuccess {
-				result.BatchItemFailures = append(result.BatchItemFailures, events.SQSBatchItemFailure{ItemIdentifier: record.MessageId})
+			res := w.Result()
+			if res.StatusCode >= http.StatusOK || res.StatusCode < http.StatusBadRequest {
+				oneSuccess = true
+			} else {
+				buf, _ := io.ReadAll(io.LimitReader(res.Body, 256))
+				log.With("statusCode", res.StatusCode).With("statusMsg", string(buf)).Info("SQS Message error")
 			}
 		}
 
-		return result, nil
-	})
+		// All 2xx and 3xx responses are "good"
+		if !oneSuccess {
+			result.BatchItemFailures = append(result.BatchItemFailures, events.SQSBatchItemFailure{ItemIdentifier: record.MessageId})
+		}
+	}
+
+	return result, nil
+}
+
+func (sqsh *SqsHandler) Start(ctx context.Context) error {
+	lambdaGo.StartWithOptions(sqsh.lambdaSqsHandler, lambdaGo.WithContext(ctx))
 
 	// Never fails
 	return nil
@@ -345,10 +350,10 @@ func (svc twClient) Do(req *http.Request) (*http.Response, error) {
 		if arn != "" {
 			return nil, errors.New("arn not supported for http")
 		}
-		client := http.Client{}
+		client := bufcutil.NewHttpClient()
 		res, err = client.Do(req)
 		elapsed := int64(time.Since(start) / time.Millisecond)
-		log.With("durationInMs", elapsed).Info("END: calling twirp service")
+		log.With("durationInMs", elapsed).Info("END: calling http service")
 
 		if err != nil {
 			return nil, err
@@ -363,7 +368,7 @@ func (svc twClient) Do(req *http.Request) (*http.Response, error) {
 			Payload:      payload,
 		})
 		elapsed := int64(time.Since(start) / time.Millisecond)
-		log.With("durationInMs", elapsed).Info("END: calling twirp service")
+		log.With("durationInMs", elapsed).Info("END: calling lambda service")
 
 		if err != nil {
 			log.With(zap.Error(err)).Info("Received error from lambda call")
@@ -418,7 +423,7 @@ func (svc twClient) Do(req *http.Request) (*http.Response, error) {
 			MessageBody:       body,
 		})
 		elapsed := int64(time.Since(start) / time.Millisecond)
-		log.With("durationInMs", elapsed).Info("END: calling twirp service")
+		log.With("durationInMs", elapsed).Info("END: calling sqs service")
 
 		if err != nil {
 			return nil, err
@@ -446,7 +451,7 @@ func (svc twClient) Do(req *http.Request) (*http.Response, error) {
 			Message:           body,
 		})
 		elapsed := int64(time.Since(start) / time.Millisecond)
-		log.With("durationInMs", elapsed).Info("END: calling twirp service")
+		log.With("durationInMs", elapsed).Info("END: calling sns service")
 
 		if err != nil {
 			return nil, err

@@ -2,27 +2,22 @@ package todo
 
 import (
 	"errors"
-	"fmt"
-	"log"
-	"net/http"
-	"strings"
 
 	"github.com/bufbuild/connect-go"
 	apiv1 "github.com/koblas/grpc-todo/gen/api/v1"
 	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
 	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/bufcutil"
+	"github.com/koblas/grpc-todo/pkg/interceptors"
 	"github.com/koblas/grpc-todo/pkg/logger"
-	"github.com/koblas/grpc-todo/pkg/manager"
-	"github.com/koblas/grpc-todo/pkg/tokenmanager"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 )
 
 // Server represents the gRPC server
 type TodoServer struct {
-	todos    corev1connect.TodoServiceClient
-	jwtMaker tokenmanager.Maker
+	todos      corev1connect.TodoServiceClient
+	userHelper interceptors.UserIdFromContext
 }
 
 type Option func(*TodoServer)
@@ -33,57 +28,34 @@ func WithTodoService(client corev1connect.TodoServiceClient) Option {
 	}
 }
 
-func NewTodoServer(config Config, opts ...Option) *TodoServer {
-	maker, err := tokenmanager.NewJWTMaker(config.JwtSecret)
-	if err != nil {
-		log.Fatal(err)
+func WithGetUserId(helper interceptors.UserIdFromContext) Option {
+	return func(svr *TodoServer) {
+		svr.userHelper = helper
 	}
+}
 
-	svr := TodoServer{
-		jwtMaker: maker,
-	}
+func NewTodoServer(opts ...Option) *TodoServer {
+	svr := TodoServer{}
 
 	for _, opt := range opts {
 		opt(&svr)
 	}
 
+	if svr.todos == nil {
+		panic("No backend todo service")
+	}
+	if svr.userHelper == nil {
+		panic("no user helper provided")
+	}
+
 	return &svr
-}
-
-func (svc *TodoServer) getUserId(ctx context.Context) (string, error) {
-	headers, ok := ctx.Value(manager.HttpHeaderCtxKey).(http.Header)
-	if !ok {
-		if ctx.Value(manager.HttpHeaderCtxKey) != nil {
-			log.Println("Headers are present")
-		}
-		return "", fmt.Errorf("headers not in context")
-	}
-
-	value := headers.Get("authorization")
-	if value == "" {
-		return "", fmt.Errorf("no authorization header")
-	}
-	parts := strings.Split(value, " ")
-	if len(parts) != 2 || parts[0] != "Bearer" {
-		return "", fmt.Errorf("bad format")
-	}
-
-	payload, err := svc.jwtMaker.VerifyToken(parts[1])
-	if err != nil {
-		return "", err
-	}
-	if payload.UserId == "" {
-		return "", fmt.Errorf("no user_id")
-	}
-
-	return payload.UserId, nil
 }
 
 // SayHello generates response to a Ping request
 func (svc *TodoServer) TodoAdd(ctx context.Context, newTodo *connect.Request[apiv1.TodoAddRequest]) (*connect.Response[apiv1.TodoAddResponse], error) {
 	log := logger.FromContext(ctx)
 	log.Info("AddTodo BEGIN")
-	userId, err := svc.getUserId(ctx)
+	userId, err := svc.userHelper.GetUserId(ctx)
 	if err != nil {
 		log.With("error", err).Info("No user id found")
 		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("missing userid"))
@@ -112,7 +84,7 @@ func (svc *TodoServer) TodoList(ctx context.Context, _ *connect.Request[apiv1.To
 	log := logger.FromContext(ctx)
 	log.Info("GetTodos BEGIN")
 
-	userId, err := svc.getUserId(ctx)
+	userId, err := svc.userHelper.GetUserId(ctx)
 	if err != nil {
 		log.With("error", err).Info("No user id found")
 		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("missing userid"))
@@ -143,7 +115,7 @@ func (svc *TodoServer) TodoDelete(ctx context.Context, delTodo *connect.Request[
 	log := logger.FromContext(ctx)
 	log.Info("DeleteTodo BEGIN")
 
-	userId, err := svc.getUserId(ctx)
+	userId, err := svc.userHelper.GetUserId(ctx)
 	if err != nil {
 		log.With("error", err).Info("No user id found")
 		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("missing userid"))

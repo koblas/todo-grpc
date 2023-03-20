@@ -2,46 +2,45 @@ package gpt
 
 import (
 	"errors"
-	"log"
 
 	"github.com/PullRequestInc/go-gpt3"
 	"github.com/bufbuild/connect-go"
 	apiv1 "github.com/koblas/grpc-todo/gen/api/v1"
 	"github.com/koblas/grpc-todo/pkg/bufcutil"
+	"github.com/koblas/grpc-todo/pkg/interceptors"
 	"github.com/koblas/grpc-todo/pkg/logger"
-	"github.com/koblas/grpc-todo/pkg/tokenmanager"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 )
 
 // Server represents the gRPC server
 type GptServer struct {
-	jwtMaker tokenmanager.Maker
-	client   gpt3.Client
+	userHelper interceptors.UserIdFromContext
+	client     gpt3.Client
 }
 
 type Option func(*GptServer)
 
-func NewGptServer(config Config, opts ...Option) *GptServer {
-	maker, err := tokenmanager.NewJWTMaker(config.JwtSecret)
-	if err != nil {
-		log.Fatal(err)
+func WithGetUserId(helper interceptors.UserIdFromContext) Option {
+	return func(svr *GptServer) {
+		svr.userHelper = helper
 	}
+}
 
+func NewGptServer(config Config, opts ...Option) *GptServer {
 	svr := GptServer{
-		jwtMaker: maker,
-		client:   gpt3.NewClient(config.GptApiKey),
+		client: gpt3.NewClient(config.GptApiKey),
 	}
 
 	for _, opt := range opts {
 		opt(&svr)
 	}
 
-	return &svr
-}
+	if svr.userHelper == nil {
+		panic("no user helper provided")
+	}
 
-func (svc *GptServer) getUserId(ctx context.Context) (string, error) {
-	return tokenmanager.UserIdFromContext(ctx, svc.jwtMaker)
+	return &svr
 }
 
 // SayHello generates response to a Ping request
@@ -49,7 +48,7 @@ func (svc *GptServer) Create(ctx context.Context, params *connect.Request[apiv1.
 	log := logger.FromContext(ctx)
 	log.Info("GptCreate BEGIN")
 
-	userId, err := svc.getUserId(ctx)
+	userId, err := svc.userHelper.GetUserId(ctx)
 	if err != nil {
 		log.With("error", err).Info("No user id found")
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("missing userid"))

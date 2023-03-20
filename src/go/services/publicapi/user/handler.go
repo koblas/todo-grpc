@@ -2,7 +2,6 @@ package user
 
 import (
 	"errors"
-	"log"
 
 	"github.com/bufbuild/connect-go"
 	"github.com/go-playground/validator/v10"
@@ -10,9 +9,9 @@ import (
 	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
 	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/bufcutil"
+	"github.com/koblas/grpc-todo/pkg/interceptors"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/protoutil"
-	"github.com/koblas/grpc-todo/pkg/tokenmanager"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 )
@@ -21,8 +20,8 @@ var validate = validator.New()
 
 // Server represents the gRPC server
 type UserServer struct {
-	user     corev1connect.UserServiceClient
-	jwtMaker tokenmanager.Maker
+	user       corev1connect.UserServiceClient
+	userHelper interceptors.UserIdFromContext
 }
 
 type Option func(*UserServer)
@@ -33,25 +32,27 @@ func WithUserService(client corev1connect.UserServiceClient) Option {
 	}
 }
 
-func NewUserServer(config Config, opts ...Option) *UserServer {
-	maker, err := tokenmanager.NewJWTMaker(config.JwtSecret)
-	if err != nil {
-		log.Fatal(err)
+func WithGetUserId(helper interceptors.UserIdFromContext) Option {
+	return func(svr *UserServer) {
+		svr.userHelper = helper
 	}
+}
 
-	svr := UserServer{
-		jwtMaker: maker,
-	}
+func NewUserServer(config Config, opts ...Option) *UserServer {
+	svr := UserServer{}
 
 	for _, opt := range opts {
 		opt(&svr)
 	}
 
-	return &svr
-}
+	if svr.user == nil {
+		panic("no user service provided")
+	}
+	if svr.userHelper == nil {
+		panic("no user helper provided")
+	}
 
-func (svc *UserServer) getUserId(ctx context.Context) (string, error) {
-	return tokenmanager.UserIdFromContext(ctx, svc.jwtMaker)
+	return &svr
 }
 
 // SayHello generates response to a Ping request
@@ -59,7 +60,7 @@ func (svc *UserServer) GetUser(ctx context.Context, _ *connect.Request[apiv1.Get
 	log := logger.FromContext(ctx)
 	log.Info("GetUser BEGIN")
 
-	userId, err := svc.getUserId(ctx)
+	userId, err := svc.userHelper.GetUserId(ctx)
 	if err != nil {
 		log.With("error", err).Info("No user id found")
 		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("missing userid"))
@@ -81,9 +82,6 @@ func (svc *UserServer) GetUser(ctx context.Context, _ *connect.Request[apiv1.Get
 		return nil, bufcutil.InternalError(err)
 	}
 
-	// return connect.NewResponse(&apipbv1.GetUserResponse{
-	// User: protoutil.UserCoreToApi(user.User),
-	// }), nil
 	return connect.NewResponse(&apiv1.GetUserResponse{
 		User: protoutil.UserCoreToApi(user.Msg.User),
 	}), nil
@@ -94,7 +92,7 @@ func (svc *UserServer) UpdateUser(ctx context.Context, updateIn *connect.Request
 	log := logger.FromContext(ctx)
 	log.Info("UserUpdate BEGIN")
 
-	userId, err := svc.getUserId(ctx)
+	userId, err := svc.userHelper.GetUserId(ctx)
 	if err != nil {
 		log.With(zap.Error(err)).Info("No user id found")
 		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("missing userid"))

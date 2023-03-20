@@ -8,9 +8,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/bufbuild/connect-go"
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
 	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
+	"github.com/koblas/grpc-todo/pkg/interceptors"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/pkg/natsutil"
 	"github.com/koblas/grpc-todo/services/core/user"
@@ -83,7 +85,10 @@ func main() {
 		)
 	}
 
-	_, api := corev1connect.NewUserServiceHandler(user.NewUserServer(opts...))
+	_, api := corev1connect.NewUserServiceHandler(
+		user.NewUserServer(opts...),
+		connect.WithInterceptors(interceptors.NewReqidInterceptor()),
+	)
 
 	mgr.Start(mgr.WrapHttpHandler(api))
 }

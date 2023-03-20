@@ -1,11 +1,11 @@
 package main
 
 import (
-	"net/http"
 	"strings"
 
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
 	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
+	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/filestore"
 	"github.com/koblas/grpc-todo/pkg/manager"
@@ -46,7 +46,7 @@ func main() {
 			),
 			workers_file.WithUserService(
 				corev1connect.NewUserServiceClient(
-					&http.Client{},
+					bufcutil.NewHttpClient(),
 					"http://"+config.UserServiceAddr,
 				),
 			),
