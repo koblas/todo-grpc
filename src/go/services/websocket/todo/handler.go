@@ -33,7 +33,7 @@ func WithProducer(producer corev1connect.BroadcastEventbusServiceClient) Option 
 	}
 }
 
-func NewTodoChangeServer(opts ...Option) []http.Handler {
+func NewTodoChangeServer(opts ...Option) map[string]http.Handler {
 	svr := TodoServer{}
 
 	for _, opt := range opts {
@@ -41,7 +41,7 @@ func NewTodoChangeServer(opts ...Option) []http.Handler {
 	}
 
 	_, api := corev1connect.NewTodoEventbusServiceHandler(&svr)
-	return []http.Handler{api}
+	return map[string]http.Handler{"todo.change": api}
 }
 
 func (svc *TodoServer) TodoChange(ctx context.Context, eventIn *connect.Request[corev1.TodoChangeEvent]) (*connect.Response[corev1.TodoEventbusTodoChangeResponse], error) {

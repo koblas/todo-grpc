@@ -50,7 +50,7 @@ type BroadcastServerHandler struct {
 }
 
 // Convert websocket-broadcast events into per-connection events
-func NewBroadcastServer(opts ...Option) []http.Handler {
+func NewBroadcastServer(opts ...Option) map[string]http.Handler {
 	svr := BroadcastServer{}
 
 	for _, opt := range opts {
@@ -59,7 +59,7 @@ func NewBroadcastServer(opts ...Option) []http.Handler {
 
 	_, api := corev1connect.NewBroadcastEventbusServiceHandler(&svr)
 
-	return []http.Handler{api}
+	return map[string]http.Handler{"websocket.broadcast": api}
 }
 
 func (svc *BroadcastServer) Send(ctx context.Context, event *connect.Request[corev1.BroadcastEvent]) (*connect.Response[corev1.BroadcastEventbusSendResponse], error) {

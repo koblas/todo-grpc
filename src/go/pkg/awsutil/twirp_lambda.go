@@ -124,7 +124,7 @@ func HandleApiLambda(api http.Handler) manager.HandlerStart {
 type SqsHandlers map[string]http.Handler
 
 type SqsHandler struct {
-	handlers []http.Handler
+	handlers map[string]http.Handler
 }
 
 func (sqsh *SqsHandler) lambdaSqsHandler(ctx context.Context, request events.SQSEvent) (events.SQSEventResponse, error) {
@@ -173,7 +173,7 @@ func (sqsh *SqsHandler) Start(ctx context.Context) error {
 	return nil
 }
 
-func HandleSqsLambda(handlers []http.Handler) *SqsHandler {
+func HandleSqsLambda(handlers map[string]http.Handler) *SqsHandler {
 	return &SqsHandler{handlers}
 }
 

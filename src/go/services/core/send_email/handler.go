@@ -27,12 +27,12 @@ var templates map[corev1.EmailTemplate]emailContent = map[corev1.EmailTemplate]e
 	corev1.EmailTemplate_EMAIL_TEMPLATE_PASSWORD_RECOVERY: passwordRecovery,
 }
 
-func NewSendEmailServer(producer corev1connect.SendEmailEventsServiceClient, sender Sender) []http.Handler {
+func NewSendEmailServer(producer corev1connect.SendEmailEventsServiceClient, sender Sender) map[string]http.Handler {
 	_, api := corev1connect.NewSendEmailServiceHandler(
 		NewSendEmailServerServer(producer, sender),
 	)
 
-	return []http.Handler{api}
+	return map[string]http.Handler{"queue.send_email": api}
 }
 
 func NewSendEmailServerServer(producer corev1connect.SendEmailEventsServiceClient, sender Sender) *SendEmailServer {

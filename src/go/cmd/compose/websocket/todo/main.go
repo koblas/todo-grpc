@@ -31,6 +31,5 @@ func main() {
 	mgr.Start(nats.TopicConsumer(
 		mgr.Context(),
 		natsutil.ConnectToTopic(corev1connect.TodoEventbusServiceName),
-		"websocket.todo",
 		s))
 }

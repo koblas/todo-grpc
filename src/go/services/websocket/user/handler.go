@@ -33,7 +33,7 @@ func WithProducer(producer corev1connect.BroadcastEventbusServiceClient) Option 
 	}
 }
 
-func NewUserChangeServer(opts ...Option) []http.Handler {
+func NewUserChangeServer(opts ...Option) map[string]http.Handler {
 	svr := UserServer{}
 
 	for _, opt := range opts {
@@ -42,7 +42,7 @@ func NewUserChangeServer(opts ...Option) []http.Handler {
 
 	_, api := corev1connect.NewUserEventbusServiceHandler(&svr)
 
-	return []http.Handler{api}
+	return map[string]http.Handler{"websocket.user": api}
 }
 
 func (svc *UserServer) UserChange(ctx context.Context, eventIn *connect.Request[corev1.UserChangeEvent]) (*connect.Response[corev1.UserEventbusUserChangeResponse], error) {

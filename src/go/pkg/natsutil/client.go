@@ -118,20 +118,19 @@ type Consumer struct {
 	url      string
 	conn     *nats.Conn
 	Topic    string
-	group    string
-	handlers []http.Handler
+	handlers map[string]http.Handler
 }
 
 func (svc *Consumer) Start(ctx context.Context) error {
 	log := logger.FromContext(ctx)
 	wg := sync.WaitGroup{}
 
-	for _, item := range svc.handlers {
+	for group, item := range svc.handlers {
 		wg.Add(1)
-		go func(handler http.Handler) {
-			log := log.With("group", svc.group)
+		go func(group string, handler http.Handler) {
+			log := log.With("group", group)
 			log.Info("Creating queue subscription")
-			_, err := svc.conn.QueueSubscribe(svc.Topic, svc.group, func(msg *nats.Msg) {
+			_, err := svc.conn.QueueSubscribe(svc.Topic, group, func(msg *nats.Msg) {
 				parts := strings.Split(msg.Subject, ".")
 				path := "/" + strings.Join(parts[0:len(parts)-1], ".") + "/" + parts[len(parts)-1]
 				if parts[0] == "twirp" {
@@ -168,7 +167,7 @@ func (svc *Consumer) Start(ctx context.Context) error {
 				wg.Add(-1)
 				log.With(zap.Error(err), zap.String("addr", svc.url)).Fatal("unable to connect")
 			}
-		}(item)
+		}(group, item)
 	}
 
 	wg.Wait()
@@ -176,7 +175,7 @@ func (svc *Consumer) Start(ctx context.Context) error {
 	return nil
 }
 
-func (svc *Client) TopicConsumer(ctx context.Context, topic string, group string, handlers []http.Handler) manager.HandlerStart {
+func (svc *Client) TopicConsumer(ctx context.Context, topic string, handlers map[string]http.Handler) manager.HandlerStart {
 	log := logger.FromContext(ctx)
 
 	log.With(zap.String("topic", topic)).Info("Consuming on topic")
@@ -188,7 +187,6 @@ func (svc *Client) TopicConsumer(ctx context.Context, topic string, group string
 		conn:     svc.Conn,
 		url:      svc.url,
 		Topic:    topic,
-		group:    group,
 		handlers: handlers,
 	}
 

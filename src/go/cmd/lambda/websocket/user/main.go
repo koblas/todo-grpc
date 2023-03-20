@@ -30,7 +30,7 @@ func main() {
 	// mux := http.NewServeMux()
 	// mux.Handle(corepbv1.UserEventbusPathPrefix, corepbv1.NewUserEventbusServer(s))
 
-	h := user.NewUserChangeServer(user.WithProducer(producer))
+	handlers := user.NewUserChangeServer(user.WithProducer(producer))
 
-	mgr.Start(awsutil.HandleSqsLambda(h))
+	mgr.Start(awsutil.HandleSqsLambda(handlers))
 }

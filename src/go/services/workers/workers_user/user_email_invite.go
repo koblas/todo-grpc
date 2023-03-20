@@ -58,7 +58,7 @@ func (cfg *userEmailInvite) SecurityInviteToken(ctx context.Context, msgIn *conn
 		Token: tokenValue,
 	}
 
-	log.Info("Sending registration email")
+	log.Info("Sending invitation email")
 	if cfg.sendEmail != nil {
 		if _, err := cfg.sendEmail.InviteUserMessage(ctx, connect.NewRequest(&params)); err != nil {
 			log.With(zap.Error(err)).Info("Failed to send")

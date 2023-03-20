@@ -36,6 +36,5 @@ func main() {
 	mgr.Start(nats.TopicConsumer(
 		mgr.Context(),
 		natsutil.ConnectToTopic(corev1connect.UserEventbusServiceName),
-		"workers.user",
 		s))
 }

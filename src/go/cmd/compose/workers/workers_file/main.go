@@ -56,6 +56,5 @@ func main() {
 
 	mgr.Start(nats.TopicConsumer(mgr.Context(),
 		natsutil.ConnectToTopic(corev1connect.FileEventbusServiceName),
-		"workers.file",
 		workers_file.BuildHandlers(config, opts...)))
 }

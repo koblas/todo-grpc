@@ -31,7 +31,6 @@ func main() {
 	nats := natsutil.NewNatsClient(config.NatsAddr)
 	mgr.Start(nats.TopicConsumer(
 		mgr.Context(),
-		natsutil.ConnectToTopic(corev1connect.SendEmailEventsServiceName),
-		"core.send_email",
+		natsutil.ConnectToTopic(corev1connect.SendEmailServiceName),
 		s))
 }

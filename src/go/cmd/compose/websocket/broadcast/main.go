@@ -33,7 +33,6 @@ func main() {
 
 	mgr.Start(nats.TopicConsumer(mgr.Context(),
 		natsutil.ConnectToTopic(corev1connect.BroadcastEventbusServiceName),
-		"websocket.broadcast",
 		s,
 	))
 }
