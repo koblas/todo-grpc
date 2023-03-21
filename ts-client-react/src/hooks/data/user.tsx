@@ -69,10 +69,12 @@ const UserEvent = z.object({
 export function useUserListener(queryClient: QueryClient) {
   const { addListener } = useWebsocketUpdates();
 
-  useEffect(() => {
-    addListener("user", (event: z.infer<typeof UserEvent>) => {
-      queryClient.setQueriesData("user", { user: event.body });
-    });
+  useEffect(
+    () =>
+      addListener("user", (event: z.infer<typeof UserEvent>) => {
+        queryClient.setQueriesData("user", { user: event.body });
+      }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    [],
+  );
 }

@@ -10,7 +10,10 @@ import (
 	"github.com/bufbuild/connect-go"
 	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
 	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
+	"github.com/minio/minio-go/v7/pkg/notification"
+
 	"github.com/koblas/grpc-todo/pkg/confmgr"
+	"github.com/koblas/grpc-todo/pkg/filestore"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/pkg/natsutil"
@@ -22,31 +25,62 @@ const EVENT_GROUP = "trigger-minio"
 const MINIO_EVENT_BUS = "minioevents"
 
 type Config struct {
-	// Used by lambda
-	NatsAddr string `environment:"NATS_ADDR"`
+	NatsAddr      string `environment:"NATS_ADDR"`
+	MinioEndpoint string `environment:"MINIO_ENDPOINT" default:"s3.amazonaws.com"`
+	UploadBucket  string `environment:"UPLOAD_BUCKET"`
 }
 
 type handler struct {
+	conf     Config
 	nats     *natsutil.Client
 	producer corev1connect.FileEventbusServiceClient
+	store    *filestore.MinioProvider
 }
 
-func newHandler(nats *natsutil.Client, producer corev1connect.FileEventbusServiceClient) *handler {
-	return &handler{nats: nats, producer: producer}
+func newHandler(conf Config, nats *natsutil.Client, producer corev1connect.FileEventbusServiceClient) *handler {
+	return &handler{
+		conf:     conf,
+		nats:     nats,
+		producer: producer,
+		store:    filestore.NewMinioProvider(conf.MinioEndpoint),
+	}
 }
 
 func (h *handler) Start(ctx context.Context) error {
+	log := logger.FromContext(ctx)
+	// log.With(zap.Any("ENV", os.Environ())).Info("ENV")
+
 	if err := h.nats.Connect(ctx); err != nil {
-		return err
+		log.With(zap.Error(err)).Fatal("Unable to connect to nats")
+	}
+	if err := h.store.BuildClient(ctx); err != nil {
+		log.With(zap.Error(err)).Fatal("Unable to connect to minio")
 	}
 
-	logger.FromContext(ctx).With(
+	topicArn := notification.NewArn("minio", "sqs", "", "PRIMARY", "nats")
+	topicConfig := notification.NewConfig(topicArn)
+	topicConfig.AddEvents(notification.ObjectCreatedAll)
+
+	nconf := notification.Configuration{}
+	nconf.AddQueue(topicConfig)
+
+	log.With(zap.String("TOPIC", topicArn.String())).Info("Got Topic")
+
+	if err := h.store.VerifyBucket(ctx, h.conf.UploadBucket); err != nil {
+		log.With(zap.Error(err), zap.String("bucket", h.conf.UploadBucket)).Fatal("Unable to verify bucket")
+	}
+
+	if err := h.store.Client.SetBucketNotification(ctx, h.conf.UploadBucket, nconf); err != nil {
+		log.With(zap.Error(err)).Fatal("Unable to create notification")
+	}
+
+	// initialization complete
+	log.With(
 		zap.String("bus", MINIO_EVENT_BUS),
 		zap.String("group", EVENT_GROUP),
 	).Info("Subscribing to NATS events")
-	h.nats.Conn.QueueSubscribe(MINIO_EVENT_BUS, EVENT_GROUP, func(msg *nats.Msg) {
-		log := logger.FromContext(ctx)
 
+	h.nats.Conn.QueueSubscribe(MINIO_EVENT_BUS, EVENT_GROUP, func(msg *nats.Msg) {
 		var request events.S3Event
 		if err := json.Unmarshal(msg.Data, &request); err != nil {
 			log.With(zap.Error(err)).Error("Unable to unmarshal event")
@@ -104,5 +138,5 @@ func main() {
 		"",
 	)
 
-	mgr.Start(newHandler(nats, producer))
+	mgr.Start(newHandler(config, nats, producer))
 }

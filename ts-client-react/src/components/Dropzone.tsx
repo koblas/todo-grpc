@@ -1,7 +1,8 @@
-import React, { useCallback } from "react";
-import { Flex } from "@chakra-ui/react";
+import * as Sentry from "@sentry/react";
+import React, { useCallback, useRef } from "react";
+import { Flex, useToast } from "@chakra-ui/react";
 import { useDropzone } from "react-dropzone";
-import { useUploadFile } from "../hooks/data/file";
+import { useFileListener, useUploadFile } from "../hooks/data/file";
 
 const focusedStyle = {
   borderColor: "#2196f3",
@@ -21,41 +22,75 @@ const dragStyle = {
 
 export function Dropzone() {
   const { useUploadSend, useUploadUrl } = useUploadFile();
+  const toast = useToast();
+  const fileIds = useRef([] as string[]);
 
   const [uploaderUrl] = useUploadUrl();
   const [uploaderFile] = useUploadSend();
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    if (acceptedFiles.length !== 0) {
-      const file = acceptedFiles[0];
+  const onDrop = useCallback(
+    (acceptedFiles: File[]) => {
+      if (acceptedFiles.length !== 0) {
+        const file = acceptedFiles[0];
 
-      uploaderUrl(
-        { type: "profile_image", contentType: file.type },
-        {
-          onCompleted(data) {
-            console.log("UPLOAD URL SUCCESS", data.url);
-            uploaderFile(
-              {
-                url: data.url,
-                file,
-              },
-              {
-                onCompleted(data2) {
-                  // console.log("UPLOAD SUCCESS", data2.id);
+        uploaderUrl(
+          { type: "profile_image", contentType: file.type },
+          {
+            onCompleted(data) {
+              fileIds.current.push(data.id);
+              uploaderFile(
+                {
+                  url: data.url,
+                  file,
                 },
-                onError(err) {
-                  console.log("UPLOAD FAILED", err);
+                {
+                  onError(err) {
+                    Sentry.captureException(err);
+                    toast({
+                      position: "top",
+                      title: "Upload failed",
+                      status: "error",
+                      isClosable: true,
+                    });
+                  },
                 },
-              },
-            );
+              );
+            },
+            onError(err) {
+              Sentry.captureException(err);
+              toast({
+                position: "top",
+                title: "Upload failed",
+                status: "error",
+                isClosable: true,
+              });
+            },
           },
-          onError(err) {
-            console.log("UPLOAD FAILED", err);
-          },
-        },
-      );
-    }
+        );
+      }
+    },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    [fileIds],
+  );
+  const action = (id: string, error?: string) => {
+    if (fileIds.current.includes(id)) {
+      if (error) {
+        toast({
+          position: "top",
+          title: "Upload failed",
+          status: "error",
+          isClosable: true,
+        });
+      } else {
+        toast({
+          position: "top",
+          title: "File uploaded",
+          status: "success",
+          isClosable: true,
+        });
+      }
+    }
+  };
+  useFileListener(action);
 
   const { acceptedFiles, getRootProps, getInputProps, isDragActive, isFocused, isDragAccept, isDragReject } =
     useDropzone({ onDrop });
@@ -91,17 +126,4 @@ export function Dropzone() {
       <span>{files.length !== 0 ? files[0] : null}</span>
     </>
   );
-
-  // return (
-  //   <section className="container">
-  //     <div {...getRootProps({ className: "dropzone" })}>
-  //       <input {...getInputProps()} />
-  //       <p>Drag 'n' drop some files here, or click to select files</p>
-  //     </div>
-  //     <aside>
-  //       <h4>Files</h4>
-  //       <ul>{files}</ul>
-  //     </aside>
-  //   </section>
-  // );
 }

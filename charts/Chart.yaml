@@ -67,6 +67,10 @@ dependencies:
   repository: file://charts/websocket-broadcast
   version: 0.1.0
   condition: websocket-broadcast.enabled
+- name: websocket-file
+  repository: file://charts/websocket-file
+  version: 0.1.0
+  condition: websocket-file.enabled
 - name: websocket-todo
   repository: file://charts/websocket-todo
   version: 0.1.0
@@ -88,14 +92,14 @@ dependencies:
 - name: trigger-minio
   repository: file://charts/trigger-minio
   version: 0.1.0
-  condition: workers-file.enabled
+  condition: workers-trigger-minio.enabled
 
 #
 #  Externals
 #
 - name: minio
   repository: https://charts.bitnami.com/bitnami
-  version: 12.1.1
+  version: 12.1.13
   condition: minio.enabled
 - name: nats
   #repository: https://charts.bitnami.com/bitnami

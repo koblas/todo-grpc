@@ -1,11 +1,11 @@
-# Default values for trigger-minio.
+# Default values for websocket-file.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
 replicaCount: 1
 
 image:
-  repository: todo-grpc/trigger-minio
+  repository: todo-grpc/websocket-file
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
@@ -83,15 +83,5 @@ affinity: {}
 
 envFrom:
   normal:
-#   URL_BASE_UI: dev-variables-env
-#   USER_SERVICE_ADDR: dev-variables-env
-#   FILE_SERVICE_ADDR: dev-variables-env
-#   REDIS_ADDR: dev-variables-env
+    REDIS_ADDR: dev-variables-env
     NATS_ADDR: dev-variables-env
-    MINIO_ENDPOINT: dev-variables-env
-    UPLOAD_BUCKET: dev-variables-env
-    PRIVATE_BUCKET: dev-variables-env
-    PUBLIC_BUCKET: dev-variables-env
-  secret:
-    MINIO_ROOT_USER: minio|root-user
-    MINIO_ROOT_PASSWORD: minio|root-password

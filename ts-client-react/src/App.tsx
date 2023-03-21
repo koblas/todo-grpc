@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo } from "react";
-
 import { ChakraProvider, CSSReset, Flex, Spinner, useToast } from "@chakra-ui/react";
 import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "react-query";
+import * as Sentry from "@sentry/react";
 
 import { AuthPages } from "./pages/auth";
 import { SettingsPage } from "./pages/settings";
@@ -18,6 +18,10 @@ import { FetchError } from "./rpc/utils";
 import { useTodoListener } from "./hooks/data/todo";
 import { useUserListener } from "./hooks/data/user";
 import ProtectedRoute from "./components/ProtectedRoute";
+
+Sentry.init({
+  debug: true,
+});
 
 function buildWebsocketUrl(): string {
   const base = process.env.WS_URL ?? "/wsapi";
@@ -110,6 +114,7 @@ export default function App() {
   const queryClient = useMemo(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     function onError(error: any) {
+      Sentry.captureException(error);
       console.log("IN TOP LEVEL ERROR", error);
       if (error instanceof FetchError) {
         const { code } = error.getInfo();

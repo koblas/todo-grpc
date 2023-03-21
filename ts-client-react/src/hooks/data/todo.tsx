@@ -1,5 +1,5 @@
 import { QueryClient, useMutation, useQuery, useQueryClient } from "react-query";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { z } from "zod";
 import * as rpcTodo from "../../rpc/todo";
 import { useAuth } from "../auth";
@@ -89,16 +89,18 @@ const TodoEvent = z.object({
 export function useTodoListener(queryClient: QueryClient) {
   const { addListener } = useWebsocketUpdates();
 
-  useEffect(() => {
-    addListener("todo", (event: z.infer<typeof TodoEvent>) => {
-      if (event.action === "delete") {
-        cacheDeleteTodo(queryClient, event.object_id);
-      } else if (event.action === "create" && event.body !== null) {
-        cacheAddTodo(queryClient, event.body);
-      } else {
-        console.log("UNKNOWN TODO EVENT", event);
-      }
-    });
+  useEffect(
+    () =>
+      addListener("todo", (event: z.infer<typeof TodoEvent>) => {
+        if (event.action === "delete") {
+          cacheDeleteTodo(queryClient, event.object_id);
+        } else if (event.action === "create" && event.body !== null) {
+          cacheAddTodo(queryClient, event.body);
+        } else {
+          console.log("UNKNOWN TODO EVENT", event);
+        }
+      }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    [queryClient],
+  );
 }

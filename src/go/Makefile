@@ -26,6 +26,7 @@ build-lambda:
 	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/publicapi-gpt ./cmd/lambda/publicapi/user/main.go
 	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/publicapi-todo ./cmd/lambda/publicapi/todo/main.go
 	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/publicapi-user ./cmd/lambda/publicapi/user/main.go
+	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/websocket-file ./cmd/lambda/websocket/file/main.go
 	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/websocket-todo ./cmd/lambda/websocket/todo/main.go
 	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/websocket-user ./cmd/lambda/websocket/user/main.go
 	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/websocket-broadcast ./cmd/lambda/websocket/broadcast/main.go
@@ -44,6 +45,7 @@ build-compose:
 	go build -o build/publicapi-user ./cmd/compose/publicapi/user/main.go
 	go build -o build/publicapi-todo ./cmd/compose/publicapi/todo/main.go
 	go build -o build/publicapi-websocket ./cmd/compose/publicapi/websocket/main.go
+	go build -o build/websocket-file ./cmd/compose/websocket/file/main.go
 	go build -o build/websocket-todo ./cmd/compose/websocket/todo/main.go
 	go build -o build/websocket-user ./cmd/compose/websocket/user/main.go
 	go build -o build/websocket-broadcast ./cmd/compose/websocket/broadcast/main.go

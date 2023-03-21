@@ -43,6 +43,9 @@ func NewFileUploaded(config WorkerConfig) http.Handler {
 
 func (cfg *fileUploaded) FileUploaded(ctx context.Context, msg *connect.Request[corev1.FileServiceUploadEvent]) (*connect.Response[corev1.FileEventbusFileUploadedResponse], error) {
 	info := msg.Msg.Info
+	parts := strings.Split(info.Url, "/")
+	lastPart := parts[len(parts)-1]
+	fileId := strings.SplitN(lastPart, ".", 2)[0]
 
 	log := logger.FromContext(ctx).With(
 		zap.String("fileType", info.FileType),
@@ -66,6 +69,7 @@ func (cfg *fileUploaded) FileUploaded(ctx context.Context, msg *connect.Request[
 			log.Info(errMsg)
 		}
 		event := corev1.FileServiceCompleteEvent{
+			Id:           fileId,
 			IdemponcyId:  ulid.Make().String(),
 			ErrorMessage: msgPtr,
 			Info: &corev1.FileServiceUploadInfo{

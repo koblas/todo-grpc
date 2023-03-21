@@ -60,6 +60,10 @@ websocket-broadcast:
   enabled: true
   image:
     version:
+websocket-file:
+  enabled: true
+  image:
+    version:
 websocket-todo:
   enabled: true
   image:
@@ -98,6 +102,8 @@ minio:
   apiIngress:
     hostname: "minio"
     enabled: true
+  auth:
+    rootPassword: password
     #path: /minio_(.*)
     #pathType: Prefix
     #annotations:

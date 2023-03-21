@@ -134,3 +134,7 @@ kubectl port-forward service/minio 9000:9000
 
 TODO -- Need to setup the MINIO->NATS subscription (the queue is created, but the subscription is not)
 
+Cleanup disk space
+```
+minikube ssh -- docker system prune
+```

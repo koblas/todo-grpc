@@ -42,16 +42,18 @@ message FileServiceUploadInfo {
 }
 
 message FileServiceUploadEvent {
-  string idemponcy_id = 1;
+  string id = 1;
+  string idemponcy_id = 2;
 
-  FileServiceUploadInfo info = 2;
+  FileServiceUploadInfo info = 3;
 }
 
 message FileServiceCompleteEvent {
-  string idemponcy_id = 1;
+  string id = 1;
+  string idemponcy_id = 2;
 
-  optional string error_message = 2; // Was here an error uploading this file
-  optional FileServiceUploadInfo info = 3;
+  optional string error_message = 3; // Was here an error uploading this file
+  optional FileServiceUploadInfo info = 4;
 }
 
 service FileService {

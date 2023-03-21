@@ -18,7 +18,7 @@ import (
 )
 
 type MinioProvider struct {
-	client    *minio.Client
+	Client    *minio.Client
 	endpoint  string
 	location  string
 	expiresIn time.Duration
@@ -34,8 +34,8 @@ func NewMinioProvider(endpoint string) *MinioProvider {
 	}
 }
 
-func (provider *MinioProvider) buildClient(ctx context.Context) error {
-	if provider.client != nil {
+func (provider *MinioProvider) BuildClient(ctx context.Context) error {
+	if provider.Client != nil {
 		return nil
 	}
 
@@ -47,23 +47,23 @@ func (provider *MinioProvider) buildClient(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	provider.client = client
+	provider.Client = client
 
 	return nil
 }
 
-func (provider *MinioProvider) verifyBucket(ctx context.Context, bucketName string) error {
-	exists, err := provider.client.BucketExists(ctx, bucketName)
+func (provider *MinioProvider) VerifyBucket(ctx context.Context, bucketName string) error {
+	exists, err := provider.Client.BucketExists(ctx, bucketName)
 	// If there is an error or the bucket already exists (e.g. err == nil) return
 	if err != nil || exists {
 		return err
 	}
 
-	return provider.client.MakeBucket(ctx, bucketName, minio.MakeBucketOptions{Region: provider.location})
+	return provider.Client.MakeBucket(ctx, bucketName, minio.MakeBucketOptions{Region: provider.location})
 }
 
 func (provider *MinioProvider) UploadUrl(ctx context.Context, params *FilePutParams) (*FilePutResponse, error) {
-	if err := provider.buildClient(ctx); err != nil {
+	if err := provider.BuildClient(ctx); err != nil {
 		return nil, err
 	}
 
@@ -74,11 +74,11 @@ func (provider *MinioProvider) UploadUrl(ctx context.Context, params *FilePutPar
 	policy.SetKey(key)
 	policy.SetExpires(time.Now().UTC().Add(provider.expiresIn))
 
-	if err := provider.verifyBucket(ctx, params.Bucket); err != nil {
+	if err := provider.VerifyBucket(ctx, params.Bucket); err != nil {
 		return nil, err
 	}
 
-	result, err := provider.client.PresignedPutObject(ctx, params.Bucket, key, provider.expiresIn)
+	result, err := provider.Client.PresignedPutObject(ctx, params.Bucket, key, provider.expiresIn)
 	if err != nil {
 		return nil, errors.Wrapf(err, "Couldn't get a presigned request to put %v:%v\n",
 			params.Bucket, key)
@@ -100,10 +100,10 @@ func (provider *MinioProvider) GetFile(ctx context.Context, params *FileGetParam
 	if u.Scheme != "minio" && u.Scheme != "s3" {
 		return nil, InvalidSchemeError
 	}
-	if err := provider.buildClient(ctx); err != nil {
+	if err := provider.BuildClient(ctx); err != nil {
 		return nil, err
 	}
-	response, err := provider.client.GetObject(ctx, u.Host, strings.TrimPrefix(u.Path, "/"), minio.GetObjectOptions{})
+	response, err := provider.Client.GetObject(ctx, u.Host, strings.TrimPrefix(u.Path, "/"), minio.GetObjectOptions{})
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to fetch from minio")
 	}
@@ -112,18 +112,18 @@ func (provider *MinioProvider) GetFile(ctx context.Context, params *FileGetParam
 }
 
 func (provider *MinioProvider) PutFile(ctx context.Context, params *FilePutParams, reader io.Reader) (*FilePutResponse, error) {
-	if err := provider.buildClient(ctx); err != nil {
+	if err := provider.BuildClient(ctx); err != nil {
 		return nil, err
 	}
 
 	key, _ := buildObjectKey(params)
 
-	if err := provider.verifyBucket(ctx, params.Bucket); err != nil {
+	if err := provider.VerifyBucket(ctx, params.Bucket); err != nil {
 		return nil, err
 	}
 	contentType := mime.TypeByExtension(filepath.Ext(key))
 
-	_, err := provider.client.PutObject(ctx, params.Bucket, key, reader, -1, minio.PutObjectOptions{
+	_, err := provider.Client.PutObject(ctx, params.Bucket, key, reader, -1, minio.PutObjectOptions{
 		ContentType: contentType,
 	})
 	if err != nil {

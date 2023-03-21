@@ -21,7 +21,7 @@ func main() {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 	smtpConfig := send_email.SmtpConfig{}
-	if err := confmgr.Parse(&config, confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
+	if err := confmgr.Parse(&smtpConfig, confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 

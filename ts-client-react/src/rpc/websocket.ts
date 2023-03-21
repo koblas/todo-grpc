@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 import { v4 as uuidV4 } from "uuid";
 
-import create from "zustand";
+import { create } from "zustand";
 import { WebSocketHook } from "react-use-websocket/dist/lib/types";
 import { useAuth } from "../hooks/auth";
 import { Json } from "../types/json";
@@ -24,23 +24,24 @@ import { Json } from "../types/json";
 
 // const WS_URL = buildWebsocketUrl();
 
-type ListenerFunc<E = Json> = (event: E) => void;
-type ListenerSelector<E = Json> = { topic: string | null; handler: (event: E) => void };
+type ListenerFunc<E extends Json> = (event: E) => void;
+type ListenerSelector<E extends Json> = { topic: string | null; handler: ListenerFunc<E> };
 
-type BearState = {
+type BearState<T extends Json = Json> = {
   connectionId: string;
   socket: null | WebSocketHook;
   connected: boolean;
-  listeners: ListenerSelector[];
+  listeners: ListenerSelector<T>[];
   setSocket: (socket: null | WebSocketHook) => void;
   setConnected: (connected: boolean) => void;
-  addListener: <E = Json>(listener: ListenerSelector<E>) => void;
+  addListener: (listener: ListenerSelector<T>) => void;
+  removeListener: (listener: ListenerSelector<T>) => void;
 };
 
 // const { Provider, useStore } = createContext<BearState>();
 
-const createStore = () =>
-  create<BearState>((set) => ({
+const createStore = <T extends Json>() =>
+  create<BearState<T>>((set) => ({
     connectionId: uuidV4(),
     socket: null,
     connected: false,
@@ -48,7 +49,11 @@ const createStore = () =>
     setSocket: (s: null | WebSocketHook) => set({ socket: s }),
     setConnected: (connected: boolean) => set({ connected }),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    addListener: (listener: ListenerSelector<any>) => set((state) => ({ listeners: state.listeners.concat(listener) })),
+    addListener: (listener) => set((state) => ({ listeners: state.listeners.concat(listener) })),
+    removeListener: (listener) =>
+      set((state) => ({
+        listeners: state.listeners.filter((item) => item.topic !== listener.topic || item.handler !== listener.handler),
+      })),
   }));
 
 const useStore = createStore();
@@ -147,15 +152,13 @@ export function WebsocketProvider({ children, url }: { url: string; children: JS
 export function useWebsocketUpdates() {
   const store = useStore();
 
-  // console.log("STORE = ", store);
+  const addListener = <E extends Json>(topic: string | null, handler: ListenerFunc<E>) => {
+    store.addListener({ topic, handler: handler as any });
 
-  const addListener = useCallback(
-    <E = Json>(topic: string | null, handler: ListenerFunc<E>) => {
-      store.addListener({ topic, handler });
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [store.addListener],
-  );
+    return () => {
+      store.removeListener({ topic, handler: handler as any });
+    };
+  };
 
   return {
     socket: store.socket,
