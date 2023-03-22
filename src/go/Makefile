@@ -6,6 +6,8 @@ all: build-lambda build-compose
 
 proto:
 	buf generate ../../protos/
+	(cd gen/core/v1/corev1connect && minimock -s _mock.go )
+
 
 start:
 	# Front end

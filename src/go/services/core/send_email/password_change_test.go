@@ -5,24 +5,22 @@ import (
 	"testing"
 
 	"github.com/bufbuild/connect-go"
-	"github.com/jaswdr/faker"
+	"github.com/go-faker/faker/v4"
 	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
 	"github.com/stretchr/testify/require"
 )
 
 func TestPasswordChange(t *testing.T) {
-	faker := faker.New()
-
 	svc, msgData := buildTestService()
 
 	params := connect.NewRequest(&corev1.PasswordChangeMessageRequest{
 		Recipient: &corev1.EmailUser{
-			Name:  faker.Person().Name(),
-			Email: faker.Internet().Email(),
+			Name:  faker.Name(),
+			Email: faker.Email(),
 		},
 		AppInfo: &corev1.EmailAppInfo{
-			AppName: faker.Company().Name(),
-			UrlBase: faker.Internet().URL(),
+			AppName: faker.Name(),
+			UrlBase: faker.URL(),
 		},
 	})
 	_, err := svc.PasswordChangeMessage(context.Background(), params)

@@ -5,16 +5,16 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/jaswdr/faker"
+	"github.com/go-faker/faker/v4"
 	"github.com/stretchr/testify/require"
 )
 
 func TestJWTMaker(t *testing.T) {
-	faker := faker.New()
-	maker, err := NewJWTMaker(faker.BinaryString().BinaryString(32))
+	// faker := faker.New()
+	maker, err := NewJWTMaker(faker.UUIDHyphenated())
 	require.NoError(t, err)
 
-	userId := faker.Internet().User()
+	userId := faker.Username()
 	duration := time.Minute
 
 	issuedAt := time.Now()
@@ -35,11 +35,10 @@ func TestJWTMaker(t *testing.T) {
 }
 
 func TestExpiredJWTToken(t *testing.T) {
-	faker := faker.New()
-	maker, err := NewJWTMaker(faker.BinaryString().BinaryString(32))
+	maker, err := NewJWTMaker(faker.UUIDHyphenated())
 	require.NoError(t, err)
 
-	token, err := maker.CreateToken(faker.Internet().User(), -time.Minute)
+	token, err := maker.CreateToken(faker.Username(), -time.Minute)
 	require.NoError(t, err)
 	require.NotEmpty(t, token)
 
@@ -50,15 +49,14 @@ func TestExpiredJWTToken(t *testing.T) {
 }
 
 func TestInvalidJWTTokenAlgNone(t *testing.T) {
-	faker := faker.New()
-	payload, err := NewPayload(faker.Internet().User(), time.Minute)
+	payload, err := NewPayload(faker.Username(), time.Minute)
 	require.NoError(t, err)
 
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodNone, payload)
 	token, err := jwtToken.SignedString(jwt.UnsafeAllowNoneSignatureType)
 	require.NoError(t, err)
 
-	maker, err := NewJWTMaker(faker.BinaryString().BinaryString(32))
+	maker, err := NewJWTMaker(faker.UUIDHyphenated())
 	require.NoError(t, err)
 
 	payload, err = maker.VerifyToken(token)

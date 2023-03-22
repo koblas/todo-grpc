@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	"github.com/jaswdr/faker"
+	"github.com/go-faker/faker/v4"
 	"github.com/koblas/grpc-todo/services/core/user"
 	"github.com/renstrom/shortuuid"
 	"github.com/stretchr/testify/assert"
@@ -101,7 +101,7 @@ func (suite *DynamoBasicSuite) TearDownSuite() {
 func (suite *DynamoBasicSuite) createUser(t *testing.T) user.User {
 	user := user.User{
 		ID:    shortuuid.New(),
-		Email: faker.New().Internet().Email(),
+		Email: faker.Email(),
 	}
 
 	err := suite.store.CreateUser(context.TODO(), user)
@@ -166,7 +166,7 @@ func (suite *DynamoBasicSuite) TestUpdateEmail() {
 
 	oldEmail := u0.Email
 
-	u0.Email = faker.New().Internet().Email()
+	u0.Email = faker.Email()
 
 	err := suite.store.UpdateUser(context.TODO(), &u0)
 	require.NoError(t, err, "update user 1")

@@ -4,16 +4,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jaswdr/faker"
+	"github.com/go-faker/faker/v4"
 	"github.com/stretchr/testify/require"
 )
 
 func TestPasetoMaker(t *testing.T) {
-	faker := faker.New()
-	maker, err := NewPasetoMaker(faker.BinaryString().BinaryString(32))
+	maker, err := NewPasetoMaker(faker.UUIDHyphenated())
 	require.NoError(t, err)
 
-	userId := faker.Internet().User()
+	userId := faker.Username()
 	duration := time.Minute
 
 	issuedAt := time.Now()
@@ -34,11 +33,10 @@ func TestPasetoMaker(t *testing.T) {
 }
 
 func TestExpiredPasetoToken(t *testing.T) {
-	faker := faker.New()
-	maker, err := NewPasetoMaker(faker.BinaryString().BinaryString(32))
+	maker, err := NewPasetoMaker(faker.UUIDHyphenated())
 	require.NoError(t, err)
 
-	token, err := maker.CreateToken(faker.Internet().User(), -time.Minute)
+	token, err := maker.CreateToken(faker.Username(), -time.Minute)
 	require.NoError(t, err)
 	require.NotEmpty(t, token)
 
