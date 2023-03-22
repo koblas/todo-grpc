@@ -9,7 +9,7 @@ import (
 )
 
 func TestPasetoMaker(t *testing.T) {
-	maker, err := NewPasetoMaker(faker.UUIDHyphenated())
+	maker, err := NewPasetoMaker(faker.UUIDHyphenated()[0:32])
 	require.NoError(t, err)
 
 	userId := faker.Username()
@@ -33,7 +33,7 @@ func TestPasetoMaker(t *testing.T) {
 }
 
 func TestExpiredPasetoToken(t *testing.T) {
-	maker, err := NewPasetoMaker(faker.UUIDHyphenated())
+	maker, err := NewPasetoMaker(faker.UUIDHyphenated()[0:32])
 	require.NoError(t, err)
 
 	token, err := maker.CreateToken(faker.Username(), -time.Minute)
