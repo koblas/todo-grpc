@@ -8,6 +8,29 @@ export interface Props {
   eventbus: aws.snsTopic.SnsTopic;
 }
 
+export class WebsocketFile extends Construct {
+  constructor(scope: Construct, id: string, { eventbus }: { eventbus: aws.snsTopic.SnsTopic }) {
+    super(scope, id);
+
+    const handler = new GoHandler(this, "websocket-file", {
+      path: ["websocket", "file"],
+      eventbus,
+      parameters: ["/common/*"],
+      environment: {
+        variables: {
+          BUS_ENTITY_ARN: eventbus.arn,
+        },
+      },
+    });
+
+    handler.eventQueue("websocket-file", eventbus, {
+      filterPolicy: JSON.stringify({
+        "twirp.path": ["/core.v1.FileEventbusService/FileCompleted"],
+      }),
+    });
+  }
+}
+
 export class WebsocketTodo extends Construct {
   constructor(scope: Construct, id: string, { eventbus }: { eventbus: aws.snsTopic.SnsTopic }) {
     super(scope, id);
@@ -70,9 +93,6 @@ export class WebsocketBroadcast extends Construct {
 
     const region = new aws.dataAwsRegion.DataAwsRegion(this, "rcurrent");
     const account = new aws.dataAwsCallerIdentity.DataAwsCallerIdentity(this, "acurrent");
-    // const callbackUrl = `https://${wsapi.id}.execute-api.${region.name}.amazonaws.com/${wsstage.name}`;
-
-    //  https://egbilew0jf.execute-api.us-west-2.amazonaws.com/$default/@connections
 
     const mgtdoc = new aws.dataAwsIamPolicyDocument.DataAwsIamPolicyDocument(this, "gwdoc", {
       statement: [
@@ -104,35 +124,6 @@ export class WebsocketBroadcast extends Construct {
       parameters: ["/common/*"],
       dynamo: wsconf.wsdb,
     });
-
-    // TODO TODO TODO
-    // const arn = aws_cdk_lib_1.Stack.of(this.api).formatArn({
-    //   service: "execute-api",
-    //   resource: this.api.apiId,
-    // });
-    // return aws_iam_1.Grant.addToPrincipal({
-    //   grantee: identity,
-    //   actions: ["execute-api:ManageConnections"],
-    //   resourceArns: [`${arn}/${this.stageName}/*/@connections/*`],
-    // });
-
-    // const policy = new aws.dataAwsIamPolicyDocument.DataAwsIamPolicyDocument(this, "policy", {
-    //   statement: [
-    //     {
-    //       effect: "Allow",
-    //       principals: [
-    //         {
-    //           type: "Service",
-    //           identifiers: [handler.lambda.arn],
-    //         },
-    //       ],
-    //       actions: ["execute-api:ManageConnections"],
-    //       resources: [wsapi.arn],
-    //     },
-    //   ],
-    // });
-
-    // wsstage.grantManagementApiAccess(handler.lambda);
 
     handler.eventQueue("websocket-broadcast", eventbus, {
       filterPolicy: JSON.stringify({

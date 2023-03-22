@@ -2,7 +2,7 @@ import { Construct } from "constructs";
 import * as aws from "@cdktf/provider-aws";
 import { PublicAuth, PublicFile, PublicTodo, PublicUser } from "./api-public";
 import { CoreOauthUser, CoreSendEmailQueue, CoreTodo, CoreUser } from "./api-core";
-import { WebsocketBroadcast, WebsocketTodo, WebsocketUser } from "./api-websocket";
+import { WebsocketBroadcast, WebsocketFile, WebsocketTodo, WebsocketUser } from "./api-websocket";
 import { WorkerFile, WorkerUser } from "./api-workers";
 import { TriggerS3 } from "./api-trigger";
 import * as rand from "@cdktf/provider-random";
@@ -47,6 +47,7 @@ export class Backend extends Construct {
       publicBucket: props.publicBucket,
     });
 
+    new WebsocketFile(this, "websocket-file", { eventbus });
     new WebsocketTodo(this, "websocket-todo", { eventbus });
     new WebsocketUser(this, "websocket-user", { eventbus });
     new WebsocketBroadcast(this, "websocket-broadcast", {
