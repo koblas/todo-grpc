@@ -26,10 +26,12 @@ func main() {
 	auth, authHelper := interceptors.NewAuthInterceptor(config.JwtSecret)
 
 	opts := []todo.Option{
-		todo.WithTodoService(corev1connect.NewTodoServiceClient(
-			awsutil.NewTwirpCallLambda(),
-			"lambda://core-todo",
-		)),
+		todo.WithTodoService(
+			corev1connect.NewTodoServiceClient(
+				awsutil.NewTwirpCallLambda(),
+				"lambda://core-todo",
+			),
+		),
 		todo.WithGetUserId(authHelper),
 	}
 

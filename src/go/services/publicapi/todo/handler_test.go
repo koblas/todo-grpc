@@ -30,11 +30,14 @@ func (p *userIdProvider) GetUserId(ctx context.Context) (string, error) {
 	return p.userId, nil
 }
 
-func buildServer(client corev1connect.TodoServiceClient, userId string) *todo.TodoServer {
+func buildServer(t *testing.T, userId string) (*todo.TodoServer, *corev1connect.TodoServiceClientMock) {
+	mc := minimock.NewController(t)
+	mocked := corev1connect.NewTodoServiceClientMock(mc)
+
 	return todo.NewTodoServer(
-		todo.WithTodoService(client),
+		todo.WithTodoService(mocked),
 		todo.WithGetUserId(&userIdProvider{userId}),
-	)
+	), mocked
 }
 
 type TodoAddSuite struct {
@@ -48,12 +51,9 @@ func TestTodo(t *testing.T) {
 }
 
 func (suite *TodoAddSuite) TestTodoAddSmoke() {
-	mc := minimock.NewController(suite.T())
-	client := corev1connect.NewTodoServiceClientMock(mc)
+	server, mock := buildServer(suite.T(), faker.UUIDHyphenated())
 
-	task := faker.UUIDHyphenated()
-
-	client.TodoAddMock.Set(func(ctx context.Context, msg *connect.Request[corev1.TodoAddRequest]) (*connect.Response[corev1.TodoAddResponse], error) {
+	mock.TodoAddMock.Set(func(ctx context.Context, msg *connect.Request[corev1.TodoAddRequest]) (*connect.Response[corev1.TodoAddResponse], error) {
 		return connect.NewResponse(&corev1.TodoAddResponse{
 			Todo: &corev1.TodoObject{
 				Task: msg.Msg.Task,
@@ -62,8 +62,7 @@ func (suite *TodoAddSuite) TestTodoAddSmoke() {
 		}), nil
 	})
 
-	server := buildServer(client, faker.UUIDHyphenated())
-
+	task := faker.UUIDHyphenated()
 	req := apiv1.TodoAddRequest{
 		Task: task + "test",
 	}
@@ -77,12 +76,8 @@ func (suite *TodoAddSuite) TestTodoAddSmoke() {
 }
 
 func (suite *TodoAddSuite) TestTodoAddNoUser() {
-	mc := minimock.NewController(suite.T())
-	client := corev1connect.NewTodoServiceClientMock(mc)
-
-	client.TodoAddMock.Return(nil, errors.New("unknown"))
-
-	server := buildServer(client, "")
+	server, mock := buildServer(suite.T(), "")
+	mock.TodoAddMock.Return(nil, errors.New("unknown"))
 
 	_, err := server.TodoAdd(context.TODO(), connect.NewRequest(
 		&apiv1.TodoAddRequest{
@@ -95,12 +90,8 @@ func (suite *TodoAddSuite) TestTodoAddNoUser() {
 }
 
 func (suite *TodoAddSuite) TestTodoAddError() {
-	mc := minimock.NewController(suite.T())
-	client := corev1connect.NewTodoServiceClientMock(mc)
-
-	client.TodoAddMock.Return(nil, errors.New("unknown"))
-
-	server := buildServer(client, faker.UUIDHyphenated())
+	server, mock := buildServer(suite.T(), faker.UUIDHyphenated())
+	mock.TodoAddMock.Return(nil, errors.New("unknown"))
 
 	_, err := server.TodoAdd(context.TODO(), connect.NewRequest(
 		&apiv1.TodoAddRequest{
