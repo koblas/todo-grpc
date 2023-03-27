@@ -29,18 +29,24 @@ func (c *mockSSMClient) GetParameters(ctx context.Context, input *ssm.GetParamet
 }
 
 func TestBaseCase(t *testing.T) {
-	var s struct {
-		S1      string  `ssm:"/strings/s1"`
-		S2      string  `ssm:"/strings/s2" default:"string2"`
-		I1      int     `ssm:"/int/i1"`
-		I2      int     `ssm:"/int/i2" default:"42"`
-		B1      bool    `ssm:"/bool/b1"`
-		B2      bool    `ssm:"/bool/b2" default:"false"`
-		F321    float32 `ssm:"/float32/f321"`
-		F322    float32 `ssm:"/float32/f322" default:"42.42"`
-		F641    float64 `ssm:"/float64/f641"`
-		F642    float64 `ssm:"/float64/f642" default:"42.42"`
+	s := struct {
+		S1      string  `ssm:"strings/s1"`
+		S2      string  `ssm:"strings/s2"`
+		I1      int     `ssm:"int/i1"`
+		I2      int     `ssm:"int/i2" `
+		B1      bool    `ssm:"bool/b1"`
+		B2      bool    `ssm:"bool/b2" `
+		F321    float32 `ssm:"float32/f321"`
+		F322    float32 `ssm:"float32/f322" `
+		F641    float64 `ssm:"float64/f641"`
+		F642    float64 `ssm:"float64/f642" `
 		Invalid string
+	}{
+		S2:   "string2",
+		I2:   42,
+		B2:   false,
+		F322: 42.42,
+		F642: 42.42,
 	}
 
 	mc := &mockSSMClient{
@@ -71,7 +77,7 @@ func TestBaseCase(t *testing.T) {
 	}
 
 	err := confmgr.NewLoader(
-		ssmconfig.NewLoaderSsm(context.TODO(), "/base", ssmconfig.WithClient(mc)),
+		ssmconfig.NewLoaderSsm(context.TODO(), "/base/", ssmconfig.WithClient(mc)),
 	).Parse(context.TODO(), &s)
 
 	if err != nil {
@@ -92,6 +98,7 @@ func TestBaseCase(t *testing.T) {
 		"/base/float32/f322",
 		"/base/float64/f641",
 		"/base/float64/f642",
+		"/base/Invalid",
 	}
 
 	if !reflect.DeepEqual(names, expectedNames) {
@@ -127,36 +134,64 @@ func TestProvider_LoadSsmConfig(t *testing.T) {
 			name:       "invalid int",
 			configPath: "/base/",
 			c: &struct {
-				I1 int `ssm:"/int/i1" default:"notAnInt"`
+				I1 int `ssm:"strings/s1"`
 			}{},
-			client:    &mockSSMClient{},
+			client: &mockSSMClient{
+				output: &ssm.GetParametersOutput{
+					Parameters: []types.Parameter{{
+						Name:  aws.String("/base/strings/s1"),
+						Value: aws.String("foobar"),
+					}},
+				},
+			},
 			shouldErr: true,
 		},
 		{
 			name:       "invalid float32",
 			configPath: "/base/",
 			c: &struct {
-				F32 float32 `ssm:"/float32/f32" default:"notAFloat"`
+				F32 float32 `ssm:"strings/s1"`
 			}{},
-			client:    &mockSSMClient{},
+			client: &mockSSMClient{
+				output: &ssm.GetParametersOutput{
+					Parameters: []types.Parameter{{
+						Name:  aws.String("/base/strings/s1"),
+						Value: aws.String(""),
+					}},
+				},
+			},
 			shouldErr: true,
 		},
 		{
 			name:       "invalid float64",
 			configPath: "/base/",
 			c: &struct {
-				F32 float64 `ssm:"/float64/f64" default:"notAFloat"`
+				F32 float64 `ssm:"strings/s1"`
 			}{},
-			client:    &mockSSMClient{},
+			client: &mockSSMClient{
+				output: &ssm.GetParametersOutput{
+					Parameters: []types.Parameter{{
+						Name:  aws.String("/base/strings/s1"),
+						Value: aws.String(""),
+					}},
+				},
+			},
 			shouldErr: true,
 		},
 		{
 			name:       "invalid bool",
 			configPath: "/base/",
 			c: &struct {
-				B1 bool `ssm:"/bool/b1" default:"notABool"`
+				B1 bool `ssm:"strings/s1"`
 			}{},
-			client:    &mockSSMClient{},
+			client: &mockSSMClient{
+				output: &ssm.GetParametersOutput{
+					Parameters: []types.Parameter{{
+						Name:  aws.String("/base/strings/s1"),
+						Value: aws.String(""),
+					}},
+				},
+			},
 			shouldErr: true,
 		},
 		{
