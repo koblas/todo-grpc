@@ -12,17 +12,27 @@ import (
 	"go.uber.org/zap"
 )
 
+type Common struct {
+	JwtSecret       string `validate:"min=32"`
+	UserServiceAddr string
+}
+
+type Config struct {
+	Common Common
+	Oauth  ouser.OauthConfig
+}
+
 func main() {
 	mgr := manager.NewManager()
 	log := mgr.Logger()
 
-	config := ouser.Config{}
-	oauthConfig := ouser.OauthConfig{}
-	if err := confmgr.Parse(&config, aws.NewLoaderSsm(mgr.Context(), "/common/")); err != nil {
-		log.With(zap.Error(err)).Fatal("failed to load general configuration")
-	}
-	if err := confmgr.Parse(&oauthConfig, aws.NewLoaderSsm(mgr.Context(), "/oauth/")); err != nil {
-		log.With(zap.Error(err)).Fatal("failed to load oauth configuration")
+	config := Config{}
+	cloader := confmgr.NewLoader(
+		confmgr.NewLoaderEnvironment("", "_"),
+		aws.NewLoaderSsm(mgr.Context(), ""),
+	)
+	if err := cloader.Parse(mgr.Context(), &config); err != nil {
+		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
 	opts := []ouser.Option{
@@ -30,11 +40,11 @@ func main() {
 			awsutil.NewTwirpCallLambda(),
 			"lambda://core-user",
 		)),
-		ouser.WithSecretManager(oauthConfig),
+		ouser.WithSecretManager(config.Oauth),
 	}
 
 	_, api := corev1connect.NewAuthUserServiceHandler(
-		ouser.NewOauthUserServer(config, opts...),
+		ouser.NewOauthUserServer(config.Common.JwtSecret, opts...),
 		connect.WithInterceptors(interceptors.NewReqidInterceptor()),
 	)
 

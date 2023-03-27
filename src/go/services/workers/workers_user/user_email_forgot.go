@@ -44,7 +44,7 @@ func (cfg *userEmailForgot) SecurityForgotRequest(ctx context.Context, msgIn *co
 	}
 
 	params := corev1.PasswordRecoveryMessageRequest{
-		AppInfo: buildAppInfo(cfg.config),
+		AppInfo: buildAppInfo(cfg.config.UrlBase),
 		Recipient: &corev1.EmailUser{
 			UserId: msg.User.Id,
 			Name:   msg.User.Name,

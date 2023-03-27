@@ -18,8 +18,7 @@ import (
 )
 
 type Config struct {
-	// Used by lambda
-	EventArn string `environment:"BUS_ENTITY_ARN" ssm:"bus_entity_arn"`
+	BusEntityArn string `validate:"required"`
 }
 
 type Handler struct {
@@ -64,13 +63,13 @@ func main() {
 
 	var config Config
 
-	if err := confmgr.Parse(&config, aws.NewLoaderSsm(mgr.Context(), "/common/")); err != nil {
+	if err := confmgr.Parse(&config, confmgr.NewLoaderEnvironment("", "_"), aws.NewLoaderSsm(mgr.Context(), "/common/")); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
 	producer := corev1connect.NewFileEventbusServiceClient(
 		awsutil.NewTwirpCallLambda(),
-		config.EventArn,
+		config.BusEntityArn,
 	)
 
 	mgr.Start(&Handler{producer})

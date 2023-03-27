@@ -12,12 +12,18 @@ import (
 	"go.uber.org/zap"
 )
 
+type Config struct {
+	NatsAddr  string
+	SendEmail string
+	UrlBase   string
+}
+
 func main() {
 	mgr := manager.NewManager(manager.WithGrpcHealth("15050"))
 	log := mgr.Logger()
 
-	config := workers_user.Config{}
-	if err := confmgr.Parse(&config, confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
+	config := Config{}
+	if err := confmgr.Parse(&config, confmgr.NewLoaderEnvironment("", "_"), confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
@@ -30,8 +36,9 @@ func main() {
 				"topic://"+config.SendEmail,
 			),
 		),
+		workers_user.WithUrlBase(config.UrlBase),
 	}
-	s := workers_user.GetHandler(config, opts...)
+	s := workers_user.GetHandler(opts...)
 
 	mgr.Start(nats.TopicConsumer(
 		mgr.Context(),

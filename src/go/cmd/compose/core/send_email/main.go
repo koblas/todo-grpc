@@ -12,25 +12,36 @@ import (
 	"go.uber.org/zap"
 )
 
+type Config struct {
+	NatsAddr string
+	Smtp     struct {
+		Addr     string
+		Username string
+		Password string
+	}
+}
+
 func main() {
 	mgr := manager.NewManager(manager.WithGrpcHealth("15050"))
 	log := mgr.Logger()
 
-	config := send_email.Config{}
-	if err := confmgr.Parse(&config, confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
-		log.With(zap.Error(err)).Fatal("failed to load configuration")
-	}
-	smtpConfig := send_email.SmtpConfig{}
-	if err := confmgr.Parse(&smtpConfig, confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
+	config := Config{}
+	if err := confmgr.Parse(&config, confmgr.NewLoaderEnvironment("", "_"), confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
 	producer := corev1connect.NewSendEmailEventsServiceClient(
 		natsutil.NewNatsClient(config.NatsAddr),
-		"topic://"+config.EmailSentTopic,
+		"topic://",
 	)
 
-	s := send_email.NewSendEmailServer(producer, send_email.NewSmtpService(smtpConfig))
+	s := send_email.NewSendEmailServer(producer,
+		send_email.NewSmtpService(
+			config.Smtp.Addr,
+			config.Smtp.Username,
+			config.Smtp.Password,
+		),
+	)
 
 	nats := natsutil.NewNatsClient(config.NatsAddr)
 	mgr.Start(nats.TopicConsumer(

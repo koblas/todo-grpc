@@ -38,7 +38,7 @@ func WithGetUserId(helper interceptors.UserIdFromContext) Option {
 	}
 }
 
-func NewUserServer(config Config, opts ...Option) *UserServer {
+func NewUserServer(opts ...Option) *UserServer {
 	svr := UserServer{}
 
 	for _, opt := range opts {

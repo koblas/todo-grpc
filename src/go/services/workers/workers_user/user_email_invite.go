@@ -44,7 +44,7 @@ func (cfg *userEmailInvite) SecurityInviteToken(ctx context.Context, msgIn *conn
 	}
 
 	params := corev1.InviteUserMessageRequest{
-		AppInfo: buildAppInfo(cfg.config),
+		AppInfo: buildAppInfo(cfg.config.UrlBase),
 		Sender: &corev1.EmailUser{
 			UserId: msg.Sender.Id,
 			Name:   msg.Sender.Name,

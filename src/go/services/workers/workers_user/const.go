@@ -8,9 +8,9 @@ const APP_NAME = "Test App"
 const APP_SENDER_EMAIL = "david@koblas.com"
 const APP_SENDER_NAME = "David Koblas"
 
-func buildAppInfo(config Config) *corev1.EmailAppInfo {
+func buildAppInfo(urlBase string) *corev1.EmailAppInfo {
 	return &corev1.EmailAppInfo{
-		UrlBase:     config.UrlBase,
+		UrlBase:     urlBase,
 		AppName:     APP_NAME,
 		SenderName:  APP_SENDER_NAME,
 		SenderEmail: APP_SENDER_EMAIL,

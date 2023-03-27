@@ -10,18 +10,22 @@ import (
 	"go.uber.org/zap"
 )
 
+type Config struct {
+	BusEntityArn string `validate:"required"`
+}
+
 func main() {
 	mgr := manager.NewManager()
 	log := mgr.Logger()
 
-	conf := file.Config{}
-	if err := confmgr.Parse(&conf, aws.NewLoaderSsm(mgr.Context(), "/common/")); err != nil {
+	conf := Config{}
+	if err := confmgr.Parse(&conf, confmgr.NewLoaderEnvironment("", "_"), aws.NewLoaderSsm(mgr.Context(), "/common/")); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
 	producer := corev1connect.NewBroadcastEventbusServiceClient(
 		awsutil.NewTwirpCallLambda(),
-		conf.EventArn,
+		conf.BusEntityArn,
 	)
 
 	h := file.NewFileChangeServer(file.WithProducer(producer))

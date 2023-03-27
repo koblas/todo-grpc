@@ -52,7 +52,7 @@ func (p *Provider) Loader(ctx context.Context, conf interface{}, specs []*confmg
 	for _, spec := range specs {
 		tagValue, ok := spec.Field.Tag.Lookup("ssm")
 		if !ok {
-			continue
+			tagValue = spec.Field.Name
 		}
 
 		qualified := p.Path + tagValue

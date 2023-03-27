@@ -12,26 +12,41 @@ import (
 	"go.uber.org/zap"
 )
 
+type Config struct {
+	BusEntityArn string `ssm:"/common/bus_entity_arn" validate:"required"`
+	Smtp         struct {
+		Addr     string
+		Username string
+		Password string
+	}
+}
+
 func main() {
 	mgr := manager.NewManager()
 	log := mgr.Logger()
 
-	config := send_email.Config{}
-	if err := confmgr.Parse(&config, aws.NewLoaderSsm(mgr.Context(), "/common/")); err != nil {
-		log.With(zap.Error(err)).Fatal("failed to load configuration")
-	}
-	smtpConfig := send_email.SmtpConfig{}
-	if err := confmgr.Parse(&smtpConfig, aws.NewLoaderSsm(mgr.Context(), "/smtp/")); err != nil {
+	config := Config{}
+	cloader := confmgr.NewLoader(
+		confmgr.NewLoaderEnvironment("", "_"),
+		aws.NewLoaderSsm(mgr.Context(), ""),
+	)
+	if err := cloader.Parse(mgr.Context(), &config); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
 	producer := corev1connect.NewSendEmailEventsServiceClient(
 		awsutil.NewTwirpCallLambda(),
-		config.EventArn,
+		config.BusEntityArn,
 		connect.WithInterceptors(interceptors.NewReqidInterceptor()),
 	)
 
-	s := send_email.NewSendEmailServer(producer, send_email.NewSmtpService(smtpConfig))
+	s := send_email.NewSendEmailServer(producer,
+		send_email.NewSmtpService(
+			config.Smtp.Addr,
+			config.Smtp.Username,
+			config.Smtp.Password,
+		),
+	)
 
 	mgr.Start(awsutil.HandleSqsLambda(s))
 }

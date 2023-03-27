@@ -10,12 +10,17 @@ import (
 	"go.uber.org/zap"
 )
 
+type Config struct {
+	WsEndpoint string
+	ConnDb     string
+}
+
 func main() {
 	mgr := manager.NewManager()
 	log := mgr.Logger()
 
-	conf := broadcast.Config{}
-	if err := confmgr.Parse(&conf, aws.NewLoaderSsm(mgr.Context(), "/common/")); err != nil {
+	conf := Config{}
+	if err := confmgr.Parse(&conf, confmgr.NewLoaderEnvironment("", "_"), aws.NewLoaderSsm(mgr.Context(), "/common/")); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 

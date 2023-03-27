@@ -1,4 +1,6 @@
 {
+  "todo-events-topic": "todo-events",
+
   "user-events": "user-events",
   "todo-events": "todo-events",
   "file-events": "file-events",

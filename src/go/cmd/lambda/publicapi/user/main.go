@@ -14,12 +14,16 @@ import (
 	"go.uber.org/zap"
 )
 
+type Config struct {
+	JwtSecret string `validate:"min=32"`
+}
+
 func main() {
 	mgr := manager.NewManager()
 	log := mgr.Logger()
 
-	var config user.Config
-	if err := confmgr.Parse(&config, aws.NewLoaderSsm(mgr.Context(), "/common/")); err != nil {
+	config := Config{}
+	if err := confmgr.Parse(&config, confmgr.NewLoaderEnvironment("", "_"), aws.NewLoaderSsm(mgr.Context(), "/common/")); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
@@ -34,7 +38,7 @@ func main() {
 	}
 
 	_, api := apiv1connect.NewUserServiceHandler(
-		user.NewUserServer(config, opts...),
+		user.NewUserServer(opts...),
 		connect.WithCodec(bufcutil.NewJsonCodec()),
 		connect.WithInterceptors(interceptors.NewReqidInterceptor(), auth),
 	)

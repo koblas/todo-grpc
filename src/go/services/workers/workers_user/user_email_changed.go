@@ -40,7 +40,7 @@ func (cfg *userEmailChanged) SecurityPasswordChange(ctx context.Context, msg *co
 	user := msg.Msg.User
 
 	params := corev1.PasswordChangeMessageRequest{
-		AppInfo: buildAppInfo(cfg.config),
+		AppInfo: buildAppInfo(cfg.config.UrlBase),
 		Recipient: &corev1.EmailUser{
 			UserId: user.Id,
 			Name:   user.Name,

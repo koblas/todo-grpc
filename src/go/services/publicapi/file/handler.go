@@ -37,15 +37,22 @@ func WithGetUserId(helper interceptors.UserIdFromContext) Option {
 	}
 }
 
-func NewFileServer(config Config, opts ...Option) *FileServer {
-	svr := FileServer{
-		uploadBucket: config.UploadBucket,
+func WithUploadBucket(uploadBucket string) Option {
+	return func(svr *FileServer) {
+		svr.uploadBucket = uploadBucket
 	}
+}
+
+func NewFileServer(opts ...Option) *FileServer {
+	svr := FileServer{}
 
 	for _, opt := range opts {
 		opt(&svr)
 	}
 
+	if svr.uploadBucket == "" {
+		panic("no upload bucket provided")
+	}
 	if svr.userHelper == nil {
 		panic("no user helper provided")
 	}

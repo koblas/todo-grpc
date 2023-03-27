@@ -12,17 +12,23 @@ import (
 	"go.uber.org/zap"
 )
 
+type Config struct {
+	BusEntityArn  string `validate:"required"`
+	PublicBucket  string `validate:"required"`
+	PrivateBucket string `validate:"required"`
+}
+
 func main() {
 	mgr := manager.NewManager()
 	defer mgr.Shutdown()
 
-	var config workers_file.Config
-	var opts []workers_file.Option
+	config := Config{}
 
+	var opts []workers_file.Option
 	{
 		ctx, span := otel.Tracer("test").Start(mgr.Context(), "initialize")
 		defer span.End()
-		if err := confmgr.ParseWithContext(ctx, &config, aws.NewLoaderSsm(ctx, "/common/")); err != nil {
+		if err := confmgr.ParseWithContext(ctx, &config, confmgr.NewLoaderEnvironment("", "_"), aws.NewLoaderSsm(ctx, "/common/")); err != nil {
 			mgr.Logger().With(zap.Error(err)).Fatal("failed to load configuration")
 		}
 
@@ -30,7 +36,7 @@ func main() {
 		opts = []workers_file.Option{
 			workers_file.WithProducer(corev1connect.NewFileEventbusServiceClient(
 				client,
-				config.EventArn,
+				config.BusEntityArn,
 			)),
 			// workers_file.WithFileService(corepbv1.NewFileServiceJSONClient("lambda://core-file", client)),
 			workers_file.WithFileService(filestore.NewAwsProvider()),
@@ -38,8 +44,9 @@ func main() {
 				client,
 				"lambda://core-user",
 			)),
+			workers_file.WithPublicBucket(config.PublicBucket),
 		}
 	}
 
-	mgr.Start(awsutil.HandleSqsLambda(workers_file.BuildHandlers(config, opts...)))
+	mgr.Start(awsutil.HandleSqsLambda(workers_file.BuildHandlers(opts...)))
 }

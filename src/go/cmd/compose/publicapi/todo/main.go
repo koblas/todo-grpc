@@ -10,17 +10,26 @@ import (
 	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/interceptors"
+
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/services/publicapi/todo"
+
 	"go.uber.org/zap"
 )
+
+type Config struct {
+	TodoServiceAddr string
+	JwtSecret       string `validate:"min=32"`
+}
 
 func main() {
 	mgr := manager.NewManager(manager.WithGrpcHealth("15050"))
 	log := mgr.Logger()
 
-	var config todo.Config
-	if err := confmgr.Parse(&config, confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
+	config := Config{
+		TodoServiceAddr: ":13005",
+	}
+	if err := confmgr.Parse(&config, confmgr.NewLoaderEnvironment("", "_"), confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 

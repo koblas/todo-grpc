@@ -15,12 +15,19 @@ import (
 	"go.uber.org/zap"
 )
 
+type Config struct {
+	RedisAddr            string
+	JwtSecret            string `validate:"min=32"`
+	UserServiceAddr      string
+	OauthUserServiceAddr string
+}
+
 func main() {
 	mgr := manager.NewManager(manager.WithGrpcHealth("15050"))
 	log := mgr.Logger()
 
-	config := auth.Config{}
-	if err := confmgr.Parse(&config, confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
+	config := Config{}
+	if err := confmgr.Parse(&config, confmgr.NewLoaderEnvironment("", "_"), confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
@@ -45,7 +52,7 @@ func main() {
 	}
 
 	_, api := apiv1connect.NewAuthenticationServiceHandler(
-		auth.NewAuthenticationServer(config, opts...),
+		auth.NewAuthenticationServer(config.JwtSecret, opts...),
 		connect.WithCodec(bufcutil.NewJsonCodec()),
 	)
 

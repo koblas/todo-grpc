@@ -14,12 +14,18 @@ import (
 	"go.uber.org/zap"
 )
 
+type Config struct {
+	NatsAddr                   string
+	RedisAddr                  string
+	WebsocketConnectionMessage string
+}
+
 func main() {
 	mgr := manager.NewManager(manager.WithGrpcHealth("15050"))
 	log := mgr.Logger()
 
-	config := broadcast.Config{}
-	if err := confmgr.Parse(&config, confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
+	config := Config{}
+	if err := confmgr.Parse(&config, confmgr.NewLoaderEnvironment("", "_"), confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 

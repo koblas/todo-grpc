@@ -14,12 +14,19 @@ import (
 	"go.uber.org/zap"
 )
 
+type Config struct {
+	TodoServiceAddr string
+	JwtSecret       string `validate:"min=32"`
+}
+
 func main() {
 	mgr := manager.NewManager()
 	log := mgr.Logger()
 
-	var config todo.Config
-	if err := confmgr.Parse(&config, aws.NewLoaderSsm(mgr.Context(), "/common/")); err != nil {
+	config := Config{
+		TodoServiceAddr: ":13005",
+	}
+	if err := confmgr.Parse(&config, confmgr.NewLoaderEnvironment("", "_"), aws.NewLoaderSsm(mgr.Context(), "/common/")); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 

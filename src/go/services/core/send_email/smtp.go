@@ -18,8 +18,8 @@ type smtpService struct {
 }
 
 // NewService construct a default email service
-func NewSmtpService(config SmtpConfig) Sender {
-	parts := strings.Split(config.SmtpAddr, ":")
+func NewSmtpService(addr, user, pass string) Sender {
+	parts := strings.Split(addr, ":")
 	host := parts[0]
 	port := 587
 	if len(parts) == 2 {
@@ -36,8 +36,8 @@ func NewSmtpService(config SmtpConfig) Sender {
 	return &smtpService{
 		host:     host,
 		port:     port,
-		username: config.SmtpUser,
-		password: config.SmtpPass,
+		username: user,
+		password: pass,
 	}
 }
 

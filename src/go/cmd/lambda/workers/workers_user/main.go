@@ -10,11 +10,15 @@ import (
 	"go.uber.org/zap"
 )
 
+type Config struct {
+	UrlBase string
+}
+
 func main() {
 	mgr := manager.NewManager()
 
-	config := workers.Config{}
-	if err := confmgr.Parse(&config, aws.NewLoaderSsm(mgr.Context(), "/common/")); err != nil {
+	config := Config{}
+	if err := confmgr.Parse(&config, confmgr.NewLoaderEnvironment("", "_"), aws.NewLoaderSsm(mgr.Context(), "/common/")); err != nil {
 		mgr.Logger().With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
@@ -25,7 +29,8 @@ func main() {
 				"sqs://send-email",
 			),
 		),
+		workers.WithUrlBase(config.UrlBase),
 	}
 
-	mgr.Start(awsutil.HandleSqsLambda(workers.GetHandler(config, opts...)))
+	mgr.Start(awsutil.HandleSqsLambda(workers.GetHandler(opts...)))
 }

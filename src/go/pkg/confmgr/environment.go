@@ -1,28 +1,45 @@
-// Package ssmconfig is a utility for loading configuration values from AWS SSM (Parameter
-// Store) directly into a struct.
 package confmgr
 
 import (
 	"context"
 	"os"
+	"strings"
+
+	"github.com/koblas/grpc-todo/pkg/util"
 )
 
-type envLoader struct{}
-
-func NewLoaderEnvironment() envLoader {
-	return envLoader{}
+type envLoader struct {
+	prefix    string
+	seperator string
 }
 
-func (envLoader) Loader(_ context.Context, conf interface{}, specs []*ConfigSpec) ([]*ConfigSpec, error) {
+func NewLoaderEnvironment(prefix string, seperator string) envLoader {
+	return envLoader{prefix, seperator}
+}
+
+func (e envLoader) getName(spec *ConfigSpec) []string {
+	name, ok := spec.Field.Tag.Lookup("environment")
+	if !ok {
+		name = strings.ToUpper(util.ToSnake(spec.Field.Name))
+	}
+	if spec.Parent == nil {
+		return []string{name}
+	}
+
+	return append(e.getName(spec.Parent), name)
+}
+
+func (e envLoader) Loader(_ context.Context, conf interface{}, specs []*ConfigSpec) ([]*ConfigSpec, error) {
 	reducedSpec := []*ConfigSpec{}
 
 	for _, spec := range specs {
-		tagValue, ok := spec.Field.Tag.Lookup("environment")
-		if !ok {
-			reducedSpec = append(reducedSpec, spec)
-			continue
+		names := e.getName(spec)
+		if len(e.prefix) != 0 {
+			names = append([]string{e.prefix}, names...)
 		}
-		envValue, ok := os.LookupEnv(tagValue)
+		name := strings.Join(names, e.seperator)
+
+		envValue, ok := os.LookupEnv(name)
 		if !ok {
 			reducedSpec = append(reducedSpec, spec)
 			continue

@@ -39,8 +39,8 @@ func WithSecretManager(client oauth_provider.SecretManager) Option {
 	}
 }
 
-func NewOauthUserServer(config Config, opts ...Option) *OauthUserServer {
-	maker, err := tokenmanager.NewJWTMaker(config.JwtSecret)
+func NewOauthUserServer(jwtSecret string, opts ...Option) *OauthUserServer {
+	maker, err := tokenmanager.NewJWTMaker(jwtSecret)
 
 	if err != nil {
 		log.Fatal(err)

@@ -1,16 +1,10 @@
 package user
 
-type Config struct {
-	// EventArn        string `environment:"BUS_ENTITY_ARN" ssm:"bus_entity_arn"`
-	JwtSecret       string `ssm:"jwt_secret" environment:"JWT_SECRET" validate:"min=32"`
-	UserServiceAddr string `environment:"USER_SERVICE_ADDR" json:"core-user-addr" default:":13001"`
-}
-
 type OauthConfig struct {
-	GoogleClientId string `ssm:"google_client_id" environment:"GOOGLE_CLIENT_ID"`
-	GoogleSecret   string `ssm:"google_secret" environment:"GOOGLE_SECRET"`
-	GitHubClientId string `ssm:"github_client_id" environment:"GITHUB_CLIENT_ID"`
-	GitHubSecret   string `ssm:"github_secret" environment:"GITHUB_SECRET"`
+	GoogleClientId string
+	GoogleSecret   string
+	GitHubClientId string
+	GitHubSecret   string
 }
 
 func (conf OauthConfig) GetSecret(provider string) (string, string, error) {

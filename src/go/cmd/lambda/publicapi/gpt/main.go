@@ -13,12 +13,17 @@ import (
 	"go.uber.org/zap"
 )
 
+type Config struct {
+	JwtSecret string `validate:"min=32"`
+	GptApiKey string `validate:"min=2"`
+}
+
 func main() {
 	mgr := manager.NewManager()
 	log := mgr.Logger()
 
-	var config gpt.Config
-	if err := confmgr.ParseWithContext(mgr.Context(), &config, aws.NewLoaderSsm(mgr.Context(), "/common/")); err != nil {
+	config := Config{}
+	if err := confmgr.ParseWithContext(mgr.Context(), &config, confmgr.NewLoaderEnvironment("", "_"), aws.NewLoaderSsm(mgr.Context(), "/common/")); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
@@ -26,10 +31,11 @@ func main() {
 
 	opts := []gpt.Option{
 		gpt.WithGetUserId(authHelper),
+		gpt.WithGpiApiKey(config.GptApiKey),
 	}
 
 	_, api := apiv1connect.NewGptServiceHandler(
-		gpt.NewGptServer(config, opts...),
+		gpt.NewGptServer(opts...),
 		connect.WithCodec(bufcutil.NewJsonCodec()),
 		connect.WithInterceptors(interceptors.NewReqidInterceptor(), auth),
 	)

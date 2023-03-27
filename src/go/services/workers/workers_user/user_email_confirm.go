@@ -50,7 +50,7 @@ func (cfg *userEmailConfirm) SecurityRegisterToken(ctx context.Context, msgIn *c
 	log = log.With("email", msg.User.Email)
 
 	params := corev1.RegisterMessageRequest{
-		AppInfo: buildAppInfo(cfg.config),
+		AppInfo: buildAppInfo(cfg.config.UrlBase),
 		Recipient: &corev1.EmailUser{
 			UserId: msg.User.Id,
 			Name:   msg.User.Name,

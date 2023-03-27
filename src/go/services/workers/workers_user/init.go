@@ -17,7 +17,9 @@ type Worker struct {
 // Some generic handling of definition
 
 type WorkerConfig struct {
-	config    Config
+	config struct {
+		UrlBase string
+	}
 	sendEmail corev1connect.SendEmailServiceClient
 }
 
@@ -29,10 +31,14 @@ func WithSendEmail(sender corev1connect.SendEmailServiceClient) Option {
 	}
 }
 
-func buildServiceConfig(config Config, opts ...Option) WorkerConfig {
-	cfg := WorkerConfig{
-		config: config,
+func WithUrlBase(base string) Option {
+	return func(cfg *WorkerConfig) {
+		cfg.config.UrlBase = base
 	}
+}
+
+func buildServiceConfig(opts ...Option) WorkerConfig {
+	cfg := WorkerConfig{}
 
 	for _, opt := range opts {
 		opt(&cfg)
@@ -47,10 +53,10 @@ var workers = []Worker{}
 // 	group string
 // }
 
-func GetHandler(config Config, opts ...Option) map[string]http.Handler {
+func GetHandler(opts ...Option) map[string]http.Handler {
 	handlers := map[string]http.Handler{}
 
-	cfg := buildServiceConfig(config, opts...)
+	cfg := buildServiceConfig(opts...)
 
 	for _, worker := range workers {
 		handlers[worker.GroupName] = worker.Build(cfg)

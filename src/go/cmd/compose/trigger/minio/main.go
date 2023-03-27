@@ -25,9 +25,9 @@ const EVENT_GROUP = "trigger-minio"
 const MINIO_EVENT_BUS = "minioevents"
 
 type Config struct {
-	NatsAddr      string `environment:"NATS_ADDR"`
-	MinioEndpoint string `environment:"MINIO_ENDPOINT" default:"s3.amazonaws.com"`
-	UploadBucket  string `environment:"UPLOAD_BUCKET"`
+	NatsAddr      string
+	MinioEndpoint string
+	UploadBucket  string
 }
 
 type handler struct {
@@ -125,9 +125,11 @@ func main() {
 	mgr := manager.NewManager(manager.WithGrpcHealth("15050"))
 	log := mgr.Logger()
 
-	var config Config
+	config := Config{
+		MinioEndpoint: "s3.amazonaws.com",
+	}
 
-	if err := confmgr.Parse(&config); err != nil {
+	if err := confmgr.Parse(&config, confmgr.NewLoaderEnvironment("", "_")); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 

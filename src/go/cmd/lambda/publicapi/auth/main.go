@@ -12,12 +12,19 @@ import (
 	"go.uber.org/zap"
 )
 
+type Config struct {
+	RedisAddr string
+	JwtSecret string `validate:"min=32"`
+	// UserServiceAddr      string
+	// OauthUserServiceAddr string
+}
+
 func main() {
 	mgr := manager.NewManager()
 	log := mgr.Logger()
 
-	config := auth.Config{}
-	if err := confmgr.Parse(&config, aws.NewLoaderSsm(mgr.Context(), "/common/")); err != nil {
+	config := Config{}
+	if err := confmgr.Parse(&config, confmgr.NewLoaderEnvironment("", "_"), aws.NewLoaderSsm(mgr.Context(), "/common/")); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
@@ -40,7 +47,7 @@ func main() {
 		opts = append(opts, auth.WithAttemptService(auth.NewAttemptCounter("publicapi:authentication", rdb)))
 	}
 
-	_, api := apiv1connect.NewAuthenticationServiceHandler(auth.NewAuthenticationServer(config, opts...))
+	_, api := apiv1connect.NewAuthenticationServiceHandler(auth.NewAuthenticationServer(config.JwtSecret, opts...))
 
 	mgr.Start(awsutil.HandleApiLambda(api))
 }

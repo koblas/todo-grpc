@@ -12,18 +12,26 @@ import (
 	"go.uber.org/zap"
 )
 
+type Config struct {
+	BusEntityArn string `environment:"BUS_ENTITY_ARN" ssm:"bus_entity_arn"`
+}
+
 func main() {
 	mgr := manager.NewManager()
 	log := mgr.Logger()
 
-	var config user.Config
-	if err := confmgr.Parse(&config, aws.NewLoaderSsm(mgr.Context(), "/common/")); err != nil {
+	config := Config{}
+	cloader := confmgr.NewLoader(
+		confmgr.NewLoaderEnvironment("", "_"),
+		aws.NewLoaderSsm(mgr.Context(), "/common/"),
+	)
+	if err := cloader.Parse(mgr.Context(), &config); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
 	producer := corev1connect.NewUserEventbusServiceClient(
 		awsutil.NewTwirpCallLambda(),
-		config.EventArn,
+		config.BusEntityArn,
 	)
 
 	opts := []user.Option{

@@ -14,17 +14,22 @@ import (
 	"go.uber.org/zap"
 )
 
+type Config struct {
+	JwtSecret string `validate:"min=32"`
+	ConnDb    string `validate:"required"`
+}
+
 func main() {
 	mgr := manager.NewManager()
 	log := mgr.Logger()
 
-	config := websocket.Config{}
-	if err := confmgr.Parse(&config, aws.NewLoaderSsm(mgr.Context(), "/common/")); err != nil {
+	config := Config{}
+	if err := confmgr.Parse(&config, confmgr.NewLoaderEnvironment("", "_"), aws.NewLoaderSsm(mgr.Context(), "/common/")); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
 	handler := websocket.NewWebsocketHandler(
-		config,
+		config.JwtSecret,
 		websocket.WithStore(
 			store.NewWsConnectionDynamoStore(
 				store.WithDynamoTable(config.ConnDb),
@@ -33,14 +38,14 @@ func main() {
 	)
 
 	lambdaHandler := func(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
-		log := logger.FromContext(ctx)
-
-		log = log.With("requestId", req.RequestContext.RequestID).
-			With("connectionId", req.RequestContext.ConnectionID).
-			With("routeKey", req.RequestContext.RouteKey)
+		log := logger.FromContext(ctx).With(
+			zap.String("requestId", req.RequestContext.RequestID),
+			zap.String("connectionId", req.RequestContext.ConnectionID),
+			zap.String("routeKey", req.RequestContext.RouteKey),
+		)
 
 		return handler.HandleRequest(logger.ToContext(ctx, log), req)
 	}
 
-	lambda.StartWithContext(mgr.Context(), lambdaHandler)
+	lambda.StartWithOptions(lambdaHandler, lambda.WithContext(mgr.Context()))
 }

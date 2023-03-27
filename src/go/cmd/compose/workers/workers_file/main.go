@@ -15,11 +15,22 @@ import (
 	"go.uber.org/zap"
 )
 
+type Config struct {
+	NatsAddr        string
+	RedisAddr       string
+	MinioEndpoint   string
+	UserServiceAddr string
+	PublicBucket    string `validate:"required"`
+}
+
 func main() {
 	mgr := manager.NewManager(manager.WithGrpcHealth("15050"))
 	defer mgr.Shutdown()
 
-	var config workers_file.Config
+	config := Config{
+		MinioEndpoint: "s3.amazonaws.com",
+	}
+
 	var opts []workers_file.Option
 	var nats *natsutil.Client
 
@@ -28,7 +39,7 @@ func main() {
 		defer span.End()
 		log := mgr.Logger()
 
-		if err := confmgr.ParseWithContext(ctx, &config, confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
+		if err := confmgr.ParseWithContext(ctx, &config, confmgr.NewLoaderEnvironment("", "_"), confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
 			log.With(zap.Error(err)).Fatal("failed to load configuration")
 		}
 
@@ -50,11 +61,12 @@ func main() {
 					"http://"+config.UserServiceAddr,
 				),
 			),
+			workers_file.WithPublicBucket(config.PublicBucket),
 		}
 
 	}
 
 	mgr.Start(nats.TopicConsumer(mgr.Context(),
 		natsutil.ConnectToTopic(corev1connect.FileEventbusServiceName),
-		workers_file.BuildHandlers(config, opts...)))
+		workers_file.BuildHandlers(opts...)))
 }

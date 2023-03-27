@@ -15,12 +15,20 @@ import (
 	"go.uber.org/zap"
 )
 
+type Config struct {
+	UploadBucket  string
+	JwtSecret     string `validate:"min=32"`
+	MinioEndpoint string
+}
+
 func main() {
 	mgr := manager.NewManager(manager.WithGrpcHealth("15050"))
 	log := mgr.Logger()
 
-	var config file.Config
-	if err := confmgr.Parse(&config, confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
+	config := Config{
+		MinioEndpoint: "s3.amazonaws.com",
+	}
+	if err := confmgr.Parse(&config, confmgr.NewLoaderEnvironment("", "_"), confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
@@ -31,10 +39,11 @@ func main() {
 			filestore.NewMinioProvider(config.MinioEndpoint),
 		),
 		file.WithGetUserId(authHelper),
+		file.WithUploadBucket(config.UploadBucket),
 	}
 
 	_, api := apiv1connect.NewFileServiceHandler(
-		file.NewFileServer(config, opts...),
+		file.NewFileServer(opts...),
 		connect.WithCodec(bufcutil.NewJsonCodec()),
 		connect.WithInterceptors(interceptors.NewReqidInterceptor(), auth),
 	)

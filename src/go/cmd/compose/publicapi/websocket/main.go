@@ -20,6 +20,12 @@ import (
 	"go.uber.org/zap"
 )
 
+type Config struct {
+	JwtSecret                  string `validate:"min=32"`
+	RedisAddr                  string `default:"redis:6379"`
+	WebsocketConnectionMessage string
+}
+
 var upgrader = wsocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
@@ -132,8 +138,8 @@ func main() {
 	mgr := manager.NewManager(manager.WithGrpcHealth("15050"))
 	log := mgr.Logger()
 
-	config := websocket.Config{}
-	if err := confmgr.Parse(&config, confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
+	config := Config{}
+	if err := confmgr.Parse(&config, confmgr.NewLoaderEnvironment("", "_"), confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
@@ -141,7 +147,7 @@ func main() {
 
 	handler := socketHandler{
 		api: websocket.NewWebsocketHandler(
-			config,
+			config.JwtSecret,
 			websocket.WithStore(wstore.NewRedisStore(config.RedisAddr)),
 		),
 		consumer:    consumer,

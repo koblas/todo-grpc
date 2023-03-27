@@ -17,6 +17,7 @@ import (
 type GptServer struct {
 	userHelper interceptors.UserIdFromContext
 	client     gpt3.Client
+	gptApiKey  string
 }
 
 type Option func(*GptServer)
@@ -27,10 +28,14 @@ func WithGetUserId(helper interceptors.UserIdFromContext) Option {
 	}
 }
 
-func NewGptServer(config Config, opts ...Option) *GptServer {
-	svr := GptServer{
-		client: gpt3.NewClient(config.GptApiKey),
+func WithGpiApiKey(apiKey string) Option {
+	return func(svr *GptServer) {
+		svr.gptApiKey = apiKey
 	}
+}
+
+func NewGptServer(opts ...Option) *GptServer {
+	svr := GptServer{}
 
 	for _, opt := range opts {
 		opt(&svr)
@@ -39,6 +44,11 @@ func NewGptServer(config Config, opts ...Option) *GptServer {
 	if svr.userHelper == nil {
 		panic("no user helper provided")
 	}
+	if svr.gptApiKey == "" {
+		panic("no GPT api key provided")
+	}
+
+	svr.client = gpt3.NewClient(svr.gptApiKey)
 
 	return &svr
 }

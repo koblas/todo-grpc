@@ -49,12 +49,17 @@ func dynamoClient(endpoint string) *dynamodb.Client {
 	return dynamodb.NewFromConfig(cfg)
 }
 
+type Config struct {
+	NatsAddr        string
+	DynamoStoreAddr *string `environment:"DYNAMO_STORE" json:"dynamo-store"`
+}
+
 func main() {
 	mgr := manager.NewManager(manager.WithGrpcHealth("15050"))
 	log := mgr.Logger()
 
-	var config user.Config
-	if err := confmgr.Parse(&config, confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
+	config := Config{}
+	if err := confmgr.Parse(&config, confmgr.NewLoaderEnvironment("", "_"), confmgr.NewJsonReader(strings.NewReader(shared_config.CONFIG))); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
@@ -67,18 +72,18 @@ func main() {
 		user.WithProducer(producer),
 	}
 
-	if config.DynamoStore == "" || config.DynamoStore == "false" {
+	if config.DynamoStoreAddr == nil || *config.DynamoStoreAddr == "" {
 		log.Info("Starting up with Memory store")
 		opts = append(opts, user.WithUserStore(user.NewUserMemoryStore()))
 	} else {
 		log.With(
-			zap.String("dynamoAddr", config.DynamoStore),
+			zap.String("dynamoAddr", *config.DynamoStoreAddr),
 		).Info("Starting up with DynamoDB store")
 		opts = append(opts,
 			user.WithUserStore(
 				user.NewUserDynamoStore(
 					user.WithDynamoClient(
-						dynamoClient(config.DynamoStore),
+						dynamoClient(*config.DynamoStoreAddr),
 					),
 				),
 			),

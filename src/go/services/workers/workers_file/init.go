@@ -18,7 +18,9 @@ type Worker struct {
 // Some generic handling of definition
 
 type WorkerConfig struct {
-	config Config
+	config struct {
+		PublicBucket string
+	}
 	pubsub corev1connect.FileEventbusServiceClient
 	// fileService corepbv1.FileService
 	fileService filestore.Filestore
@@ -45,10 +47,14 @@ func WithUserService(svc corev1connect.UserServiceClient) Option {
 	}
 }
 
-func buildServiceConfig(config Config, opts ...Option) WorkerConfig {
-	cfg := WorkerConfig{
-		config: config,
+func WithPublicBucket(name string) Option {
+	return func(cfg *WorkerConfig) {
+		cfg.config.PublicBucket = name
 	}
+}
+
+func buildServiceConfig(opts ...Option) WorkerConfig {
+	cfg := WorkerConfig{}
 
 	for _, opt := range opts {
 		opt(&cfg)
@@ -59,10 +65,10 @@ func buildServiceConfig(config Config, opts ...Option) WorkerConfig {
 
 var workers = []Worker{}
 
-func BuildHandlers(config Config, opts ...Option) map[string]http.Handler {
+func BuildHandlers(opts ...Option) map[string]http.Handler {
 	handlers := map[string]http.Handler{}
 
-	cfg := buildServiceConfig(config, opts...)
+	cfg := buildServiceConfig(opts...)
 
 	for _, worker := range workers {
 		handlers[worker.GroupName] = worker.Build(cfg)

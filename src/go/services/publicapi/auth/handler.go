@@ -43,8 +43,8 @@ func WithAttemptService(client AttemptService) Option {
 	}
 }
 
-func NewAuthenticationServer(config Config, opts ...Option) AuthenticationServer {
-	maker, err := tokenmanager.NewJWTMaker(config.JwtSecret)
+func NewAuthenticationServer(jwtSecret string, opts ...Option) AuthenticationServer {
+	maker, err := tokenmanager.NewJWTMaker(jwtSecret)
 	if err != nil {
 		log.Fatal(err)
 	}

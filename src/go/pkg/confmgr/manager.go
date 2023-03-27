@@ -28,24 +28,22 @@ type ConfigLoader struct {
 
 func NewLoader(loaders ...Loadable) *ConfigLoader {
 	return &ConfigLoader{
-		loaders: append(loaders, NewLoaderEnvironment(), NewLoaderDefault(), NewLoaderValidate()),
+		loaders: append(loaders, NewLoaderValidate()),
 	}
 }
 
 // Parse is a convience function to combine the NewLoader().Parse() calls
-func Parse(conf interface{}, loaders ...Loadable) error {
+func Parse(conf any, loaders ...Loadable) error {
 	return ParseWithContext(context.TODO(), conf, loaders...)
 }
 
-func ParseWithContext(ctx context.Context, conf interface{}, loaders ...Loadable) error {
-	mgr := &ConfigLoader{
-		loaders: append(loaders, NewLoaderEnvironment(), NewLoaderDefault(), NewLoaderValidate()),
-	}
+func ParseWithContext(ctx context.Context, conf any, loaders ...Loadable) error {
+	mgr := NewLoader(loaders...)
 
 	return mgr.Parse(ctx, conf)
 }
 
-func (mgr *ConfigLoader) Parse(ctx context.Context, conf interface{}) error {
+func (mgr *ConfigLoader) Parse(ctx context.Context, conf any) error {
 	spec, err := walkInput(conf)
 
 	if err != nil {
@@ -62,7 +60,7 @@ func (mgr *ConfigLoader) Parse(ctx context.Context, conf interface{}) error {
 	return nil
 }
 
-func walkInput(input interface{}) ([]*ConfigSpec, error) {
+func walkInput(input any) ([]*ConfigSpec, error) {
 	v := reflect.ValueOf(input)
 
 	if v.Kind() != reflect.Ptr || v.IsNil() {
@@ -92,6 +90,11 @@ func walkStruct(v reflect.Value, parent *ConfigSpec) []*ConfigSpec {
 			Value:  value,
 			Parent: parent,
 		}
+
+		// fmt.Println("HERE 0 ", field.Name)
+		// fmt.Println("HERE k  ", value.Kind())
+		// fmt.Println("HERE t  ", value.Type())
+		// fmt.Println("HERE ks ", value.Type().Kind().String())
 
 		if value.Kind() == reflect.Struct {
 			children := walkStruct(value, &item)
@@ -145,6 +148,11 @@ func SetValueString(v reflect.Value, s string) error {
 			return errors.Errorf("could not decode %q into type %v", s, v.Type().String())
 		}
 		v.SetBool(s == "true")
+
+	case reflect.Ptr:
+		pval := reflect.New(v.Type().Elem())
+		v.Set(pval)
+		SetValueString(pval.Elem(), s)
 
 	default:
 		return errors.Errorf("could not decode %q into type %v", s, v.Type().String())

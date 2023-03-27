@@ -11,16 +11,22 @@ import (
 	"go.uber.org/zap"
 )
 
+type Common struct {
+	JwtSecret       string `validate:"min=32"`
+	UserServiceAddr string
+}
+
+type Config struct {
+	Common Common `environment:""`
+	Oauth  ouser.OauthConfig
+}
+
 func main() {
 	mgr := manager.NewManager(manager.WithGrpcHealth("15050"))
 	log := mgr.Logger()
 
-	config := ouser.Config{}
-	oauthConfig := ouser.OauthConfig{}
-	if err := confmgr.Parse(&config); err != nil {
-		log.With(zap.Error(err)).Fatal("failed to load configuration")
-	}
-	if err := confmgr.Parse(&oauthConfig); err != nil {
+	config := Config{}
+	if err := confmgr.Parse(&config, confmgr.NewLoaderEnvironment("", "_")); err != nil {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
@@ -28,14 +34,14 @@ func main() {
 		ouser.WithUserService(
 			corev1connect.NewUserServiceClient(
 				bufcutil.NewHttpClient(),
-				"http://"+config.UserServiceAddr,
+				"http://"+config.Common.UserServiceAddr,
 			),
 		),
-		ouser.WithSecretManager(oauthConfig),
+		ouser.WithSecretManager(config.Oauth),
 	}
 
 	_, api := corev1connect.NewAuthUserServiceHandler(
-		ouser.NewOauthUserServer(config, opts...),
+		ouser.NewOauthUserServer(config.Common.JwtSecret, opts...),
 		connect.WithInterceptors(interceptors.NewReqidInterceptor()),
 	)
 
