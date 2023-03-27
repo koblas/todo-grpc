@@ -98,7 +98,7 @@ func TestBaseCase(t *testing.T) {
 		"/base/float32/f322",
 		"/base/float64/f641",
 		"/base/float64/f642",
-		"/base/Invalid",
+		"/base/invalid",
 	}
 
 	if !reflect.DeepEqual(names, expectedNames) {

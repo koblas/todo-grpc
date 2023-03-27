@@ -33,7 +33,11 @@ func WithClient(client SsmGetParamertsAPI) Option {
 }
 
 func NewLoaderSsm(ctx context.Context, path string, opts ...Option) *Provider {
-	p := Provider{Path: path}
+	p := Provider{
+		Path:      path,
+		seperator: "/",
+		toSnake:   true,
+	}
 
 	for _, opt := range opts {
 		opt(&p)
@@ -48,7 +52,6 @@ func NewLoaderSsm(ctx context.Context, path string, opts ...Option) *Provider {
 		p.Client = ssm.NewFromConfig(cfg)
 	}
 
-	p.seperator = "/"
 	p.cleanRe = regexp.MustCompile(p.seperator + p.seperator + "+")
 
 	return &p
