@@ -310,7 +310,7 @@ func (svc twClient) Do(req *http.Request) (*http.Response, error) {
 		}
 	}
 
-	buf := strings.Builder{}
+	buf := bytes.Buffer{}
 	_, err := io.Copy(&buf, req.Body)
 	if err != nil {
 		return nil, err
@@ -319,6 +319,16 @@ func (svc twClient) Do(req *http.Request) (*http.Response, error) {
 	basicHeaders := map[string]string{}
 	for k, v := range req.Header {
 		basicHeaders[k] = strings.Join(v, ",")
+	}
+
+	var strBody string
+	isBase64 := false
+	bdata := buf.Bytes()
+	if utf8.Valid(bdata) {
+		strBody = string(bdata)
+	} else {
+		strBody = base64.StdEncoding.EncodeToString(bdata)
+		isBase64 = true
 	}
 
 	lambdaRequest := events.APIGatewayV2HTTPRequest{
@@ -331,8 +341,8 @@ func (svc twClient) Do(req *http.Request) (*http.Response, error) {
 		RawPath:         path,
 		RawQueryString:  req.URL.Query().Encode(),
 		Headers:         basicHeaders,
-		Body:            buf.String(),
-		IsBase64Encoded: false,
+		Body:            strBody,
+		IsBase64Encoded: isBase64,
 		// Resource:              "",
 		// QueryStringParameters: map[string]string{},
 		// PathParameters:        map[string]string{},
