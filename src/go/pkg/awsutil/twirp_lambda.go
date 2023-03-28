@@ -106,6 +106,7 @@ func (l *LambdaStart) lambdaApiHandler(ctx context.Context, request events.APIGa
 		zap.Binary("data", bdata),
 		zap.Bool("validUtf8", utf8.Valid(bdata)),
 		zap.Bool("isBase64", isBase64),
+		zap.Any("headers", simpleHeaders),
 	).Info("Raw data")
 
 	return events.APIGatewayV2HTTPResponse{
