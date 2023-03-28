@@ -58,7 +58,10 @@ func (l *LambdaStart) lambdaApiHandler(ctx context.Context, request events.APIGa
 		)
 	}
 
-	log.Info("Processing Lambda request")
+	log.With(
+		zap.Any("request.Headers", request.Headers),
+		zap.Any("request.URL", request.RequestContext.HTTP.Path),
+	).Info("Processing Lambda request")
 
 	req, err := GatewayToHttpRequestV2(logger.ToContext(ctx, log), request, false)
 	if err != nil {
@@ -391,17 +394,17 @@ func (svc twClient) Do(req *http.Request) (*http.Response, error) {
 			return nil, err
 		}
 
-		// log.With(
-		// 	zap.Int("status", lambdaResponse.StatusCode),
-		// ).With(
-		// 	zap.Bool("isBase64", (lambdaResponse.IsBase64Encoded)),
-		// ).With(
-		// 	zap.Int("length", len(lambdaResponse.Body)),
-		// ).With(
-		// 	zap.Binary("body", []byte(lambdaResponse.Body)),
-		// ).With(
-		// 	zap.Any("headers", lambdaResponse.MultiValueHeaders),
-		// ).Info("Lambda Info")
+		log.With(
+			zap.Int("status", lambdaResponse.StatusCode),
+		).With(
+			zap.Bool("isBase64", (lambdaResponse.IsBase64Encoded)),
+		).With(
+			zap.Int("length", len(lambdaResponse.Body)),
+		).With(
+			zap.Binary("body", []byte(lambdaResponse.Body)),
+		).With(
+			zap.Any("headers", lambdaResponse.MultiValueHeaders),
+		).Info("Lambda Info")
 
 		var reader io.Reader
 		reader = strings.NewReader(lambdaResponse.Body)
