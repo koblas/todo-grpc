@@ -81,7 +81,7 @@ func (p *Provider) Loader(ctx context.Context, conf interface{}, specs []*confmg
 		if len(p.Path) != 0 {
 			nlist = append([]string{p.Path}, nlist...)
 		}
-		name := p.cleanRe.ReplaceAllString(strings.Join(nlist, p.seperator), p.seperator)
+		name := p.cleanRe.ReplaceAllString(p.seperator+strings.Join(nlist, p.seperator), p.seperator)
 
 		reverse[name] = spec
 

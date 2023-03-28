@@ -121,6 +121,43 @@ func TestBaseCase(t *testing.T) {
 	}
 }
 
+func TestSubstruct(t *testing.T) {
+	type OauthConfig struct {
+		GoogleClientId string
+		GoogleSecret   string
+		GitHubClientId string
+		GitHubSecret   string
+	}
+
+	type Common struct {
+		JwtSecret       string `validate:"min=32"`
+		UserServiceAddr string
+	}
+
+	type Config struct {
+		Common Common
+		Oauth  OauthConfig
+	}
+
+	mc := &mockSSMClient{
+		output: &ssm.GetParametersOutput{
+			Parameters: []types.Parameter{
+				{
+					Name:  aws.String("/common/jwt_secret"),
+					Value: aws.String("abcdefghijklmnopqurstuvwxyzy0123456789"),
+				},
+			},
+		},
+	}
+
+	conf := Config{}
+	err := confmgr.NewLoader(
+		ssmconfig.NewLoaderSsm(context.TODO(), "", ssmconfig.WithClient(mc)),
+	).Parse(context.TODO(), &conf)
+
+	assert.NoError(t, err, "ssm lookup errored")
+}
+
 func TestProvider_LoadSsmConfig(t *testing.T) {
 	for _, tt := range []struct {
 		name       string
