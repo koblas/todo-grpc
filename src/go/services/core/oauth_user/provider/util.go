@@ -10,6 +10,7 @@ import (
 
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/util"
+	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 )
 
@@ -39,7 +40,7 @@ func (svc providerBase) httpTokenRequest(ctx context.Context, logger logger.Logg
 
 	u, err := url.Parse(baseURL)
 	if err != nil {
-		panic("Failed to parse internal URL")
+		logger.Fatal("Failed to parse internal URL")
 	}
 
 	q := u.Query()
@@ -58,7 +59,7 @@ func (svc providerBase) httpTokenRequest(ctx context.Context, logger logger.Logg
 
 	req, err := http.NewRequest("POST", u.String(), strings.NewReader(q.Encode()))
 	if err != nil {
-		logger.With("error", err).Info("Building Request Failed")
+		logger.With(zap.Error(err)).Info("Building Request Failed")
 		return tokenResult.TokenResult, err
 	}
 
@@ -66,7 +67,7 @@ func (svc providerBase) httpTokenRequest(ctx context.Context, logger logger.Logg
 
 	logger.Info("OAuth Token HTTP call start")
 	if err = makeHTTPcall(ctx, nil, logger, req, &tokenResult); err != nil {
-		logger.With("error", err).Info("OAuth Token HTTP call failed")
+		logger.With(zap.Error(err)).Info("OAuth Token HTTP call failed")
 	}
 
 	if tokenResult.ExpiresIn != nil {
@@ -77,5 +78,5 @@ func (svc providerBase) httpTokenRequest(ctx context.Context, logger logger.Logg
 		tokenResult.Expires = &tval
 	}
 
-	return tokenResult.TokenResult, err
+	return tokenResult.TokenResult, nil
 }

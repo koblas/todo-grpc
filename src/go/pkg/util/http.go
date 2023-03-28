@@ -4,13 +4,14 @@ import (
 	// "fmt"
 
 	"context"
-	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"time"
 
 	jsoniter "github.com/json-iterator/go"
 	"github.com/koblas/grpc-todo/pkg/logger"
+	"go.uber.org/zap"
 )
 
 func NewHttpTransportContext(ctx context.Context) context.Context {
@@ -42,32 +43,21 @@ func DoHTTPRequest(ctx context.Context, client *http.Client, logger logger.Logge
 		return err
 	}
 
-	json := jsoniter.ConfigCompatibleWithStandardLibrary
-
-	switch resp.StatusCode / 100 {
-	case 1: // 3xx response
-		logger.With("status", resp.Status).Info("HTTP error: 1xx response")
-		return errors.New("Unexpected response")
-	case 2:
-		{ // 2xx response
-			body, err := ioutil.ReadAll(resp.Body)
-			resp.Body.Close()
-			if err != nil {
-				return err
-			}
-			return json.Unmarshal(body, result)
-		}
-	case 3: // 3xx response
-		logger.With("status", resp.Status).Info("HTTP error: 3xx response")
-		return errors.New("Unexpected response")
-	case 4:
-		logger.With("status", resp.Status).Info("HTTP error: 4xx response")
-		return errors.New("Unexpected response")
-	case 5: // 5xx response
-		logger.With("status", resp.Status).Info("HTTP error: 5xx response")
-		return errors.New("Unexpected response")
+	body, err := ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+	if err != nil {
+		return err
 	}
 
-	logger.With("status", resp.Status).Info("HTTP error: bad status")
-	return errors.New("Unexpected invalid status code")
+	json := jsoniter.ConfigCompatibleWithStandardLibrary
+
+	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+		return json.Unmarshal(body, result)
+	}
+
+	logger.With(
+		zap.String("status", resp.Status),
+		zap.String("body", string(body)),
+	).Info("HTTP error: non-200 status")
+	return fmt.Errorf("unexpected status=%s", resp.Status)
 }
