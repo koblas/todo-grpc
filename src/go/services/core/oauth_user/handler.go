@@ -100,20 +100,20 @@ func (svc *OauthUserServer) UpsertUser(ctx context.Context, request *connect.Req
 	// Verify the state matches
 	_, err = svc.jwtMaker.VerifyToken(params.State)
 	if err != nil {
-		log.With("state", params.State).Info("Falied JWT validation")
+		log.With(zap.String("state", params.State)).Info("Falied JWT validation")
 		return nil, bufcutil.InvalidArgumentError("state", "state does not validate")
 	}
 
 	tokenResult, err := oprovider.GetAccessToken(ctx, params.Oauth.Code, params.RedirectUrl)
 	if err != nil {
-		log.With("error", err).Info("Failed to get access token")
+		log.With(zap.Error(err)).Info("Failed to get access token")
 		return nil, bufcutil.InternalError(err)
 	}
 	log.Info("Getting OAuth User information")
 
 	info, err := oprovider.GetInfo(ctx, tokenResult)
 	if err != nil {
-		log.With("error", err).Info("Failed to get user info")
+		log.With(zap.Error(err)).Info("Failed to get user info")
 		return nil, bufcutil.InternalError(err)
 	}
 
@@ -141,7 +141,7 @@ func (svc *OauthUserServer) UpsertUser(ctx context.Context, request *connect.Req
 	}
 
 	if info.Email == "" {
-		log.With("error", err).Info("Failed to get user email")
+		log.With(zap.Error(err)).Info("Failed to get user email")
 		return nil, bufcutil.InvalidArgumentError("email", "provider didn't send email address")
 	}
 
@@ -152,7 +152,7 @@ func (svc *OauthUserServer) UpsertUser(ctx context.Context, request *connect.Req
 	}))
 	if err != nil {
 		if connect.CodeOf(err) != connect.CodeNotFound {
-			log.With("error", err).Info("Failed to lookup user")
+			log.With(zap.Error(err)).Info("Failed to lookup user")
 			return nil, bufcutil.InternalError(err)
 		}
 	}
@@ -160,7 +160,7 @@ func (svc *OauthUserServer) UpsertUser(ctx context.Context, request *connect.Req
 	userId := ""
 	created := false
 	if findBy == nil || findBy.Msg.User.Id == "" {
-		log.With("email", info.Email).Info("Creating new user")
+		log.With(zap.String("email", info.Email)).Info("Creating new user")
 		created = true
 		newUser, err := svc.user.Create(ctx, connect.NewRequest(&corev1.UserServiceCreateRequest{
 			Email: info.Email,
@@ -168,13 +168,13 @@ func (svc *OauthUserServer) UpsertUser(ctx context.Context, request *connect.Req
 			// TODO - create as "ACTIVE" since we "know" the email is good
 		}))
 		if err != nil {
-			log.With("error", err).Info("Unable to create user")
+			log.With(zap.Error(err)).Info("Unable to create user")
 			return nil, bufcutil.InternalError(err)
 		}
 		userId = newUser.Msg.User.Id
 	} else {
 		userId = findBy.Msg.User.Id
-		log.With("email", findBy.Msg.User.Email).Info("User already exists, associating")
+		log.With(zap.String("email", findBy.Msg.User.Email)).Info("User already exists, associating")
 	}
 
 	// Now associate the OAuth token and the UserId
@@ -187,7 +187,7 @@ func (svc *OauthUserServer) UpsertUser(ctx context.Context, request *connect.Req
 		},
 	}))
 	if err != nil {
-		log.With("error", err).Info("Unable to associate")
+		log.With(zap.Error(err)).Info("Unable to associate")
 		return nil, bufcutil.InternalError(err)
 	}
 
