@@ -94,7 +94,7 @@ function Site() {
   );
 }
 
-function AuthErrorBoundary({ error, componentStack, resetErrorBoundary }: FallbackProps) {
+function AuthErrorBoundary({ error }: FallbackProps) {
   const navigate = useNavigate();
   const { mutations } = useAuth();
   const logout = mutations.useLogout();
