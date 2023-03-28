@@ -101,13 +101,13 @@ func (l *LambdaStart) lambdaApiHandler(ctx context.Context, request events.APIGa
 		isBase64 = true
 	}
 
-	log.With(
-		zap.Int("length", buf.Len()),
-		zap.Binary("data", bdata),
-		zap.Bool("validUtf8", utf8.Valid(bdata)),
-		zap.Bool("isBase64", isBase64),
-		zap.Any("headers", simpleHeaders),
-	).Info("Raw data")
+	// log.With(
+	// 	zap.Int("length", buf.Len()),
+	// 	zap.Binary("data", bdata),
+	// 	zap.Bool("validUtf8", utf8.Valid(bdata)),
+	// 	zap.Bool("isBase64", isBase64),
+	// 	zap.Any("headers", simpleHeaders),
+	// ).Info("Raw data")
 
 	return events.APIGatewayV2HTTPResponse{
 		StatusCode:        result.StatusCode,
@@ -358,7 +358,7 @@ func (svc twClient) Do(req *http.Request) (*http.Response, error) {
 	}
 
 	log := logger.FromContext(req.Context()).With(
-		zap.Any("twirp_do", map[string]string{
+		zap.Any("grpc_call", map[string]string{
 			"scheme": scheme,
 			"method": path,
 			"host":   req.URL.Host,
@@ -406,17 +406,13 @@ func (svc twClient) Do(req *http.Request) (*http.Response, error) {
 			return nil, err
 		}
 
-		log.With(
-			zap.Int("status", lambdaResponse.StatusCode),
-		).With(
-			zap.Bool("isBase64", (lambdaResponse.IsBase64Encoded)),
-		).With(
-			zap.Int("length", len(lambdaResponse.Body)),
-		).With(
-			zap.Binary("body", []byte(lambdaResponse.Body)),
-		).With(
-			zap.Any("headers", lambdaResponse.MultiValueHeaders),
-		).Info("Lambda Info")
+		// log.With(
+		// 	zap.Int("status", lambdaResponse.StatusCode),
+		// 	zap.Bool("isBase64", (lambdaResponse.IsBase64Encoded)),
+		// 	zap.Int("length", len(lambdaResponse.Body)),
+		// 	zap.Binary("body", []byte(lambdaResponse.Body)),
+		// 	zap.Any("headers", lambdaResponse.MultiValueHeaders),
+		// ).Info("Lambda RPC response")
 
 		var reader io.Reader
 		reader = strings.NewReader(lambdaResponse.Body)
