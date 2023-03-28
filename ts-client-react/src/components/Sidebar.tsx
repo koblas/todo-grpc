@@ -107,7 +107,7 @@ function SidebarTopItems({ isExpanded }: { isExpanded: boolean }) {
   );
 }
 
-export function Sidebar() {
+export function Sidebar(): JSX.Element {
   const { isAuthenticated } = useAuth();
   const [isExpanded, setExpanded] = useState(true);
   const [showExpando, setShowExpando] = useState(false);

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from "react";
 import { ChakraProvider, CSSReset, Flex, Spinner, useToast } from "@chakra-ui/react";
-import { BrowserRouter, Routes, Route, Outlet, redirect, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet, useNavigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { ErrorBoundary, FallbackProps } from "react-error-boundary";
 import * as Sentry from "@sentry/react";
@@ -41,7 +41,7 @@ function buildWebsocketUrl(): string {
 
 const WS_URL = buildWebsocketUrl();
 
-function SiteLayout() {
+function SiteLayout(): JSX.Element {
   return (
     <Flex w="100%">
       <Sidebar />
@@ -140,7 +140,7 @@ function ClearOnLogout({ queryClient }: { queryClient: QueryClient }) {
   return null;
 }
 
-export default function App() {
+export default function App(): React.ReactElement {
   const toast = useToast();
 
   const queryClient = useMemo(() => {
