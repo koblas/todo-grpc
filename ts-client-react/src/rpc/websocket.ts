@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 import { v4 as uuidV4 } from "uuid";
 
@@ -6,23 +6,6 @@ import { create } from "zustand";
 import { WebSocketHook } from "react-use-websocket/dist/lib/types";
 import { useAuth } from "../hooks/auth";
 import { Json } from "../types/json";
-
-// function buildWebsocketUrl(): string {
-//   const base = process.env.WS_URL ?? "";
-
-//   if (base === "") {
-//     return "";
-//   }
-//   if (base.startsWith("ws")) {
-//     return base;
-//   }
-
-//   const loc = window.location;
-
-//   return new URL((loc.protocol === "https:" ? "wss://" : "ws://") + loc.host + loc.pathname, base).toString();
-// }
-
-// const WS_URL = buildWebsocketUrl();
 
 type ListenerFunc<E extends Json> = (event: E) => void;
 type ListenerSelector<E extends Json> = { topic: string | null; handler: ListenerFunc<E> };

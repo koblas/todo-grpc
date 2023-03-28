@@ -5,7 +5,7 @@
   "scripts": {
     "start": "BASE_URL=/api WS_URL=/wsapi parcel serve --hmr-port 1236 public/index.html",
     "start-old": "BASE_URL=http://localhost:8081/api parcel serve public/index.html",
-    "prod": "BASE_URL=https://api.iqvine.com WS_URL=wss://wsapi.iqvine.com/ parcel serve public/index.html",
+    "prod": "BASE_URL=https://api.iqvine.com/api WS_URL=wss://wsapi.iqvine.com/ parcel serve public/index.html",
     "build": "mkdir -p dist && rm -f dist/* && BASE_URL=/api WS_URL=/wsapi parcel build public/index.html",
     "build-old": "mkdir -p dist && rm -f dist/* && BASE_URL=https://api.iqvine.com WS_URL=wss://wsapi.iqvine.com/ parcel build public/index.html",
     "deploy": "cd ./deploy ; npx cdk deploy",
@@ -65,6 +65,7 @@
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
     "react-dropzone": "^14.2.3",
+    "react-error-boundary": "^4.0.3",
     "react-hook-form": "^7.18.0",
     "react-icons": "^4.3.1",
     "react-query": "^3.39.2",

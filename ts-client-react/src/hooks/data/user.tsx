@@ -4,7 +4,6 @@ import { z } from "zod";
 import * as rpcUser from "../../rpc/user";
 import { useAuth } from "../auth";
 import { newFetchClient } from "../../rpc/utils";
-import { Json } from "../../types/json";
 import { useWebsocketUpdates } from "../../rpc/websocket";
 import { buildCallbacksTyped, buildCallbacksTypedQuery } from "../../rpc/utils/helper";
 import { RpcMutation, RpcOptions } from "../../rpc/errors";

@@ -161,8 +161,7 @@ export function useAuth() {
 
       useOauthLogin(): RpcMutation<rpcAuth.OauthLoginRequestT, rpcAuth.OauthLoginResponseT> {
         const mutation = useMutation(
-          (data: rpcAuth.OauthLoginRequestT) =>
-            client.POST<rpcAuth.OauthLoginResponseT>("/v1/auth/oauth_login", data as Json),
+          (data: rpcAuth.OauthLoginRequestT) => client.POST<rpcAuth.OauthLoginResponseT>("/v1/auth/oauth_login", data),
           {},
         );
 
@@ -174,8 +173,10 @@ export function useAuth() {
               queryClient,
               rpcAuth.OauthLoginResponse,
               {
-                onCompleted(result) {
+                ...(handlers ?? {}),
+                onCompleted(result, vars) {
                   setToken(result.token.accessToken);
+                  handlers?.onCompleted?.(result, vars);
                 },
               },
               handlers,

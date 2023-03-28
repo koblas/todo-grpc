@@ -1,11 +1,11 @@
 import { QueryClient, useMutation, useQuery, useQueryClient } from "react-query";
-import { useCallback, useEffect } from "react";
+import { useEffect } from "react";
 import { z } from "zod";
 import * as rpcTodo from "../../rpc/todo";
 import { useAuth } from "../auth";
 import { newFetchClient } from "../../rpc/utils";
 import { useWebsocketUpdates } from "../../rpc/websocket";
-import { buildCallbacksTyped } from "../../rpc/utils/helper";
+import { buildCallbacksTyped, buildCallbacksTypedQuery } from "../../rpc/utils/helper";
 
 function cacheAddTodo(queryClient: QueryClient, item: rpcTodo.TodoObjectT) {
   queryClient.setQueriesData<{ todos: rpcTodo.TodoObjectT[] }>("todos", (old) => {
@@ -39,6 +39,7 @@ export function useTodos() {
   const result = useQuery("todos", () => client.POST<rpcTodo.TodoListResponseT>("/v1/todo/todo_list", {}), {
     staleTime: 300_000,
     enabled: !!token,
+    ...buildCallbacksTypedQuery(queryClient, rpcTodo.TodoListRequest, {}),
   });
 
   const addTodo = useMutation(

@@ -81,6 +81,7 @@ export function buildCallbacksTypedQuery<
   const defaultOptions = queryClient.getDefaultOptions();
 
   const options = {
+    retry: false,
     onSuccess(result: TData) {
       const parsed = tzod.safeParse(result);
 
@@ -98,7 +99,7 @@ export function buildCallbacksTypedQuery<
         return false;
       });
 
-      if (found.some((x) => x)) {
+      if (!found.some((x) => x)) {
         if (!parsed.success) {
           defaultOptions.queries?.onError?.(parsed.error);
         } else {
@@ -113,22 +114,21 @@ export function buildCallbacksTypedQuery<
         return Boolean(handler?.onFinished);
       });
 
-      if (found.some((x) => x)) {
+      if (!found.some((x) => x)) {
         defaultOptions.queries?.onSettled?.(data, error);
       }
     },
     // Handle an error, determine if it's a HTTP error or something else
     onError(error: TError) {
-      console.log("QUERY ERROR ", error);
       // onError(error: TError) {
       const found = handlers?.map((handler) => handleJsonError(error, handler));
 
-      if (found.some((x) => x)) {
+      if (!found.some((x) => x)) {
         defaultOptions.queries?.onError?.(error);
       }
     },
     useErrorBoundary() {
-      return false;
+      return true;
     },
   };
 

@@ -25,51 +25,61 @@ export default function OAuthPage() {
 
   useEffect(() => {
     // FIXME -- `next` parameter triggers a google error with redirects, so not implemented
-    const query = new URLSearchParams(search);
+    // const query = new URLSearchParams(search);
     // const next = query.get("next") ?? "";
 
     // const nextQuery = next ? `?next=${encodeURIComponent(next)}` : "";
-    const nextQuery = "";
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    const redirect_url = `${window.location.origin}/auth/oauth/${provider}${nextQuery}`;
+    // const redirect_url = `${window.location.origin}/auth/oauth/${provider}${nextQuery}`;
     // No code, redice to the OAuth provider
-    if (!code) {
-      oauthRedirect(
-        { provider, redirectUrl },
-        {
-          onCompleted({ url }) {
-            setInterval(() => {
-              window.location.href = url;
-            }, 0);
+
+    // This is a total hack, since useEffect in React 18 is called twice we need to
+    // handle the create/destroy cycle and only run for the one that sticks around.
+    // There probably is a better way, but ugh.
+    const timer = setTimeout(() => {
+      if (!code) {
+        oauthRedirect(
+          { provider, redirectUrl },
+          {
+            onCompleted({ url }) {
+              setTimeout(() => {
+                // window.location.href = url;
+                window.location.assign(url);
+              }, 0);
+            },
+            onError() {
+              setLoading(false);
+            },
           },
-          onError() {
+        );
+
+        return;
+      }
+
+      oauthLogin(
+        { provider, code, redirectUrl, state },
+        {
+          onCompleted(data) {
+            if (data.created) {
+              // TODO -- If created we should flag this as a new user
+              // For now we just have a lame message
+              setSuccess(true);
+            } else {
+              navigate(search.get("next") ?? "/", { replace: true });
+            }
+          },
+          onFinished() {
             setLoading(false);
           },
         },
       );
+    }, 2);
 
-      return;
-    }
-
-    oauthLogin(
-      { provider, code, redirectUrl, state },
-      {
-        onCompleted(data) {
-          if (data.created) {
-            // TODO -- If created we should flag this as a new user
-            // For now we just have a lame message
-            setSuccess(true);
-          } else {
-            navigate(query.get("next") ?? "/", { replace: true });
-          }
-        },
-        onFinished() {
-          setLoading(false);
-        },
-      },
-    );
+    return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [provider, code, redirectUrl]);
+  }, [provider, code, state]);
+
+  console.log("USE EFFECT", provider, code, redirectUrl);
 
   // When redirected from Google/GitHub/etc.. Show a spinner while we figure out
   //  if everything is valid and the account exists or needs to be created

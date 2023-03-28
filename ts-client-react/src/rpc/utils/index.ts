@@ -80,8 +80,16 @@ const fetchHandlers: FetchHandlers = {
     }
     throw error;
   },
-  "401": async () => {
-    throw new Error("Need authentication");
+  "401": async (response) => {
+    // In theory we should capture this specifically
+    const body = await response.text();
+    let error;
+    try {
+      error = new FetchError(response.status, JSON.parse(body));
+    } catch {
+      error = new FetchError(response.status, body);
+    }
+    throw error;
   },
 };
 

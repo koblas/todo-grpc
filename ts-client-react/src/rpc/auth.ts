@@ -90,7 +90,7 @@ export const OauthLoginRequest = z.object({
 });
 export const OauthLoginResponse = z.object({
   token: Token,
-  created: z.boolean(),
+  created: z.optional(z.boolean()),
 });
 
 export type OauthLoginRequestT = z.infer<typeof OauthLoginRequest>;

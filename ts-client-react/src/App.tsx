@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo } from "react";
 import { ChakraProvider, CSSReset, Flex, Spinner, useToast } from "@chakra-ui/react";
-import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet, redirect, useNavigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "react-query";
+import { ErrorBoundary, FallbackProps } from "react-error-boundary";
 import * as Sentry from "@sentry/react";
 
 import { AuthPages } from "./pages/auth";
@@ -93,6 +94,37 @@ function Site() {
   );
 }
 
+function AuthErrorBoundary({ error, componentStack, resetErrorBoundary }: FallbackProps) {
+  const navigate = useNavigate();
+  const { mutations } = useAuth();
+  const logout = mutations.useLogout();
+
+  if (error instanceof FetchError && error.code === 401) {
+    logout({
+      onCompleted() {
+        navigate("/auth/login");
+      },
+    });
+  } else {
+    throw error;
+  }
+
+  // toast({
+  //   status: "error",
+  //   title: "Authentication failed",
+  //   isClosable: true,
+  //   onCloseComplete() {
+  //     logout({
+  //       onCompleted() {
+  //         navigate("/auth/login");
+  //       },
+  //     });
+  //   },
+  // });
+
+  return null;
+}
+
 function ClearOnLogout({ queryClient }: { queryClient: QueryClient }) {
   const { token } = useAuth();
 
@@ -125,6 +157,9 @@ export default function App() {
             status: "error",
             isClosable: true,
           });
+        } else if (code === "unauthenticated") {
+          console.log("RETRYOW");
+          throw error;
         } else if (code !== "invalid_argument" && code !== "unauthenticated") {
           toast({
             title: "Network error",
@@ -171,10 +206,12 @@ export default function App() {
           <React.Suspense fallback={<Spinner />}>
             <ClearOnLogout queryClient={queryClient} />
             <BrowserRouter>
-              <Routes>
-                <Route path="/auth/*" element={<AuthPages />} />
-                <Route path="*" element={<Site />} />
-              </Routes>
+              <ErrorBoundary FallbackComponent={AuthErrorBoundary}>
+                <Routes>
+                  <Route path="/auth/*" element={<AuthPages />} />
+                  <Route path="*" element={<Site />} />
+                </Routes>
+              </ErrorBoundary>
             </BrowserRouter>
           </React.Suspense>
         </WebsocketProvider>
