@@ -39,7 +39,7 @@ func main() {
 			),
 		),
 		auth.WithOAuthClient(
-			corev1connect.NewAuthUserServiceClient(
+			corev1connect.NewOAuthUserServiceClient(
 				bufcutil.NewHttpClient(),
 				"http://"+config.OauthUserServiceAddr,
 			),

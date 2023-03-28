@@ -43,7 +43,7 @@ func main() {
 		ouser.WithSecretManager(config.Oauth),
 	}
 
-	_, api := corev1connect.NewAuthUserServiceHandler(
+	_, api := corev1connect.NewOAuthUserServiceHandler(
 		ouser.NewOauthUserServer(config.Common.JwtSecret, opts...),
 		connect.WithInterceptors(interceptors.NewReqidInterceptor()),
 	)

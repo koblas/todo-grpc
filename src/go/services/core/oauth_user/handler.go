@@ -61,7 +61,7 @@ func NewOauthUserServer(jwtSecret string, opts ...Option) *OauthUserServer {
 	return &svr
 }
 
-func (svc *OauthUserServer) GetAuthUrl(ctx context.Context, request *connect.Request[corev1.AuthUserServiceGetAuthUrlRequest]) (*connect.Response[corev1.AuthUserServiceGetAuthUrlResponse], error) {
+func (svc *OauthUserServer) GetAuthUrl(ctx context.Context, request *connect.Request[corev1.OAuthUserServiceGetAuthUrlRequest]) (*connect.Response[corev1.OAuthUserServiceGetAuthUrlResponse], error) {
 	params := request.Msg
 	log := logger.FromContext(ctx).With("provider", params.Provider)
 	log.Info("Calling GetAuthURL")
@@ -83,10 +83,10 @@ func (svc *OauthUserServer) GetAuthUrl(ctx context.Context, request *connect.Req
 
 	url := oprovider.BuildRedirect(ctx, params.RedirectUrl, state)
 
-	return connect.NewResponse(&corev1.AuthUserServiceGetAuthUrlResponse{Url: url}), nil
+	return connect.NewResponse(&corev1.OAuthUserServiceGetAuthUrlResponse{Url: url}), nil
 }
 
-func (svc *OauthUserServer) UpsertUser(ctx context.Context, request *connect.Request[corev1.AuthUserServiceUpsertUserRequest]) (*connect.Response[corev1.AuthUserServiceUpsertUserResponse], error) {
+func (svc *OauthUserServer) UpsertUser(ctx context.Context, request *connect.Request[corev1.OAuthUserServiceUpsertUserRequest]) (*connect.Response[corev1.OAuthUserServiceUpsertUserResponse], error) {
 	params := request.Msg
 	log := logger.FromContext(ctx).With("provider", params.Oauth.Provider)
 	log.Info("Calling UpsertUser")
@@ -137,7 +137,7 @@ func (svc *OauthUserServer) UpsertUser(ctx context.Context, request *connect.Req
 	}
 
 	if findBy != nil && findBy.Msg != nil {
-		return connect.NewResponse(&corev1.AuthUserServiceUpsertUserResponse{UserId: findBy.Msg.User.Id, Created: false}), nil
+		return connect.NewResponse(&corev1.OAuthUserServiceUpsertUserResponse{UserId: findBy.Msg.User.Id, Created: false}), nil
 	}
 
 	if info.Email == "" {
@@ -191,13 +191,13 @@ func (svc *OauthUserServer) UpsertUser(ctx context.Context, request *connect.Req
 		return nil, bufcutil.InternalError(err)
 	}
 
-	return connect.NewResponse(&corev1.AuthUserServiceUpsertUserResponse{UserId: userId, Created: created}), nil
+	return connect.NewResponse(&corev1.OAuthUserServiceUpsertUserResponse{UserId: userId, Created: created}), nil
 }
 
-func (s *OauthUserServer) ListAssociations(ctx context.Context, params *connect.Request[corev1.AuthUserServiceListAssociationsRequest]) (*connect.Response[corev1.AuthUserServiceListAssociationsResponse], error) {
-	return connect.NewResponse(&corev1.AuthUserServiceListAssociationsResponse{}), nil
+func (s *OauthUserServer) ListAssociations(ctx context.Context, params *connect.Request[corev1.OAuthUserServiceListAssociationsRequest]) (*connect.Response[corev1.OAuthUserServiceListAssociationsResponse], error) {
+	return connect.NewResponse(&corev1.OAuthUserServiceListAssociationsResponse{}), nil
 }
 
-func (s *OauthUserServer) RemoveAssociation(ctx context.Context, params *connect.Request[corev1.AuthUserServiceRemoveAssociationRequest]) (*connect.Response[corev1.AuthUserServiceRemoveAssociationResponse], error) {
-	return connect.NewResponse(&corev1.AuthUserServiceRemoveAssociationResponse{}), nil
+func (s *OauthUserServer) RemoveAssociation(ctx context.Context, params *connect.Request[corev1.OAuthUserServiceRemoveAssociationRequest]) (*connect.Response[corev1.OAuthUserServiceRemoveAssociationResponse], error) {
+	return connect.NewResponse(&corev1.OAuthUserServiceRemoveAssociationResponse{}), nil
 }

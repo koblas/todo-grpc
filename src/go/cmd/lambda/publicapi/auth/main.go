@@ -34,7 +34,7 @@ func main() {
 			awsutil.NewTwirpCallLambda(),
 			"lambda://core-user",
 		)),
-		auth.WithOAuthClient(corev1connect.NewAuthUserServiceClient(
+		auth.WithOAuthClient(corev1connect.NewOAuthUserServiceClient(
 			awsutil.NewTwirpCallLambda(),
 			"lambda://core-oauth-user",
 		)),

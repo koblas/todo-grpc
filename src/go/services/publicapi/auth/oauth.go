@@ -4,7 +4,9 @@ import (
 	"github.com/bufbuild/connect-go"
 	apiv1 "github.com/koblas/grpc-todo/gen/api/v1"
 	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
+	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/logger"
+	"go.uber.org/zap"
 	"golang.org/x/net/context"
 )
 
@@ -17,8 +19,8 @@ func (s AuthenticationServer) OauthLogin(ctx context.Context, paramsIn *connect.
 	log := logger.FromContext(ctx).With("provider", params.Provider)
 	log.Info("OauthLogin")
 
-	result, err := s.oauthClient.UpsertUser(ctx, connect.NewRequest(&corev1.AuthUserServiceUpsertUserRequest{
-		Oauth: &corev1.AuthOauthParams{
+	result, err := s.oauthClient.UpsertUser(ctx, connect.NewRequest(&corev1.OAuthUserServiceUpsertUserRequest{
+		Oauth: &corev1.OAuthOauthParams{
 			Provider: params.Provider,
 			Code:     params.Code,
 		},
@@ -27,8 +29,8 @@ func (s AuthenticationServer) OauthLogin(ctx context.Context, paramsIn *connect.
 	}))
 
 	if err != nil {
-		log.Info("Failed to call oauthClient.UpsertUser")
-		return nil, err
+		log.With(zap.Error(err)).Info("Failed to call oauthClient.UpsertUser")
+		return nil, bufcutil.InternalError(err)
 	}
 
 	user, err := s.userClient.FindBy(ctx, connect.NewRequest(&corev1.FindByRequest{
@@ -37,12 +39,14 @@ func (s AuthenticationServer) OauthLogin(ctx context.Context, paramsIn *connect.
 		},
 	}))
 	if err != nil {
-		return nil, err
+		log.With(zap.Error(err)).Info("Failed to call userClient.FindBy")
+		return nil, bufcutil.InternalError(err)
 	}
 
 	token, err := s.returnToken(ctx, user.Msg.User.Id)
 	if err != nil {
-		return nil, err
+		log.With(zap.Error(err)).Info("Failed to call returnToken")
+		return nil, bufcutil.InternalError(err)
 	}
 	return connect.NewResponse(&apiv1.OauthLoginResponse{
 		Token:   token,
@@ -56,13 +60,13 @@ func (s AuthenticationServer) OauthUrl(ctx context.Context, params *connect.Requ
 
 	// TODO -- basic validation on parameters
 
-	result, err := s.oauthClient.GetAuthUrl(ctx, connect.NewRequest(&corev1.AuthUserServiceGetAuthUrlRequest{
+	result, err := s.oauthClient.GetAuthUrl(ctx, connect.NewRequest(&corev1.OAuthUserServiceGetAuthUrlRequest{
 		Provider:    params.Msg.Provider,
 		RedirectUrl: params.Msg.RedirectUrl,
 	}))
 	if err != nil {
-		log.Info("Failed to call oauthClient.GetAuthURL")
-		return nil, err
+		log.With(zap.Error(err)).Info("Failed to call oauthClient.GetAuthURL")
+		return nil, bufcutil.InternalError(err)
 	}
 
 	return connect.NewResponse(&apiv1.OauthUrlResponse{

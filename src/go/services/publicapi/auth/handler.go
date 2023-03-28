@@ -19,7 +19,7 @@ type AuthenticationServer struct {
 
 	jwtMaker    tokenmanager.Maker
 	userClient  corev1connect.UserServiceClient
-	oauthClient corev1connect.AuthUserServiceClient
+	oauthClient corev1connect.OAuthUserServiceClient
 	attempts    AttemptService
 }
 
@@ -31,7 +31,7 @@ func WithUserClient(client corev1connect.UserServiceClient) Option {
 	}
 }
 
-func WithOAuthClient(client corev1connect.AuthUserServiceClient) Option {
+func WithOAuthClient(client corev1connect.OAuthUserServiceClient) Option {
 	return func(input *AuthenticationServer) {
 		input.oauthClient = client
 	}
