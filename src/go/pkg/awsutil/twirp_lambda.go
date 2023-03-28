@@ -80,6 +80,10 @@ func (l *LambdaStart) lambdaApiHandler(ctx context.Context, request events.APIGa
 	// 	zap.Int64("result.ContentLength", result.ContentLength),
 	// 	zap.Strings("result.TransferEncoding", result.TransferEncoding),
 	// )
+	simpleHeaders := map[string]string{}
+	for k, v := range result.Header {
+		simpleHeaders[k] = strings.Join(v, ",")
+	}
 
 	buf := bytes.Buffer{}
 	if _, err := buf.ReadFrom(result.Body); err != nil {
@@ -87,17 +91,7 @@ func (l *LambdaStart) lambdaApiHandler(ctx context.Context, request events.APIGa
 		return errorResponse, nil
 	}
 
-	simpleHeaders := map[string]string{}
-	for k, v := range result.Header {
-		simpleHeaders[k] = strings.Join(v, ",")
-	}
 	bdata := buf.Bytes()
-	// log.With(
-	// 	zap.Int("length", buf.Len()),
-	// 	zap.Binary("data", bdata),
-	// 	zap.Bool("validUtf8", utf8.Valid(bdata)),
-	// ).Info("Raw data")
-
 	strBody := ""
 	isBase64 := false
 	if utf8.Valid(bdata) {
@@ -106,6 +100,13 @@ func (l *LambdaStart) lambdaApiHandler(ctx context.Context, request events.APIGa
 		strBody = base64.StdEncoding.EncodeToString(bdata)
 		isBase64 = true
 	}
+
+	log.With(
+		zap.Int("length", buf.Len()),
+		zap.Binary("data", bdata),
+		zap.Bool("validUtf8", utf8.Valid(bdata)),
+		zap.Bool("isBase64", isBase64),
+	).Info("Raw data")
 
 	return events.APIGatewayV2HTTPResponse{
 		StatusCode:        result.StatusCode,

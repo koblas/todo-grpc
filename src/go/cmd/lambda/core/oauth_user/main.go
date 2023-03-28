@@ -35,8 +35,6 @@ func main() {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
-	log.With(zap.Any("credentials", config.Oauth)).Info("testing")
-
 	opts := []ouser.Option{
 		ouser.WithUserService(corev1connect.NewUserServiceClient(
 			awsutil.NewTwirpCallLambda(),
