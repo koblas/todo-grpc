@@ -116,7 +116,7 @@ minikube addons enable ingress
 ```
 kubectl apply -f infra/dev-variables-env-configmap.yaml
 kubectl delete secret common-secrets --ignore-not-found
-kubectl create secret generic common-secrets --from-env-file=../.env
+kubectl create secret generic common-secrets --from-env-file=.env
 ```
 
     --namespace=new-namespace
@@ -129,7 +129,7 @@ minikube start
 minikube addons enable ingress
 minikube tunnel
 tilt up
-kubectl port-forward service/minio 9000:9000
+kubectl port-forward service/minio 9000:9000 9001:9001
 ```
 
 TODO -- Need to setup the MINIO->NATS subscription (the queue is created, but the subscription is not)
