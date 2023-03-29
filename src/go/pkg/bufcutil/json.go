@@ -26,7 +26,9 @@ func (c *protoJSONCodec) Marshal(message any) ([]byte, error) {
 	if !ok {
 		return nil, errNotProto(message)
 	}
-	options := protojson.MarshalOptions{}
+	options := protojson.MarshalOptions{
+		EmitUnpopulated: true,
+	}
 	return options.Marshal(protoMessage)
 }
 
