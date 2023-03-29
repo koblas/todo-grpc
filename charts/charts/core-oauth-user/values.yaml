@@ -87,6 +87,6 @@ envFrom:
     EMAILSERVICE_ADDR: dev-variables-env
     USER_SERVICE_ADDR: dev-variables-env
   secret:
-    GOOGLE_CLIENT_ID: common-secrets
-    GOOGLE_SECRET: common-secrets
+    OAUTH_GOOGLE_CLIENT_ID: common-secrets
+    OAUTH_GOOGLE_SECRET: common-secrets
     JWT_SECRET: common-secrets
