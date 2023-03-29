@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"net/http"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -9,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/bufbuild/connect-go"
+	grpchealth "github.com/bufbuild/connect-grpchealth-go"
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
 	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
@@ -16,6 +18,7 @@ import (
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/pkg/natsutil"
 	"github.com/koblas/grpc-todo/services/core/user"
+
 	"go.uber.org/zap"
 )
 
@@ -55,7 +58,7 @@ type Config struct {
 }
 
 func main() {
-	mgr := manager.NewManager(manager.WithGrpcHealth("15050"))
+	mgr := manager.NewManager()
 	log := mgr.Logger()
 
 	config := Config{}
@@ -90,10 +93,16 @@ func main() {
 		)
 	}
 
-	_, api := corev1connect.NewUserServiceHandler(
+	mux := http.NewServeMux()
+	mux.Handle(corev1connect.NewUserServiceHandler(
 		user.NewUserServer(opts...),
 		connect.WithInterceptors(interceptors.NewReqidInterceptor()),
-	)
+		connect.WithCompressMinBytes(1024),
+	))
+	mux.Handle(grpchealth.NewHandler(
+		grpchealth.NewStaticChecker(corev1connect.UserServiceName),
+		connect.WithCompressMinBytes(1024),
+	))
 
-	mgr.Start(mgr.WrapHttpHandler(api))
+	mgr.Start(mgr.WrapHttpHandler(mux))
 }

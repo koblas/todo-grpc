@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
+	"github.com/bufbuild/connect-go"
+	grpchealth "github.com/bufbuild/connect-grpchealth-go"
 	wsocket "github.com/gorilla/websocket"
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
@@ -135,7 +137,7 @@ func (h *socketHandler) consume(ctx context.Context) {
 }
 
 func main() {
-	mgr := manager.NewManager(manager.WithGrpcHealth("15050"))
+	mgr := manager.NewManager()
 	log := mgr.Logger()
 
 	config := Config{}
@@ -156,5 +158,12 @@ func main() {
 
 	go handler.consume(mgr.Context())
 
-	mgr.Start(mgr.WrapHttpHandler(&handler))
+	mux := http.NewServeMux()
+	mux.Handle("/", &handler)
+	mux.Handle(grpchealth.NewHandler(
+		grpchealth.NewStaticChecker(),
+		connect.WithCompressMinBytes(1024),
+	))
+
+	mgr.Start(mgr.WrapHttpHandler(mux))
 }

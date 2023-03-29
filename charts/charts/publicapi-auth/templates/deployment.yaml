@@ -42,7 +42,7 @@ spec:
           livenessProbe:
             initialDelaySeconds: 3
             grpc:
-              port: 15050
+              port: {{ .Values.service.port }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}

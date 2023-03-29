@@ -1,9 +1,11 @@
 package main
 
 import (
+	"net/http"
 	"strings"
 
 	"github.com/bufbuild/connect-go"
+	grpchealth "github.com/bufbuild/connect-grpchealth-go"
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
 	"github.com/koblas/grpc-todo/gen/api/v1/apiv1connect"
 	"github.com/koblas/grpc-todo/pkg/bufcutil"
@@ -22,7 +24,7 @@ type Config struct {
 }
 
 func main() {
-	mgr := manager.NewManager(manager.WithGrpcHealth("15050"))
+	mgr := manager.NewManager()
 	log := mgr.Logger()
 
 	config := Config{
@@ -42,11 +44,16 @@ func main() {
 		file.WithUploadBucket(config.UploadBucket),
 	}
 
-	_, api := apiv1connect.NewFileServiceHandler(
+	mux := http.NewServeMux()
+	mux.Handle(apiv1connect.NewFileServiceHandler(
 		file.NewFileServer(opts...),
 		connect.WithCodec(bufcutil.NewJsonCodec()),
 		connect.WithInterceptors(interceptors.NewReqidInterceptor(), auth),
-	)
+	))
+	mux.Handle(grpchealth.NewHandler(
+		grpchealth.NewStaticChecker(apiv1connect.FileServiceName),
+		connect.WithCompressMinBytes(1024),
+	))
 
-	mgr.Start(mgr.WrapHttpHandler(api))
+	mgr.Start(mgr.WrapHttpHandler(mux))
 }

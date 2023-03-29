@@ -1,7 +1,10 @@
 package main
 
 import (
+	"net/http"
+
 	"github.com/bufbuild/connect-go"
+	grpchealth "github.com/bufbuild/connect-grpchealth-go"
 	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
@@ -18,7 +21,7 @@ type Config struct {
 }
 
 func main() {
-	mgr := manager.NewManager(manager.WithGrpcHealth("15050"))
+	mgr := manager.NewManager()
 	log := mgr.Logger()
 
 	config := Config{}
@@ -36,10 +39,16 @@ func main() {
 		ouser.WithSecretManager(config.Oauth),
 	}
 
-	_, api := corev1connect.NewOAuthUserServiceHandler(
+	mux := http.NewServeMux()
+	mux.Handle(corev1connect.NewOAuthUserServiceHandler(
 		ouser.NewOauthUserServer(config.JwtSecret, opts...),
 		connect.WithInterceptors(interceptors.NewReqidInterceptor()),
-	)
+		connect.WithCompressMinBytes(1024),
+	))
+	mux.Handle(grpchealth.NewHandler(
+		grpchealth.NewStaticChecker(corev1connect.UserServiceName),
+		connect.WithCompressMinBytes(1024),
+	))
 
-	mgr.Start(mgr.WrapHttpHandler(api))
+	mgr.Start(mgr.WrapHttpHandler(mux))
 }

@@ -77,10 +77,14 @@ func (svc *UserServer) GetUser(ctx context.Context, _ *connect.Request[apiv1.Get
 	if err != nil {
 		log.With(zap.Error(err)).Info("lookup failed")
 		if connect.CodeOf(err) == connect.CodeNotFound {
-			return nil, connect.NewError(connect.CodeNotFound, nil)
+			// NotFound is valid error, translate this to not-authenticated since
+			// it means they don't have a valid account
+			return nil, connect.NewError(connect.CodeUnauthenticated, nil)
 		}
 		return nil, bufcutil.InternalError(err)
 	}
+
+	// TODO -- we should consider status in this case and potentially de-authenticate
 
 	return connect.NewResponse(&apiv1.GetUserResponse{
 		User: protoutil.UserCoreToApi(user.Msg.User),

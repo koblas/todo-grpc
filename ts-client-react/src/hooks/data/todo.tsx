@@ -9,7 +9,7 @@ import { buildCallbacksTyped, buildCallbacksTypedQuery } from "../../rpc/utils/h
 
 function cacheAddTodo(queryClient: QueryClient, item: rpcTodo.TodoObjectT) {
   queryClient.setQueriesData<{ todos: rpcTodo.TodoObjectT[] }>("todos", (old) => {
-    if (!old) {
+    if (!old || !old.todos) {
       return { todos: [item] };
     }
 
