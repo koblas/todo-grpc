@@ -163,12 +163,12 @@ func (svc *OauthUserServer) UpsertUser(ctx context.Context, request *connect.Req
 		log.With(zap.String("email", info.Email)).Info("Creating new user")
 		created = true
 		newUser, err := svc.user.Create(ctx, connect.NewRequest(&corev1.UserServiceCreateRequest{
-			Email: info.Email,
-			Name:  info.Name,
-			// TODO - create as "ACTIVE" since we "know" the email is good
+			Email:  info.Email,
+			Name:   info.Name,
+			Status: corev1.UserStatus_USER_STATUS_ACTIVE,
 		}))
 		if err != nil {
-			log.With(zap.Error(err)).Info("Unable to create user")
+			log.With(zap.Error(err)).Error("Unable to create user")
 			return nil, bufcutil.InternalError(err)
 		}
 		userId = newUser.Msg.User.Id

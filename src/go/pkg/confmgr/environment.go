@@ -3,6 +3,7 @@ package confmgr
 import (
 	"context"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/koblas/grpc-todo/pkg/util"
@@ -11,10 +12,18 @@ import (
 type envLoader struct {
 	prefix    string
 	seperator string
+	cleanRe   *regexp.Regexp
 }
 
 func NewLoaderEnvironment(prefix string, seperator string) envLoader {
-	return envLoader{prefix, seperator}
+	p := envLoader{
+		prefix:    prefix,
+		seperator: seperator,
+	}
+
+	p.cleanRe = regexp.MustCompile(p.seperator + p.seperator + "+")
+
+	return p
 }
 
 func (e envLoader) getName(spec *ConfigSpec) []string {
@@ -33,11 +42,11 @@ func (e envLoader) Loader(_ context.Context, conf interface{}, specs []*ConfigSp
 	reducedSpec := []*ConfigSpec{}
 
 	for _, spec := range specs {
-		names := e.getName(spec)
+		nlist := e.getName(spec)
 		if len(e.prefix) != 0 {
-			names = append([]string{e.prefix}, names...)
+			nlist = append([]string{e.prefix}, nlist...)
 		}
-		name := strings.Join(names, e.seperator)
+		name := e.cleanRe.ReplaceAllString(strings.Join(nlist, e.seperator), e.seperator)
 
 		envValue, ok := os.LookupEnv(name)
 		if !ok {

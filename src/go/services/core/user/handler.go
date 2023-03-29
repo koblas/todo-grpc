@@ -108,7 +108,13 @@ func (s *UserServer) Create(ctx context.Context, request *connect.Request[corev1
 	log := logger.FromContext(ctx).With(zap.String("email", params.Email))
 	log.Info("Received Create")
 
-	if params.Status != corev1.UserStatus_USER_STATUS_REGISTERED && params.Status != corev1.UserStatus_USER_STATUS_INVITED {
+	// Just using a switch for formatting reasons
+	switch params.Status {
+	case corev1.UserStatus_USER_STATUS_ACTIVE,
+		corev1.UserStatus_USER_STATUS_REGISTERED,
+		corev1.UserStatus_USER_STATUS_INVITED:
+		break
+	default:
 		log.Error("Bad user status")
 		return nil, bufcutil.InvalidArgumentError("status", "invalid user status choice")
 	}

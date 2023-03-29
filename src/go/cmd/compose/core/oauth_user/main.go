@@ -11,14 +11,10 @@ import (
 	"go.uber.org/zap"
 )
 
-type Common struct {
-	JwtSecret       string `validate:"min=32"`
-	UserServiceAddr string
-}
-
 type Config struct {
-	Common Common `environment:""`
-	Oauth  ouser.OauthConfig
+	JwtSecret       string `ssm:"/common/jwt_secret" validate:"min=32"`
+	UserServiceAddr string
+	Oauth           ouser.OauthConfig
 }
 
 func main() {
@@ -34,14 +30,14 @@ func main() {
 		ouser.WithUserService(
 			corev1connect.NewUserServiceClient(
 				bufcutil.NewHttpClient(),
-				"http://"+config.Common.UserServiceAddr,
+				"http://"+config.UserServiceAddr,
 			),
 		),
 		ouser.WithSecretManager(config.Oauth),
 	}
 
 	_, api := corev1connect.NewOAuthUserServiceHandler(
-		ouser.NewOauthUserServer(config.Common.JwtSecret, opts...),
+		ouser.NewOauthUserServer(config.JwtSecret, opts...),
 		connect.WithInterceptors(interceptors.NewReqidInterceptor()),
 	)
 
