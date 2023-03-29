@@ -3,65 +3,65 @@ package core.v1;
 
 option go_package = "github.com/koblas/grpc-todo/protos";
 
-message AuthUserServiceRemoveAssociationResponse {}
+message OAuthUserServiceRemoveAssociationResponse {}
 
-message AuthUserServiceGetAuthUrlRequest {
+message OAuthUserServiceGetAuthUrlRequest {
   string provider = 1;
   string redirect_url = 2;
   string state = 3;
 }
 
-message AuthUserServiceGetAuthUrlResponse { string url = 1; }
+message OAuthUserServiceGetAuthUrlResponse { string url = 1; }
 
-message AuthUserServiceRemoveAssociationRequest {
+message OAuthUserServiceRemoveAssociationRequest {
   string user_id = 1;
   string provider = 2;
 }
 
-message AuthUserServiceListAssociationsRequest {
+message OAuthUserServiceListAssociationsRequest {
   string user_id = 1;
   string provider = 2;
 }
 
-message AuthOauthParams {
+message OAuthOauthParams {
   string provider = 1;
   string provider_id = 2;
   string code = 3;
 }
 
-message AuthEmailParams {
+message OAuthEmailParams {
   string email = 1;
   string password = 2;
 }
 
-message AuthUserServiceListAssociationsResponse { repeated string provider = 1; }
+message OAuthUserServiceListAssociationsResponse { repeated string provider = 1; }
 
-message AuthUserServiceUpsertUserRequest {
+message OAuthUserServiceUpsertUserRequest {
   // If provide, then we're additing an association
   string user_id = 1;
-  AuthOauthParams oauth = 2;
-  AuthEmailParams email = 3;
+  OAuthOauthParams oauth = 2;
+  OAuthEmailParams email = 3;
   string redirect_url = 4;
   string state = 5;
 }
 
-message AuthUserServiceUpsertUserResponse {
+message OAuthUserServiceUpsertUserResponse {
   string user_id = 1;
   bool created = 2;
 }
 
-service AuthUserService {
+service OAuthUserService {
   // Get an authentiction url
-  rpc GetAuthUrl(AuthUserServiceGetAuthUrlRequest) returns (AuthUserServiceGetAuthUrlResponse);
+  rpc GetAuthUrl(OAuthUserServiceGetAuthUrlRequest) returns (OAuthUserServiceGetAuthUrlResponse);
 
   // List all associations for this user
-  rpc ListAssociations(AuthUserServiceListAssociationsRequest)
-      returns (AuthUserServiceListAssociationsResponse);
+  rpc ListAssociations(OAuthUserServiceListAssociationsRequest)
+      returns (OAuthUserServiceListAssociationsResponse);
   // Remove this token from the system
-  rpc RemoveAssociation(AuthUserServiceRemoveAssociationRequest) returns (AuthUserServiceRemoveAssociationResponse);
+  rpc RemoveAssociation(OAuthUserServiceRemoveAssociationRequest) returns (OAuthUserServiceRemoveAssociationResponse);
   // Assoicate or create the user as needed
 
-  rpc UpsertUser(AuthUserServiceUpsertUserRequest) returns (AuthUserServiceUpsertUserResponse);
+  rpc UpsertUser(OAuthUserServiceUpsertUserRequest) returns (OAuthUserServiceUpsertUserResponse);
 
   // TO make 3rd party calls we need a bearer token...
   //   GetTokenSource(ctx context.Context, userGUID entity.UserGUID, provider
