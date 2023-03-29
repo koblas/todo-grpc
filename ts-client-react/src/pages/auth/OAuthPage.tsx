@@ -79,8 +79,6 @@ export default function OAuthPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [provider, code, state]);
 
-  console.log("USE EFFECT", provider, code, redirectUrl);
-
   // When redirected from Google/GitHub/etc.. Show a spinner while we figure out
   //  if everything is valid and the account exists or needs to be created
   if (code && loading) {
