@@ -1,0 +1,33 @@
+syntax = "proto3";
+package api.message.v1;
+
+option go_package = "github.com/koblas/grpc-todo/protos";
+
+message MessageItem {
+  string id = 1;
+  string room_id = 2;
+  string sender = 3;
+  string text = 4;
+}
+
+message ListRequest {
+  string room_id = 1;
+}
+message ListResponse { repeated MessageItem messages = 1; }
+
+message AddRequest { 
+  string room_id = 1;
+  string text = 2;
+}
+message AddResponse { MessageItem message = 1; }
+
+message DeleteRequest { 
+  string room_id = 1;
+  string msg_id = 2; 
+}
+message DeleteResponse { }
+
+service MessageService {
+  rpc add(AddRequest) returns (AddResponse);
+  rpc list(ListRequest) returns (ListResponse);
+}
