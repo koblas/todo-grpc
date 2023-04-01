@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/bufbuild/connect-go"
+	"github.com/koblas/grpc-todo/gen/core/eventbus/v1/eventbusv1connect"
 	messagev1 "github.com/koblas/grpc-todo/gen/core/message/v1"
-	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/rs/xid"
@@ -15,7 +15,7 @@ import (
 type MessageServer struct {
 	store MessageStore
 	// producer corev1.TodoEventbus
-	pubsub corev1connect.MessageEventbusServiceClient
+	pubsub eventbusv1connect.MessageEventbusServiceClient
 }
 
 type Option func(*MessageServer)
@@ -26,7 +26,7 @@ func WithMessageStore(store MessageStore) Option {
 	}
 }
 
-func WithProducer(bus corev1connect.MessageEventbusServiceClient) Option {
+func WithProducer(bus eventbusv1connect.MessageEventbusServiceClient) Option {
 	return func(cfg *MessageServer) {
 		cfg.pubsub = bus
 	}

@@ -7,8 +7,9 @@ import (
 	"net/http"
 
 	"github.com/bufbuild/connect-go"
+	eventv1 "github.com/koblas/grpc-todo/gen/core/eventbus/v1"
+	"github.com/koblas/grpc-todo/gen/core/eventbus/v1/eventbusv1connect"
 	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
-	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/protoutil"
 	"go.uber.org/zap"
@@ -22,12 +23,12 @@ type SocketMessage struct {
 }
 
 type UserServer struct {
-	producer corev1connect.BroadcastEventbusServiceClient
+	producer eventbusv1connect.BroadcastEventbusServiceClient
 }
 
 type Option func(*UserServer)
 
-func WithProducer(producer corev1connect.BroadcastEventbusServiceClient) Option {
+func WithProducer(producer eventbusv1connect.BroadcastEventbusServiceClient) Option {
 	return func(conf *UserServer) {
 		conf.producer = producer
 	}
@@ -40,12 +41,12 @@ func NewUserChangeServer(opts ...Option) map[string]http.Handler {
 		opt(&svr)
 	}
 
-	_, api := corev1connect.NewUserEventbusServiceHandler(&svr)
+	_, api := eventbusv1connect.NewUserEventbusServiceHandler(&svr)
 
 	return map[string]http.Handler{"websocket.user": api}
 }
 
-func (svc *UserServer) UserChange(ctx context.Context, eventIn *connect.Request[corev1.UserChangeEvent]) (*connect.Response[corev1.UserEventbusUserChangeResponse], error) {
+func (svc *UserServer) UserChange(ctx context.Context, eventIn *connect.Request[corev1.UserChangeEvent]) (*connect.Response[eventv1.UserEventbusUserChangeResponse], error) {
 	event := eventIn.Msg
 	log := logger.FromContext(ctx)
 	log.Info("received user event")
@@ -92,18 +93,18 @@ func (svc *UserServer) UserChange(ctx context.Context, eventIn *connect.Request[
 		log.With(zap.Error(err)).Error("failed to send to websocket")
 	}
 
-	return connect.NewResponse(&corev1.UserEventbusUserChangeResponse{}), nil
+	return connect.NewResponse(&eventv1.UserEventbusUserChangeResponse{}), nil
 }
 
-func (*UserServer) SecurityPasswordChange(context.Context, *connect.Request[corev1.UserSecurityEvent]) (*connect.Response[corev1.UserEventbusSecurityPasswordChangeResponse], error) {
-	return connect.NewResponse(&corev1.UserEventbusSecurityPasswordChangeResponse{}), nil
+func (*UserServer) SecurityPasswordChange(context.Context, *connect.Request[corev1.UserSecurityEvent]) (*connect.Response[eventv1.UserEventbusSecurityPasswordChangeResponse], error) {
+	return connect.NewResponse(&eventv1.UserEventbusSecurityPasswordChangeResponse{}), nil
 }
-func (*UserServer) SecurityForgotRequest(context.Context, *connect.Request[corev1.UserSecurityEvent]) (*connect.Response[corev1.UserEventbusSecurityForgotRequestResponse], error) {
-	return connect.NewResponse(&corev1.UserEventbusSecurityForgotRequestResponse{}), nil
+func (*UserServer) SecurityForgotRequest(context.Context, *connect.Request[corev1.UserSecurityEvent]) (*connect.Response[eventv1.UserEventbusSecurityForgotRequestResponse], error) {
+	return connect.NewResponse(&eventv1.UserEventbusSecurityForgotRequestResponse{}), nil
 }
-func (*UserServer) SecurityRegisterToken(context.Context, *connect.Request[corev1.UserSecurityEvent]) (*connect.Response[corev1.UserEventbusSecurityRegisterTokenResponse], error) {
-	return connect.NewResponse(&corev1.UserEventbusSecurityRegisterTokenResponse{}), nil
+func (*UserServer) SecurityRegisterToken(context.Context, *connect.Request[corev1.UserSecurityEvent]) (*connect.Response[eventv1.UserEventbusSecurityRegisterTokenResponse], error) {
+	return connect.NewResponse(&eventv1.UserEventbusSecurityRegisterTokenResponse{}), nil
 }
-func (*UserServer) SecurityInviteToken(context.Context, *connect.Request[corev1.UserSecurityEvent]) (*connect.Response[corev1.UserEventbusSecurityInviteTokenResponse], error) {
-	return connect.NewResponse(&corev1.UserEventbusSecurityInviteTokenResponse{}), nil
+func (*UserServer) SecurityInviteToken(context.Context, *connect.Request[corev1.UserSecurityEvent]) (*connect.Response[eventv1.UserEventbusSecurityInviteTokenResponse], error) {
+	return connect.NewResponse(&eventv1.UserEventbusSecurityInviteTokenResponse{}), nil
 }

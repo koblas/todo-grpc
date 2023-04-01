@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/bufbuild/connect-go"
+	"github.com/koblas/grpc-todo/gen/core/eventbus/v1/eventbusv1connect"
 	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
@@ -29,7 +30,7 @@ func main() {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
-	producer := corev1connect.NewUserEventbusServiceClient(
+	producer := eventbusv1connect.NewUserEventbusServiceClient(
 		awsutil.NewTwirpCallLambda(),
 		config.BusEntityArn,
 	)

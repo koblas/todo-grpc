@@ -11,8 +11,9 @@ import (
 
 	"github.com/bufbuild/connect-go"
 	"github.com/disintegration/imaging"
+	eventv1 "github.com/koblas/grpc-todo/gen/core/eventbus/v1"
+	"github.com/koblas/grpc-todo/gen/core/eventbus/v1/eventbusv1connect"
 	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
-	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/filestore"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/oklog/ulid/v2"
@@ -37,11 +38,11 @@ type fileUploaded struct {
 func NewFileUploaded(config WorkerConfig) http.Handler {
 	svc := &fileUploaded{WorkerConfig: config}
 
-	_, api := corev1connect.NewFileEventbusServiceHandler(svc)
+	_, api := eventbusv1connect.NewFileEventbusServiceHandler(svc)
 	return api
 }
 
-func (cfg *fileUploaded) FileUploaded(ctx context.Context, msg *connect.Request[corev1.FileServiceUploadEvent]) (*connect.Response[corev1.FileEventbusFileUploadedResponse], error) {
+func (cfg *fileUploaded) FileUploaded(ctx context.Context, msg *connect.Request[corev1.FileServiceUploadEvent]) (*connect.Response[eventv1.FileEventbusFileUploadedResponse], error) {
 	info := msg.Msg.Info
 	parts := strings.Split(info.Url, "/")
 	lastPart := parts[len(parts)-1]
@@ -56,7 +57,7 @@ func (cfg *fileUploaded) FileUploaded(ctx context.Context, msg *connect.Request[
 
 	// We only handle profile images
 	if info.FileType != "profile_image.upload" || info.UserId == nil {
-		return connect.NewResponse(&corev1.FileEventbusFileUploadedResponse{}), nil
+		return connect.NewResponse(&eventv1.FileEventbusFileUploadedResponse{}), nil
 	}
 
 	fileType := strings.TrimSuffix(info.FileType, ".upload")
@@ -88,28 +89,28 @@ func (cfg *fileUploaded) FileUploaded(ctx context.Context, msg *connect.Request[
 	buf, err := cfg.fetchFromS3(ctx, log, msg.Msg)
 	if err != nil {
 		postComplete("unable to get data")
-		return connect.NewResponse(&corev1.FileEventbusFileUploadedResponse{}), nil
+		return connect.NewResponse(&eventv1.FileEventbusFileUploadedResponse{}), nil
 	}
 
 	writer, err := cfg.resizeImage(ctx, log, buf)
 	if err != nil {
 		postComplete("unable to get data")
-		return connect.NewResponse(&corev1.FileEventbusFileUploadedResponse{}), nil
+		return connect.NewResponse(&eventv1.FileEventbusFileUploadedResponse{}), nil
 	}
 
 	avatarUrl, err := cfg.saveToS3(ctx, log, *info.UserId, fileType, writer)
 	if err != nil {
 		postComplete("unable to save data")
-		return connect.NewResponse(&corev1.FileEventbusFileUploadedResponse{}), nil
+		return connect.NewResponse(&eventv1.FileEventbusFileUploadedResponse{}), nil
 	}
 
 	if err := cfg.updateUser(ctx, log, *info.UserId, avatarUrl); err != nil {
 		postComplete("user update failed")
-		return connect.NewResponse(&corev1.FileEventbusFileUploadedResponse{}), nil
+		return connect.NewResponse(&eventv1.FileEventbusFileUploadedResponse{}), nil
 	}
 
 	postComplete("")
-	return connect.NewResponse(&corev1.FileEventbusFileUploadedResponse{}), nil
+	return connect.NewResponse(&eventv1.FileEventbusFileUploadedResponse{}), nil
 }
 
 func (cfg *fileUploaded) fetchFromS3(ctx context.Context, log logger.Logger, msg *corev1.FileServiceUploadEvent) (bytes.Buffer, error) {
@@ -196,9 +197,9 @@ func (cfg *fileUploaded) updateUser(ctx context.Context, log logger.Logger, user
 	return nil
 }
 
-func (cfg *fileUploaded) FileComplete(ctx context.Context, msg *connect.Request[corev1.FileServiceCompleteEvent]) (*connect.Response[corev1.FileEventbusFileCompleteResponse], error) {
+func (cfg *fileUploaded) FileComplete(ctx context.Context, msg *connect.Request[corev1.FileServiceCompleteEvent]) (*connect.Response[eventv1.FileEventbusFileCompleteResponse], error) {
 	log := logger.FromContext(ctx).With(zap.String("fileType", msg.Msg.Info.FileType))
 
 	log.Info("in ready handler")
-	return connect.NewResponse(&corev1.FileEventbusFileCompleteResponse{}), nil
+	return connect.NewResponse(&eventv1.FileEventbusFileCompleteResponse{}), nil
 }

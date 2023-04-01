@@ -8,15 +8,16 @@ import (
 
 	"github.com/bufbuild/connect-go"
 	messagev1 "github.com/koblas/grpc-todo/gen/api/message/v1"
+	eventv1 "github.com/koblas/grpc-todo/gen/core/eventbus/v1"
+	"github.com/koblas/grpc-todo/gen/core/eventbus/v1/eventbusv1connect"
 	mcorev1 "github.com/koblas/grpc-todo/gen/core/message/v1"
 	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
-	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"go.uber.org/zap"
 )
 
 type MessageServer struct {
-	producer corev1connect.BroadcastEventbusServiceClient
+	producer eventbusv1connect.BroadcastEventbusServiceClient
 }
 
 type SocketMessage struct {
@@ -28,7 +29,7 @@ type SocketMessage struct {
 
 type Option func(*MessageServer)
 
-func WithProducer(producer corev1connect.BroadcastEventbusServiceClient) Option {
+func WithProducer(producer eventbusv1connect.BroadcastEventbusServiceClient) Option {
 	return func(conf *MessageServer) {
 		conf.producer = producer
 	}
@@ -41,11 +42,11 @@ func NewMessageChangeServer(opts ...Option) map[string]http.Handler {
 		opt(&svr)
 	}
 
-	_, api := corev1connect.NewMessageEventbusServiceHandler(&svr)
+	_, api := eventbusv1connect.NewMessageEventbusServiceHandler(&svr)
 	return map[string]http.Handler{"message.change": api}
 }
 
-func (svc *MessageServer) Change(ctx context.Context, eventIn *connect.Request[mcorev1.MessageChangeEvent]) (*connect.Response[corev1.MessageEventbusServiceChangeResponse], error) {
+func (svc *MessageServer) Change(ctx context.Context, eventIn *connect.Request[mcorev1.MessageChangeEvent]) (*connect.Response[eventv1.MessageEventbusServiceChangeResponse], error) {
 	event := eventIn.Msg
 	log := logger.FromContext(ctx)
 	log.Info("received message event")
@@ -89,5 +90,5 @@ func (svc *MessageServer) Change(ctx context.Context, eventIn *connect.Request[m
 		}
 	}
 
-	return connect.NewResponse(&corev1.MessageEventbusServiceChangeResponse{}), nil
+	return connect.NewResponse(&eventv1.MessageEventbusServiceChangeResponse{}), nil
 }

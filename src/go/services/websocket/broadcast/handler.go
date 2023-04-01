@@ -9,8 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	smithy "github.com/aws/smithy-go"
 	"github.com/bufbuild/connect-go"
+	eventv1 "github.com/koblas/grpc-todo/gen/core/eventbus/v1"
+	"github.com/koblas/grpc-todo/gen/core/eventbus/v1/eventbusv1connect"
 	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
-	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/store/websocket"
 	"go.uber.org/zap"
@@ -57,12 +58,12 @@ func NewBroadcastServer(opts ...Option) map[string]http.Handler {
 		opt(&svr)
 	}
 
-	_, api := corev1connect.NewBroadcastEventbusServiceHandler(&svr)
+	_, api := eventbusv1connect.NewBroadcastEventbusServiceHandler(&svr)
 
 	return map[string]http.Handler{"websocket.broadcast": api}
 }
 
-func (svc *BroadcastServer) Send(ctx context.Context, event *connect.Request[corev1.BroadcastEvent]) (*connect.Response[corev1.BroadcastEventbusSendResponse], error) {
+func (svc *BroadcastServer) Send(ctx context.Context, event *connect.Request[corev1.BroadcastEvent]) (*connect.Response[eventv1.BroadcastEventbusSendResponse], error) {
 	log := logger.FromContext(ctx).With(zap.String("userId", event.Msg.Filter.UserId))
 	log.Info("received broadcast event")
 
@@ -109,5 +110,5 @@ func (svc *BroadcastServer) Send(ctx context.Context, event *connect.Request[cor
 		log.With("count", len(conns), "success", success).Info("send partial failure")
 	}
 
-	return connect.NewResponse(&corev1.BroadcastEventbusSendResponse{}), nil
+	return connect.NewResponse(&eventv1.BroadcastEventbusSendResponse{}), nil
 }

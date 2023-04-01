@@ -6,14 +6,15 @@ import (
 	"net/http"
 
 	"github.com/bufbuild/connect-go"
+	eventv1 "github.com/koblas/grpc-todo/gen/core/eventbus/v1"
+	"github.com/koblas/grpc-todo/gen/core/eventbus/v1/eventbusv1connect"
 	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
-	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"go.uber.org/zap"
 )
 
 type FileServer struct {
-	producer corev1connect.BroadcastEventbusServiceClient
+	producer eventbusv1connect.BroadcastEventbusServiceClient
 }
 
 type SocketMessage struct {
@@ -25,7 +26,7 @@ type SocketMessage struct {
 
 type Option func(*FileServer)
 
-func WithProducer(producer corev1connect.BroadcastEventbusServiceClient) Option {
+func WithProducer(producer eventbusv1connect.BroadcastEventbusServiceClient) Option {
 	return func(conf *FileServer) {
 		conf.producer = producer
 	}
@@ -38,15 +39,15 @@ func NewFileChangeServer(opts ...Option) map[string]http.Handler {
 		opt(&svr)
 	}
 
-	_, api := corev1connect.NewFileEventbusServiceHandler(&svr)
+	_, api := eventbusv1connect.NewFileEventbusServiceHandler(&svr)
 	return map[string]http.Handler{"websocket.file": api}
 }
 
-func (svc *FileServer) FileUploaded(ctx context.Context, eventIn *connect.Request[corev1.FileServiceUploadEvent]) (*connect.Response[corev1.FileEventbusFileUploadedResponse], error) {
-	return connect.NewResponse(&corev1.FileEventbusFileUploadedResponse{}), nil
+func (svc *FileServer) FileUploaded(ctx context.Context, eventIn *connect.Request[corev1.FileServiceUploadEvent]) (*connect.Response[eventv1.FileEventbusFileUploadedResponse], error) {
+	return connect.NewResponse(&eventv1.FileEventbusFileUploadedResponse{}), nil
 }
 
-func (svc *FileServer) FileComplete(ctx context.Context, eventIn *connect.Request[corev1.FileServiceCompleteEvent]) (*connect.Response[corev1.FileEventbusFileCompleteResponse], error) {
+func (svc *FileServer) FileComplete(ctx context.Context, eventIn *connect.Request[corev1.FileServiceCompleteEvent]) (*connect.Response[eventv1.FileEventbusFileCompleteResponse], error) {
 	event := eventIn.Msg
 	log := logger.FromContext(ctx)
 	log.Info("received file event")
@@ -81,5 +82,5 @@ func (svc *FileServer) FileComplete(ctx context.Context, eventIn *connect.Reques
 		log.With(zap.Error(err)).Error("failed to send to websocket")
 	}
 
-	return connect.NewResponse(&corev1.FileEventbusFileCompleteResponse{}), nil
+	return connect.NewResponse(&eventv1.FileEventbusFileCompleteResponse{}), nil
 }

@@ -5,8 +5,9 @@ import (
 	"net/http"
 
 	"github.com/bufbuild/connect-go"
+	eventv1 "github.com/koblas/grpc-todo/gen/core/eventbus/v1"
+	"github.com/koblas/grpc-todo/gen/core/eventbus/v1/eventbusv1connect"
 	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
-	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"go.uber.org/zap"
@@ -28,11 +29,11 @@ type userEmailConfirm struct {
 func NewUserEmailConfirm(config WorkerConfig) http.Handler {
 	svc := &userEmailConfirm{WorkerConfig: config}
 
-	_, api := corev1connect.NewUserEventbusServiceHandler(svc)
+	_, api := eventbusv1connect.NewUserEventbusServiceHandler(svc)
 	return api
 }
 
-func (cfg *userEmailConfirm) SecurityRegisterToken(ctx context.Context, msgIn *connect.Request[corev1.UserSecurityEvent]) (*connect.Response[corev1.UserEventbusSecurityRegisterTokenResponse], error) {
+func (cfg *userEmailConfirm) SecurityRegisterToken(ctx context.Context, msgIn *connect.Request[corev1.UserSecurityEvent]) (*connect.Response[eventv1.UserEventbusSecurityRegisterTokenResponse], error) {
 	log := logger.FromContext(ctx)
 	if msgIn.Msg.User == nil {
 		log.With(zap.Any("msg", msgIn.Msg)).Info("RAW MESSAGE")
@@ -67,5 +68,5 @@ func (cfg *userEmailConfirm) SecurityRegisterToken(ctx context.Context, msgIn *c
 		}
 	}
 
-	return connect.NewResponse(&corev1.UserEventbusSecurityRegisterTokenResponse{}), err
+	return connect.NewResponse(&eventv1.UserEventbusSecurityRegisterTokenResponse{}), err
 }

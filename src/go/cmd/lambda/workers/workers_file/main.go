@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/koblas/grpc-todo/gen/core/eventbus/v1/eventbusv1connect"
 	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
@@ -34,7 +35,7 @@ func main() {
 
 		client := awsutil.NewTwirpCallLambda()
 		opts = []workers_file.Option{
-			workers_file.WithProducer(corev1connect.NewFileEventbusServiceClient(
+			workers_file.WithProducer(eventbusv1connect.NewFileEventbusServiceClient(
 				client,
 				config.BusEntityArn,
 			)),

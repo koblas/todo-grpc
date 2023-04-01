@@ -1,5 +1,5 @@
 syntax = "proto3";
-package core.v1;
+package core.eventbus.v1;
 
 option go_package = "github.com/koblas/grpc-todo/protos";
 

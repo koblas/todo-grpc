@@ -41,7 +41,7 @@ export class WorkerFile extends Construct {
 
     handler.eventQueue("worker-file", eventbus, {
       filterPolicy: JSON.stringify({
-        "twirp.path": ["/core.v1.FileEventbusService/FileUploaded"],
+        "twirp.path": ["/core.eventbus.v1.FileEventbusService/FileUploaded"],
       }),
     });
   }
@@ -73,10 +73,10 @@ export class WorkerUser extends Construct {
     handler.eventQueue("worker-user", eventbus, {
       filterPolicy: JSON.stringify({
         "twirp.path": [
-          "/core.v1.UserEventbusService/SecurityPasswordChange",
-          "/core.v1.UserEventbusService/SecurityRegisterToken",
-          "/core.v1.UserEventbusService/SecurityForgotRequest",
-          "/core.v1.UserEventbusService/SecurityInviteToken",
+          "/core.eventbus.v1.UserEventbusService/SecurityPasswordChange",
+          "/core.eventbus.v1.UserEventbusService/SecurityRegisterToken",
+          "/core.eventbus.v1.UserEventbusService/SecurityForgotRequest",
+          "/core.eventbus.v1.UserEventbusService/SecurityInviteToken",
         ],
       }),
     });

@@ -25,7 +25,7 @@ export class WebsocketFile extends Construct {
 
     handler.eventQueue("websocket-file", eventbus, {
       filterPolicy: JSON.stringify({
-        "twirp.path": ["/core.v1.FileEventbusService/FileCompleted"],
+        "twirp.path": ["/core.eventbus.v1.FileEventbusService/FileCompleted"],
       }),
     });
   }
@@ -48,7 +48,7 @@ export class WebsocketTodo extends Construct {
 
     handler.eventQueue("websocket-todo", eventbus, {
       filterPolicy: JSON.stringify({
-        "twirp.path": ["/core.v1.TodoEventbusService/TodoChange"],
+        "twirp.path": ["/core.eventbus.v1.TodoEventbusService/TodoChange"],
       }),
     });
   }
@@ -71,7 +71,7 @@ export class WebsocketUser extends Construct {
 
     handler.eventQueue("websocket-user", eventbus, {
       filterPolicy: JSON.stringify({
-        "twirp.path": ["/core.v1.UserEventbusService/UserChange"],
+        "twirp.path": ["/core.eventbus.v1.UserEventbusService/UserChange"],
       }),
     });
   }
@@ -127,7 +127,7 @@ export class WebsocketBroadcast extends Construct {
 
     handler.eventQueue("websocket-broadcast", eventbus, {
       filterPolicy: JSON.stringify({
-        "twirp.path": ["/core.v1.BroadcastEventbusService/Send"],
+        "twirp.path": ["/core.eventbus.v1.BroadcastEventbusService/Send"],
       }),
     });
   }

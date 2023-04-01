@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/bufbuild/connect-go"
+	"github.com/koblas/grpc-todo/gen/core/eventbus/v1/eventbusv1connect"
 	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
-	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/rs/xid"
@@ -15,7 +15,7 @@ import (
 type TodoServer struct {
 	todos TodoStore
 	// producer corev1.TodoEventbus
-	pubsub corev1connect.TodoEventbusServiceClient
+	pubsub eventbusv1connect.TodoEventbusServiceClient
 }
 
 type Option func(*TodoServer)
@@ -26,7 +26,7 @@ func WithTodoStore(store TodoStore) Option {
 	}
 }
 
-func WithProducer(bus corev1connect.TodoEventbusServiceClient) Option {
+func WithProducer(bus eventbusv1connect.TodoEventbusServiceClient) Option {
 	return func(cfg *TodoServer) {
 		cfg.pubsub = bus
 	}

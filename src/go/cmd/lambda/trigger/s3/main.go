@@ -7,8 +7,8 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	lambdaGo "github.com/aws/aws-lambda-go/lambda"
 	"github.com/bufbuild/connect-go"
+	"github.com/koblas/grpc-todo/gen/core/eventbus/v1/eventbusv1connect"
 	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
-	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
@@ -22,7 +22,7 @@ type Config struct {
 }
 
 type Handler struct {
-	produer corev1connect.FileEventbusServiceClient
+	produer eventbusv1connect.FileEventbusServiceClient
 }
 
 func (state *Handler) Start(ctx context.Context) error {
@@ -67,7 +67,7 @@ func main() {
 		log.With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
-	producer := corev1connect.NewFileEventbusServiceClient(
+	producer := eventbusv1connect.NewFileEventbusServiceClient(
 		awsutil.NewTwirpCallLambda(),
 		config.BusEntityArn,
 	)

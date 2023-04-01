@@ -5,8 +5,9 @@ import (
 	"net/http"
 
 	"github.com/bufbuild/connect-go"
+	eventv1 "github.com/koblas/grpc-todo/gen/core/eventbus/v1"
+	"github.com/koblas/grpc-todo/gen/core/eventbus/v1/eventbusv1connect"
 	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
-	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"go.uber.org/zap"
@@ -28,11 +29,11 @@ type userEmailInvite struct {
 func NewUserEmailInvite(config WorkerConfig) http.Handler {
 	svc := &userEmailInvite{WorkerConfig: config}
 
-	_, api := corev1connect.NewUserEventbusServiceHandler(svc)
+	_, api := eventbusv1connect.NewUserEventbusServiceHandler(svc)
 	return api
 }
 
-func (cfg *userEmailInvite) SecurityInviteToken(ctx context.Context, msgIn *connect.Request[corev1.UserSecurityEvent]) (*connect.Response[corev1.UserEventbusSecurityInviteTokenResponse], error) {
+func (cfg *userEmailInvite) SecurityInviteToken(ctx context.Context, msgIn *connect.Request[corev1.UserSecurityEvent]) (*connect.Response[eventv1.UserEventbusSecurityInviteTokenResponse], error) {
 	msg := msgIn.Msg
 	log := logger.FromContext(ctx).With(zap.Int32("action", int32(msg.Action))).With(zap.String("email", msg.User.Email))
 
@@ -66,5 +67,5 @@ func (cfg *userEmailInvite) SecurityInviteToken(ctx context.Context, msgIn *conn
 		}
 	}
 
-	return connect.NewResponse(&corev1.UserEventbusSecurityInviteTokenResponse{}), nil
+	return connect.NewResponse(&eventv1.UserEventbusSecurityInviteTokenResponse{}), nil
 }

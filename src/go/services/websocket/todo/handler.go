@@ -8,14 +8,15 @@ import (
 
 	"github.com/bufbuild/connect-go"
 	apiv1 "github.com/koblas/grpc-todo/gen/api/v1"
+	eventv1 "github.com/koblas/grpc-todo/gen/core/eventbus/v1"
+	"github.com/koblas/grpc-todo/gen/core/eventbus/v1/eventbusv1connect"
 	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
-	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"go.uber.org/zap"
 )
 
 type TodoServer struct {
-	producer corev1connect.BroadcastEventbusServiceClient
+	producer eventbusv1connect.BroadcastEventbusServiceClient
 }
 
 type SocketMessage struct {
@@ -27,7 +28,7 @@ type SocketMessage struct {
 
 type Option func(*TodoServer)
 
-func WithProducer(producer corev1connect.BroadcastEventbusServiceClient) Option {
+func WithProducer(producer eventbusv1connect.BroadcastEventbusServiceClient) Option {
 	return func(conf *TodoServer) {
 		conf.producer = producer
 	}
@@ -40,11 +41,11 @@ func NewTodoChangeServer(opts ...Option) map[string]http.Handler {
 		opt(&svr)
 	}
 
-	_, api := corev1connect.NewTodoEventbusServiceHandler(&svr)
+	_, api := eventbusv1connect.NewTodoEventbusServiceHandler(&svr)
 	return map[string]http.Handler{"todo.change": api}
 }
 
-func (svc *TodoServer) TodoChange(ctx context.Context, eventIn *connect.Request[corev1.TodoChangeEvent]) (*connect.Response[corev1.TodoEventbusTodoChangeResponse], error) {
+func (svc *TodoServer) TodoChange(ctx context.Context, eventIn *connect.Request[corev1.TodoChangeEvent]) (*connect.Response[eventv1.TodoEventbusTodoChangeResponse], error) {
 	event := eventIn.Msg
 	log := logger.FromContext(ctx)
 	log.Info("received todo event")
@@ -93,5 +94,5 @@ func (svc *TodoServer) TodoChange(ctx context.Context, eventIn *connect.Request[
 		log.With(zap.Error(err)).Error("failed to send to websocket")
 	}
 
-	return connect.NewResponse(&corev1.TodoEventbusTodoChangeResponse{}), nil
+	return connect.NewResponse(&eventv1.TodoEventbusTodoChangeResponse{}), nil
 }

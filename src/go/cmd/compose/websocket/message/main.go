@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
-	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
+	"github.com/koblas/grpc-todo/gen/core/eventbus/v1/eventbusv1connect"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/manager"
 	"github.com/koblas/grpc-todo/pkg/natsutil"
@@ -26,7 +26,7 @@ func main() {
 	}
 
 	nats := natsutil.NewNatsClient(config.NatsAddr)
-	producer := corev1connect.NewBroadcastEventbusServiceClient(nats, "")
+	producer := eventbusv1connect.NewBroadcastEventbusServiceClient(nats, "")
 
 	s := message.NewMessageChangeServer(
 		message.WithProducer(producer),
@@ -34,6 +34,6 @@ func main() {
 
 	mgr.Start(nats.TopicConsumer(
 		mgr.Context(),
-		natsutil.ConnectToTopic(corev1connect.MessageEventbusServiceName),
+		natsutil.ConnectToTopic(eventbusv1connect.MessageEventbusServiceName),
 		s))
 }

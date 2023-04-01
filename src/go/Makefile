@@ -8,6 +8,7 @@ proto:
 	buf generate ../../protos/
 	(cd gen/core/v1/corev1connect && minimock -s _mock.go )
 	(cd gen/core/message/v1/messagev1connect && minimock -s _mock.go )
+	(cd gen/core/eventbus/v1/eventbusv1connect && minimock -s _mock.go )
 
 
 start:

@@ -3,6 +3,7 @@ package workers_file
 import (
 	"net/http"
 
+	"github.com/koblas/grpc-todo/gen/core/eventbus/v1/eventbusv1connect"
 	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/filestore"
 )
@@ -21,7 +22,7 @@ type WorkerConfig struct {
 	config struct {
 		PublicBucket string
 	}
-	pubsub corev1connect.FileEventbusServiceClient
+	pubsub eventbusv1connect.FileEventbusServiceClient
 	// fileService corepbv1.FileService
 	fileService filestore.Filestore
 	userService corev1connect.UserServiceClient
@@ -29,7 +30,7 @@ type WorkerConfig struct {
 
 type Option func(*WorkerConfig)
 
-func WithProducer(bus corev1connect.FileEventbusServiceClient) Option {
+func WithProducer(bus eventbusv1connect.FileEventbusServiceClient) Option {
 	return func(cfg *WorkerConfig) {
 		cfg.pubsub = bus
 	}

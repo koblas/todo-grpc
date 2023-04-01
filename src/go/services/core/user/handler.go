@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/bufbuild/connect-go"
+	"github.com/koblas/grpc-todo/gen/core/eventbus/v1/eventbusv1connect"
 	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
-	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/key_manager"
 	"github.com/koblas/grpc-todo/pkg/logger"
@@ -25,7 +25,7 @@ func (UserId) Prefix() string { return "U" }
 // Server represents the gRPC server
 type UserServer struct {
 	users  UserStore
-	pubsub corev1connect.UserEventbusServiceClient
+	pubsub eventbusv1connect.UserEventbusServiceClient
 	kms    key_manager.Encoder
 }
 
@@ -50,7 +50,7 @@ func WithUserStore(store UserStore) Option {
 	}
 }
 
-func WithProducer(bus corev1connect.UserEventbusServiceClient) Option {
+func WithProducer(bus eventbusv1connect.UserEventbusServiceClient) Option {
 	return func(cfg *UserServer) {
 		cfg.pubsub = bus
 	}
