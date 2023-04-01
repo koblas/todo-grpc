@@ -5,87 +5,52 @@ global: {}
 # Portal
 ts-client-react:
   enabled: true
-  image:
-    version:
 
-core-user:
-  enabled: true
-  image:
-    version:
-core-file:
-  enabled: false
-  image:
-    version:
-core-todo:
-  enabled: true
-  image:
-    version:
 core-oauth-user:
   enabled: true
-  image:
-    version:
+core-message:
+  enabled: true
 core-send-email:
   enabled: true
-  image:
-    version:
+core-todo:
+  enabled: true
+core-user:
+  enabled: true
 
 publicapi-auth:
   enabled: true
-  image:
-    version:
 publicapi-gpt:
   enabled: true
-  image:
-    version:
-publicapi-websocket:
-  enabled: true
-  image:
-publicapi-user:
-  enabled: true
-  image:
-publicapi-todo:
-  enabled: true
-  image:
-    version:
 publicapi-file:
   enabled: true
-  image:
-    version:
-publicapi-fileput:
-  enabled: false
-  image:
-    version:
+publicapi-message:
+  enabled: true
+publicapi-todo:
+  enabled: true
+publicapi-user:
+  enabled: true
+publicapi-websocket:
+  enabled: true
 
 websocket-broadcast:
   enabled: true
-  image:
-    version:
 websocket-file:
   enabled: true
-  image:
-    version:
+websocket-message:
+  enabled: true
 websocket-todo:
   enabled: true
-  image:
-    version:
 websocket-user:
   enabled: true
-  image:
-    version:
 
 workers-user:
   enabled: true
-  image:
-    version:
 workers-file:
   enabled: true
-  image:
-    version:
 
 trigger-minio:
   enabled: true
-  image:
-    version:
+
 #
 #  External
 #

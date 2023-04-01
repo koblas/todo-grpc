@@ -13,26 +13,26 @@ dependencies:
   version: 0.1.0
   condition: ts-client-react.enabled
 
-- name: core-user
-  repository: file://charts/core-user
-  version: 0.1.0
-  condition: core-user.enabled
-- name: core-todo
-  repository: file://charts/core-todo
-  version: 0.1.0
-  condition: core-todo.enabled
-- name: core-file
-  repository: file://charts/core-file
-  version: 0.1.0
-  condition: core-file.enabled
-- name: core-send-email
-  repository: file://charts/core-send-email
-  version: 0.1.0
-  condition: core-send-email.enabled
 - name: core-oauth-user
   repository: file://charts/core-oauth-user
   version: 0.1.0
   condition: core-oauth-user.enabled
+- name: core-message
+  repository: file://charts/core-message
+  version: 0.1.0
+  condition: core-message.enabled
+- name: core-send-email
+  repository: file://charts/core-send-email
+  version: 0.1.0
+  condition: core-send-email.enabled
+- name: core-todo
+  repository: file://charts/core-todo
+  version: 0.1.0
+  condition: core-todo.enabled
+- name: core-user
+  repository: file://charts/core-user
+  version: 0.1.0
+  condition: core-user.enabled
 
 - name: publicapi-auth
   repository: file://charts/publicapi-auth
@@ -42,22 +42,22 @@ dependencies:
   repository: file://charts/publicapi-gpt
   version: 0.1.0
   condition: publicapi-gpt.enabled
-- name: publicapi-user
-  repository: file://charts/publicapi-user
-  version: 0.1.0
-  condition: publicapi-user.enabled
-- name: publicapi-todo
-  repository: file://charts/publicapi-todo
-  version: 0.1.0
-  condition: publicapi-todo.enabled
 - name: publicapi-file
   repository: file://charts/publicapi-file
   version: 0.1.0
   condition: publicapi-file.enabled
-- name: publicapi-fileput
-  repository: file://charts/publicapi-fileput
+- name: publicapi-message
+  repository: file://charts/publicapi-message
   version: 0.1.0
-  condition: publicapi-fileput.enabled
+  condition: publicapi-message.enabled
+- name: publicapi-todo
+  repository: file://charts/publicapi-todo
+  version: 0.1.0
+  condition: publicapi-todo.enabled
+- name: publicapi-user
+  repository: file://charts/publicapi-user
+  version: 0.1.0
+  condition: publicapi-user.enabled
 - name: publicapi-websocket
   repository: file://charts/publicapi-websocket
   version: 0.1.0
@@ -71,6 +71,10 @@ dependencies:
   repository: file://charts/websocket-file
   version: 0.1.0
   condition: websocket-file.enabled
+- name: websocket-message
+  repository: file://charts/websocket-message
+  version: 0.1.0
+  condition: websocket-message.enabled
 - name: websocket-todo
   repository: file://charts/websocket-todo
   version: 0.1.0

@@ -3,17 +3,20 @@ kind: ConfigMap
 metadata:
   name: dev-variables-env
 data:
-  EMAILSERVICE_ADDR: core-send-email:14586
-  OAUTH_USER_SERVICE_ADDR: core-oauth-user:14586
   REDIS_ADDR: redis-master:6379
   NATS_ADDR: nats:4222
   BUS_ENTITY_ARN: ""
-  TODO_SERVICE_ADDR: core-todo:14586
   URL_BASE_UI: http://localhost:1234
-  USER_SERVICE_ADDR: core-user:14586
-  FILE_SERVICE_ADDR: core-file:14586
   DYNAMO_STORE_ADDR: dynamodb:8000
   MINIO_ENDPOINT: minio:9000
+# Buckets
   UPLOAD_BUCKET: core-uploads
   PUBLIC_BUCKET: core-public
   PRIVATE_BUCKET: core-private
+# Services
+  FILE_SERVICE_ADDR: core-file:14586
+  EMAILSERVICE_ADDR: core-send-email:14586
+  MESSAGE_SERVICE_ADDR: core-message:14586
+  OAUTH_USER_SERVICE_ADDR: core-oauth-user:14586
+  TODO_SERVICE_ADDR: core-todo:14586
+  USER_SERVICE_ADDR: core-user:14586
