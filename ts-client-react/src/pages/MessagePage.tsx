@@ -6,16 +6,16 @@ import { Header } from "../components/chat/Header";
 import { Footer } from "../components/chat/Footer";
 import { Divider } from "../components/chat/Divider";
 
-const baseMessage: Message[] = [
-  { id: "1", from: "computer", text: "Hi, My Name is HoneyChat" },
-  { id: "2", from: "me", text: "Hey there" },
-  { id: "3", from: "me", text: "Myself Ferin Patel" },
-  {
-    id: "4",
-    from: "computer",
-    text: "Nice to meet you. You can send me message and i'll reply you with same message.",
-  },
-];
+// const baseMessage: Message[] = [
+//   { id: "1", from: "computer", text: "Hi, My Name is HoneyChat" },
+//   { id: "2", from: "me", text: "Hey there" },
+//   { id: "3", from: "me", text: "Myself Ferin Patel" },
+//   {
+//     id: "4",
+//     from: "computer",
+//     text: "Nice to meet you. You can send me message and i'll reply you with same message.",
+//   },
+// ];
 
 function Chat() {
   const roomId = "xyzzy";
