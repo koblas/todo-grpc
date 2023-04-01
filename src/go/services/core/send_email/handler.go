@@ -7,35 +7,37 @@ import (
 	"net/http"
 
 	"github.com/bufbuild/connect-go"
-	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
-	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
+	eventbusv1 "github.com/koblas/grpc-todo/gen/core/eventbus/v1"
+	"github.com/koblas/grpc-todo/gen/core/eventbus/v1/eventbusv1connect"
+	emailv1 "github.com/koblas/grpc-todo/gen/core/send_email/v1"
+	"github.com/koblas/grpc-todo/gen/core/send_email/v1/send_emailv1connect"
 	"github.com/koblas/grpc-todo/pkg/bufcutil"
 )
 
 type SendEmailServer struct {
 	sender Sender
-	pubsub corev1connect.SendEmailEventsServiceClient
+	pubsub eventbusv1connect.SendEmailEventsServiceClient
 }
 
 // This is really hear to make it easy to make sure that you've
 //
 //	tied the correct event to the template that will be sent
-var templates map[corev1.EmailTemplate]emailContent = map[corev1.EmailTemplate]emailContent{
-	corev1.EmailTemplate_EMAIL_TEMPLATE_USER_REGISTERED:   registerUser,
-	corev1.EmailTemplate_EMAIL_TEMPLATE_USER_INVITED:      inviteUser,
-	corev1.EmailTemplate_EMAIL_TEMPLATE_PASSWORD_CHANGE:   passwordChange,
-	corev1.EmailTemplate_EMAIL_TEMPLATE_PASSWORD_RECOVERY: passwordRecovery,
+var templates map[emailv1.EmailTemplate]emailContent = map[emailv1.EmailTemplate]emailContent{
+	emailv1.EmailTemplate_EMAIL_TEMPLATE_USER_REGISTERED:   registerUser,
+	emailv1.EmailTemplate_EMAIL_TEMPLATE_USER_INVITED:      inviteUser,
+	emailv1.EmailTemplate_EMAIL_TEMPLATE_PASSWORD_CHANGE:   passwordChange,
+	emailv1.EmailTemplate_EMAIL_TEMPLATE_PASSWORD_RECOVERY: passwordRecovery,
 }
 
-func NewSendEmailServer(producer corev1connect.SendEmailEventsServiceClient, sender Sender) map[string]http.Handler {
-	_, api := corev1connect.NewSendEmailServiceHandler(
+func NewSendEmailServer(producer eventbusv1connect.SendEmailEventsServiceClient, sender Sender) map[string]http.Handler {
+	_, api := send_emailv1connect.NewSendEmailServiceHandler(
 		NewSendEmailServerServer(producer, sender),
 	)
 
 	return map[string]http.Handler{"queue.send_email": api}
 }
 
-func NewSendEmailServerServer(producer corev1connect.SendEmailEventsServiceClient, sender Sender) *SendEmailServer {
+func NewSendEmailServerServer(producer eventbusv1connect.SendEmailEventsServiceClient, sender Sender) *SendEmailServer {
 	server := SendEmailServer{
 		pubsub: producer,
 		sender: sender,
@@ -45,7 +47,7 @@ func NewSendEmailServerServer(producer corev1connect.SendEmailEventsServiceClien
 
 }
 
-func (s *SendEmailServer) RegisterMessage(ctx context.Context, req *connect.Request[corev1.RegisterMessageRequest]) (*connect.Response[corev1.RegisterMessageResponse], error) {
+func (s *SendEmailServer) RegisterMessage(ctx context.Context, req *connect.Request[emailv1.RegisterMessageRequest]) (*connect.Response[emailv1.RegisterMessageResponse], error) {
 	params := req.Msg
 	recipient := params.Recipient.Email
 	sender := params.Recipient.Email
@@ -60,14 +62,14 @@ func (s *SendEmailServer) RegisterMessage(ctx context.Context, req *connect.Requ
 		"Token":   params.Token,
 	}
 
-	if err := s.simpleSend(ctx, sender, recipient, data, corev1.EmailTemplate_EMAIL_TEMPLATE_USER_REGISTERED, params.ReferenceId); err != nil {
+	if err := s.simpleSend(ctx, sender, recipient, data, emailv1.EmailTemplate_EMAIL_TEMPLATE_USER_REGISTERED, params.ReferenceId); err != nil {
 		return nil, bufcutil.InternalError(err)
 	}
 
-	return connect.NewResponse(&corev1.RegisterMessageResponse{}), nil
+	return connect.NewResponse(&emailv1.RegisterMessageResponse{}), nil
 }
 
-func (s *SendEmailServer) PasswordChangeMessage(ctx context.Context, req *connect.Request[corev1.PasswordChangeMessageRequest]) (*connect.Response[corev1.PasswordChangeMessageResponse], error) {
+func (s *SendEmailServer) PasswordChangeMessage(ctx context.Context, req *connect.Request[emailv1.PasswordChangeMessageRequest]) (*connect.Response[emailv1.PasswordChangeMessageResponse], error) {
 	params := req.Msg
 	recipient := params.Recipient.Email
 	sender := params.Recipient.Email
@@ -81,14 +83,14 @@ func (s *SendEmailServer) PasswordChangeMessage(ctx context.Context, req *connec
 		"URLBase": params.AppInfo.UrlBase,
 	}
 
-	if err := s.simpleSend(ctx, sender, recipient, data, corev1.EmailTemplate_EMAIL_TEMPLATE_PASSWORD_CHANGE, params.ReferenceId); err != nil {
+	if err := s.simpleSend(ctx, sender, recipient, data, emailv1.EmailTemplate_EMAIL_TEMPLATE_PASSWORD_CHANGE, params.ReferenceId); err != nil {
 		return nil, bufcutil.InternalError(err)
 	}
 
-	return connect.NewResponse(&corev1.PasswordChangeMessageResponse{}), nil
+	return connect.NewResponse(&emailv1.PasswordChangeMessageResponse{}), nil
 }
 
-func (s *SendEmailServer) PasswordRecoveryMessage(ctx context.Context, req *connect.Request[corev1.PasswordRecoveryMessageRequest]) (*connect.Response[corev1.PasswordRecoveryMessageResponse], error) {
+func (s *SendEmailServer) PasswordRecoveryMessage(ctx context.Context, req *connect.Request[emailv1.PasswordRecoveryMessageRequest]) (*connect.Response[emailv1.PasswordRecoveryMessageResponse], error) {
 	params := req.Msg
 	recipient := params.Recipient.Email
 	sender := params.Recipient.Email
@@ -103,14 +105,14 @@ func (s *SendEmailServer) PasswordRecoveryMessage(ctx context.Context, req *conn
 		"Token":   params.Token,
 	}
 
-	if err := s.simpleSend(ctx, sender, recipient, data, corev1.EmailTemplate_EMAIL_TEMPLATE_PASSWORD_RECOVERY, params.ReferenceId); err != nil {
+	if err := s.simpleSend(ctx, sender, recipient, data, emailv1.EmailTemplate_EMAIL_TEMPLATE_PASSWORD_RECOVERY, params.ReferenceId); err != nil {
 		return nil, bufcutil.InternalError(err)
 	}
 
-	return connect.NewResponse(&corev1.PasswordRecoveryMessageResponse{}), nil
+	return connect.NewResponse(&emailv1.PasswordRecoveryMessageResponse{}), nil
 }
 
-func (s *SendEmailServer) InviteUserMessage(ctx context.Context, req *connect.Request[corev1.InviteUserMessageRequest]) (*connect.Response[corev1.InviteUserMessageResponse], error) {
+func (s *SendEmailServer) InviteUserMessage(ctx context.Context, req *connect.Request[emailv1.InviteUserMessageRequest]) (*connect.Response[emailv1.InviteUserMessageResponse], error) {
 	params := req.Msg
 	recipient := params.Recipient.Email
 	sender := params.Recipient.Email
@@ -130,18 +132,18 @@ func (s *SendEmailServer) InviteUserMessage(ctx context.Context, req *connect.Re
 		"Token":   params.Token,
 	}
 
-	if err := s.simpleSend(ctx, sender, recipient, data, corev1.EmailTemplate_EMAIL_TEMPLATE_USER_INVITED, params.ReferenceId); err != nil {
+	if err := s.simpleSend(ctx, sender, recipient, data, emailv1.EmailTemplate_EMAIL_TEMPLATE_USER_INVITED, params.ReferenceId); err != nil {
 		return nil, bufcutil.InternalError(err)
 	}
 
-	return connect.NewResponse(&corev1.InviteUserMessageResponse{}), nil
+	return connect.NewResponse(&emailv1.InviteUserMessageResponse{}), nil
 }
 
 // One stop shop to send a message
-func (svc *SendEmailServer) simpleSend(ctx context.Context, sender, recipient string, data Params, tmpl corev1.EmailTemplate, referenceId string) error {
+func (svc *SendEmailServer) simpleSend(ctx context.Context, sender, recipient string, data Params, tmpl emailv1.EmailTemplate, referenceId string) error {
 	content, found := templates[tmpl]
 	if !found {
-		return fmt.Errorf("unable to find template id=%d name=%s", tmpl, corev1.EmailTemplate_name[int32(tmpl)])
+		return fmt.Errorf("unable to find template id=%d name=%s", tmpl, emailv1.EmailTemplate_name[int32(tmpl)])
 	}
 
 	subject, body, err := buildEmail(data, content)
@@ -159,8 +161,8 @@ func (svc *SendEmailServer) simpleSend(ctx context.Context, sender, recipient st
 	return nil
 }
 
-func (svc *SendEmailServer) notify(ctx context.Context, messageId string, recipient string, tmpl corev1.EmailTemplate, referenceId string) error {
-	_, err := svc.pubsub.NotifyEmailSent(ctx, connect.NewRequest(&corev1.NotifyEmailSentRequest{
+func (svc *SendEmailServer) notify(ctx context.Context, messageId string, recipient string, tmpl emailv1.EmailTemplate, referenceId string) error {
+	_, err := svc.pubsub.NotifyEmailSent(ctx, connect.NewRequest(&eventbusv1.NotifyEmailSentRequest{
 		RecipientEmail: recipient,
 		MessageId:      messageId,
 		Template:       tmpl,

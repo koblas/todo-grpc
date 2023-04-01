@@ -5,7 +5,7 @@ import (
 
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
 	"github.com/koblas/grpc-todo/gen/core/eventbus/v1/eventbusv1connect"
-	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
+	"github.com/koblas/grpc-todo/gen/core/user/v1/userv1connect"
 	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/filestore"
@@ -57,7 +57,7 @@ func main() {
 				filestore.NewMinioProvider(config.MinioEndpoint),
 			),
 			workers_file.WithUserService(
-				corev1connect.NewUserServiceClient(
+				userv1connect.NewUserServiceClient(
 					bufcutil.NewHttpClient(),
 					"http://"+config.UserServiceAddr,
 				),

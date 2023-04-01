@@ -4,10 +4,10 @@ import (
 	"net/url"
 
 	apiv1 "github.com/koblas/grpc-todo/gen/api/v1"
-	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
+	userv1 "github.com/koblas/grpc-todo/gen/core/user/v1"
 )
 
-func UserCoreToApi(user *corev1.User) *apiv1.User {
+func UserCoreToApi(user *userv1.User) *apiv1.User {
 	if user == nil {
 		return nil
 	}

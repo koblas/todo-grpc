@@ -11,7 +11,7 @@ import (
 	eventv1 "github.com/koblas/grpc-todo/gen/core/eventbus/v1"
 	"github.com/koblas/grpc-todo/gen/core/eventbus/v1/eventbusv1connect"
 	mcorev1 "github.com/koblas/grpc-todo/gen/core/message/v1"
-	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
+	websocketv1 "github.com/koblas/grpc-todo/gen/core/websocket/v1"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"go.uber.org/zap"
 )
@@ -80,8 +80,8 @@ func (svc *MessageServer) Change(ctx context.Context, eventIn *connect.Request[m
 	}
 
 	for _, userId := range event.UserId {
-		if _, err := svc.producer.Send(ctx, connect.NewRequest(&corev1.BroadcastEvent{
-			Filter: &corev1.BroadcastFilter{
+		if _, err := svc.producer.Send(ctx, connect.NewRequest(&websocketv1.BroadcastEvent{
+			Filter: &websocketv1.BroadcastFilter{
 				UserId: userId,
 			},
 			Data: data,

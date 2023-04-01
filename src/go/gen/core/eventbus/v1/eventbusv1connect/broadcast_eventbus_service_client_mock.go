@@ -13,7 +13,7 @@ import (
 	connect_go "github.com/bufbuild/connect-go"
 	"github.com/gojuno/minimock/v3"
 	v11 "github.com/koblas/grpc-todo/gen/core/eventbus/v1"
-	v1 "github.com/koblas/grpc-todo/gen/core/v1"
+	v1 "github.com/koblas/grpc-todo/gen/core/websocket/v1"
 )
 
 // BroadcastEventbusServiceClientMock implements BroadcastEventbusServiceClient

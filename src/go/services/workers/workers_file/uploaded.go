@@ -13,7 +13,8 @@ import (
 	"github.com/disintegration/imaging"
 	eventv1 "github.com/koblas/grpc-todo/gen/core/eventbus/v1"
 	"github.com/koblas/grpc-todo/gen/core/eventbus/v1/eventbusv1connect"
-	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
+	filev1 "github.com/koblas/grpc-todo/gen/core/file/v1"
+	userv1 "github.com/koblas/grpc-todo/gen/core/user/v1"
 	"github.com/koblas/grpc-todo/pkg/filestore"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/oklog/ulid/v2"
@@ -42,7 +43,7 @@ func NewFileUploaded(config WorkerConfig) http.Handler {
 	return api
 }
 
-func (cfg *fileUploaded) FileUploaded(ctx context.Context, msg *connect.Request[corev1.FileServiceUploadEvent]) (*connect.Response[eventv1.FileEventbusFileUploadedResponse], error) {
+func (cfg *fileUploaded) FileUploaded(ctx context.Context, msg *connect.Request[filev1.FileServiceUploadEvent]) (*connect.Response[eventv1.FileEventbusFileUploadedResponse], error) {
 	info := msg.Msg.Info
 	parts := strings.Split(info.Url, "/")
 	lastPart := parts[len(parts)-1]
@@ -69,11 +70,11 @@ func (cfg *fileUploaded) FileUploaded(ctx context.Context, msg *connect.Request[
 		} else {
 			log.Info(errMsg)
 		}
-		event := corev1.FileServiceCompleteEvent{
+		event := filev1.FileServiceCompleteEvent{
 			Id:           fileId,
 			IdemponcyId:  ulid.Make().String(),
 			ErrorMessage: msgPtr,
-			Info: &corev1.FileServiceUploadInfo{
+			Info: &filev1.FileServiceUploadInfo{
 				UserId:      info.UserId,
 				FileType:    fileType,
 				ContentType: nil,
@@ -113,7 +114,7 @@ func (cfg *fileUploaded) FileUploaded(ctx context.Context, msg *connect.Request[
 	return connect.NewResponse(&eventv1.FileEventbusFileUploadedResponse{}), nil
 }
 
-func (cfg *fileUploaded) fetchFromS3(ctx context.Context, log logger.Logger, msg *corev1.FileServiceUploadEvent) (bytes.Buffer, error) {
+func (cfg *fileUploaded) fetchFromS3(ctx context.Context, log logger.Logger, msg *filev1.FileServiceUploadEvent) (bytes.Buffer, error) {
 	buf := bytes.Buffer{}
 
 	_, span := otel.Tracer("upload").Start(ctx, "fetch_s3")
@@ -187,7 +188,7 @@ func (cfg *fileUploaded) updateUser(ctx context.Context, log logger.Logger, user
 	_, span := otel.Tracer("upload").Start(ctx, "post_event")
 	defer span.End()
 
-	if _, err := cfg.userService.Update(ctx, connect.NewRequest(&corev1.UserServiceUpdateRequest{
+	if _, err := cfg.userService.Update(ctx, connect.NewRequest(&userv1.UserServiceUpdateRequest{
 		UserId:    userId,
 		AvatarUrl: &avatarUrl,
 	})); err != nil {
@@ -197,7 +198,7 @@ func (cfg *fileUploaded) updateUser(ctx context.Context, log logger.Logger, user
 	return nil
 }
 
-func (cfg *fileUploaded) FileComplete(ctx context.Context, msg *connect.Request[corev1.FileServiceCompleteEvent]) (*connect.Response[eventv1.FileEventbusFileCompleteResponse], error) {
+func (cfg *fileUploaded) FileComplete(ctx context.Context, msg *connect.Request[filev1.FileServiceCompleteEvent]) (*connect.Response[eventv1.FileEventbusFileCompleteResponse], error) {
 	log := logger.FromContext(ctx).With(zap.String("fileType", msg.Msg.Info.FileType))
 
 	log.Info("in ready handler")

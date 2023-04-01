@@ -1,0 +1,14 @@
+syntax = "proto3";
+package core.v1;
+
+option go_package = "github.com/koblas/grpc-todo/protos";
+
+message SecureValue {
+  // e.g.
+  // "arn:aws:kms:us-east-1:111111111:key/abcdef00-0123-4567-7799-012345678990"
+  string key_uri = 1;
+  // opaque value that key encrypted
+  string data_key = 2;
+  // encrypted value
+  string data_value = 3;
+}

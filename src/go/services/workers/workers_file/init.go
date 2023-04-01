@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/koblas/grpc-todo/gen/core/eventbus/v1/eventbusv1connect"
-	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
+	"github.com/koblas/grpc-todo/gen/core/user/v1/userv1connect"
 	"github.com/koblas/grpc-todo/pkg/filestore"
 )
 
@@ -25,7 +25,7 @@ type WorkerConfig struct {
 	pubsub eventbusv1connect.FileEventbusServiceClient
 	// fileService corepbv1.FileService
 	fileService filestore.Filestore
-	userService corev1connect.UserServiceClient
+	userService userv1connect.UserServiceClient
 }
 
 type Option func(*WorkerConfig)
@@ -42,7 +42,7 @@ func WithFileService(svc filestore.Filestore) Option {
 	}
 }
 
-func WithUserService(svc corev1connect.UserServiceClient) Option {
+func WithUserService(svc userv1connect.UserServiceClient) Option {
 	return func(cfg *WorkerConfig) {
 		cfg.userService = svc
 	}

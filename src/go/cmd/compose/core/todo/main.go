@@ -8,7 +8,7 @@ import (
 	grpchealth "github.com/bufbuild/connect-grpchealth-go"
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
 	"github.com/koblas/grpc-todo/gen/core/eventbus/v1/eventbusv1connect"
-	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
+	"github.com/koblas/grpc-todo/gen/core/todo/v1/todov1connect"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/interceptors"
 	"github.com/koblas/grpc-todo/pkg/manager"
@@ -42,13 +42,13 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	mux.Handle(corev1connect.NewTodoServiceHandler(
+	mux.Handle(todov1connect.NewTodoServiceHandler(
 		todo.NewTodoServer(opts...),
 		connect.WithInterceptors(interceptors.NewReqidInterceptor()),
 		connect.WithCompressMinBytes(1024),
 	))
 	mux.Handle(grpchealth.NewHandler(
-		grpchealth.NewStaticChecker(corev1connect.TodoServiceName),
+		grpchealth.NewStaticChecker(todov1connect.TodoServiceName),
 		connect.WithCompressMinBytes(1024),
 	))
 

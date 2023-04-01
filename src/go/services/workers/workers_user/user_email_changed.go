@@ -7,7 +7,8 @@ import (
 	"github.com/bufbuild/connect-go"
 	eventv1 "github.com/koblas/grpc-todo/gen/core/eventbus/v1"
 	"github.com/koblas/grpc-todo/gen/core/eventbus/v1/eventbusv1connect"
-	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
+	emailv1 "github.com/koblas/grpc-todo/gen/core/send_email/v1"
+	userv1 "github.com/koblas/grpc-todo/gen/core/user/v1"
 	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"go.uber.org/zap"
@@ -34,15 +35,15 @@ func NewUserEmailChanged(config WorkerConfig) http.Handler {
 	return api
 }
 
-func (cfg *userEmailChanged) SecurityPasswordChange(ctx context.Context, msg *connect.Request[corev1.UserSecurityEvent]) (*connect.Response[eventv1.UserEventbusSecurityPasswordChangeResponse], error) {
+func (cfg *userEmailChanged) SecurityPasswordChange(ctx context.Context, msg *connect.Request[userv1.UserSecurityEvent]) (*connect.Response[eventv1.UserEventbusSecurityPasswordChangeResponse], error) {
 	log := logger.FromContext(ctx).With(zap.Int32("action", int32(msg.Msg.Action))).With(zap.String("email", msg.Msg.User.Email))
 
 	log.Info("processing message")
 	user := msg.Msg.User
 
-	params := corev1.PasswordChangeMessageRequest{
+	params := emailv1.PasswordChangeMessageRequest{
 		AppInfo: buildAppInfo(cfg.config.UrlBase),
-		Recipient: &corev1.EmailUser{
+		Recipient: &emailv1.EmailUser{
 			UserId: user.Id,
 			Name:   user.Name,
 			Email:  user.Email,

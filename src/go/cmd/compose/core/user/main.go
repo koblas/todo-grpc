@@ -13,7 +13,7 @@ import (
 	grpchealth "github.com/bufbuild/connect-grpchealth-go"
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
 	"github.com/koblas/grpc-todo/gen/core/eventbus/v1/eventbusv1connect"
-	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
+	"github.com/koblas/grpc-todo/gen/core/user/v1/userv1connect"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/interceptors"
 	"github.com/koblas/grpc-todo/pkg/manager"
@@ -95,13 +95,13 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	mux.Handle(corev1connect.NewUserServiceHandler(
+	mux.Handle(userv1connect.NewUserServiceHandler(
 		user.NewUserServer(opts...),
 		connect.WithInterceptors(interceptors.NewReqidInterceptor()),
 		connect.WithCompressMinBytes(1024),
 	))
 	mux.Handle(grpchealth.NewHandler(
-		grpchealth.NewStaticChecker(corev1connect.UserServiceName),
+		grpchealth.NewStaticChecker(userv1connect.UserServiceName),
 		connect.WithCompressMinBytes(1024),
 	))
 

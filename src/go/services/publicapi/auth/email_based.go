@@ -6,7 +6,7 @@ import (
 
 	"github.com/bufbuild/connect-go"
 	apiv1 "github.com/koblas/grpc-todo/gen/api/v1"
-	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
+	userv1 "github.com/koblas/grpc-todo/gen/core/user/v1"
 	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/util"
@@ -35,7 +35,7 @@ func (s AuthenticationServer) Authenticate(ctx context.Context, paramsIn *connec
 		log.With("error", err).Error("Authenticate/redis unable to fetch attempts keys")
 	}
 
-	userParam, err := s.userClient.ComparePassword(ctx, connect.NewRequest(&corev1.ComparePasswordRequest{
+	userParam, err := s.userClient.ComparePassword(ctx, connect.NewRequest(&userv1.ComparePasswordRequest{
 		Email:    params.Email,
 		Password: params.Password,
 	}))
@@ -67,8 +67,8 @@ func (s AuthenticationServer) Register(ctx context.Context, paramsIn *connect.Re
 		return nil, bufcutil.InvalidArgumentError("password", "Password too short must be 8 characters (password_short)")
 	}
 
-	user, err := s.userClient.Create(ctx, connect.NewRequest(&corev1.UserServiceCreateRequest{
-		Status:   corev1.UserStatus_USER_STATUS_REGISTERED,
+	user, err := s.userClient.Create(ctx, connect.NewRequest(&userv1.UserServiceCreateRequest{
+		Status:   userv1.UserStatus_USER_STATUS_REGISTERED,
 		Email:    params.Email,
 		Password: params.Password,
 		Name:     params.Name,
@@ -95,8 +95,8 @@ func (s AuthenticationServer) VerifyEmail(ctx context.Context, params *connect.R
 	log := logger.FromContext(ctx)
 	log.Info("Verify register user")
 
-	user, err := s.userClient.VerificationVerify(ctx, connect.NewRequest(&corev1.VerificationVerifyRequest{
-		Verification: &corev1.Verification{
+	user, err := s.userClient.VerificationVerify(ctx, connect.NewRequest(&userv1.VerificationVerifyRequest{
+		Verification: &userv1.Verification{
 			UserId: params.Msg.UserId,
 			Token:  params.Msg.Token,
 		},
@@ -125,8 +125,8 @@ func (s AuthenticationServer) RecoverSend(ctx context.Context, params *connect.R
 		log.With("error", err).Error("RecoverSend/redis unable to fetch attempts keys")
 	}
 
-	user, err := s.userClient.ForgotSend(ctx, connect.NewRequest(&corev1.ForgotSendRequest{
-		FindBy: &corev1.FindBy{
+	user, err := s.userClient.ForgotSend(ctx, connect.NewRequest(&userv1.ForgotSendRequest{
+		FindBy: &userv1.FindBy{
 			Email: email,
 		},
 	}))
@@ -149,8 +149,8 @@ func (s AuthenticationServer) RecoverVerify(ctx context.Context, params *connect
 	log := logger.FromContext(ctx).With("user_id", params.Msg.UserId)
 	log.Info("Recover Verify")
 
-	user, err := s.userClient.ForgotVerify(ctx, connect.NewRequest(&corev1.ForgotVerifyRequest{
-		Verification: &corev1.Verification{
+	user, err := s.userClient.ForgotVerify(ctx, connect.NewRequest(&userv1.ForgotVerifyRequest{
+		Verification: &userv1.Verification{
 			UserId: params.Msg.UserId,
 			Token:  params.Msg.Token,
 		},
@@ -169,8 +169,8 @@ func (s AuthenticationServer) RecoverUpdate(ctx context.Context, params *connect
 	log := logger.FromContext(ctx)
 	log.Info("Recover Update password")
 
-	user, err := s.userClient.ForgotUpdate(ctx, connect.NewRequest(&corev1.ForgotUpdateRequest{
-		Verification: &corev1.Verification{
+	user, err := s.userClient.ForgotUpdate(ctx, connect.NewRequest(&userv1.ForgotUpdateRequest{
+		Verification: &userv1.Verification{
 			UserId:   params.Msg.UserId,
 			Token:    params.Msg.Token,
 			Password: params.Msg.Password,

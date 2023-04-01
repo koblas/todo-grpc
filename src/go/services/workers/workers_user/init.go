@@ -3,7 +3,7 @@ package workers_user
 import (
 	"net/http"
 
-	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
+	"github.com/koblas/grpc-todo/gen/core/send_email/v1/send_emailv1connect"
 )
 
 type SqsConsumerBuilder func(WorkerConfig) http.Handler
@@ -20,12 +20,12 @@ type WorkerConfig struct {
 	config struct {
 		UrlBase string
 	}
-	sendEmail corev1connect.SendEmailServiceClient
+	sendEmail send_emailv1connect.SendEmailServiceClient
 }
 
 type Option func(*WorkerConfig)
 
-func WithSendEmail(sender corev1connect.SendEmailServiceClient) Option {
+func WithSendEmail(sender send_emailv1connect.SendEmailServiceClient) Option {
 	return func(cfg *WorkerConfig) {
 		cfg.sendEmail = sender
 	}

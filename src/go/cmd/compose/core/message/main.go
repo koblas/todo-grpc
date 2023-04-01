@@ -9,7 +9,6 @@ import (
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
 	"github.com/koblas/grpc-todo/gen/core/eventbus/v1/eventbusv1connect"
 	"github.com/koblas/grpc-todo/gen/core/message/v1/messagev1connect"
-	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/interceptors"
 	"github.com/koblas/grpc-todo/pkg/manager"
@@ -49,7 +48,7 @@ func main() {
 		connect.WithCompressMinBytes(1024),
 	))
 	mux.Handle(grpchealth.NewHandler(
-		grpchealth.NewStaticChecker(corev1connect.TodoServiceName),
+		grpchealth.NewStaticChecker(messagev1connect.MessageServiceName),
 		connect.WithCompressMinBytes(1024),
 	))
 

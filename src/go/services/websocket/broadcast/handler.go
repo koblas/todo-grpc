@@ -11,7 +11,7 @@ import (
 	"github.com/bufbuild/connect-go"
 	eventv1 "github.com/koblas/grpc-todo/gen/core/eventbus/v1"
 	"github.com/koblas/grpc-todo/gen/core/eventbus/v1/eventbusv1connect"
-	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
+	websocketv1 "github.com/koblas/grpc-todo/gen/core/websocket/v1"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/store/websocket"
 	"go.uber.org/zap"
@@ -63,7 +63,7 @@ func NewBroadcastServer(opts ...Option) map[string]http.Handler {
 	return map[string]http.Handler{"websocket.broadcast": api}
 }
 
-func (svc *BroadcastServer) Send(ctx context.Context, event *connect.Request[corev1.BroadcastEvent]) (*connect.Response[eventv1.BroadcastEventbusSendResponse], error) {
+func (svc *BroadcastServer) Send(ctx context.Context, event *connect.Request[websocketv1.BroadcastEvent]) (*connect.Response[eventv1.BroadcastEventbusSendResponse], error) {
 	log := logger.FromContext(ctx).With(zap.String("userId", event.Msg.Filter.UserId))
 	log.Info("received broadcast event")
 

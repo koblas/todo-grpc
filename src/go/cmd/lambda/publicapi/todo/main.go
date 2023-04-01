@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/bufbuild/connect-go"
 	"github.com/koblas/grpc-todo/gen/api/v1/apiv1connect"
-	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
+	"github.com/koblas/grpc-todo/gen/core/todo/v1/todov1connect"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
@@ -34,7 +34,7 @@ func main() {
 
 	opts := []todo.Option{
 		todo.WithTodoService(
-			corev1connect.NewTodoServiceClient(
+			todov1connect.NewTodoServiceClient(
 				awsutil.NewTwirpCallLambda(),
 				"lambda://core-todo",
 			),

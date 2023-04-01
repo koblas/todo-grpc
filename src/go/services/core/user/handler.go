@@ -6,7 +6,7 @@ import (
 
 	"github.com/bufbuild/connect-go"
 	"github.com/koblas/grpc-todo/gen/core/eventbus/v1/eventbusv1connect"
-	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
+	userv1 "github.com/koblas/grpc-todo/gen/core/user/v1"
 	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/key_manager"
 	"github.com/koblas/grpc-todo/pkg/logger"
@@ -29,17 +29,17 @@ type UserServer struct {
 	kms    key_manager.Encoder
 }
 
-var pbStatusToStatus = map[corev1.UserStatus]UserStatus{
-	corev1.UserStatus_USER_STATUS_ACTIVE:     UserStatus_ACTIVE,
-	corev1.UserStatus_USER_STATUS_INVITED:    UserStatus_INVITED,
-	corev1.UserStatus_USER_STATUS_DISABLED:   UserStatus_DISABLED,
-	corev1.UserStatus_USER_STATUS_REGISTERED: UserStatus_REGISTERED,
+var pbStatusToStatus = map[userv1.UserStatus]UserStatus{
+	userv1.UserStatus_USER_STATUS_ACTIVE:     UserStatus_ACTIVE,
+	userv1.UserStatus_USER_STATUS_INVITED:    UserStatus_INVITED,
+	userv1.UserStatus_USER_STATUS_DISABLED:   UserStatus_DISABLED,
+	userv1.UserStatus_USER_STATUS_REGISTERED: UserStatus_REGISTERED,
 }
-var statusToPbStatus = map[UserStatus]corev1.UserStatus{
-	UserStatus_ACTIVE:     corev1.UserStatus_USER_STATUS_ACTIVE,
-	UserStatus_INVITED:    corev1.UserStatus_USER_STATUS_INVITED,
-	UserStatus_DISABLED:   corev1.UserStatus_USER_STATUS_DISABLED,
-	UserStatus_REGISTERED: corev1.UserStatus_USER_STATUS_REGISTERED,
+var statusToPbStatus = map[UserStatus]userv1.UserStatus{
+	UserStatus_ACTIVE:     userv1.UserStatus_USER_STATUS_ACTIVE,
+	UserStatus_INVITED:    userv1.UserStatus_USER_STATUS_INVITED,
+	UserStatus_DISABLED:   userv1.UserStatus_USER_STATUS_DISABLED,
+	UserStatus_REGISTERED: userv1.UserStatus_USER_STATUS_REGISTERED,
 }
 
 type Option func(*UserServer)
@@ -68,7 +68,7 @@ func NewUserServer(opts ...Option) *UserServer {
 	return &svr
 }
 
-func (s *UserServer) FindBy(ctx context.Context, request *connect.Request[corev1.FindByRequest]) (*connect.Response[corev1.FindByResponse], error) {
+func (s *UserServer) FindBy(ctx context.Context, request *connect.Request[userv1.FindByRequest]) (*connect.Response[userv1.FindByResponse], error) {
 	params := request.Msg.FindBy
 	log := logger.FromContext(ctx).With(zap.String("email", params.Email)).With(zap.String("userId", params.UserId))
 	log.Info("FindBy")
@@ -100,19 +100,19 @@ func (s *UserServer) FindBy(ctx context.Context, request *connect.Request[corev1
 
 	log.With("ID", user.ID).Info("found")
 
-	return connect.NewResponse(&corev1.FindByResponse{User: s.toProtoUser(user)}), nil
+	return connect.NewResponse(&userv1.FindByResponse{User: s.toProtoUser(user)}), nil
 }
 
-func (s *UserServer) Create(ctx context.Context, request *connect.Request[corev1.UserServiceCreateRequest]) (*connect.Response[corev1.UserServiceCreateResponse], error) {
+func (s *UserServer) Create(ctx context.Context, request *connect.Request[userv1.UserServiceCreateRequest]) (*connect.Response[userv1.UserServiceCreateResponse], error) {
 	params := request.Msg
 	log := logger.FromContext(ctx).With(zap.String("email", params.Email))
 	log.Info("Received Create")
 
 	// Just using a switch for formatting reasons
 	switch params.Status {
-	case corev1.UserStatus_USER_STATUS_ACTIVE,
-		corev1.UserStatus_USER_STATUS_REGISTERED,
-		corev1.UserStatus_USER_STATUS_INVITED:
+	case userv1.UserStatus_USER_STATUS_ACTIVE,
+		userv1.UserStatus_USER_STATUS_REGISTERED,
+		userv1.UserStatus_USER_STATUS_INVITED:
 		break
 	default:
 		log.Error("Bad user status")
@@ -145,7 +145,7 @@ func (s *UserServer) Create(ctx context.Context, request *connect.Request[corev1
 	var vExpires time.Time
 	vToken := []byte{}
 	var secret string
-	if params.Status != corev1.UserStatus_USER_STATUS_ACTIVE {
+	if params.Status != userv1.UserStatus_USER_STATUS_ACTIVE {
 		var err error
 		vExpires = time.Now().Add(time.Duration(24 * time.Hour))
 		vToken, secret, err = hmacCreate(userId, shortuuid.New())
@@ -182,7 +182,7 @@ func (s *UserServer) Create(ctx context.Context, request *connect.Request[corev1
 
 	log.Info("User Created")
 
-	if _, err := s.pubsub.UserChange(ctx, connect.NewRequest(&corev1.UserChangeEvent{
+	if _, err := s.pubsub.UserChange(ctx, connect.NewRequest(&userv1.UserChangeEvent{
 		Current: s.toProtoUser(&user),
 	})); err != nil {
 		log.With(zap.Error(err)).Info("user entity publish failed")
@@ -192,18 +192,18 @@ func (s *UserServer) Create(ctx context.Context, request *connect.Request[corev1
 		if err != nil {
 			log.With(zap.Error(err)).Info("unable to create token")
 		} else {
-			payload := corev1.UserSecurityEvent{
+			payload := userv1.UserSecurityEvent{
 				User:  s.toProtoUser(&user),
 				Token: token,
 			}
 
-			if params.Status == corev1.UserStatus_USER_STATUS_REGISTERED {
-				payload.Action = corev1.UserSecurity_USER_SECURITY_USER_REGISTER_TOKEN
+			if params.Status == userv1.UserStatus_USER_STATUS_REGISTERED {
+				payload.Action = userv1.UserSecurity_USER_SECURITY_USER_REGISTER_TOKEN
 				if _, err := s.pubsub.SecurityRegisterToken(ctx, connect.NewRequest(&payload)); err != nil {
 					log.With(zap.Error(err)).Info("user security publish failed")
 				}
-			} else if params.Status == corev1.UserStatus_USER_STATUS_INVITED {
-				payload.Action = corev1.UserSecurity_USER_SECURITY_USER_INVITE_TOKEN
+			} else if params.Status == userv1.UserStatus_USER_STATUS_INVITED {
+				payload.Action = userv1.UserSecurity_USER_SECURITY_USER_INVITE_TOKEN
 				if _, err := s.pubsub.SecurityInviteToken(ctx, connect.NewRequest(&payload)); err != nil {
 					log.With(zap.Error(err)).Info("user security publish failed")
 				}
@@ -212,10 +212,10 @@ func (s *UserServer) Create(ctx context.Context, request *connect.Request[corev1
 		}
 	}
 
-	return connect.NewResponse(&corev1.UserServiceCreateResponse{User: s.toProtoUser(&user)}), nil
+	return connect.NewResponse(&userv1.UserServiceCreateResponse{User: s.toProtoUser(&user)}), nil
 }
 
-func (s *UserServer) Update(ctx context.Context, request *connect.Request[corev1.UserServiceUpdateRequest]) (*connect.Response[corev1.UserServiceUpdateResponse], error) {
+func (s *UserServer) Update(ctx context.Context, request *connect.Request[userv1.UserServiceUpdateRequest]) (*connect.Response[userv1.UserServiceUpdateResponse], error) {
 	params := request.Msg
 	log := logger.FromContext(ctx).With(zap.String("userId", params.UserId))
 	log.Info("User Update")
@@ -302,7 +302,7 @@ func (s *UserServer) Update(ctx context.Context, request *connect.Request[corev1
 		}
 	}
 
-	if _, err := s.pubsub.UserChange(ctx, connect.NewRequest(&corev1.UserChangeEvent{
+	if _, err := s.pubsub.UserChange(ctx, connect.NewRequest(&userv1.UserChangeEvent{
 		Current:  s.toProtoUser(&updated),
 		Original: s.toProtoUser(orig),
 	})); err != nil {
@@ -310,18 +310,18 @@ func (s *UserServer) Update(ctx context.Context, request *connect.Request[corev1
 	}
 
 	if params.PasswordNew != nil {
-		if _, err := s.pubsub.SecurityPasswordChange(ctx, connect.NewRequest(&corev1.UserSecurityEvent{
-			Action: corev1.UserSecurity_USER_SECURITY_USER_PASSWORD_CHANGE,
+		if _, err := s.pubsub.SecurityPasswordChange(ctx, connect.NewRequest(&userv1.UserSecurityEvent{
+			Action: userv1.UserSecurity_USER_SECURITY_USER_PASSWORD_CHANGE,
 			User:   s.toProtoUser(&updated),
 		})); err != nil {
 			log.With(zap.Error(err)).Info("user security publish failed")
 		}
 	}
 
-	return connect.NewResponse(&corev1.UserServiceUpdateResponse{User: s.toProtoUser(&updated)}), nil
+	return connect.NewResponse(&userv1.UserServiceUpdateResponse{User: s.toProtoUser(&updated)}), nil
 }
 
-func (s *UserServer) ComparePassword(ctx context.Context, request *connect.Request[corev1.ComparePasswordRequest]) (*connect.Response[corev1.ComparePasswordResponse], error) {
+func (s *UserServer) ComparePassword(ctx context.Context, request *connect.Request[userv1.ComparePasswordRequest]) (*connect.Response[userv1.ComparePasswordResponse], error) {
 	params := request.Msg
 	log := logger.FromContext(ctx).With("email", params.Email)
 	log.Info("check password")
@@ -340,12 +340,12 @@ func (s *UserServer) ComparePassword(ctx context.Context, request *connect.Reque
 		return nil, bufcutil.InvalidArgumentError("password", "password mismatch")
 	}
 
-	return connect.NewResponse(&corev1.ComparePasswordResponse{
+	return connect.NewResponse(&userv1.ComparePasswordResponse{
 		UserId: auth.UserID,
 	}), nil
 }
 
-func (s *UserServer) GetSettings(ctx context.Context, params *connect.Request[corev1.UserServiceGetSettingsRequest]) (*connect.Response[corev1.UserServiceGetSettingsResponse], error) {
+func (s *UserServer) GetSettings(ctx context.Context, params *connect.Request[userv1.UserServiceGetSettingsRequest]) (*connect.Response[userv1.UserServiceGetSettingsResponse], error) {
 	log := logger.FromContext(ctx).With(zap.String("userId", params.Msg.UserId))
 	user, err := s.users.GetById(ctx, params.Msg.UserId)
 
@@ -358,10 +358,10 @@ func (s *UserServer) GetSettings(ctx context.Context, params *connect.Request[co
 		return nil, bufcutil.NotFoundError("User not found")
 	}
 
-	return connect.NewResponse(&corev1.UserServiceGetSettingsResponse{Settings: s.toProtoSettings(user)}), nil
+	return connect.NewResponse(&userv1.UserServiceGetSettingsResponse{Settings: s.toProtoSettings(user)}), nil
 }
 
-func (s *UserServer) SetSettings(ctx context.Context, request *connect.Request[corev1.UserServiceSetSettingsRequest]) (*connect.Response[corev1.UserServiceSetSettingsResponse], error) {
+func (s *UserServer) SetSettings(ctx context.Context, request *connect.Request[userv1.UserServiceSetSettingsRequest]) (*connect.Response[userv1.UserServiceSetSettingsResponse], error) {
 	params := request.Msg
 	log := logger.FromContext(ctx).With(zap.String("userId", params.UserId))
 	orig, err := s.users.GetById(ctx, params.UserId)
@@ -390,17 +390,17 @@ func (s *UserServer) SetSettings(ctx context.Context, request *connect.Request[c
 	}
 
 	s.users.UpdateUser(ctx, &updated)
-	if _, err := s.pubsub.UserChange(ctx, connect.NewRequest(&corev1.UserChangeEvent{
+	if _, err := s.pubsub.UserChange(ctx, connect.NewRequest(&userv1.UserChangeEvent{
 		Current:  s.toProtoUser(&updated),
 		Original: s.toProtoUser(orig),
 	})); err != nil {
 		log.With(zap.Error(err)).Info("user entity publish failed")
 	}
 
-	return connect.NewResponse(&corev1.UserServiceSetSettingsResponse{Settings: s.toProtoSettings(&updated)}), nil
+	return connect.NewResponse(&userv1.UserServiceSetSettingsResponse{Settings: s.toProtoSettings(&updated)}), nil
 }
 
-func (s *UserServer) getUserByVerification(ctx context.Context, params *corev1.Verification) (*UserAuth, error) {
+func (s *UserServer) getUserByVerification(ctx context.Context, params *userv1.Verification) (*UserAuth, error) {
 	log := logger.FromContext(ctx).With(zap.String("userId", params.UserId))
 	log.Info("getUserByVerification BEGIN")
 
@@ -431,7 +431,7 @@ func (s *UserServer) getUserByVerification(ctx context.Context, params *corev1.V
 }
 
 // Verify the email address is "owned" by you
-func (s *UserServer) VerificationVerify(ctx context.Context, request *connect.Request[corev1.VerificationVerifyRequest]) (*connect.Response[corev1.VerificationVerifyResponse], error) {
+func (s *UserServer) VerificationVerify(ctx context.Context, request *connect.Request[userv1.VerificationVerifyRequest]) (*connect.Response[userv1.VerificationVerifyResponse], error) {
 	params := request.Msg.Verification
 	log := logger.FromContext(ctx).With(zap.String("userId", params.UserId))
 	log.Info("Verification email")
@@ -466,17 +466,17 @@ func (s *UserServer) VerificationVerify(ctx context.Context, request *connect.Re
 	update.Status = UserStatus_ACTIVE
 	s.users.UpdateUser(ctx, &update)
 
-	if _, err := s.pubsub.UserChange(ctx, connect.NewRequest(&corev1.UserChangeEvent{
+	if _, err := s.pubsub.UserChange(ctx, connect.NewRequest(&userv1.UserChangeEvent{
 		Current:  s.toProtoUser(&update),
 		Original: s.toProtoUser(user),
 	})); err != nil {
 		log.With(zap.Error(err)).Info("user entity publish failed")
 	}
 
-	return connect.NewResponse(&corev1.VerificationVerifyResponse{User: s.toProtoUser(user)}), nil
+	return connect.NewResponse(&userv1.VerificationVerifyResponse{User: s.toProtoUser(user)}), nil
 }
 
-func (s *UserServer) ForgotVerify(ctx context.Context, request *connect.Request[corev1.ForgotVerifyRequest]) (*connect.Response[corev1.ForgotVerifyResponse], error) {
+func (s *UserServer) ForgotVerify(ctx context.Context, request *connect.Request[userv1.ForgotVerifyRequest]) (*connect.Response[userv1.ForgotVerifyResponse], error) {
 	params := request.Msg.Verification
 	log := logger.FromContext(ctx).With(zap.String("userId", params.UserId))
 	log.Info("START ForgotVerify")
@@ -493,10 +493,10 @@ func (s *UserServer) ForgotVerify(ctx context.Context, request *connect.Request[
 		return nil, bufcutil.FailedPreconditionError("user is disabled")
 	}
 
-	return connect.NewResponse(&corev1.ForgotVerifyResponse{User: s.toProtoUser(user)}), nil
+	return connect.NewResponse(&userv1.ForgotVerifyResponse{User: s.toProtoUser(user)}), nil
 }
 
-func (s *UserServer) ForgotUpdate(ctx context.Context, request *connect.Request[corev1.ForgotUpdateRequest]) (*connect.Response[corev1.ForgotUpdateResponse], error) {
+func (s *UserServer) ForgotUpdate(ctx context.Context, request *connect.Request[userv1.ForgotUpdateRequest]) (*connect.Response[userv1.ForgotUpdateResponse], error) {
 	params := request.Msg.Verification
 	log := logger.FromContext(ctx).With(zap.String("userId", params.UserId))
 	log.Info("START ForgotUpdate")
@@ -545,25 +545,25 @@ func (s *UserServer) ForgotUpdate(ctx context.Context, request *connect.Request[
 		}
 	}
 
-	if _, err := s.pubsub.UserChange(ctx, connect.NewRequest(&corev1.UserChangeEvent{
+	if _, err := s.pubsub.UserChange(ctx, connect.NewRequest(&userv1.UserChangeEvent{
 		Current:  s.toProtoUser(&update),
 		Original: s.toProtoUser(user),
 	})); err != nil {
 		log.With(zap.Error(err)).Info("user entity publish failed")
 	}
 	if params.Password != "" {
-		if _, err := s.pubsub.SecurityPasswordChange(ctx, connect.NewRequest(&corev1.UserSecurityEvent{
-			Action: corev1.UserSecurity_USER_SECURITY_USER_PASSWORD_CHANGE,
+		if _, err := s.pubsub.SecurityPasswordChange(ctx, connect.NewRequest(&userv1.UserSecurityEvent{
+			Action: userv1.UserSecurity_USER_SECURITY_USER_PASSWORD_CHANGE,
 			User:   s.toProtoUser(user),
 		})); err != nil {
 			log.With(zap.Error(err)).Info("user security publish failed")
 		}
 	}
 
-	return connect.NewResponse(&corev1.ForgotUpdateResponse{User: s.toProtoUser(user)}), nil
+	return connect.NewResponse(&userv1.ForgotUpdateResponse{User: s.toProtoUser(user)}), nil
 }
 
-func (s *UserServer) ForgotSend(ctx context.Context, request *connect.Request[corev1.ForgotSendRequest]) (*connect.Response[corev1.ForgotSendResponse], error) {
+func (s *UserServer) ForgotSend(ctx context.Context, request *connect.Request[userv1.ForgotSendRequest]) (*connect.Response[userv1.ForgotSendResponse], error) {
 	params := request.Msg.FindBy
 	log := logger.FromContext(ctx).With(zap.String("userId", params.UserId))
 	log.Info("Forgot send")
@@ -600,18 +600,18 @@ func (s *UserServer) ForgotSend(ctx context.Context, request *connect.Request[co
 	// }
 	if token, err := protoutil.SecureValueEncode(s.kms, secret); err != nil {
 		log.With(zap.Error(err)).Info("failed to encrypt token")
-	} else if _, err := s.pubsub.SecurityForgotRequest(ctx, connect.NewRequest(&corev1.UserSecurityEvent{
-		Action: corev1.UserSecurity_USER_SECURITY_USER_FORGOT_REQUEST,
+	} else if _, err := s.pubsub.SecurityForgotRequest(ctx, connect.NewRequest(&userv1.UserSecurityEvent{
+		Action: userv1.UserSecurity_USER_SECURITY_USER_FORGOT_REQUEST,
 		User:   s.toProtoUser(user),
 		Token:  token,
 	})); err != nil {
 		log.With(zap.Error(err)).Info("user security publish failed")
 	}
 
-	return connect.NewResponse(&corev1.ForgotSendResponse{User: s.toProtoUser(user)}), nil
+	return connect.NewResponse(&userv1.ForgotSendResponse{User: s.toProtoUser(user)}), nil
 }
 
-func (s *UserServer) AuthAssociate(ctx context.Context, params *connect.Request[corev1.AuthAssociateRequest]) (*connect.Response[corev1.AuthAssociateResponse], error) {
+func (s *UserServer) AuthAssociate(ctx context.Context, params *connect.Request[userv1.AuthAssociateRequest]) (*connect.Response[userv1.AuthAssociateResponse], error) {
 	auth := UserAuth{
 		UserID: params.Msg.UserId,
 	}
@@ -620,5 +620,5 @@ func (s *UserServer) AuthAssociate(ctx context.Context, params *connect.Request[
 		return nil, bufcutil.InternalError(err)
 	}
 
-	return connect.NewResponse(&corev1.AuthAssociateResponse{UserId: params.Msg.UserId}), nil
+	return connect.NewResponse(&userv1.AuthAssociateResponse{UserId: params.Msg.UserId}), nil
 }

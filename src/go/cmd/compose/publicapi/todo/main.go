@@ -8,7 +8,7 @@ import (
 	grpchealth "github.com/bufbuild/connect-grpchealth-go"
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
 	"github.com/koblas/grpc-todo/gen/api/v1/apiv1connect"
-	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
+	"github.com/koblas/grpc-todo/gen/core/todo/v1/todov1connect"
 	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/interceptors"
@@ -39,7 +39,7 @@ func main() {
 
 	opts := []todo.Option{
 		todo.WithTodoService(
-			corev1connect.NewTodoServiceClient(
+			todov1connect.NewTodoServiceClient(
 				bufcutil.NewHttpClient(),
 				"http://"+config.TodoServiceAddr,
 			),

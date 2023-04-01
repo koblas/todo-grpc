@@ -5,8 +5,9 @@ import (
 	"time"
 
 	"github.com/bufbuild/connect-go"
-	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
-	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
+	oauthv1 "github.com/koblas/grpc-todo/gen/core/oauth_user/v1"
+	userv1 "github.com/koblas/grpc-todo/gen/core/user/v1"
+	"github.com/koblas/grpc-todo/gen/core/user/v1/userv1connect"
 	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/key_manager"
 	"github.com/koblas/grpc-todo/pkg/logger"
@@ -20,14 +21,14 @@ import (
 // Server represents the gRPC server
 type OauthUserServer struct {
 	kms      key_manager.Encoder
-	user     corev1connect.UserServiceClient
+	user     userv1connect.UserServiceClient
 	jwtMaker tokenmanager.Maker
 	smanager oauth_provider.SecretManager
 }
 
 type Option func(*OauthUserServer)
 
-func WithUserService(client corev1connect.UserServiceClient) Option {
+func WithUserService(client userv1connect.UserServiceClient) Option {
 	return func(cfg *OauthUserServer) {
 		cfg.user = client
 	}
@@ -61,7 +62,7 @@ func NewOauthUserServer(jwtSecret string, opts ...Option) *OauthUserServer {
 	return &svr
 }
 
-func (svc *OauthUserServer) GetAuthUrl(ctx context.Context, request *connect.Request[corev1.OAuthUserServiceGetAuthUrlRequest]) (*connect.Response[corev1.OAuthUserServiceGetAuthUrlResponse], error) {
+func (svc *OauthUserServer) GetAuthUrl(ctx context.Context, request *connect.Request[oauthv1.OAuthUserServiceGetAuthUrlRequest]) (*connect.Response[oauthv1.OAuthUserServiceGetAuthUrlResponse], error) {
 	params := request.Msg
 	log := logger.FromContext(ctx).With("provider", params.Provider)
 	log.Info("Calling GetAuthURL")
@@ -83,10 +84,10 @@ func (svc *OauthUserServer) GetAuthUrl(ctx context.Context, request *connect.Req
 
 	url := oprovider.BuildRedirect(ctx, params.RedirectUrl, state)
 
-	return connect.NewResponse(&corev1.OAuthUserServiceGetAuthUrlResponse{Url: url}), nil
+	return connect.NewResponse(&oauthv1.OAuthUserServiceGetAuthUrlResponse{Url: url}), nil
 }
 
-func (svc *OauthUserServer) UpsertUser(ctx context.Context, request *connect.Request[corev1.OAuthUserServiceUpsertUserRequest]) (*connect.Response[corev1.OAuthUserServiceUpsertUserResponse], error) {
+func (svc *OauthUserServer) UpsertUser(ctx context.Context, request *connect.Request[oauthv1.OAuthUserServiceUpsertUserRequest]) (*connect.Response[oauthv1.OAuthUserServiceUpsertUserResponse], error) {
 	params := request.Msg
 	log := logger.FromContext(ctx).With("provider", params.Oauth.Provider)
 	log.Info("Calling UpsertUser")
@@ -122,9 +123,9 @@ func (svc *OauthUserServer) UpsertUser(ctx context.Context, request *connect.Req
 		return nil, bufcutil.InternalError(err, "Unable to get ID from provider")
 	}
 
-	findBy, err := svc.user.FindBy(ctx, connect.NewRequest(&corev1.FindByRequest{
-		FindBy: &corev1.FindBy{
-			Auth: &corev1.AuthInfo{
+	findBy, err := svc.user.FindBy(ctx, connect.NewRequest(&userv1.FindByRequest{
+		FindBy: &userv1.FindBy{
+			Auth: &userv1.AuthInfo{
 				Provider:   params.Oauth.Provider,
 				ProviderId: info.Id,
 			},
@@ -137,7 +138,7 @@ func (svc *OauthUserServer) UpsertUser(ctx context.Context, request *connect.Req
 	}
 
 	if findBy != nil && findBy.Msg != nil {
-		return connect.NewResponse(&corev1.OAuthUserServiceUpsertUserResponse{UserId: findBy.Msg.User.Id, Created: false}), nil
+		return connect.NewResponse(&oauthv1.OAuthUserServiceUpsertUserResponse{UserId: findBy.Msg.User.Id, Created: false}), nil
 	}
 
 	if info.Email == "" {
@@ -145,8 +146,8 @@ func (svc *OauthUserServer) UpsertUser(ctx context.Context, request *connect.Req
 		return nil, bufcutil.InvalidArgumentError("email", "provider didn't send email address")
 	}
 
-	findBy, err = svc.user.FindBy(ctx, connect.NewRequest(&corev1.FindByRequest{
-		FindBy: &corev1.FindBy{
+	findBy, err = svc.user.FindBy(ctx, connect.NewRequest(&userv1.FindByRequest{
+		FindBy: &userv1.FindBy{
 			Email: info.Email,
 		},
 	}))
@@ -162,10 +163,10 @@ func (svc *OauthUserServer) UpsertUser(ctx context.Context, request *connect.Req
 	if findBy == nil || findBy.Msg.User.Id == "" {
 		log.With(zap.String("email", info.Email)).Info("Creating new user")
 		created = true
-		newUser, err := svc.user.Create(ctx, connect.NewRequest(&corev1.UserServiceCreateRequest{
+		newUser, err := svc.user.Create(ctx, connect.NewRequest(&userv1.UserServiceCreateRequest{
 			Email:  info.Email,
 			Name:   info.Name,
-			Status: corev1.UserStatus_USER_STATUS_ACTIVE,
+			Status: userv1.UserStatus_USER_STATUS_ACTIVE,
 		}))
 		if err != nil {
 			log.With(zap.Error(err)).Error("Unable to create user")
@@ -179,9 +180,9 @@ func (svc *OauthUserServer) UpsertUser(ctx context.Context, request *connect.Req
 
 	// Now associate the OAuth token and the UserId
 	// TODO - save the token!
-	_, err = svc.user.AuthAssociate(ctx, connect.NewRequest(&corev1.AuthAssociateRequest{
+	_, err = svc.user.AuthAssociate(ctx, connect.NewRequest(&userv1.AuthAssociateRequest{
 		UserId: userId,
-		Auth: &corev1.AuthInfo{
+		Auth: &userv1.AuthInfo{
 			Provider:   params.Oauth.Provider,
 			ProviderId: info.Id,
 		},
@@ -191,13 +192,13 @@ func (svc *OauthUserServer) UpsertUser(ctx context.Context, request *connect.Req
 		return nil, bufcutil.InternalError(err)
 	}
 
-	return connect.NewResponse(&corev1.OAuthUserServiceUpsertUserResponse{UserId: userId, Created: created}), nil
+	return connect.NewResponse(&oauthv1.OAuthUserServiceUpsertUserResponse{UserId: userId, Created: created}), nil
 }
 
-func (s *OauthUserServer) ListAssociations(ctx context.Context, params *connect.Request[corev1.OAuthUserServiceListAssociationsRequest]) (*connect.Response[corev1.OAuthUserServiceListAssociationsResponse], error) {
-	return connect.NewResponse(&corev1.OAuthUserServiceListAssociationsResponse{}), nil
+func (s *OauthUserServer) ListAssociations(ctx context.Context, params *connect.Request[oauthv1.OAuthUserServiceListAssociationsRequest]) (*connect.Response[oauthv1.OAuthUserServiceListAssociationsResponse], error) {
+	return connect.NewResponse(&oauthv1.OAuthUserServiceListAssociationsResponse{}), nil
 }
 
-func (s *OauthUserServer) RemoveAssociation(ctx context.Context, params *connect.Request[corev1.OAuthUserServiceRemoveAssociationRequest]) (*connect.Response[corev1.OAuthUserServiceRemoveAssociationResponse], error) {
-	return connect.NewResponse(&corev1.OAuthUserServiceRemoveAssociationResponse{}), nil
+func (s *OauthUserServer) RemoveAssociation(ctx context.Context, params *connect.Request[oauthv1.OAuthUserServiceRemoveAssociationRequest]) (*connect.Response[oauthv1.OAuthUserServiceRemoveAssociationResponse], error) {
+	return connect.NewResponse(&oauthv1.OAuthUserServiceRemoveAssociationResponse{}), nil
 }

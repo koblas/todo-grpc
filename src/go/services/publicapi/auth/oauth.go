@@ -3,7 +3,8 @@ package auth
 import (
 	"github.com/bufbuild/connect-go"
 	apiv1 "github.com/koblas/grpc-todo/gen/api/v1"
-	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
+	oauthv1 "github.com/koblas/grpc-todo/gen/core/oauth_user/v1"
+	userv1 "github.com/koblas/grpc-todo/gen/core/user/v1"
 	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"go.uber.org/zap"
@@ -19,8 +20,8 @@ func (s AuthenticationServer) OauthLogin(ctx context.Context, paramsIn *connect.
 	log := logger.FromContext(ctx).With("provider", params.Provider)
 	log.Info("OauthLogin")
 
-	result, err := s.oauthClient.UpsertUser(ctx, connect.NewRequest(&corev1.OAuthUserServiceUpsertUserRequest{
-		Oauth: &corev1.OAuthOauthParams{
+	result, err := s.oauthClient.UpsertUser(ctx, connect.NewRequest(&oauthv1.OAuthUserServiceUpsertUserRequest{
+		Oauth: &oauthv1.OAuthOauthParams{
 			Provider: params.Provider,
 			Code:     params.Code,
 		},
@@ -33,8 +34,8 @@ func (s AuthenticationServer) OauthLogin(ctx context.Context, paramsIn *connect.
 		return nil, bufcutil.InternalError(err)
 	}
 
-	user, err := s.userClient.FindBy(ctx, connect.NewRequest(&corev1.FindByRequest{
-		FindBy: &corev1.FindBy{
+	user, err := s.userClient.FindBy(ctx, connect.NewRequest(&userv1.FindByRequest{
+		FindBy: &userv1.FindBy{
 			UserId: result.Msg.UserId,
 		},
 	}))
@@ -60,7 +61,7 @@ func (s AuthenticationServer) OauthUrl(ctx context.Context, params *connect.Requ
 
 	// TODO -- basic validation on parameters
 
-	result, err := s.oauthClient.GetAuthUrl(ctx, connect.NewRequest(&corev1.OAuthUserServiceGetAuthUrlRequest{
+	result, err := s.oauthClient.GetAuthUrl(ctx, connect.NewRequest(&oauthv1.OAuthUserServiceGetAuthUrlRequest{
 		Provider:    params.Msg.Provider,
 		RedirectUrl: params.Msg.RedirectUrl,
 	}))

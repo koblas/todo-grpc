@@ -13,15 +13,15 @@ import (
 	connect_go "github.com/bufbuild/connect-go"
 	"github.com/gojuno/minimock/v3"
 	v11 "github.com/koblas/grpc-todo/gen/core/eventbus/v1"
-	v1 "github.com/koblas/grpc-todo/gen/core/v1"
+	v13 "github.com/koblas/grpc-todo/gen/core/todo/v1"
 )
 
 // TodoEventbusServiceHandlerMock implements TodoEventbusServiceHandler
 type TodoEventbusServiceHandlerMock struct {
 	t minimock.Tester
 
-	funcTodoChange          func(ctx context.Context, pp1 *connect_go.Request[v1.TodoChangeEvent]) (pp2 *connect_go.Response[v11.TodoEventbusTodoChangeResponse], err error)
-	inspectFuncTodoChange   func(ctx context.Context, pp1 *connect_go.Request[v1.TodoChangeEvent])
+	funcTodoChange          func(ctx context.Context, pp1 *connect_go.Request[v13.TodoChangeEvent]) (pp2 *connect_go.Response[v11.TodoEventbusTodoChangeResponse], err error)
+	inspectFuncTodoChange   func(ctx context.Context, pp1 *connect_go.Request[v13.TodoChangeEvent])
 	afterTodoChangeCounter  uint64
 	beforeTodoChangeCounter uint64
 	TodoChangeMock          mTodoEventbusServiceHandlerMockTodoChange
@@ -60,7 +60,7 @@ type TodoEventbusServiceHandlerMockTodoChangeExpectation struct {
 // TodoEventbusServiceHandlerMockTodoChangeParams contains parameters of the TodoEventbusServiceHandler.TodoChange
 type TodoEventbusServiceHandlerMockTodoChangeParams struct {
 	ctx context.Context
-	pp1 *connect_go.Request[v1.TodoChangeEvent]
+	pp1 *connect_go.Request[v13.TodoChangeEvent]
 }
 
 // TodoEventbusServiceHandlerMockTodoChangeResults contains results of the TodoEventbusServiceHandler.TodoChange
@@ -70,7 +70,7 @@ type TodoEventbusServiceHandlerMockTodoChangeResults struct {
 }
 
 // Expect sets up expected params for TodoEventbusServiceHandler.TodoChange
-func (mmTodoChange *mTodoEventbusServiceHandlerMockTodoChange) Expect(ctx context.Context, pp1 *connect_go.Request[v1.TodoChangeEvent]) *mTodoEventbusServiceHandlerMockTodoChange {
+func (mmTodoChange *mTodoEventbusServiceHandlerMockTodoChange) Expect(ctx context.Context, pp1 *connect_go.Request[v13.TodoChangeEvent]) *mTodoEventbusServiceHandlerMockTodoChange {
 	if mmTodoChange.mock.funcTodoChange != nil {
 		mmTodoChange.mock.t.Fatalf("TodoEventbusServiceHandlerMock.TodoChange mock is already set by Set")
 	}
@@ -90,7 +90,7 @@ func (mmTodoChange *mTodoEventbusServiceHandlerMockTodoChange) Expect(ctx contex
 }
 
 // Inspect accepts an inspector function that has same arguments as the TodoEventbusServiceHandler.TodoChange
-func (mmTodoChange *mTodoEventbusServiceHandlerMockTodoChange) Inspect(f func(ctx context.Context, pp1 *connect_go.Request[v1.TodoChangeEvent])) *mTodoEventbusServiceHandlerMockTodoChange {
+func (mmTodoChange *mTodoEventbusServiceHandlerMockTodoChange) Inspect(f func(ctx context.Context, pp1 *connect_go.Request[v13.TodoChangeEvent])) *mTodoEventbusServiceHandlerMockTodoChange {
 	if mmTodoChange.mock.inspectFuncTodoChange != nil {
 		mmTodoChange.mock.t.Fatalf("Inspect function is already set for TodoEventbusServiceHandlerMock.TodoChange")
 	}
@@ -114,7 +114,7 @@ func (mmTodoChange *mTodoEventbusServiceHandlerMockTodoChange) Return(pp2 *conne
 }
 
 // Set uses given function f to mock the TodoEventbusServiceHandler.TodoChange method
-func (mmTodoChange *mTodoEventbusServiceHandlerMockTodoChange) Set(f func(ctx context.Context, pp1 *connect_go.Request[v1.TodoChangeEvent]) (pp2 *connect_go.Response[v11.TodoEventbusTodoChangeResponse], err error)) *TodoEventbusServiceHandlerMock {
+func (mmTodoChange *mTodoEventbusServiceHandlerMockTodoChange) Set(f func(ctx context.Context, pp1 *connect_go.Request[v13.TodoChangeEvent]) (pp2 *connect_go.Response[v11.TodoEventbusTodoChangeResponse], err error)) *TodoEventbusServiceHandlerMock {
 	if mmTodoChange.defaultExpectation != nil {
 		mmTodoChange.mock.t.Fatalf("Default expectation is already set for the TodoEventbusServiceHandler.TodoChange method")
 	}
@@ -129,7 +129,7 @@ func (mmTodoChange *mTodoEventbusServiceHandlerMockTodoChange) Set(f func(ctx co
 
 // When sets expectation for the TodoEventbusServiceHandler.TodoChange which will trigger the result defined by the following
 // Then helper
-func (mmTodoChange *mTodoEventbusServiceHandlerMockTodoChange) When(ctx context.Context, pp1 *connect_go.Request[v1.TodoChangeEvent]) *TodoEventbusServiceHandlerMockTodoChangeExpectation {
+func (mmTodoChange *mTodoEventbusServiceHandlerMockTodoChange) When(ctx context.Context, pp1 *connect_go.Request[v13.TodoChangeEvent]) *TodoEventbusServiceHandlerMockTodoChangeExpectation {
 	if mmTodoChange.mock.funcTodoChange != nil {
 		mmTodoChange.mock.t.Fatalf("TodoEventbusServiceHandlerMock.TodoChange mock is already set by Set")
 	}
@@ -149,7 +149,7 @@ func (e *TodoEventbusServiceHandlerMockTodoChangeExpectation) Then(pp2 *connect_
 }
 
 // TodoChange implements TodoEventbusServiceHandler
-func (mmTodoChange *TodoEventbusServiceHandlerMock) TodoChange(ctx context.Context, pp1 *connect_go.Request[v1.TodoChangeEvent]) (pp2 *connect_go.Response[v11.TodoEventbusTodoChangeResponse], err error) {
+func (mmTodoChange *TodoEventbusServiceHandlerMock) TodoChange(ctx context.Context, pp1 *connect_go.Request[v13.TodoChangeEvent]) (pp2 *connect_go.Response[v11.TodoEventbusTodoChangeResponse], err error) {
 	mm_atomic.AddUint64(&mmTodoChange.beforeTodoChangeCounter, 1)
 	defer mm_atomic.AddUint64(&mmTodoChange.afterTodoChangeCounter, 1)
 

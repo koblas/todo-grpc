@@ -8,7 +8,8 @@ import (
 	grpchealth "github.com/bufbuild/connect-grpchealth-go"
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
 	"github.com/koblas/grpc-todo/gen/api/v1/apiv1connect"
-	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
+	"github.com/koblas/grpc-todo/gen/core/oauth_user/v1/oauth_userv1connect"
+	"github.com/koblas/grpc-todo/gen/core/user/v1/userv1connect"
 	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/manager"
@@ -35,13 +36,13 @@ func main() {
 
 	opts := []auth.Option{
 		auth.WithUserClient(
-			corev1connect.NewUserServiceClient(
+			userv1connect.NewUserServiceClient(
 				bufcutil.NewHttpClient(),
 				"http://"+config.UserServiceAddr,
 			),
 		),
 		auth.WithOAuthClient(
-			corev1connect.NewOAuthUserServiceClient(
+			oauth_userv1connect.NewOAuthUserServiceClient(
 				bufcutil.NewHttpClient(),
 				"http://"+config.OauthUserServiceAddr,
 			),

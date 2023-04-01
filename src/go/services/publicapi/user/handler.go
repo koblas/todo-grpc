@@ -6,8 +6,8 @@ import (
 	"github.com/bufbuild/connect-go"
 	"github.com/go-playground/validator/v10"
 	apiv1 "github.com/koblas/grpc-todo/gen/api/v1"
-	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
-	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
+	userv1 "github.com/koblas/grpc-todo/gen/core/user/v1"
+	"github.com/koblas/grpc-todo/gen/core/user/v1/userv1connect"
 	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/interceptors"
 	"github.com/koblas/grpc-todo/pkg/logger"
@@ -20,13 +20,13 @@ var validate = validator.New()
 
 // Server represents the gRPC server
 type UserServer struct {
-	user       corev1connect.UserServiceClient
+	user       userv1connect.UserServiceClient
 	userHelper interceptors.UserIdFromContext
 }
 
 type Option func(*UserServer)
 
-func WithUserService(client corev1connect.UserServiceClient) Option {
+func WithUserService(client userv1connect.UserServiceClient) Option {
 	return func(svr *UserServer) {
 		svr.user = client
 	}
@@ -68,8 +68,8 @@ func (svc *UserServer) GetUser(ctx context.Context, _ *connect.Request[apiv1.Get
 	log = log.With("userId", userId)
 	log.Info("Looking up user")
 
-	user, err := svc.user.FindBy(ctx, connect.NewRequest(&corev1.FindByRequest{
-		FindBy: &corev1.FindBy{
+	user, err := svc.user.FindBy(ctx, connect.NewRequest(&userv1.FindByRequest{
+		FindBy: &userv1.FindBy{
 			UserId: userId,
 		},
 	}))
@@ -102,8 +102,8 @@ func (svc *UserServer) UpdateUser(ctx context.Context, updateIn *connect.Request
 		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("missing userid"))
 	}
 
-	found, err := svc.user.FindBy(ctx, connect.NewRequest(&corev1.FindByRequest{
-		FindBy: &corev1.FindBy{
+	found, err := svc.user.FindBy(ctx, connect.NewRequest(&userv1.FindByRequest{
+		FindBy: &userv1.FindBy{
 			UserId: userId,
 		},
 	}))
@@ -128,7 +128,7 @@ func (svc *UserServer) UpdateUser(ctx context.Context, updateIn *connect.Request
 		}
 	}
 
-	user, err := svc.user.Update(ctx, connect.NewRequest(&corev1.UserServiceUpdateRequest{
+	user, err := svc.user.Update(ctx, connect.NewRequest(&userv1.UserServiceUpdateRequest{
 		UserId:      userId,
 		Name:        update.Name,
 		Email:       update.Email,

@@ -5,8 +5,8 @@ import (
 
 	"github.com/bufbuild/connect-go"
 	apiv1 "github.com/koblas/grpc-todo/gen/api/v1"
-	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
-	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
+	todov1 "github.com/koblas/grpc-todo/gen/core/todo/v1"
+	"github.com/koblas/grpc-todo/gen/core/todo/v1/todov1connect"
 	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/interceptors"
 	"github.com/koblas/grpc-todo/pkg/logger"
@@ -16,13 +16,13 @@ import (
 
 // Server represents the gRPC server
 type TodoServer struct {
-	todos      corev1connect.TodoServiceClient
+	todos      todov1connect.TodoServiceClient
 	userHelper interceptors.UserIdFromContext
 }
 
 type Option func(*TodoServer)
 
-func WithTodoService(client corev1connect.TodoServiceClient) Option {
+func WithTodoService(client todov1connect.TodoServiceClient) Option {
 	return func(svr *TodoServer) {
 		svr.todos = client
 	}
@@ -61,7 +61,7 @@ func (svc *TodoServer) TodoAdd(ctx context.Context, newTodo *connect.Request[api
 		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("missing userid"))
 	}
 
-	task, err := svc.todos.TodoAdd(ctx, connect.NewRequest(&corev1.TodoAddRequest{
+	task, err := svc.todos.TodoAdd(ctx, connect.NewRequest(&todov1.TodoAddRequest{
 		UserId: userId, // TODO
 		Task:   newTodo.Msg.Task,
 	}))
@@ -90,7 +90,7 @@ func (svc *TodoServer) TodoList(ctx context.Context, _ *connect.Request[apiv1.To
 		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("missing userid"))
 	}
 
-	out, err := svc.todos.TodoList(ctx, connect.NewRequest(&corev1.TodoListRequest{
+	out, err := svc.todos.TodoList(ctx, connect.NewRequest(&todov1.TodoListRequest{
 		UserId: userId,
 	}))
 
@@ -121,7 +121,7 @@ func (svc *TodoServer) TodoDelete(ctx context.Context, delTodo *connect.Request[
 		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("missing userid"))
 	}
 
-	_, err = svc.todos.TodoDelete(ctx, connect.NewRequest(&corev1.TodoDeleteRequest{
+	_, err = svc.todos.TodoDelete(ctx, connect.NewRequest(&todov1.TodoDeleteRequest{
 		UserId: userId,
 		Id:     delTodo.Msg.Id,
 	}))

@@ -2,7 +2,8 @@ package main
 
 import (
 	"github.com/koblas/grpc-todo/gen/api/v1/apiv1connect"
-	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
+	"github.com/koblas/grpc-todo/gen/core/oauth_user/v1/oauth_userv1connect"
+	"github.com/koblas/grpc-todo/gen/core/user/v1/userv1connect"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
@@ -30,11 +31,11 @@ func main() {
 
 	// Connect to the user service
 	opts := []auth.Option{
-		auth.WithUserClient(corev1connect.NewUserServiceClient(
+		auth.WithUserClient(userv1connect.NewUserServiceClient(
 			awsutil.NewTwirpCallLambda(),
 			"lambda://core-user",
 		)),
-		auth.WithOAuthClient(corev1connect.NewOAuthUserServiceClient(
+		auth.WithOAuthClient(oauth_userv1connect.NewOAuthUserServiceClient(
 			awsutil.NewTwirpCallLambda(),
 			"lambda://core-oauth-user",
 		)),

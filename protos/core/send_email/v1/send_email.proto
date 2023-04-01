@@ -1,0 +1,89 @@
+syntax = "proto3";
+package core.send_email.v1;
+
+option go_package = "github.com/koblas/grpc-todo/protos";
+
+// Basic user email info
+message EmailUser {
+  string email = 1;
+  string name = 2;
+  string user_id = 3;
+}
+
+// Basic Application information for the message
+message EmailAppInfo {
+  string url_base = 1;
+  string app_name = 2;
+  string sender_email = 3;
+  string sender_name = 4;
+}
+
+//
+//  Specific messages
+//
+message RegisterMessageRequest {
+  EmailAppInfo app_info = 1;
+  EmailUser recipient = 3;
+  string reference_id = 4;
+  string token = 5;
+}
+
+message PasswordChangeMessageRequest {
+  EmailAppInfo app_info = 1;
+  EmailUser recipient = 3;
+  string reference_id = 4;
+}
+
+message PasswordRecoveryMessageRequest {
+  EmailAppInfo app_info = 1;
+  EmailUser recipient = 3;
+  string reference_id = 4;
+  string token = 5;
+}
+
+message InviteUserMessageRequest {
+  EmailAppInfo app_info = 1;
+  EmailUser sender = 2;
+  EmailUser recipient = 3;
+  string reference_id = 4;
+  string token = 5;
+}
+
+// message EmailOkResponse { bool ok = 1; }
+message RegisterMessageResponse { }
+message PasswordChangeMessageResponse { }
+message PasswordRecoveryMessageResponse { }
+message InviteUserMessageResponse { }
+message NotifyEmailSentResponse { }
+
+// For pubsub listeners
+enum EmailTemplate {
+  EMAIL_TEMPLATE_UNSPECIFIED = 0;
+  EMAIL_TEMPLATE_USER_REGISTERED = 1;
+  EMAIL_TEMPLATE_USER_INVITED = 2;
+  EMAIL_TEMPLATE_PASSWORD_RECOVERY = 3;
+  EMAIL_TEMPLATE_PASSWORD_CHANGE = 4;
+}
+
+message NotifyEmailSentRequest {
+  string recipient_email = 1;
+  string message_id = 2;
+  EmailTemplate template = 3;
+  string reference_id = 4;
+}
+
+//
+
+service SendEmailService {
+  rpc RegisterMessage(RegisterMessageRequest) returns (RegisterMessageResponse) {}
+  rpc PasswordChangeMessage(PasswordChangeMessageRequest)
+      returns (PasswordChangeMessageResponse) {}
+  rpc PasswordRecoveryMessage(PasswordRecoveryMessageRequest)
+      returns (PasswordRecoveryMessageResponse) {}
+  rpc InviteUserMessage(InviteUserMessageRequest) returns (InviteUserMessageResponse) {}
+}
+
+service SendEmailEventsService {
+  // The notification channel
+  rpc NotifyEmailSent(NotifyEmailSentRequest) returns (NotifyEmailSentResponse) {}
+}

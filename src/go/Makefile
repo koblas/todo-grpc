@@ -6,9 +6,15 @@ all: build-lambda build-compose
 
 proto:
 	buf generate ../../protos/
-	(cd gen/core/v1/corev1connect && minimock -s _mock.go )
-	(cd gen/core/message/v1/messagev1connect && minimock -s _mock.go )
+	# (cd gen/core/v1/corev1connect && minimock -s _mock.go )
 	(cd gen/core/eventbus/v1/eventbusv1connect && minimock -s _mock.go )
+	(cd gen/core/file/v1/filev1connect && minimock -s _mock.go )
+	(cd gen/core/message/v1/messagev1connect && minimock -s _mock.go )
+	(cd gen/core/oauth_user/v1/oauth_userv1connect && minimock -s _mock.go )
+	(cd gen/core/send_email/v1/send_emailv1connect && minimock -s _mock.go )
+	(cd gen/core/todo/v1/todov1connect && minimock -s _mock.go )
+	(cd gen/core/user/v1/userv1connect && minimock -s _mock.go )
+	# (cd gen/core/websocket/v1/websocketv1connect && minimock -s _mock.go )
 
 
 start:

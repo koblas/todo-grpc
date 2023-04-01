@@ -10,7 +10,8 @@ import (
 	apiv1 "github.com/koblas/grpc-todo/gen/api/v1"
 	eventv1 "github.com/koblas/grpc-todo/gen/core/eventbus/v1"
 	"github.com/koblas/grpc-todo/gen/core/eventbus/v1/eventbusv1connect"
-	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
+	todov1 "github.com/koblas/grpc-todo/gen/core/todo/v1"
+	websocketv1 "github.com/koblas/grpc-todo/gen/core/websocket/v1"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"go.uber.org/zap"
 )
@@ -45,7 +46,7 @@ func NewTodoChangeServer(opts ...Option) map[string]http.Handler {
 	return map[string]http.Handler{"todo.change": api}
 }
 
-func (svc *TodoServer) TodoChange(ctx context.Context, eventIn *connect.Request[corev1.TodoChangeEvent]) (*connect.Response[eventv1.TodoEventbusTodoChangeResponse], error) {
+func (svc *TodoServer) TodoChange(ctx context.Context, eventIn *connect.Request[todov1.TodoChangeEvent]) (*connect.Response[eventv1.TodoEventbusTodoChangeResponse], error) {
 	event := eventIn.Msg
 	log := logger.FromContext(ctx)
 	log.Info("received todo event")
@@ -85,8 +86,8 @@ func (svc *TodoServer) TodoChange(ctx context.Context, eventIn *connect.Request[
 		return nil, err
 	}
 
-	if _, err := svc.producer.Send(ctx, connect.NewRequest(&corev1.BroadcastEvent{
-		Filter: &corev1.BroadcastFilter{
+	if _, err := svc.producer.Send(ctx, connect.NewRequest(&websocketv1.BroadcastEvent{
+		Filter: &websocketv1.BroadcastFilter{
 			UserId: userId,
 		},
 		Data: data,

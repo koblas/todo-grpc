@@ -8,7 +8,8 @@ import (
 	"github.com/bufbuild/connect-go"
 	eventv1 "github.com/koblas/grpc-todo/gen/core/eventbus/v1"
 	"github.com/koblas/grpc-todo/gen/core/eventbus/v1/eventbusv1connect"
-	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
+	filev1 "github.com/koblas/grpc-todo/gen/core/file/v1"
+	websocketv1 "github.com/koblas/grpc-todo/gen/core/websocket/v1"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"go.uber.org/zap"
 )
@@ -43,11 +44,11 @@ func NewFileChangeServer(opts ...Option) map[string]http.Handler {
 	return map[string]http.Handler{"websocket.file": api}
 }
 
-func (svc *FileServer) FileUploaded(ctx context.Context, eventIn *connect.Request[corev1.FileServiceUploadEvent]) (*connect.Response[eventv1.FileEventbusFileUploadedResponse], error) {
+func (svc *FileServer) FileUploaded(ctx context.Context, eventIn *connect.Request[filev1.FileServiceUploadEvent]) (*connect.Response[eventv1.FileEventbusFileUploadedResponse], error) {
 	return connect.NewResponse(&eventv1.FileEventbusFileUploadedResponse{}), nil
 }
 
-func (svc *FileServer) FileComplete(ctx context.Context, eventIn *connect.Request[corev1.FileServiceCompleteEvent]) (*connect.Response[eventv1.FileEventbusFileCompleteResponse], error) {
+func (svc *FileServer) FileComplete(ctx context.Context, eventIn *connect.Request[filev1.FileServiceCompleteEvent]) (*connect.Response[eventv1.FileEventbusFileCompleteResponse], error) {
 	event := eventIn.Msg
 	log := logger.FromContext(ctx)
 	log.Info("received file event")
@@ -73,8 +74,8 @@ func (svc *FileServer) FileComplete(ctx context.Context, eventIn *connect.Reques
 		return nil, err
 	}
 
-	if _, err := svc.producer.Send(ctx, connect.NewRequest(&corev1.BroadcastEvent{
-		Filter: &corev1.BroadcastFilter{
+	if _, err := svc.producer.Send(ctx, connect.NewRequest(&websocketv1.BroadcastEvent{
+		Filter: &websocketv1.BroadcastFilter{
 			UserId: *event.Info.UserId,
 		},
 		Data: data,

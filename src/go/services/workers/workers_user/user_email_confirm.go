@@ -7,7 +7,8 @@ import (
 	"github.com/bufbuild/connect-go"
 	eventv1 "github.com/koblas/grpc-todo/gen/core/eventbus/v1"
 	"github.com/koblas/grpc-todo/gen/core/eventbus/v1/eventbusv1connect"
-	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
+	emailv1 "github.com/koblas/grpc-todo/gen/core/send_email/v1"
+	userv1 "github.com/koblas/grpc-todo/gen/core/user/v1"
 	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"go.uber.org/zap"
@@ -33,7 +34,7 @@ func NewUserEmailConfirm(config WorkerConfig) http.Handler {
 	return api
 }
 
-func (cfg *userEmailConfirm) SecurityRegisterToken(ctx context.Context, msgIn *connect.Request[corev1.UserSecurityEvent]) (*connect.Response[eventv1.UserEventbusSecurityRegisterTokenResponse], error) {
+func (cfg *userEmailConfirm) SecurityRegisterToken(ctx context.Context, msgIn *connect.Request[userv1.UserSecurityEvent]) (*connect.Response[eventv1.UserEventbusSecurityRegisterTokenResponse], error) {
 	log := logger.FromContext(ctx)
 	if msgIn.Msg.User == nil {
 		log.With(zap.Any("msg", msgIn.Msg)).Info("RAW MESSAGE")
@@ -50,9 +51,9 @@ func (cfg *userEmailConfirm) SecurityRegisterToken(ctx context.Context, msgIn *c
 
 	log = log.With("email", msg.User.Email)
 
-	params := corev1.RegisterMessageRequest{
+	params := emailv1.RegisterMessageRequest{
 		AppInfo: buildAppInfo(cfg.config.UrlBase),
-		Recipient: &corev1.EmailUser{
+		Recipient: &emailv1.EmailUser{
 			UserId: msg.User.Id,
 			Name:   msg.User.Name,
 			Email:  msg.User.Email,

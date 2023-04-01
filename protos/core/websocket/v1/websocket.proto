@@ -1,0 +1,14 @@
+syntax = "proto3";
+package core.websocket.v1;
+
+option go_package = "github.com/koblas/grpc-todo/protos";
+
+message BroadcastFilter {
+    string user_id = 1;
+}
+
+message BroadcastEvent {
+    BroadcastFilter filter = 1;
+    bytes data = 2;
+}
+

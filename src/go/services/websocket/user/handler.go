@@ -9,7 +9,8 @@ import (
 	"github.com/bufbuild/connect-go"
 	eventv1 "github.com/koblas/grpc-todo/gen/core/eventbus/v1"
 	"github.com/koblas/grpc-todo/gen/core/eventbus/v1/eventbusv1connect"
-	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
+	userv1 "github.com/koblas/grpc-todo/gen/core/user/v1"
+	websocketv1 "github.com/koblas/grpc-todo/gen/core/websocket/v1"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/protoutil"
 	"go.uber.org/zap"
@@ -46,7 +47,7 @@ func NewUserChangeServer(opts ...Option) map[string]http.Handler {
 	return map[string]http.Handler{"websocket.user": api}
 }
 
-func (svc *UserServer) UserChange(ctx context.Context, eventIn *connect.Request[corev1.UserChangeEvent]) (*connect.Response[eventv1.UserEventbusUserChangeResponse], error) {
+func (svc *UserServer) UserChange(ctx context.Context, eventIn *connect.Request[userv1.UserChangeEvent]) (*connect.Response[eventv1.UserEventbusUserChangeResponse], error) {
 	event := eventIn.Msg
 	log := logger.FromContext(ctx)
 	log.Info("received user event")
@@ -84,8 +85,8 @@ func (svc *UserServer) UserChange(ctx context.Context, eventIn *connect.Request[
 		return nil, err
 	}
 
-	if _, err := svc.producer.Send(ctx, connect.NewRequest(&corev1.BroadcastEvent{
-		Filter: &corev1.BroadcastFilter{
+	if _, err := svc.producer.Send(ctx, connect.NewRequest(&websocketv1.BroadcastEvent{
+		Filter: &websocketv1.BroadcastFilter{
 			UserId: userId,
 		},
 		Data: data,
@@ -96,15 +97,15 @@ func (svc *UserServer) UserChange(ctx context.Context, eventIn *connect.Request[
 	return connect.NewResponse(&eventv1.UserEventbusUserChangeResponse{}), nil
 }
 
-func (*UserServer) SecurityPasswordChange(context.Context, *connect.Request[corev1.UserSecurityEvent]) (*connect.Response[eventv1.UserEventbusSecurityPasswordChangeResponse], error) {
+func (*UserServer) SecurityPasswordChange(context.Context, *connect.Request[userv1.UserSecurityEvent]) (*connect.Response[eventv1.UserEventbusSecurityPasswordChangeResponse], error) {
 	return connect.NewResponse(&eventv1.UserEventbusSecurityPasswordChangeResponse{}), nil
 }
-func (*UserServer) SecurityForgotRequest(context.Context, *connect.Request[corev1.UserSecurityEvent]) (*connect.Response[eventv1.UserEventbusSecurityForgotRequestResponse], error) {
+func (*UserServer) SecurityForgotRequest(context.Context, *connect.Request[userv1.UserSecurityEvent]) (*connect.Response[eventv1.UserEventbusSecurityForgotRequestResponse], error) {
 	return connect.NewResponse(&eventv1.UserEventbusSecurityForgotRequestResponse{}), nil
 }
-func (*UserServer) SecurityRegisterToken(context.Context, *connect.Request[corev1.UserSecurityEvent]) (*connect.Response[eventv1.UserEventbusSecurityRegisterTokenResponse], error) {
+func (*UserServer) SecurityRegisterToken(context.Context, *connect.Request[userv1.UserSecurityEvent]) (*connect.Response[eventv1.UserEventbusSecurityRegisterTokenResponse], error) {
 	return connect.NewResponse(&eventv1.UserEventbusSecurityRegisterTokenResponse{}), nil
 }
-func (*UserServer) SecurityInviteToken(context.Context, *connect.Request[corev1.UserSecurityEvent]) (*connect.Response[eventv1.UserEventbusSecurityInviteTokenResponse], error) {
+func (*UserServer) SecurityInviteToken(context.Context, *connect.Request[userv1.UserSecurityEvent]) (*connect.Response[eventv1.UserEventbusSecurityInviteTokenResponse], error) {
 	return connect.NewResponse(&eventv1.UserEventbusSecurityInviteTokenResponse{}), nil
 }

@@ -2,7 +2,8 @@ package main
 
 import (
 	"github.com/bufbuild/connect-go"
-	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
+	"github.com/koblas/grpc-todo/gen/core/oauth_user/v1/oauth_userv1connect"
+	"github.com/koblas/grpc-todo/gen/core/user/v1/userv1connect"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
@@ -36,14 +37,14 @@ func main() {
 	}
 
 	opts := []ouser.Option{
-		ouser.WithUserService(corev1connect.NewUserServiceClient(
+		ouser.WithUserService(userv1connect.NewUserServiceClient(
 			awsutil.NewTwirpCallLambda(),
 			"lambda://core-user",
 		)),
 		ouser.WithSecretManager(config.Oauth),
 	}
 
-	_, api := corev1connect.NewOAuthUserServiceHandler(
+	_, api := oauth_userv1connect.NewOAuthUserServiceHandler(
 		ouser.NewOauthUserServer(config.Common.JwtSecret, opts...),
 		connect.WithInterceptors(interceptors.NewReqidInterceptor()),
 	)

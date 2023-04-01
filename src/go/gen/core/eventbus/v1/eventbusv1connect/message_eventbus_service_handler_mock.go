@@ -13,15 +13,15 @@ import (
 	connect_go "github.com/bufbuild/connect-go"
 	"github.com/gojuno/minimock/v3"
 	v11 "github.com/koblas/grpc-todo/gen/core/eventbus/v1"
-	v12 "github.com/koblas/grpc-todo/gen/core/message/v1"
+	v15 "github.com/koblas/grpc-todo/gen/core/message/v1"
 )
 
 // MessageEventbusServiceHandlerMock implements MessageEventbusServiceHandler
 type MessageEventbusServiceHandlerMock struct {
 	t minimock.Tester
 
-	funcChange          func(ctx context.Context, pp1 *connect_go.Request[v12.MessageChangeEvent]) (pp2 *connect_go.Response[v11.MessageEventbusServiceChangeResponse], err error)
-	inspectFuncChange   func(ctx context.Context, pp1 *connect_go.Request[v12.MessageChangeEvent])
+	funcChange          func(ctx context.Context, pp1 *connect_go.Request[v15.MessageChangeEvent]) (pp2 *connect_go.Response[v11.MessageEventbusServiceChangeResponse], err error)
+	inspectFuncChange   func(ctx context.Context, pp1 *connect_go.Request[v15.MessageChangeEvent])
 	afterChangeCounter  uint64
 	beforeChangeCounter uint64
 	ChangeMock          mMessageEventbusServiceHandlerMockChange
@@ -60,7 +60,7 @@ type MessageEventbusServiceHandlerMockChangeExpectation struct {
 // MessageEventbusServiceHandlerMockChangeParams contains parameters of the MessageEventbusServiceHandler.Change
 type MessageEventbusServiceHandlerMockChangeParams struct {
 	ctx context.Context
-	pp1 *connect_go.Request[v12.MessageChangeEvent]
+	pp1 *connect_go.Request[v15.MessageChangeEvent]
 }
 
 // MessageEventbusServiceHandlerMockChangeResults contains results of the MessageEventbusServiceHandler.Change
@@ -70,7 +70,7 @@ type MessageEventbusServiceHandlerMockChangeResults struct {
 }
 
 // Expect sets up expected params for MessageEventbusServiceHandler.Change
-func (mmChange *mMessageEventbusServiceHandlerMockChange) Expect(ctx context.Context, pp1 *connect_go.Request[v12.MessageChangeEvent]) *mMessageEventbusServiceHandlerMockChange {
+func (mmChange *mMessageEventbusServiceHandlerMockChange) Expect(ctx context.Context, pp1 *connect_go.Request[v15.MessageChangeEvent]) *mMessageEventbusServiceHandlerMockChange {
 	if mmChange.mock.funcChange != nil {
 		mmChange.mock.t.Fatalf("MessageEventbusServiceHandlerMock.Change mock is already set by Set")
 	}
@@ -90,7 +90,7 @@ func (mmChange *mMessageEventbusServiceHandlerMockChange) Expect(ctx context.Con
 }
 
 // Inspect accepts an inspector function that has same arguments as the MessageEventbusServiceHandler.Change
-func (mmChange *mMessageEventbusServiceHandlerMockChange) Inspect(f func(ctx context.Context, pp1 *connect_go.Request[v12.MessageChangeEvent])) *mMessageEventbusServiceHandlerMockChange {
+func (mmChange *mMessageEventbusServiceHandlerMockChange) Inspect(f func(ctx context.Context, pp1 *connect_go.Request[v15.MessageChangeEvent])) *mMessageEventbusServiceHandlerMockChange {
 	if mmChange.mock.inspectFuncChange != nil {
 		mmChange.mock.t.Fatalf("Inspect function is already set for MessageEventbusServiceHandlerMock.Change")
 	}
@@ -114,7 +114,7 @@ func (mmChange *mMessageEventbusServiceHandlerMockChange) Return(pp2 *connect_go
 }
 
 // Set uses given function f to mock the MessageEventbusServiceHandler.Change method
-func (mmChange *mMessageEventbusServiceHandlerMockChange) Set(f func(ctx context.Context, pp1 *connect_go.Request[v12.MessageChangeEvent]) (pp2 *connect_go.Response[v11.MessageEventbusServiceChangeResponse], err error)) *MessageEventbusServiceHandlerMock {
+func (mmChange *mMessageEventbusServiceHandlerMockChange) Set(f func(ctx context.Context, pp1 *connect_go.Request[v15.MessageChangeEvent]) (pp2 *connect_go.Response[v11.MessageEventbusServiceChangeResponse], err error)) *MessageEventbusServiceHandlerMock {
 	if mmChange.defaultExpectation != nil {
 		mmChange.mock.t.Fatalf("Default expectation is already set for the MessageEventbusServiceHandler.Change method")
 	}
@@ -129,7 +129,7 @@ func (mmChange *mMessageEventbusServiceHandlerMockChange) Set(f func(ctx context
 
 // When sets expectation for the MessageEventbusServiceHandler.Change which will trigger the result defined by the following
 // Then helper
-func (mmChange *mMessageEventbusServiceHandlerMockChange) When(ctx context.Context, pp1 *connect_go.Request[v12.MessageChangeEvent]) *MessageEventbusServiceHandlerMockChangeExpectation {
+func (mmChange *mMessageEventbusServiceHandlerMockChange) When(ctx context.Context, pp1 *connect_go.Request[v15.MessageChangeEvent]) *MessageEventbusServiceHandlerMockChangeExpectation {
 	if mmChange.mock.funcChange != nil {
 		mmChange.mock.t.Fatalf("MessageEventbusServiceHandlerMock.Change mock is already set by Set")
 	}
@@ -149,7 +149,7 @@ func (e *MessageEventbusServiceHandlerMockChangeExpectation) Then(pp2 *connect_g
 }
 
 // Change implements MessageEventbusServiceHandler
-func (mmChange *MessageEventbusServiceHandlerMock) Change(ctx context.Context, pp1 *connect_go.Request[v12.MessageChangeEvent]) (pp2 *connect_go.Response[v11.MessageEventbusServiceChangeResponse], err error) {
+func (mmChange *MessageEventbusServiceHandlerMock) Change(ctx context.Context, pp1 *connect_go.Request[v15.MessageChangeEvent]) (pp2 *connect_go.Response[v11.MessageEventbusServiceChangeResponse], err error) {
 	mm_atomic.AddUint64(&mmChange.beforeChangeCounter, 1)
 	defer mm_atomic.AddUint64(&mmChange.afterChangeCounter, 1)
 

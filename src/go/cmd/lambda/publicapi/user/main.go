@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/bufbuild/connect-go"
 	"github.com/koblas/grpc-todo/gen/api/v1/apiv1connect"
-	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
+	"github.com/koblas/grpc-todo/gen/core/user/v1/userv1connect"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
@@ -30,7 +30,7 @@ func main() {
 	auth, authHelper := interceptors.NewAuthInterceptor(config.JwtSecret)
 
 	opts := []user.Option{
-		user.WithUserService(corev1connect.NewUserServiceClient(
+		user.WithUserService(userv1connect.NewUserServiceClient(
 			awsutil.NewTwirpCallLambda(),
 			"lambda://core-user",
 		)),

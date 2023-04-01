@@ -13,39 +13,39 @@ import (
 	connect_go "github.com/bufbuild/connect-go"
 	"github.com/gojuno/minimock/v3"
 	v11 "github.com/koblas/grpc-todo/gen/core/eventbus/v1"
-	v1 "github.com/koblas/grpc-todo/gen/core/v1"
+	v12 "github.com/koblas/grpc-todo/gen/core/user/v1"
 )
 
 // UserEventbusServiceClientMock implements UserEventbusServiceClient
 type UserEventbusServiceClientMock struct {
 	t minimock.Tester
 
-	funcSecurityForgotRequest          func(ctx context.Context, pp1 *connect_go.Request[v1.UserSecurityEvent]) (pp2 *connect_go.Response[v11.UserEventbusSecurityForgotRequestResponse], err error)
-	inspectFuncSecurityForgotRequest   func(ctx context.Context, pp1 *connect_go.Request[v1.UserSecurityEvent])
+	funcSecurityForgotRequest          func(ctx context.Context, pp1 *connect_go.Request[v12.UserSecurityEvent]) (pp2 *connect_go.Response[v11.UserEventbusSecurityForgotRequestResponse], err error)
+	inspectFuncSecurityForgotRequest   func(ctx context.Context, pp1 *connect_go.Request[v12.UserSecurityEvent])
 	afterSecurityForgotRequestCounter  uint64
 	beforeSecurityForgotRequestCounter uint64
 	SecurityForgotRequestMock          mUserEventbusServiceClientMockSecurityForgotRequest
 
-	funcSecurityInviteToken          func(ctx context.Context, pp1 *connect_go.Request[v1.UserSecurityEvent]) (pp2 *connect_go.Response[v11.UserEventbusSecurityInviteTokenResponse], err error)
-	inspectFuncSecurityInviteToken   func(ctx context.Context, pp1 *connect_go.Request[v1.UserSecurityEvent])
+	funcSecurityInviteToken          func(ctx context.Context, pp1 *connect_go.Request[v12.UserSecurityEvent]) (pp2 *connect_go.Response[v11.UserEventbusSecurityInviteTokenResponse], err error)
+	inspectFuncSecurityInviteToken   func(ctx context.Context, pp1 *connect_go.Request[v12.UserSecurityEvent])
 	afterSecurityInviteTokenCounter  uint64
 	beforeSecurityInviteTokenCounter uint64
 	SecurityInviteTokenMock          mUserEventbusServiceClientMockSecurityInviteToken
 
-	funcSecurityPasswordChange          func(ctx context.Context, pp1 *connect_go.Request[v1.UserSecurityEvent]) (pp2 *connect_go.Response[v11.UserEventbusSecurityPasswordChangeResponse], err error)
-	inspectFuncSecurityPasswordChange   func(ctx context.Context, pp1 *connect_go.Request[v1.UserSecurityEvent])
+	funcSecurityPasswordChange          func(ctx context.Context, pp1 *connect_go.Request[v12.UserSecurityEvent]) (pp2 *connect_go.Response[v11.UserEventbusSecurityPasswordChangeResponse], err error)
+	inspectFuncSecurityPasswordChange   func(ctx context.Context, pp1 *connect_go.Request[v12.UserSecurityEvent])
 	afterSecurityPasswordChangeCounter  uint64
 	beforeSecurityPasswordChangeCounter uint64
 	SecurityPasswordChangeMock          mUserEventbusServiceClientMockSecurityPasswordChange
 
-	funcSecurityRegisterToken          func(ctx context.Context, pp1 *connect_go.Request[v1.UserSecurityEvent]) (pp2 *connect_go.Response[v11.UserEventbusSecurityRegisterTokenResponse], err error)
-	inspectFuncSecurityRegisterToken   func(ctx context.Context, pp1 *connect_go.Request[v1.UserSecurityEvent])
+	funcSecurityRegisterToken          func(ctx context.Context, pp1 *connect_go.Request[v12.UserSecurityEvent]) (pp2 *connect_go.Response[v11.UserEventbusSecurityRegisterTokenResponse], err error)
+	inspectFuncSecurityRegisterToken   func(ctx context.Context, pp1 *connect_go.Request[v12.UserSecurityEvent])
 	afterSecurityRegisterTokenCounter  uint64
 	beforeSecurityRegisterTokenCounter uint64
 	SecurityRegisterTokenMock          mUserEventbusServiceClientMockSecurityRegisterToken
 
-	funcUserChange          func(ctx context.Context, pp1 *connect_go.Request[v1.UserChangeEvent]) (pp2 *connect_go.Response[v11.UserEventbusUserChangeResponse], err error)
-	inspectFuncUserChange   func(ctx context.Context, pp1 *connect_go.Request[v1.UserChangeEvent])
+	funcUserChange          func(ctx context.Context, pp1 *connect_go.Request[v12.UserChangeEvent]) (pp2 *connect_go.Response[v11.UserEventbusUserChangeResponse], err error)
+	inspectFuncUserChange   func(ctx context.Context, pp1 *connect_go.Request[v12.UserChangeEvent])
 	afterUserChangeCounter  uint64
 	beforeUserChangeCounter uint64
 	UserChangeMock          mUserEventbusServiceClientMockUserChange
@@ -96,7 +96,7 @@ type UserEventbusServiceClientMockSecurityForgotRequestExpectation struct {
 // UserEventbusServiceClientMockSecurityForgotRequestParams contains parameters of the UserEventbusServiceClient.SecurityForgotRequest
 type UserEventbusServiceClientMockSecurityForgotRequestParams struct {
 	ctx context.Context
-	pp1 *connect_go.Request[v1.UserSecurityEvent]
+	pp1 *connect_go.Request[v12.UserSecurityEvent]
 }
 
 // UserEventbusServiceClientMockSecurityForgotRequestResults contains results of the UserEventbusServiceClient.SecurityForgotRequest
@@ -106,7 +106,7 @@ type UserEventbusServiceClientMockSecurityForgotRequestResults struct {
 }
 
 // Expect sets up expected params for UserEventbusServiceClient.SecurityForgotRequest
-func (mmSecurityForgotRequest *mUserEventbusServiceClientMockSecurityForgotRequest) Expect(ctx context.Context, pp1 *connect_go.Request[v1.UserSecurityEvent]) *mUserEventbusServiceClientMockSecurityForgotRequest {
+func (mmSecurityForgotRequest *mUserEventbusServiceClientMockSecurityForgotRequest) Expect(ctx context.Context, pp1 *connect_go.Request[v12.UserSecurityEvent]) *mUserEventbusServiceClientMockSecurityForgotRequest {
 	if mmSecurityForgotRequest.mock.funcSecurityForgotRequest != nil {
 		mmSecurityForgotRequest.mock.t.Fatalf("UserEventbusServiceClientMock.SecurityForgotRequest mock is already set by Set")
 	}
@@ -126,7 +126,7 @@ func (mmSecurityForgotRequest *mUserEventbusServiceClientMockSecurityForgotReque
 }
 
 // Inspect accepts an inspector function that has same arguments as the UserEventbusServiceClient.SecurityForgotRequest
-func (mmSecurityForgotRequest *mUserEventbusServiceClientMockSecurityForgotRequest) Inspect(f func(ctx context.Context, pp1 *connect_go.Request[v1.UserSecurityEvent])) *mUserEventbusServiceClientMockSecurityForgotRequest {
+func (mmSecurityForgotRequest *mUserEventbusServiceClientMockSecurityForgotRequest) Inspect(f func(ctx context.Context, pp1 *connect_go.Request[v12.UserSecurityEvent])) *mUserEventbusServiceClientMockSecurityForgotRequest {
 	if mmSecurityForgotRequest.mock.inspectFuncSecurityForgotRequest != nil {
 		mmSecurityForgotRequest.mock.t.Fatalf("Inspect function is already set for UserEventbusServiceClientMock.SecurityForgotRequest")
 	}
@@ -150,7 +150,7 @@ func (mmSecurityForgotRequest *mUserEventbusServiceClientMockSecurityForgotReque
 }
 
 // Set uses given function f to mock the UserEventbusServiceClient.SecurityForgotRequest method
-func (mmSecurityForgotRequest *mUserEventbusServiceClientMockSecurityForgotRequest) Set(f func(ctx context.Context, pp1 *connect_go.Request[v1.UserSecurityEvent]) (pp2 *connect_go.Response[v11.UserEventbusSecurityForgotRequestResponse], err error)) *UserEventbusServiceClientMock {
+func (mmSecurityForgotRequest *mUserEventbusServiceClientMockSecurityForgotRequest) Set(f func(ctx context.Context, pp1 *connect_go.Request[v12.UserSecurityEvent]) (pp2 *connect_go.Response[v11.UserEventbusSecurityForgotRequestResponse], err error)) *UserEventbusServiceClientMock {
 	if mmSecurityForgotRequest.defaultExpectation != nil {
 		mmSecurityForgotRequest.mock.t.Fatalf("Default expectation is already set for the UserEventbusServiceClient.SecurityForgotRequest method")
 	}
@@ -165,7 +165,7 @@ func (mmSecurityForgotRequest *mUserEventbusServiceClientMockSecurityForgotReque
 
 // When sets expectation for the UserEventbusServiceClient.SecurityForgotRequest which will trigger the result defined by the following
 // Then helper
-func (mmSecurityForgotRequest *mUserEventbusServiceClientMockSecurityForgotRequest) When(ctx context.Context, pp1 *connect_go.Request[v1.UserSecurityEvent]) *UserEventbusServiceClientMockSecurityForgotRequestExpectation {
+func (mmSecurityForgotRequest *mUserEventbusServiceClientMockSecurityForgotRequest) When(ctx context.Context, pp1 *connect_go.Request[v12.UserSecurityEvent]) *UserEventbusServiceClientMockSecurityForgotRequestExpectation {
 	if mmSecurityForgotRequest.mock.funcSecurityForgotRequest != nil {
 		mmSecurityForgotRequest.mock.t.Fatalf("UserEventbusServiceClientMock.SecurityForgotRequest mock is already set by Set")
 	}
@@ -185,7 +185,7 @@ func (e *UserEventbusServiceClientMockSecurityForgotRequestExpectation) Then(pp2
 }
 
 // SecurityForgotRequest implements UserEventbusServiceClient
-func (mmSecurityForgotRequest *UserEventbusServiceClientMock) SecurityForgotRequest(ctx context.Context, pp1 *connect_go.Request[v1.UserSecurityEvent]) (pp2 *connect_go.Response[v11.UserEventbusSecurityForgotRequestResponse], err error) {
+func (mmSecurityForgotRequest *UserEventbusServiceClientMock) SecurityForgotRequest(ctx context.Context, pp1 *connect_go.Request[v12.UserSecurityEvent]) (pp2 *connect_go.Response[v11.UserEventbusSecurityForgotRequestResponse], err error) {
 	mm_atomic.AddUint64(&mmSecurityForgotRequest.beforeSecurityForgotRequestCounter, 1)
 	defer mm_atomic.AddUint64(&mmSecurityForgotRequest.afterSecurityForgotRequestCounter, 1)
 
@@ -313,7 +313,7 @@ type UserEventbusServiceClientMockSecurityInviteTokenExpectation struct {
 // UserEventbusServiceClientMockSecurityInviteTokenParams contains parameters of the UserEventbusServiceClient.SecurityInviteToken
 type UserEventbusServiceClientMockSecurityInviteTokenParams struct {
 	ctx context.Context
-	pp1 *connect_go.Request[v1.UserSecurityEvent]
+	pp1 *connect_go.Request[v12.UserSecurityEvent]
 }
 
 // UserEventbusServiceClientMockSecurityInviteTokenResults contains results of the UserEventbusServiceClient.SecurityInviteToken
@@ -323,7 +323,7 @@ type UserEventbusServiceClientMockSecurityInviteTokenResults struct {
 }
 
 // Expect sets up expected params for UserEventbusServiceClient.SecurityInviteToken
-func (mmSecurityInviteToken *mUserEventbusServiceClientMockSecurityInviteToken) Expect(ctx context.Context, pp1 *connect_go.Request[v1.UserSecurityEvent]) *mUserEventbusServiceClientMockSecurityInviteToken {
+func (mmSecurityInviteToken *mUserEventbusServiceClientMockSecurityInviteToken) Expect(ctx context.Context, pp1 *connect_go.Request[v12.UserSecurityEvent]) *mUserEventbusServiceClientMockSecurityInviteToken {
 	if mmSecurityInviteToken.mock.funcSecurityInviteToken != nil {
 		mmSecurityInviteToken.mock.t.Fatalf("UserEventbusServiceClientMock.SecurityInviteToken mock is already set by Set")
 	}
@@ -343,7 +343,7 @@ func (mmSecurityInviteToken *mUserEventbusServiceClientMockSecurityInviteToken) 
 }
 
 // Inspect accepts an inspector function that has same arguments as the UserEventbusServiceClient.SecurityInviteToken
-func (mmSecurityInviteToken *mUserEventbusServiceClientMockSecurityInviteToken) Inspect(f func(ctx context.Context, pp1 *connect_go.Request[v1.UserSecurityEvent])) *mUserEventbusServiceClientMockSecurityInviteToken {
+func (mmSecurityInviteToken *mUserEventbusServiceClientMockSecurityInviteToken) Inspect(f func(ctx context.Context, pp1 *connect_go.Request[v12.UserSecurityEvent])) *mUserEventbusServiceClientMockSecurityInviteToken {
 	if mmSecurityInviteToken.mock.inspectFuncSecurityInviteToken != nil {
 		mmSecurityInviteToken.mock.t.Fatalf("Inspect function is already set for UserEventbusServiceClientMock.SecurityInviteToken")
 	}
@@ -367,7 +367,7 @@ func (mmSecurityInviteToken *mUserEventbusServiceClientMockSecurityInviteToken) 
 }
 
 // Set uses given function f to mock the UserEventbusServiceClient.SecurityInviteToken method
-func (mmSecurityInviteToken *mUserEventbusServiceClientMockSecurityInviteToken) Set(f func(ctx context.Context, pp1 *connect_go.Request[v1.UserSecurityEvent]) (pp2 *connect_go.Response[v11.UserEventbusSecurityInviteTokenResponse], err error)) *UserEventbusServiceClientMock {
+func (mmSecurityInviteToken *mUserEventbusServiceClientMockSecurityInviteToken) Set(f func(ctx context.Context, pp1 *connect_go.Request[v12.UserSecurityEvent]) (pp2 *connect_go.Response[v11.UserEventbusSecurityInviteTokenResponse], err error)) *UserEventbusServiceClientMock {
 	if mmSecurityInviteToken.defaultExpectation != nil {
 		mmSecurityInviteToken.mock.t.Fatalf("Default expectation is already set for the UserEventbusServiceClient.SecurityInviteToken method")
 	}
@@ -382,7 +382,7 @@ func (mmSecurityInviteToken *mUserEventbusServiceClientMockSecurityInviteToken) 
 
 // When sets expectation for the UserEventbusServiceClient.SecurityInviteToken which will trigger the result defined by the following
 // Then helper
-func (mmSecurityInviteToken *mUserEventbusServiceClientMockSecurityInviteToken) When(ctx context.Context, pp1 *connect_go.Request[v1.UserSecurityEvent]) *UserEventbusServiceClientMockSecurityInviteTokenExpectation {
+func (mmSecurityInviteToken *mUserEventbusServiceClientMockSecurityInviteToken) When(ctx context.Context, pp1 *connect_go.Request[v12.UserSecurityEvent]) *UserEventbusServiceClientMockSecurityInviteTokenExpectation {
 	if mmSecurityInviteToken.mock.funcSecurityInviteToken != nil {
 		mmSecurityInviteToken.mock.t.Fatalf("UserEventbusServiceClientMock.SecurityInviteToken mock is already set by Set")
 	}
@@ -402,7 +402,7 @@ func (e *UserEventbusServiceClientMockSecurityInviteTokenExpectation) Then(pp2 *
 }
 
 // SecurityInviteToken implements UserEventbusServiceClient
-func (mmSecurityInviteToken *UserEventbusServiceClientMock) SecurityInviteToken(ctx context.Context, pp1 *connect_go.Request[v1.UserSecurityEvent]) (pp2 *connect_go.Response[v11.UserEventbusSecurityInviteTokenResponse], err error) {
+func (mmSecurityInviteToken *UserEventbusServiceClientMock) SecurityInviteToken(ctx context.Context, pp1 *connect_go.Request[v12.UserSecurityEvent]) (pp2 *connect_go.Response[v11.UserEventbusSecurityInviteTokenResponse], err error) {
 	mm_atomic.AddUint64(&mmSecurityInviteToken.beforeSecurityInviteTokenCounter, 1)
 	defer mm_atomic.AddUint64(&mmSecurityInviteToken.afterSecurityInviteTokenCounter, 1)
 
@@ -530,7 +530,7 @@ type UserEventbusServiceClientMockSecurityPasswordChangeExpectation struct {
 // UserEventbusServiceClientMockSecurityPasswordChangeParams contains parameters of the UserEventbusServiceClient.SecurityPasswordChange
 type UserEventbusServiceClientMockSecurityPasswordChangeParams struct {
 	ctx context.Context
-	pp1 *connect_go.Request[v1.UserSecurityEvent]
+	pp1 *connect_go.Request[v12.UserSecurityEvent]
 }
 
 // UserEventbusServiceClientMockSecurityPasswordChangeResults contains results of the UserEventbusServiceClient.SecurityPasswordChange
@@ -540,7 +540,7 @@ type UserEventbusServiceClientMockSecurityPasswordChangeResults struct {
 }
 
 // Expect sets up expected params for UserEventbusServiceClient.SecurityPasswordChange
-func (mmSecurityPasswordChange *mUserEventbusServiceClientMockSecurityPasswordChange) Expect(ctx context.Context, pp1 *connect_go.Request[v1.UserSecurityEvent]) *mUserEventbusServiceClientMockSecurityPasswordChange {
+func (mmSecurityPasswordChange *mUserEventbusServiceClientMockSecurityPasswordChange) Expect(ctx context.Context, pp1 *connect_go.Request[v12.UserSecurityEvent]) *mUserEventbusServiceClientMockSecurityPasswordChange {
 	if mmSecurityPasswordChange.mock.funcSecurityPasswordChange != nil {
 		mmSecurityPasswordChange.mock.t.Fatalf("UserEventbusServiceClientMock.SecurityPasswordChange mock is already set by Set")
 	}
@@ -560,7 +560,7 @@ func (mmSecurityPasswordChange *mUserEventbusServiceClientMockSecurityPasswordCh
 }
 
 // Inspect accepts an inspector function that has same arguments as the UserEventbusServiceClient.SecurityPasswordChange
-func (mmSecurityPasswordChange *mUserEventbusServiceClientMockSecurityPasswordChange) Inspect(f func(ctx context.Context, pp1 *connect_go.Request[v1.UserSecurityEvent])) *mUserEventbusServiceClientMockSecurityPasswordChange {
+func (mmSecurityPasswordChange *mUserEventbusServiceClientMockSecurityPasswordChange) Inspect(f func(ctx context.Context, pp1 *connect_go.Request[v12.UserSecurityEvent])) *mUserEventbusServiceClientMockSecurityPasswordChange {
 	if mmSecurityPasswordChange.mock.inspectFuncSecurityPasswordChange != nil {
 		mmSecurityPasswordChange.mock.t.Fatalf("Inspect function is already set for UserEventbusServiceClientMock.SecurityPasswordChange")
 	}
@@ -584,7 +584,7 @@ func (mmSecurityPasswordChange *mUserEventbusServiceClientMockSecurityPasswordCh
 }
 
 // Set uses given function f to mock the UserEventbusServiceClient.SecurityPasswordChange method
-func (mmSecurityPasswordChange *mUserEventbusServiceClientMockSecurityPasswordChange) Set(f func(ctx context.Context, pp1 *connect_go.Request[v1.UserSecurityEvent]) (pp2 *connect_go.Response[v11.UserEventbusSecurityPasswordChangeResponse], err error)) *UserEventbusServiceClientMock {
+func (mmSecurityPasswordChange *mUserEventbusServiceClientMockSecurityPasswordChange) Set(f func(ctx context.Context, pp1 *connect_go.Request[v12.UserSecurityEvent]) (pp2 *connect_go.Response[v11.UserEventbusSecurityPasswordChangeResponse], err error)) *UserEventbusServiceClientMock {
 	if mmSecurityPasswordChange.defaultExpectation != nil {
 		mmSecurityPasswordChange.mock.t.Fatalf("Default expectation is already set for the UserEventbusServiceClient.SecurityPasswordChange method")
 	}
@@ -599,7 +599,7 @@ func (mmSecurityPasswordChange *mUserEventbusServiceClientMockSecurityPasswordCh
 
 // When sets expectation for the UserEventbusServiceClient.SecurityPasswordChange which will trigger the result defined by the following
 // Then helper
-func (mmSecurityPasswordChange *mUserEventbusServiceClientMockSecurityPasswordChange) When(ctx context.Context, pp1 *connect_go.Request[v1.UserSecurityEvent]) *UserEventbusServiceClientMockSecurityPasswordChangeExpectation {
+func (mmSecurityPasswordChange *mUserEventbusServiceClientMockSecurityPasswordChange) When(ctx context.Context, pp1 *connect_go.Request[v12.UserSecurityEvent]) *UserEventbusServiceClientMockSecurityPasswordChangeExpectation {
 	if mmSecurityPasswordChange.mock.funcSecurityPasswordChange != nil {
 		mmSecurityPasswordChange.mock.t.Fatalf("UserEventbusServiceClientMock.SecurityPasswordChange mock is already set by Set")
 	}
@@ -619,7 +619,7 @@ func (e *UserEventbusServiceClientMockSecurityPasswordChangeExpectation) Then(pp
 }
 
 // SecurityPasswordChange implements UserEventbusServiceClient
-func (mmSecurityPasswordChange *UserEventbusServiceClientMock) SecurityPasswordChange(ctx context.Context, pp1 *connect_go.Request[v1.UserSecurityEvent]) (pp2 *connect_go.Response[v11.UserEventbusSecurityPasswordChangeResponse], err error) {
+func (mmSecurityPasswordChange *UserEventbusServiceClientMock) SecurityPasswordChange(ctx context.Context, pp1 *connect_go.Request[v12.UserSecurityEvent]) (pp2 *connect_go.Response[v11.UserEventbusSecurityPasswordChangeResponse], err error) {
 	mm_atomic.AddUint64(&mmSecurityPasswordChange.beforeSecurityPasswordChangeCounter, 1)
 	defer mm_atomic.AddUint64(&mmSecurityPasswordChange.afterSecurityPasswordChangeCounter, 1)
 
@@ -747,7 +747,7 @@ type UserEventbusServiceClientMockSecurityRegisterTokenExpectation struct {
 // UserEventbusServiceClientMockSecurityRegisterTokenParams contains parameters of the UserEventbusServiceClient.SecurityRegisterToken
 type UserEventbusServiceClientMockSecurityRegisterTokenParams struct {
 	ctx context.Context
-	pp1 *connect_go.Request[v1.UserSecurityEvent]
+	pp1 *connect_go.Request[v12.UserSecurityEvent]
 }
 
 // UserEventbusServiceClientMockSecurityRegisterTokenResults contains results of the UserEventbusServiceClient.SecurityRegisterToken
@@ -757,7 +757,7 @@ type UserEventbusServiceClientMockSecurityRegisterTokenResults struct {
 }
 
 // Expect sets up expected params for UserEventbusServiceClient.SecurityRegisterToken
-func (mmSecurityRegisterToken *mUserEventbusServiceClientMockSecurityRegisterToken) Expect(ctx context.Context, pp1 *connect_go.Request[v1.UserSecurityEvent]) *mUserEventbusServiceClientMockSecurityRegisterToken {
+func (mmSecurityRegisterToken *mUserEventbusServiceClientMockSecurityRegisterToken) Expect(ctx context.Context, pp1 *connect_go.Request[v12.UserSecurityEvent]) *mUserEventbusServiceClientMockSecurityRegisterToken {
 	if mmSecurityRegisterToken.mock.funcSecurityRegisterToken != nil {
 		mmSecurityRegisterToken.mock.t.Fatalf("UserEventbusServiceClientMock.SecurityRegisterToken mock is already set by Set")
 	}
@@ -777,7 +777,7 @@ func (mmSecurityRegisterToken *mUserEventbusServiceClientMockSecurityRegisterTok
 }
 
 // Inspect accepts an inspector function that has same arguments as the UserEventbusServiceClient.SecurityRegisterToken
-func (mmSecurityRegisterToken *mUserEventbusServiceClientMockSecurityRegisterToken) Inspect(f func(ctx context.Context, pp1 *connect_go.Request[v1.UserSecurityEvent])) *mUserEventbusServiceClientMockSecurityRegisterToken {
+func (mmSecurityRegisterToken *mUserEventbusServiceClientMockSecurityRegisterToken) Inspect(f func(ctx context.Context, pp1 *connect_go.Request[v12.UserSecurityEvent])) *mUserEventbusServiceClientMockSecurityRegisterToken {
 	if mmSecurityRegisterToken.mock.inspectFuncSecurityRegisterToken != nil {
 		mmSecurityRegisterToken.mock.t.Fatalf("Inspect function is already set for UserEventbusServiceClientMock.SecurityRegisterToken")
 	}
@@ -801,7 +801,7 @@ func (mmSecurityRegisterToken *mUserEventbusServiceClientMockSecurityRegisterTok
 }
 
 // Set uses given function f to mock the UserEventbusServiceClient.SecurityRegisterToken method
-func (mmSecurityRegisterToken *mUserEventbusServiceClientMockSecurityRegisterToken) Set(f func(ctx context.Context, pp1 *connect_go.Request[v1.UserSecurityEvent]) (pp2 *connect_go.Response[v11.UserEventbusSecurityRegisterTokenResponse], err error)) *UserEventbusServiceClientMock {
+func (mmSecurityRegisterToken *mUserEventbusServiceClientMockSecurityRegisterToken) Set(f func(ctx context.Context, pp1 *connect_go.Request[v12.UserSecurityEvent]) (pp2 *connect_go.Response[v11.UserEventbusSecurityRegisterTokenResponse], err error)) *UserEventbusServiceClientMock {
 	if mmSecurityRegisterToken.defaultExpectation != nil {
 		mmSecurityRegisterToken.mock.t.Fatalf("Default expectation is already set for the UserEventbusServiceClient.SecurityRegisterToken method")
 	}
@@ -816,7 +816,7 @@ func (mmSecurityRegisterToken *mUserEventbusServiceClientMockSecurityRegisterTok
 
 // When sets expectation for the UserEventbusServiceClient.SecurityRegisterToken which will trigger the result defined by the following
 // Then helper
-func (mmSecurityRegisterToken *mUserEventbusServiceClientMockSecurityRegisterToken) When(ctx context.Context, pp1 *connect_go.Request[v1.UserSecurityEvent]) *UserEventbusServiceClientMockSecurityRegisterTokenExpectation {
+func (mmSecurityRegisterToken *mUserEventbusServiceClientMockSecurityRegisterToken) When(ctx context.Context, pp1 *connect_go.Request[v12.UserSecurityEvent]) *UserEventbusServiceClientMockSecurityRegisterTokenExpectation {
 	if mmSecurityRegisterToken.mock.funcSecurityRegisterToken != nil {
 		mmSecurityRegisterToken.mock.t.Fatalf("UserEventbusServiceClientMock.SecurityRegisterToken mock is already set by Set")
 	}
@@ -836,7 +836,7 @@ func (e *UserEventbusServiceClientMockSecurityRegisterTokenExpectation) Then(pp2
 }
 
 // SecurityRegisterToken implements UserEventbusServiceClient
-func (mmSecurityRegisterToken *UserEventbusServiceClientMock) SecurityRegisterToken(ctx context.Context, pp1 *connect_go.Request[v1.UserSecurityEvent]) (pp2 *connect_go.Response[v11.UserEventbusSecurityRegisterTokenResponse], err error) {
+func (mmSecurityRegisterToken *UserEventbusServiceClientMock) SecurityRegisterToken(ctx context.Context, pp1 *connect_go.Request[v12.UserSecurityEvent]) (pp2 *connect_go.Response[v11.UserEventbusSecurityRegisterTokenResponse], err error) {
 	mm_atomic.AddUint64(&mmSecurityRegisterToken.beforeSecurityRegisterTokenCounter, 1)
 	defer mm_atomic.AddUint64(&mmSecurityRegisterToken.afterSecurityRegisterTokenCounter, 1)
 
@@ -964,7 +964,7 @@ type UserEventbusServiceClientMockUserChangeExpectation struct {
 // UserEventbusServiceClientMockUserChangeParams contains parameters of the UserEventbusServiceClient.UserChange
 type UserEventbusServiceClientMockUserChangeParams struct {
 	ctx context.Context
-	pp1 *connect_go.Request[v1.UserChangeEvent]
+	pp1 *connect_go.Request[v12.UserChangeEvent]
 }
 
 // UserEventbusServiceClientMockUserChangeResults contains results of the UserEventbusServiceClient.UserChange
@@ -974,7 +974,7 @@ type UserEventbusServiceClientMockUserChangeResults struct {
 }
 
 // Expect sets up expected params for UserEventbusServiceClient.UserChange
-func (mmUserChange *mUserEventbusServiceClientMockUserChange) Expect(ctx context.Context, pp1 *connect_go.Request[v1.UserChangeEvent]) *mUserEventbusServiceClientMockUserChange {
+func (mmUserChange *mUserEventbusServiceClientMockUserChange) Expect(ctx context.Context, pp1 *connect_go.Request[v12.UserChangeEvent]) *mUserEventbusServiceClientMockUserChange {
 	if mmUserChange.mock.funcUserChange != nil {
 		mmUserChange.mock.t.Fatalf("UserEventbusServiceClientMock.UserChange mock is already set by Set")
 	}
@@ -994,7 +994,7 @@ func (mmUserChange *mUserEventbusServiceClientMockUserChange) Expect(ctx context
 }
 
 // Inspect accepts an inspector function that has same arguments as the UserEventbusServiceClient.UserChange
-func (mmUserChange *mUserEventbusServiceClientMockUserChange) Inspect(f func(ctx context.Context, pp1 *connect_go.Request[v1.UserChangeEvent])) *mUserEventbusServiceClientMockUserChange {
+func (mmUserChange *mUserEventbusServiceClientMockUserChange) Inspect(f func(ctx context.Context, pp1 *connect_go.Request[v12.UserChangeEvent])) *mUserEventbusServiceClientMockUserChange {
 	if mmUserChange.mock.inspectFuncUserChange != nil {
 		mmUserChange.mock.t.Fatalf("Inspect function is already set for UserEventbusServiceClientMock.UserChange")
 	}
@@ -1018,7 +1018,7 @@ func (mmUserChange *mUserEventbusServiceClientMockUserChange) Return(pp2 *connec
 }
 
 // Set uses given function f to mock the UserEventbusServiceClient.UserChange method
-func (mmUserChange *mUserEventbusServiceClientMockUserChange) Set(f func(ctx context.Context, pp1 *connect_go.Request[v1.UserChangeEvent]) (pp2 *connect_go.Response[v11.UserEventbusUserChangeResponse], err error)) *UserEventbusServiceClientMock {
+func (mmUserChange *mUserEventbusServiceClientMockUserChange) Set(f func(ctx context.Context, pp1 *connect_go.Request[v12.UserChangeEvent]) (pp2 *connect_go.Response[v11.UserEventbusUserChangeResponse], err error)) *UserEventbusServiceClientMock {
 	if mmUserChange.defaultExpectation != nil {
 		mmUserChange.mock.t.Fatalf("Default expectation is already set for the UserEventbusServiceClient.UserChange method")
 	}
@@ -1033,7 +1033,7 @@ func (mmUserChange *mUserEventbusServiceClientMockUserChange) Set(f func(ctx con
 
 // When sets expectation for the UserEventbusServiceClient.UserChange which will trigger the result defined by the following
 // Then helper
-func (mmUserChange *mUserEventbusServiceClientMockUserChange) When(ctx context.Context, pp1 *connect_go.Request[v1.UserChangeEvent]) *UserEventbusServiceClientMockUserChangeExpectation {
+func (mmUserChange *mUserEventbusServiceClientMockUserChange) When(ctx context.Context, pp1 *connect_go.Request[v12.UserChangeEvent]) *UserEventbusServiceClientMockUserChangeExpectation {
 	if mmUserChange.mock.funcUserChange != nil {
 		mmUserChange.mock.t.Fatalf("UserEventbusServiceClientMock.UserChange mock is already set by Set")
 	}
@@ -1053,7 +1053,7 @@ func (e *UserEventbusServiceClientMockUserChangeExpectation) Then(pp2 *connect_g
 }
 
 // UserChange implements UserEventbusServiceClient
-func (mmUserChange *UserEventbusServiceClientMock) UserChange(ctx context.Context, pp1 *connect_go.Request[v1.UserChangeEvent]) (pp2 *connect_go.Response[v11.UserEventbusUserChangeResponse], err error) {
+func (mmUserChange *UserEventbusServiceClientMock) UserChange(ctx context.Context, pp1 *connect_go.Request[v12.UserChangeEvent]) (pp2 *connect_go.Response[v11.UserEventbusUserChangeResponse], err error) {
 	mm_atomic.AddUint64(&mmUserChange.beforeUserChangeCounter, 1)
 	defer mm_atomic.AddUint64(&mmUserChange.afterUserChangeCounter, 1)
 

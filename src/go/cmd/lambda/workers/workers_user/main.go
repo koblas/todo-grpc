@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
+	"github.com/koblas/grpc-todo/gen/core/send_email/v1/send_emailv1connect"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
@@ -24,7 +24,7 @@ func main() {
 
 	opts := []workers.Option{
 		workers.WithSendEmail(
-			corev1connect.NewSendEmailServiceClient(
+			send_emailv1connect.NewSendEmailServiceClient(
 				awsutil.NewTwirpCallLambda(),
 				"sqs://send-email",
 			),

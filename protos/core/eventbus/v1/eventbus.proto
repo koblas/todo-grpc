@@ -3,19 +3,18 @@ package core.eventbus.v1;
 
 option go_package = "github.com/koblas/grpc-todo/protos";
 
-import "core/v1/user.proto";
-import "core/v1/todo.proto";
-import "core/v1/file.proto";
-import "core/v1/websocket.proto";
+import "core/user/v1/user.proto";
+import "core/todo/v1/todo.proto";
+import "core/file/v1/file.proto";
+import "core/websocket/v1/websocket.proto";
+import "core/send_email/v1/send_email.proto";
 import "core/message/v1/message.proto";
-
-message EventbusEmpty {}
 
 message BroadcastEventbusSendResponse {}
 
 // Websocket broadcast event
 service BroadcastEventbusService {
-  rpc Send(core.v1.BroadcastEvent) returns (BroadcastEventbusSendResponse);
+  rpc Send(core.websocket.v1.BroadcastEvent) returns (BroadcastEventbusSendResponse);
 }
 
 message UserEventbusUserChangeResponse {}
@@ -25,38 +24,52 @@ message UserEventbusSecurityRegisterTokenResponse {}
 message UserEventbusSecurityInviteTokenResponse {}
 
 service UserEventbusService {
-  rpc UserChange(core.v1.UserChangeEvent) returns (UserEventbusUserChangeResponse);
+  rpc UserChange(core.user.v1.UserChangeEvent) returns (UserEventbusUserChangeResponse);
 
   // Password change notification
-  rpc SecurityPasswordChange(core.v1.UserSecurityEvent)
+  rpc SecurityPasswordChange(core.user.v1.UserSecurityEvent)
       returns (UserEventbusSecurityPasswordChangeResponse);
   // Forgot password request notfication
-  rpc SecurityForgotRequest(core.v1.UserSecurityEvent)
+  rpc SecurityForgotRequest(core.user.v1.UserSecurityEvent)
       returns (UserEventbusSecurityForgotRequestResponse);
   // New user registration
-  rpc SecurityRegisterToken(core.v1.UserSecurityEvent)
+  rpc SecurityRegisterToken(core.user.v1.UserSecurityEvent)
       returns (UserEventbusSecurityRegisterTokenResponse);
   // Invite sent
-  rpc SecurityInviteToken(core.v1.UserSecurityEvent)
+  rpc SecurityInviteToken(core.user.v1.UserSecurityEvent)
       returns (UserEventbusSecurityInviteTokenResponse);
 }
 
 message TodoEventbusTodoChangeResponse {}
 
 service TodoEventbusService {
-  rpc TodoChange(core.v1.TodoChangeEvent) returns (TodoEventbusTodoChangeResponse);
+  rpc TodoChange(core.todo.v1.TodoChangeEvent) returns (TodoEventbusTodoChangeResponse);
 }
 
 message FileEventbusFileUploadedResponse {}
 message FileEventbusFileCompleteResponse {}
 
 service FileEventbusService {
-  rpc FileUploaded(core.v1.FileServiceUploadEvent) returns (FileEventbusFileUploadedResponse);
-  rpc FileComplete(core.v1.FileServiceCompleteEvent) returns (FileEventbusFileCompleteResponse);
+  rpc FileUploaded(core.file.v1.FileServiceUploadEvent) returns (FileEventbusFileUploadedResponse);
+  rpc FileComplete(core.file.v1.FileServiceCompleteEvent) returns (FileEventbusFileCompleteResponse);
 }
 
 message MessageEventbusServiceChangeResponse {}
 
 service MessageEventbusService {
   rpc Change(core.message.v1.MessageChangeEvent) returns (MessageEventbusServiceChangeResponse);
+}
+
+message NotifyEmailSentRequest {
+  string recipient_email = 1;
+  string message_id = 2;
+  core.send_email.v1.EmailTemplate template = 3;
+  string reference_id = 4;
+}
+
+message NotifyEmailSentResponse { }
+
+service SendEmailEventsService {
+  // The notification channel
+  rpc NotifyEmailSent(NotifyEmailSentRequest) returns (NotifyEmailSentResponse) {}
 }

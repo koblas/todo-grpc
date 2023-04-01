@@ -13,21 +13,21 @@ import (
 	connect_go "github.com/bufbuild/connect-go"
 	"github.com/gojuno/minimock/v3"
 	v11 "github.com/koblas/grpc-todo/gen/core/eventbus/v1"
-	v1 "github.com/koblas/grpc-todo/gen/core/v1"
+	v14 "github.com/koblas/grpc-todo/gen/core/file/v1"
 )
 
 // FileEventbusServiceHandlerMock implements FileEventbusServiceHandler
 type FileEventbusServiceHandlerMock struct {
 	t minimock.Tester
 
-	funcFileComplete          func(ctx context.Context, pp1 *connect_go.Request[v1.FileServiceCompleteEvent]) (pp2 *connect_go.Response[v11.FileEventbusFileCompleteResponse], err error)
-	inspectFuncFileComplete   func(ctx context.Context, pp1 *connect_go.Request[v1.FileServiceCompleteEvent])
+	funcFileComplete          func(ctx context.Context, pp1 *connect_go.Request[v14.FileServiceCompleteEvent]) (pp2 *connect_go.Response[v11.FileEventbusFileCompleteResponse], err error)
+	inspectFuncFileComplete   func(ctx context.Context, pp1 *connect_go.Request[v14.FileServiceCompleteEvent])
 	afterFileCompleteCounter  uint64
 	beforeFileCompleteCounter uint64
 	FileCompleteMock          mFileEventbusServiceHandlerMockFileComplete
 
-	funcFileUploaded          func(ctx context.Context, pp1 *connect_go.Request[v1.FileServiceUploadEvent]) (pp2 *connect_go.Response[v11.FileEventbusFileUploadedResponse], err error)
-	inspectFuncFileUploaded   func(ctx context.Context, pp1 *connect_go.Request[v1.FileServiceUploadEvent])
+	funcFileUploaded          func(ctx context.Context, pp1 *connect_go.Request[v14.FileServiceUploadEvent]) (pp2 *connect_go.Response[v11.FileEventbusFileUploadedResponse], err error)
+	inspectFuncFileUploaded   func(ctx context.Context, pp1 *connect_go.Request[v14.FileServiceUploadEvent])
 	afterFileUploadedCounter  uint64
 	beforeFileUploadedCounter uint64
 	FileUploadedMock          mFileEventbusServiceHandlerMockFileUploaded
@@ -69,7 +69,7 @@ type FileEventbusServiceHandlerMockFileCompleteExpectation struct {
 // FileEventbusServiceHandlerMockFileCompleteParams contains parameters of the FileEventbusServiceHandler.FileComplete
 type FileEventbusServiceHandlerMockFileCompleteParams struct {
 	ctx context.Context
-	pp1 *connect_go.Request[v1.FileServiceCompleteEvent]
+	pp1 *connect_go.Request[v14.FileServiceCompleteEvent]
 }
 
 // FileEventbusServiceHandlerMockFileCompleteResults contains results of the FileEventbusServiceHandler.FileComplete
@@ -79,7 +79,7 @@ type FileEventbusServiceHandlerMockFileCompleteResults struct {
 }
 
 // Expect sets up expected params for FileEventbusServiceHandler.FileComplete
-func (mmFileComplete *mFileEventbusServiceHandlerMockFileComplete) Expect(ctx context.Context, pp1 *connect_go.Request[v1.FileServiceCompleteEvent]) *mFileEventbusServiceHandlerMockFileComplete {
+func (mmFileComplete *mFileEventbusServiceHandlerMockFileComplete) Expect(ctx context.Context, pp1 *connect_go.Request[v14.FileServiceCompleteEvent]) *mFileEventbusServiceHandlerMockFileComplete {
 	if mmFileComplete.mock.funcFileComplete != nil {
 		mmFileComplete.mock.t.Fatalf("FileEventbusServiceHandlerMock.FileComplete mock is already set by Set")
 	}
@@ -99,7 +99,7 @@ func (mmFileComplete *mFileEventbusServiceHandlerMockFileComplete) Expect(ctx co
 }
 
 // Inspect accepts an inspector function that has same arguments as the FileEventbusServiceHandler.FileComplete
-func (mmFileComplete *mFileEventbusServiceHandlerMockFileComplete) Inspect(f func(ctx context.Context, pp1 *connect_go.Request[v1.FileServiceCompleteEvent])) *mFileEventbusServiceHandlerMockFileComplete {
+func (mmFileComplete *mFileEventbusServiceHandlerMockFileComplete) Inspect(f func(ctx context.Context, pp1 *connect_go.Request[v14.FileServiceCompleteEvent])) *mFileEventbusServiceHandlerMockFileComplete {
 	if mmFileComplete.mock.inspectFuncFileComplete != nil {
 		mmFileComplete.mock.t.Fatalf("Inspect function is already set for FileEventbusServiceHandlerMock.FileComplete")
 	}
@@ -123,7 +123,7 @@ func (mmFileComplete *mFileEventbusServiceHandlerMockFileComplete) Return(pp2 *c
 }
 
 // Set uses given function f to mock the FileEventbusServiceHandler.FileComplete method
-func (mmFileComplete *mFileEventbusServiceHandlerMockFileComplete) Set(f func(ctx context.Context, pp1 *connect_go.Request[v1.FileServiceCompleteEvent]) (pp2 *connect_go.Response[v11.FileEventbusFileCompleteResponse], err error)) *FileEventbusServiceHandlerMock {
+func (mmFileComplete *mFileEventbusServiceHandlerMockFileComplete) Set(f func(ctx context.Context, pp1 *connect_go.Request[v14.FileServiceCompleteEvent]) (pp2 *connect_go.Response[v11.FileEventbusFileCompleteResponse], err error)) *FileEventbusServiceHandlerMock {
 	if mmFileComplete.defaultExpectation != nil {
 		mmFileComplete.mock.t.Fatalf("Default expectation is already set for the FileEventbusServiceHandler.FileComplete method")
 	}
@@ -138,7 +138,7 @@ func (mmFileComplete *mFileEventbusServiceHandlerMockFileComplete) Set(f func(ct
 
 // When sets expectation for the FileEventbusServiceHandler.FileComplete which will trigger the result defined by the following
 // Then helper
-func (mmFileComplete *mFileEventbusServiceHandlerMockFileComplete) When(ctx context.Context, pp1 *connect_go.Request[v1.FileServiceCompleteEvent]) *FileEventbusServiceHandlerMockFileCompleteExpectation {
+func (mmFileComplete *mFileEventbusServiceHandlerMockFileComplete) When(ctx context.Context, pp1 *connect_go.Request[v14.FileServiceCompleteEvent]) *FileEventbusServiceHandlerMockFileCompleteExpectation {
 	if mmFileComplete.mock.funcFileComplete != nil {
 		mmFileComplete.mock.t.Fatalf("FileEventbusServiceHandlerMock.FileComplete mock is already set by Set")
 	}
@@ -158,7 +158,7 @@ func (e *FileEventbusServiceHandlerMockFileCompleteExpectation) Then(pp2 *connec
 }
 
 // FileComplete implements FileEventbusServiceHandler
-func (mmFileComplete *FileEventbusServiceHandlerMock) FileComplete(ctx context.Context, pp1 *connect_go.Request[v1.FileServiceCompleteEvent]) (pp2 *connect_go.Response[v11.FileEventbusFileCompleteResponse], err error) {
+func (mmFileComplete *FileEventbusServiceHandlerMock) FileComplete(ctx context.Context, pp1 *connect_go.Request[v14.FileServiceCompleteEvent]) (pp2 *connect_go.Response[v11.FileEventbusFileCompleteResponse], err error) {
 	mm_atomic.AddUint64(&mmFileComplete.beforeFileCompleteCounter, 1)
 	defer mm_atomic.AddUint64(&mmFileComplete.afterFileCompleteCounter, 1)
 
@@ -286,7 +286,7 @@ type FileEventbusServiceHandlerMockFileUploadedExpectation struct {
 // FileEventbusServiceHandlerMockFileUploadedParams contains parameters of the FileEventbusServiceHandler.FileUploaded
 type FileEventbusServiceHandlerMockFileUploadedParams struct {
 	ctx context.Context
-	pp1 *connect_go.Request[v1.FileServiceUploadEvent]
+	pp1 *connect_go.Request[v14.FileServiceUploadEvent]
 }
 
 // FileEventbusServiceHandlerMockFileUploadedResults contains results of the FileEventbusServiceHandler.FileUploaded
@@ -296,7 +296,7 @@ type FileEventbusServiceHandlerMockFileUploadedResults struct {
 }
 
 // Expect sets up expected params for FileEventbusServiceHandler.FileUploaded
-func (mmFileUploaded *mFileEventbusServiceHandlerMockFileUploaded) Expect(ctx context.Context, pp1 *connect_go.Request[v1.FileServiceUploadEvent]) *mFileEventbusServiceHandlerMockFileUploaded {
+func (mmFileUploaded *mFileEventbusServiceHandlerMockFileUploaded) Expect(ctx context.Context, pp1 *connect_go.Request[v14.FileServiceUploadEvent]) *mFileEventbusServiceHandlerMockFileUploaded {
 	if mmFileUploaded.mock.funcFileUploaded != nil {
 		mmFileUploaded.mock.t.Fatalf("FileEventbusServiceHandlerMock.FileUploaded mock is already set by Set")
 	}
@@ -316,7 +316,7 @@ func (mmFileUploaded *mFileEventbusServiceHandlerMockFileUploaded) Expect(ctx co
 }
 
 // Inspect accepts an inspector function that has same arguments as the FileEventbusServiceHandler.FileUploaded
-func (mmFileUploaded *mFileEventbusServiceHandlerMockFileUploaded) Inspect(f func(ctx context.Context, pp1 *connect_go.Request[v1.FileServiceUploadEvent])) *mFileEventbusServiceHandlerMockFileUploaded {
+func (mmFileUploaded *mFileEventbusServiceHandlerMockFileUploaded) Inspect(f func(ctx context.Context, pp1 *connect_go.Request[v14.FileServiceUploadEvent])) *mFileEventbusServiceHandlerMockFileUploaded {
 	if mmFileUploaded.mock.inspectFuncFileUploaded != nil {
 		mmFileUploaded.mock.t.Fatalf("Inspect function is already set for FileEventbusServiceHandlerMock.FileUploaded")
 	}
@@ -340,7 +340,7 @@ func (mmFileUploaded *mFileEventbusServiceHandlerMockFileUploaded) Return(pp2 *c
 }
 
 // Set uses given function f to mock the FileEventbusServiceHandler.FileUploaded method
-func (mmFileUploaded *mFileEventbusServiceHandlerMockFileUploaded) Set(f func(ctx context.Context, pp1 *connect_go.Request[v1.FileServiceUploadEvent]) (pp2 *connect_go.Response[v11.FileEventbusFileUploadedResponse], err error)) *FileEventbusServiceHandlerMock {
+func (mmFileUploaded *mFileEventbusServiceHandlerMockFileUploaded) Set(f func(ctx context.Context, pp1 *connect_go.Request[v14.FileServiceUploadEvent]) (pp2 *connect_go.Response[v11.FileEventbusFileUploadedResponse], err error)) *FileEventbusServiceHandlerMock {
 	if mmFileUploaded.defaultExpectation != nil {
 		mmFileUploaded.mock.t.Fatalf("Default expectation is already set for the FileEventbusServiceHandler.FileUploaded method")
 	}
@@ -355,7 +355,7 @@ func (mmFileUploaded *mFileEventbusServiceHandlerMockFileUploaded) Set(f func(ct
 
 // When sets expectation for the FileEventbusServiceHandler.FileUploaded which will trigger the result defined by the following
 // Then helper
-func (mmFileUploaded *mFileEventbusServiceHandlerMockFileUploaded) When(ctx context.Context, pp1 *connect_go.Request[v1.FileServiceUploadEvent]) *FileEventbusServiceHandlerMockFileUploadedExpectation {
+func (mmFileUploaded *mFileEventbusServiceHandlerMockFileUploaded) When(ctx context.Context, pp1 *connect_go.Request[v14.FileServiceUploadEvent]) *FileEventbusServiceHandlerMockFileUploadedExpectation {
 	if mmFileUploaded.mock.funcFileUploaded != nil {
 		mmFileUploaded.mock.t.Fatalf("FileEventbusServiceHandlerMock.FileUploaded mock is already set by Set")
 	}
@@ -375,7 +375,7 @@ func (e *FileEventbusServiceHandlerMockFileUploadedExpectation) Then(pp2 *connec
 }
 
 // FileUploaded implements FileEventbusServiceHandler
-func (mmFileUploaded *FileEventbusServiceHandlerMock) FileUploaded(ctx context.Context, pp1 *connect_go.Request[v1.FileServiceUploadEvent]) (pp2 *connect_go.Response[v11.FileEventbusFileUploadedResponse], err error) {
+func (mmFileUploaded *FileEventbusServiceHandlerMock) FileUploaded(ctx context.Context, pp1 *connect_go.Request[v14.FileServiceUploadEvent]) (pp2 *connect_go.Response[v11.FileEventbusFileUploadedResponse], err error) {
 	mm_atomic.AddUint64(&mmFileUploaded.beforeFileUploadedCounter, 1)
 	defer mm_atomic.AddUint64(&mmFileUploaded.afterFileUploadedCounter, 1)
 

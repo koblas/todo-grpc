@@ -8,7 +8,7 @@ import (
 	lambdaGo "github.com/aws/aws-lambda-go/lambda"
 	"github.com/bufbuild/connect-go"
 	"github.com/koblas/grpc-todo/gen/core/eventbus/v1/eventbusv1connect"
-	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
+	filev1 "github.com/koblas/grpc-todo/gen/core/file/v1"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/confmgr/aws"
@@ -40,8 +40,8 @@ func (state *Handler) Start(ctx context.Context) error {
 				continue
 			}
 
-			_, err := state.produer.FileUploaded(ctx, connect.NewRequest(&corev1.FileServiceUploadEvent{
-				Info: &corev1.FileServiceUploadInfo{
+			_, err := state.produer.FileUploaded(ctx, connect.NewRequest(&filev1.FileServiceUploadEvent{
+				Info: &filev1.FileServiceUploadInfo{
 					UserId:   &parts[1],
 					FileType: parts[0],
 					Url:      "s3://" + bucket + "/" + key,

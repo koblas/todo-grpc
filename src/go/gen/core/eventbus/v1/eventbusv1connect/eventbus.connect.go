@@ -9,8 +9,11 @@ import (
 	errors "errors"
 	connect_go "github.com/bufbuild/connect-go"
 	v11 "github.com/koblas/grpc-todo/gen/core/eventbus/v1"
-	v12 "github.com/koblas/grpc-todo/gen/core/message/v1"
-	v1 "github.com/koblas/grpc-todo/gen/core/v1"
+	v14 "github.com/koblas/grpc-todo/gen/core/file/v1"
+	v15 "github.com/koblas/grpc-todo/gen/core/message/v1"
+	v13 "github.com/koblas/grpc-todo/gen/core/todo/v1"
+	v12 "github.com/koblas/grpc-todo/gen/core/user/v1"
+	v1 "github.com/koblas/grpc-todo/gen/core/websocket/v1"
 	http "net/http"
 	strings "strings"
 )
@@ -33,6 +36,8 @@ const (
 	FileEventbusServiceName = "core.eventbus.v1.FileEventbusService"
 	// MessageEventbusServiceName is the fully-qualified name of the MessageEventbusService service.
 	MessageEventbusServiceName = "core.eventbus.v1.MessageEventbusService"
+	// SendEmailEventsServiceName is the fully-qualified name of the SendEmailEventsService service.
+	SendEmailEventsServiceName = "core.eventbus.v1.SendEmailEventsService"
 )
 
 // BroadcastEventbusServiceClient is a client for the core.eventbus.v1.BroadcastEventbusService
@@ -99,15 +104,15 @@ func (UnimplementedBroadcastEventbusServiceHandler) Send(context.Context, *conne
 
 // UserEventbusServiceClient is a client for the core.eventbus.v1.UserEventbusService service.
 type UserEventbusServiceClient interface {
-	UserChange(context.Context, *connect_go.Request[v1.UserChangeEvent]) (*connect_go.Response[v11.UserEventbusUserChangeResponse], error)
+	UserChange(context.Context, *connect_go.Request[v12.UserChangeEvent]) (*connect_go.Response[v11.UserEventbusUserChangeResponse], error)
 	// Password change notification
-	SecurityPasswordChange(context.Context, *connect_go.Request[v1.UserSecurityEvent]) (*connect_go.Response[v11.UserEventbusSecurityPasswordChangeResponse], error)
+	SecurityPasswordChange(context.Context, *connect_go.Request[v12.UserSecurityEvent]) (*connect_go.Response[v11.UserEventbusSecurityPasswordChangeResponse], error)
 	// Forgot password request notfication
-	SecurityForgotRequest(context.Context, *connect_go.Request[v1.UserSecurityEvent]) (*connect_go.Response[v11.UserEventbusSecurityForgotRequestResponse], error)
+	SecurityForgotRequest(context.Context, *connect_go.Request[v12.UserSecurityEvent]) (*connect_go.Response[v11.UserEventbusSecurityForgotRequestResponse], error)
 	// New user registration
-	SecurityRegisterToken(context.Context, *connect_go.Request[v1.UserSecurityEvent]) (*connect_go.Response[v11.UserEventbusSecurityRegisterTokenResponse], error)
+	SecurityRegisterToken(context.Context, *connect_go.Request[v12.UserSecurityEvent]) (*connect_go.Response[v11.UserEventbusSecurityRegisterTokenResponse], error)
 	// Invite sent
-	SecurityInviteToken(context.Context, *connect_go.Request[v1.UserSecurityEvent]) (*connect_go.Response[v11.UserEventbusSecurityInviteTokenResponse], error)
+	SecurityInviteToken(context.Context, *connect_go.Request[v12.UserSecurityEvent]) (*connect_go.Response[v11.UserEventbusSecurityInviteTokenResponse], error)
 }
 
 // NewUserEventbusServiceClient constructs a client for the core.eventbus.v1.UserEventbusService
@@ -120,27 +125,27 @@ type UserEventbusServiceClient interface {
 func NewUserEventbusServiceClient(httpClient connect_go.HTTPClient, baseURL string, opts ...connect_go.ClientOption) UserEventbusServiceClient {
 	baseURL = strings.TrimRight(baseURL, "/")
 	return &userEventbusServiceClient{
-		userChange: connect_go.NewClient[v1.UserChangeEvent, v11.UserEventbusUserChangeResponse](
+		userChange: connect_go.NewClient[v12.UserChangeEvent, v11.UserEventbusUserChangeResponse](
 			httpClient,
 			baseURL+"/core.eventbus.v1.UserEventbusService/UserChange",
 			opts...,
 		),
-		securityPasswordChange: connect_go.NewClient[v1.UserSecurityEvent, v11.UserEventbusSecurityPasswordChangeResponse](
+		securityPasswordChange: connect_go.NewClient[v12.UserSecurityEvent, v11.UserEventbusSecurityPasswordChangeResponse](
 			httpClient,
 			baseURL+"/core.eventbus.v1.UserEventbusService/SecurityPasswordChange",
 			opts...,
 		),
-		securityForgotRequest: connect_go.NewClient[v1.UserSecurityEvent, v11.UserEventbusSecurityForgotRequestResponse](
+		securityForgotRequest: connect_go.NewClient[v12.UserSecurityEvent, v11.UserEventbusSecurityForgotRequestResponse](
 			httpClient,
 			baseURL+"/core.eventbus.v1.UserEventbusService/SecurityForgotRequest",
 			opts...,
 		),
-		securityRegisterToken: connect_go.NewClient[v1.UserSecurityEvent, v11.UserEventbusSecurityRegisterTokenResponse](
+		securityRegisterToken: connect_go.NewClient[v12.UserSecurityEvent, v11.UserEventbusSecurityRegisterTokenResponse](
 			httpClient,
 			baseURL+"/core.eventbus.v1.UserEventbusService/SecurityRegisterToken",
 			opts...,
 		),
-		securityInviteToken: connect_go.NewClient[v1.UserSecurityEvent, v11.UserEventbusSecurityInviteTokenResponse](
+		securityInviteToken: connect_go.NewClient[v12.UserSecurityEvent, v11.UserEventbusSecurityInviteTokenResponse](
 			httpClient,
 			baseURL+"/core.eventbus.v1.UserEventbusService/SecurityInviteToken",
 			opts...,
@@ -150,50 +155,50 @@ func NewUserEventbusServiceClient(httpClient connect_go.HTTPClient, baseURL stri
 
 // userEventbusServiceClient implements UserEventbusServiceClient.
 type userEventbusServiceClient struct {
-	userChange             *connect_go.Client[v1.UserChangeEvent, v11.UserEventbusUserChangeResponse]
-	securityPasswordChange *connect_go.Client[v1.UserSecurityEvent, v11.UserEventbusSecurityPasswordChangeResponse]
-	securityForgotRequest  *connect_go.Client[v1.UserSecurityEvent, v11.UserEventbusSecurityForgotRequestResponse]
-	securityRegisterToken  *connect_go.Client[v1.UserSecurityEvent, v11.UserEventbusSecurityRegisterTokenResponse]
-	securityInviteToken    *connect_go.Client[v1.UserSecurityEvent, v11.UserEventbusSecurityInviteTokenResponse]
+	userChange             *connect_go.Client[v12.UserChangeEvent, v11.UserEventbusUserChangeResponse]
+	securityPasswordChange *connect_go.Client[v12.UserSecurityEvent, v11.UserEventbusSecurityPasswordChangeResponse]
+	securityForgotRequest  *connect_go.Client[v12.UserSecurityEvent, v11.UserEventbusSecurityForgotRequestResponse]
+	securityRegisterToken  *connect_go.Client[v12.UserSecurityEvent, v11.UserEventbusSecurityRegisterTokenResponse]
+	securityInviteToken    *connect_go.Client[v12.UserSecurityEvent, v11.UserEventbusSecurityInviteTokenResponse]
 }
 
 // UserChange calls core.eventbus.v1.UserEventbusService.UserChange.
-func (c *userEventbusServiceClient) UserChange(ctx context.Context, req *connect_go.Request[v1.UserChangeEvent]) (*connect_go.Response[v11.UserEventbusUserChangeResponse], error) {
+func (c *userEventbusServiceClient) UserChange(ctx context.Context, req *connect_go.Request[v12.UserChangeEvent]) (*connect_go.Response[v11.UserEventbusUserChangeResponse], error) {
 	return c.userChange.CallUnary(ctx, req)
 }
 
 // SecurityPasswordChange calls core.eventbus.v1.UserEventbusService.SecurityPasswordChange.
-func (c *userEventbusServiceClient) SecurityPasswordChange(ctx context.Context, req *connect_go.Request[v1.UserSecurityEvent]) (*connect_go.Response[v11.UserEventbusSecurityPasswordChangeResponse], error) {
+func (c *userEventbusServiceClient) SecurityPasswordChange(ctx context.Context, req *connect_go.Request[v12.UserSecurityEvent]) (*connect_go.Response[v11.UserEventbusSecurityPasswordChangeResponse], error) {
 	return c.securityPasswordChange.CallUnary(ctx, req)
 }
 
 // SecurityForgotRequest calls core.eventbus.v1.UserEventbusService.SecurityForgotRequest.
-func (c *userEventbusServiceClient) SecurityForgotRequest(ctx context.Context, req *connect_go.Request[v1.UserSecurityEvent]) (*connect_go.Response[v11.UserEventbusSecurityForgotRequestResponse], error) {
+func (c *userEventbusServiceClient) SecurityForgotRequest(ctx context.Context, req *connect_go.Request[v12.UserSecurityEvent]) (*connect_go.Response[v11.UserEventbusSecurityForgotRequestResponse], error) {
 	return c.securityForgotRequest.CallUnary(ctx, req)
 }
 
 // SecurityRegisterToken calls core.eventbus.v1.UserEventbusService.SecurityRegisterToken.
-func (c *userEventbusServiceClient) SecurityRegisterToken(ctx context.Context, req *connect_go.Request[v1.UserSecurityEvent]) (*connect_go.Response[v11.UserEventbusSecurityRegisterTokenResponse], error) {
+func (c *userEventbusServiceClient) SecurityRegisterToken(ctx context.Context, req *connect_go.Request[v12.UserSecurityEvent]) (*connect_go.Response[v11.UserEventbusSecurityRegisterTokenResponse], error) {
 	return c.securityRegisterToken.CallUnary(ctx, req)
 }
 
 // SecurityInviteToken calls core.eventbus.v1.UserEventbusService.SecurityInviteToken.
-func (c *userEventbusServiceClient) SecurityInviteToken(ctx context.Context, req *connect_go.Request[v1.UserSecurityEvent]) (*connect_go.Response[v11.UserEventbusSecurityInviteTokenResponse], error) {
+func (c *userEventbusServiceClient) SecurityInviteToken(ctx context.Context, req *connect_go.Request[v12.UserSecurityEvent]) (*connect_go.Response[v11.UserEventbusSecurityInviteTokenResponse], error) {
 	return c.securityInviteToken.CallUnary(ctx, req)
 }
 
 // UserEventbusServiceHandler is an implementation of the core.eventbus.v1.UserEventbusService
 // service.
 type UserEventbusServiceHandler interface {
-	UserChange(context.Context, *connect_go.Request[v1.UserChangeEvent]) (*connect_go.Response[v11.UserEventbusUserChangeResponse], error)
+	UserChange(context.Context, *connect_go.Request[v12.UserChangeEvent]) (*connect_go.Response[v11.UserEventbusUserChangeResponse], error)
 	// Password change notification
-	SecurityPasswordChange(context.Context, *connect_go.Request[v1.UserSecurityEvent]) (*connect_go.Response[v11.UserEventbusSecurityPasswordChangeResponse], error)
+	SecurityPasswordChange(context.Context, *connect_go.Request[v12.UserSecurityEvent]) (*connect_go.Response[v11.UserEventbusSecurityPasswordChangeResponse], error)
 	// Forgot password request notfication
-	SecurityForgotRequest(context.Context, *connect_go.Request[v1.UserSecurityEvent]) (*connect_go.Response[v11.UserEventbusSecurityForgotRequestResponse], error)
+	SecurityForgotRequest(context.Context, *connect_go.Request[v12.UserSecurityEvent]) (*connect_go.Response[v11.UserEventbusSecurityForgotRequestResponse], error)
 	// New user registration
-	SecurityRegisterToken(context.Context, *connect_go.Request[v1.UserSecurityEvent]) (*connect_go.Response[v11.UserEventbusSecurityRegisterTokenResponse], error)
+	SecurityRegisterToken(context.Context, *connect_go.Request[v12.UserSecurityEvent]) (*connect_go.Response[v11.UserEventbusSecurityRegisterTokenResponse], error)
 	// Invite sent
-	SecurityInviteToken(context.Context, *connect_go.Request[v1.UserSecurityEvent]) (*connect_go.Response[v11.UserEventbusSecurityInviteTokenResponse], error)
+	SecurityInviteToken(context.Context, *connect_go.Request[v12.UserSecurityEvent]) (*connect_go.Response[v11.UserEventbusSecurityInviteTokenResponse], error)
 }
 
 // NewUserEventbusServiceHandler builds an HTTP handler from the service implementation. It returns
@@ -234,29 +239,29 @@ func NewUserEventbusServiceHandler(svc UserEventbusServiceHandler, opts ...conne
 // UnimplementedUserEventbusServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedUserEventbusServiceHandler struct{}
 
-func (UnimplementedUserEventbusServiceHandler) UserChange(context.Context, *connect_go.Request[v1.UserChangeEvent]) (*connect_go.Response[v11.UserEventbusUserChangeResponse], error) {
+func (UnimplementedUserEventbusServiceHandler) UserChange(context.Context, *connect_go.Request[v12.UserChangeEvent]) (*connect_go.Response[v11.UserEventbusUserChangeResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("core.eventbus.v1.UserEventbusService.UserChange is not implemented"))
 }
 
-func (UnimplementedUserEventbusServiceHandler) SecurityPasswordChange(context.Context, *connect_go.Request[v1.UserSecurityEvent]) (*connect_go.Response[v11.UserEventbusSecurityPasswordChangeResponse], error) {
+func (UnimplementedUserEventbusServiceHandler) SecurityPasswordChange(context.Context, *connect_go.Request[v12.UserSecurityEvent]) (*connect_go.Response[v11.UserEventbusSecurityPasswordChangeResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("core.eventbus.v1.UserEventbusService.SecurityPasswordChange is not implemented"))
 }
 
-func (UnimplementedUserEventbusServiceHandler) SecurityForgotRequest(context.Context, *connect_go.Request[v1.UserSecurityEvent]) (*connect_go.Response[v11.UserEventbusSecurityForgotRequestResponse], error) {
+func (UnimplementedUserEventbusServiceHandler) SecurityForgotRequest(context.Context, *connect_go.Request[v12.UserSecurityEvent]) (*connect_go.Response[v11.UserEventbusSecurityForgotRequestResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("core.eventbus.v1.UserEventbusService.SecurityForgotRequest is not implemented"))
 }
 
-func (UnimplementedUserEventbusServiceHandler) SecurityRegisterToken(context.Context, *connect_go.Request[v1.UserSecurityEvent]) (*connect_go.Response[v11.UserEventbusSecurityRegisterTokenResponse], error) {
+func (UnimplementedUserEventbusServiceHandler) SecurityRegisterToken(context.Context, *connect_go.Request[v12.UserSecurityEvent]) (*connect_go.Response[v11.UserEventbusSecurityRegisterTokenResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("core.eventbus.v1.UserEventbusService.SecurityRegisterToken is not implemented"))
 }
 
-func (UnimplementedUserEventbusServiceHandler) SecurityInviteToken(context.Context, *connect_go.Request[v1.UserSecurityEvent]) (*connect_go.Response[v11.UserEventbusSecurityInviteTokenResponse], error) {
+func (UnimplementedUserEventbusServiceHandler) SecurityInviteToken(context.Context, *connect_go.Request[v12.UserSecurityEvent]) (*connect_go.Response[v11.UserEventbusSecurityInviteTokenResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("core.eventbus.v1.UserEventbusService.SecurityInviteToken is not implemented"))
 }
 
 // TodoEventbusServiceClient is a client for the core.eventbus.v1.TodoEventbusService service.
 type TodoEventbusServiceClient interface {
-	TodoChange(context.Context, *connect_go.Request[v1.TodoChangeEvent]) (*connect_go.Response[v11.TodoEventbusTodoChangeResponse], error)
+	TodoChange(context.Context, *connect_go.Request[v13.TodoChangeEvent]) (*connect_go.Response[v11.TodoEventbusTodoChangeResponse], error)
 }
 
 // NewTodoEventbusServiceClient constructs a client for the core.eventbus.v1.TodoEventbusService
@@ -269,7 +274,7 @@ type TodoEventbusServiceClient interface {
 func NewTodoEventbusServiceClient(httpClient connect_go.HTTPClient, baseURL string, opts ...connect_go.ClientOption) TodoEventbusServiceClient {
 	baseURL = strings.TrimRight(baseURL, "/")
 	return &todoEventbusServiceClient{
-		todoChange: connect_go.NewClient[v1.TodoChangeEvent, v11.TodoEventbusTodoChangeResponse](
+		todoChange: connect_go.NewClient[v13.TodoChangeEvent, v11.TodoEventbusTodoChangeResponse](
 			httpClient,
 			baseURL+"/core.eventbus.v1.TodoEventbusService/TodoChange",
 			opts...,
@@ -279,18 +284,18 @@ func NewTodoEventbusServiceClient(httpClient connect_go.HTTPClient, baseURL stri
 
 // todoEventbusServiceClient implements TodoEventbusServiceClient.
 type todoEventbusServiceClient struct {
-	todoChange *connect_go.Client[v1.TodoChangeEvent, v11.TodoEventbusTodoChangeResponse]
+	todoChange *connect_go.Client[v13.TodoChangeEvent, v11.TodoEventbusTodoChangeResponse]
 }
 
 // TodoChange calls core.eventbus.v1.TodoEventbusService.TodoChange.
-func (c *todoEventbusServiceClient) TodoChange(ctx context.Context, req *connect_go.Request[v1.TodoChangeEvent]) (*connect_go.Response[v11.TodoEventbusTodoChangeResponse], error) {
+func (c *todoEventbusServiceClient) TodoChange(ctx context.Context, req *connect_go.Request[v13.TodoChangeEvent]) (*connect_go.Response[v11.TodoEventbusTodoChangeResponse], error) {
 	return c.todoChange.CallUnary(ctx, req)
 }
 
 // TodoEventbusServiceHandler is an implementation of the core.eventbus.v1.TodoEventbusService
 // service.
 type TodoEventbusServiceHandler interface {
-	TodoChange(context.Context, *connect_go.Request[v1.TodoChangeEvent]) (*connect_go.Response[v11.TodoEventbusTodoChangeResponse], error)
+	TodoChange(context.Context, *connect_go.Request[v13.TodoChangeEvent]) (*connect_go.Response[v11.TodoEventbusTodoChangeResponse], error)
 }
 
 // NewTodoEventbusServiceHandler builds an HTTP handler from the service implementation. It returns
@@ -311,14 +316,14 @@ func NewTodoEventbusServiceHandler(svc TodoEventbusServiceHandler, opts ...conne
 // UnimplementedTodoEventbusServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedTodoEventbusServiceHandler struct{}
 
-func (UnimplementedTodoEventbusServiceHandler) TodoChange(context.Context, *connect_go.Request[v1.TodoChangeEvent]) (*connect_go.Response[v11.TodoEventbusTodoChangeResponse], error) {
+func (UnimplementedTodoEventbusServiceHandler) TodoChange(context.Context, *connect_go.Request[v13.TodoChangeEvent]) (*connect_go.Response[v11.TodoEventbusTodoChangeResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("core.eventbus.v1.TodoEventbusService.TodoChange is not implemented"))
 }
 
 // FileEventbusServiceClient is a client for the core.eventbus.v1.FileEventbusService service.
 type FileEventbusServiceClient interface {
-	FileUploaded(context.Context, *connect_go.Request[v1.FileServiceUploadEvent]) (*connect_go.Response[v11.FileEventbusFileUploadedResponse], error)
-	FileComplete(context.Context, *connect_go.Request[v1.FileServiceCompleteEvent]) (*connect_go.Response[v11.FileEventbusFileCompleteResponse], error)
+	FileUploaded(context.Context, *connect_go.Request[v14.FileServiceUploadEvent]) (*connect_go.Response[v11.FileEventbusFileUploadedResponse], error)
+	FileComplete(context.Context, *connect_go.Request[v14.FileServiceCompleteEvent]) (*connect_go.Response[v11.FileEventbusFileCompleteResponse], error)
 }
 
 // NewFileEventbusServiceClient constructs a client for the core.eventbus.v1.FileEventbusService
@@ -331,12 +336,12 @@ type FileEventbusServiceClient interface {
 func NewFileEventbusServiceClient(httpClient connect_go.HTTPClient, baseURL string, opts ...connect_go.ClientOption) FileEventbusServiceClient {
 	baseURL = strings.TrimRight(baseURL, "/")
 	return &fileEventbusServiceClient{
-		fileUploaded: connect_go.NewClient[v1.FileServiceUploadEvent, v11.FileEventbusFileUploadedResponse](
+		fileUploaded: connect_go.NewClient[v14.FileServiceUploadEvent, v11.FileEventbusFileUploadedResponse](
 			httpClient,
 			baseURL+"/core.eventbus.v1.FileEventbusService/FileUploaded",
 			opts...,
 		),
-		fileComplete: connect_go.NewClient[v1.FileServiceCompleteEvent, v11.FileEventbusFileCompleteResponse](
+		fileComplete: connect_go.NewClient[v14.FileServiceCompleteEvent, v11.FileEventbusFileCompleteResponse](
 			httpClient,
 			baseURL+"/core.eventbus.v1.FileEventbusService/FileComplete",
 			opts...,
@@ -346,25 +351,25 @@ func NewFileEventbusServiceClient(httpClient connect_go.HTTPClient, baseURL stri
 
 // fileEventbusServiceClient implements FileEventbusServiceClient.
 type fileEventbusServiceClient struct {
-	fileUploaded *connect_go.Client[v1.FileServiceUploadEvent, v11.FileEventbusFileUploadedResponse]
-	fileComplete *connect_go.Client[v1.FileServiceCompleteEvent, v11.FileEventbusFileCompleteResponse]
+	fileUploaded *connect_go.Client[v14.FileServiceUploadEvent, v11.FileEventbusFileUploadedResponse]
+	fileComplete *connect_go.Client[v14.FileServiceCompleteEvent, v11.FileEventbusFileCompleteResponse]
 }
 
 // FileUploaded calls core.eventbus.v1.FileEventbusService.FileUploaded.
-func (c *fileEventbusServiceClient) FileUploaded(ctx context.Context, req *connect_go.Request[v1.FileServiceUploadEvent]) (*connect_go.Response[v11.FileEventbusFileUploadedResponse], error) {
+func (c *fileEventbusServiceClient) FileUploaded(ctx context.Context, req *connect_go.Request[v14.FileServiceUploadEvent]) (*connect_go.Response[v11.FileEventbusFileUploadedResponse], error) {
 	return c.fileUploaded.CallUnary(ctx, req)
 }
 
 // FileComplete calls core.eventbus.v1.FileEventbusService.FileComplete.
-func (c *fileEventbusServiceClient) FileComplete(ctx context.Context, req *connect_go.Request[v1.FileServiceCompleteEvent]) (*connect_go.Response[v11.FileEventbusFileCompleteResponse], error) {
+func (c *fileEventbusServiceClient) FileComplete(ctx context.Context, req *connect_go.Request[v14.FileServiceCompleteEvent]) (*connect_go.Response[v11.FileEventbusFileCompleteResponse], error) {
 	return c.fileComplete.CallUnary(ctx, req)
 }
 
 // FileEventbusServiceHandler is an implementation of the core.eventbus.v1.FileEventbusService
 // service.
 type FileEventbusServiceHandler interface {
-	FileUploaded(context.Context, *connect_go.Request[v1.FileServiceUploadEvent]) (*connect_go.Response[v11.FileEventbusFileUploadedResponse], error)
-	FileComplete(context.Context, *connect_go.Request[v1.FileServiceCompleteEvent]) (*connect_go.Response[v11.FileEventbusFileCompleteResponse], error)
+	FileUploaded(context.Context, *connect_go.Request[v14.FileServiceUploadEvent]) (*connect_go.Response[v11.FileEventbusFileUploadedResponse], error)
+	FileComplete(context.Context, *connect_go.Request[v14.FileServiceCompleteEvent]) (*connect_go.Response[v11.FileEventbusFileCompleteResponse], error)
 }
 
 // NewFileEventbusServiceHandler builds an HTTP handler from the service implementation. It returns
@@ -390,17 +395,17 @@ func NewFileEventbusServiceHandler(svc FileEventbusServiceHandler, opts ...conne
 // UnimplementedFileEventbusServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedFileEventbusServiceHandler struct{}
 
-func (UnimplementedFileEventbusServiceHandler) FileUploaded(context.Context, *connect_go.Request[v1.FileServiceUploadEvent]) (*connect_go.Response[v11.FileEventbusFileUploadedResponse], error) {
+func (UnimplementedFileEventbusServiceHandler) FileUploaded(context.Context, *connect_go.Request[v14.FileServiceUploadEvent]) (*connect_go.Response[v11.FileEventbusFileUploadedResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("core.eventbus.v1.FileEventbusService.FileUploaded is not implemented"))
 }
 
-func (UnimplementedFileEventbusServiceHandler) FileComplete(context.Context, *connect_go.Request[v1.FileServiceCompleteEvent]) (*connect_go.Response[v11.FileEventbusFileCompleteResponse], error) {
+func (UnimplementedFileEventbusServiceHandler) FileComplete(context.Context, *connect_go.Request[v14.FileServiceCompleteEvent]) (*connect_go.Response[v11.FileEventbusFileCompleteResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("core.eventbus.v1.FileEventbusService.FileComplete is not implemented"))
 }
 
 // MessageEventbusServiceClient is a client for the core.eventbus.v1.MessageEventbusService service.
 type MessageEventbusServiceClient interface {
-	Change(context.Context, *connect_go.Request[v12.MessageChangeEvent]) (*connect_go.Response[v11.MessageEventbusServiceChangeResponse], error)
+	Change(context.Context, *connect_go.Request[v15.MessageChangeEvent]) (*connect_go.Response[v11.MessageEventbusServiceChangeResponse], error)
 }
 
 // NewMessageEventbusServiceClient constructs a client for the
@@ -413,7 +418,7 @@ type MessageEventbusServiceClient interface {
 func NewMessageEventbusServiceClient(httpClient connect_go.HTTPClient, baseURL string, opts ...connect_go.ClientOption) MessageEventbusServiceClient {
 	baseURL = strings.TrimRight(baseURL, "/")
 	return &messageEventbusServiceClient{
-		change: connect_go.NewClient[v12.MessageChangeEvent, v11.MessageEventbusServiceChangeResponse](
+		change: connect_go.NewClient[v15.MessageChangeEvent, v11.MessageEventbusServiceChangeResponse](
 			httpClient,
 			baseURL+"/core.eventbus.v1.MessageEventbusService/Change",
 			opts...,
@@ -423,18 +428,18 @@ func NewMessageEventbusServiceClient(httpClient connect_go.HTTPClient, baseURL s
 
 // messageEventbusServiceClient implements MessageEventbusServiceClient.
 type messageEventbusServiceClient struct {
-	change *connect_go.Client[v12.MessageChangeEvent, v11.MessageEventbusServiceChangeResponse]
+	change *connect_go.Client[v15.MessageChangeEvent, v11.MessageEventbusServiceChangeResponse]
 }
 
 // Change calls core.eventbus.v1.MessageEventbusService.Change.
-func (c *messageEventbusServiceClient) Change(ctx context.Context, req *connect_go.Request[v12.MessageChangeEvent]) (*connect_go.Response[v11.MessageEventbusServiceChangeResponse], error) {
+func (c *messageEventbusServiceClient) Change(ctx context.Context, req *connect_go.Request[v15.MessageChangeEvent]) (*connect_go.Response[v11.MessageEventbusServiceChangeResponse], error) {
 	return c.change.CallUnary(ctx, req)
 }
 
 // MessageEventbusServiceHandler is an implementation of the core.eventbus.v1.MessageEventbusService
 // service.
 type MessageEventbusServiceHandler interface {
-	Change(context.Context, *connect_go.Request[v12.MessageChangeEvent]) (*connect_go.Response[v11.MessageEventbusServiceChangeResponse], error)
+	Change(context.Context, *connect_go.Request[v15.MessageChangeEvent]) (*connect_go.Response[v11.MessageEventbusServiceChangeResponse], error)
 }
 
 // NewMessageEventbusServiceHandler builds an HTTP handler from the service implementation. It
@@ -455,6 +460,69 @@ func NewMessageEventbusServiceHandler(svc MessageEventbusServiceHandler, opts ..
 // UnimplementedMessageEventbusServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedMessageEventbusServiceHandler struct{}
 
-func (UnimplementedMessageEventbusServiceHandler) Change(context.Context, *connect_go.Request[v12.MessageChangeEvent]) (*connect_go.Response[v11.MessageEventbusServiceChangeResponse], error) {
+func (UnimplementedMessageEventbusServiceHandler) Change(context.Context, *connect_go.Request[v15.MessageChangeEvent]) (*connect_go.Response[v11.MessageEventbusServiceChangeResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("core.eventbus.v1.MessageEventbusService.Change is not implemented"))
+}
+
+// SendEmailEventsServiceClient is a client for the core.eventbus.v1.SendEmailEventsService service.
+type SendEmailEventsServiceClient interface {
+	// The notification channel
+	NotifyEmailSent(context.Context, *connect_go.Request[v11.NotifyEmailSentRequest]) (*connect_go.Response[v11.NotifyEmailSentResponse], error)
+}
+
+// NewSendEmailEventsServiceClient constructs a client for the
+// core.eventbus.v1.SendEmailEventsService service. By default, it uses the Connect protocol with
+// the binary Protobuf Codec, asks for gzipped responses, and sends uncompressed requests. To use
+// the gRPC or gRPC-Web protocols, supply the connect.WithGRPC() or connect.WithGRPCWeb() options.
+//
+// The URL supplied here should be the base URL for the Connect or gRPC server (for example,
+// http://api.acme.com or https://acme.com/grpc).
+func NewSendEmailEventsServiceClient(httpClient connect_go.HTTPClient, baseURL string, opts ...connect_go.ClientOption) SendEmailEventsServiceClient {
+	baseURL = strings.TrimRight(baseURL, "/")
+	return &sendEmailEventsServiceClient{
+		notifyEmailSent: connect_go.NewClient[v11.NotifyEmailSentRequest, v11.NotifyEmailSentResponse](
+			httpClient,
+			baseURL+"/core.eventbus.v1.SendEmailEventsService/NotifyEmailSent",
+			opts...,
+		),
+	}
+}
+
+// sendEmailEventsServiceClient implements SendEmailEventsServiceClient.
+type sendEmailEventsServiceClient struct {
+	notifyEmailSent *connect_go.Client[v11.NotifyEmailSentRequest, v11.NotifyEmailSentResponse]
+}
+
+// NotifyEmailSent calls core.eventbus.v1.SendEmailEventsService.NotifyEmailSent.
+func (c *sendEmailEventsServiceClient) NotifyEmailSent(ctx context.Context, req *connect_go.Request[v11.NotifyEmailSentRequest]) (*connect_go.Response[v11.NotifyEmailSentResponse], error) {
+	return c.notifyEmailSent.CallUnary(ctx, req)
+}
+
+// SendEmailEventsServiceHandler is an implementation of the core.eventbus.v1.SendEmailEventsService
+// service.
+type SendEmailEventsServiceHandler interface {
+	// The notification channel
+	NotifyEmailSent(context.Context, *connect_go.Request[v11.NotifyEmailSentRequest]) (*connect_go.Response[v11.NotifyEmailSentResponse], error)
+}
+
+// NewSendEmailEventsServiceHandler builds an HTTP handler from the service implementation. It
+// returns the path on which to mount the handler and the handler itself.
+//
+// By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
+// and JSON codecs. They also support gzip compression.
+func NewSendEmailEventsServiceHandler(svc SendEmailEventsServiceHandler, opts ...connect_go.HandlerOption) (string, http.Handler) {
+	mux := http.NewServeMux()
+	mux.Handle("/core.eventbus.v1.SendEmailEventsService/NotifyEmailSent", connect_go.NewUnaryHandler(
+		"/core.eventbus.v1.SendEmailEventsService/NotifyEmailSent",
+		svc.NotifyEmailSent,
+		opts...,
+	))
+	return "/core.eventbus.v1.SendEmailEventsService/", mux
+}
+
+// UnimplementedSendEmailEventsServiceHandler returns CodeUnimplemented from all methods.
+type UnimplementedSendEmailEventsServiceHandler struct{}
+
+func (UnimplementedSendEmailEventsServiceHandler) NotifyEmailSent(context.Context, *connect_go.Request[v11.NotifyEmailSentRequest]) (*connect_go.Response[v11.NotifyEmailSentResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("core.eventbus.v1.SendEmailEventsService.NotifyEmailSent is not implemented"))
 }

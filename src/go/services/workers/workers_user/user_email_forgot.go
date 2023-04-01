@@ -7,7 +7,8 @@ import (
 	"github.com/bufbuild/connect-go"
 	eventv1 "github.com/koblas/grpc-todo/gen/core/eventbus/v1"
 	"github.com/koblas/grpc-todo/gen/core/eventbus/v1/eventbusv1connect"
-	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
+	emailv1 "github.com/koblas/grpc-todo/gen/core/send_email/v1"
+	userv1 "github.com/koblas/grpc-todo/gen/core/user/v1"
 	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"go.uber.org/zap"
@@ -33,7 +34,7 @@ func NewUserEmailForgot(config WorkerConfig) http.Handler {
 	return api
 }
 
-func (cfg *userEmailForgot) SecurityForgotRequest(ctx context.Context, msgIn *connect.Request[corev1.UserSecurityEvent]) (*connect.Response[eventv1.UserEventbusSecurityForgotRequestResponse], error) {
+func (cfg *userEmailForgot) SecurityForgotRequest(ctx context.Context, msgIn *connect.Request[userv1.UserSecurityEvent]) (*connect.Response[eventv1.UserEventbusSecurityForgotRequestResponse], error) {
 	msg := msgIn.Msg
 	log := logger.FromContext(ctx).With(zap.Int32("action", int32(msg.Action))).With(zap.String("email", msg.User.Email))
 
@@ -44,9 +45,9 @@ func (cfg *userEmailForgot) SecurityForgotRequest(ctx context.Context, msgIn *co
 		return connect.NewResponse(&eventv1.UserEventbusSecurityForgotRequestResponse{}), err
 	}
 
-	params := corev1.PasswordRecoveryMessageRequest{
+	params := emailv1.PasswordRecoveryMessageRequest{
 		AppInfo: buildAppInfo(cfg.config.UrlBase),
-		Recipient: &corev1.EmailUser{
+		Recipient: &emailv1.EmailUser{
 			UserId: msg.User.Id,
 			Name:   msg.User.Name,
 			Email:  msg.User.Email,

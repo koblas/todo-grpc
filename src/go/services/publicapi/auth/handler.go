@@ -5,7 +5,8 @@ import (
 	"time"
 
 	apiv1 "github.com/koblas/grpc-todo/gen/api/v1"
-	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
+	"github.com/koblas/grpc-todo/gen/core/oauth_user/v1/oauth_userv1connect"
+	"github.com/koblas/grpc-todo/gen/core/user/v1/userv1connect"
 	"github.com/koblas/grpc-todo/pkg/tokenmanager"
 	"golang.org/x/net/context"
 )
@@ -18,20 +19,20 @@ type AuthenticationServer struct {
 	// apiv1.UnimplementedAuthenticationServiceServer
 
 	jwtMaker    tokenmanager.Maker
-	userClient  corev1connect.UserServiceClient
-	oauthClient corev1connect.OAuthUserServiceClient
+	userClient  userv1connect.UserServiceClient
+	oauthClient oauth_userv1connect.OAuthUserServiceClient
 	attempts    AttemptService
 }
 
 type Option func(*AuthenticationServer)
 
-func WithUserClient(client corev1connect.UserServiceClient) Option {
+func WithUserClient(client userv1connect.UserServiceClient) Option {
 	return func(input *AuthenticationServer) {
 		input.userClient = client
 	}
 }
 
-func WithOAuthClient(client corev1connect.OAuthUserServiceClient) Option {
+func WithOAuthClient(client oauth_userv1connect.OAuthUserServiceClient) Option {
 	return func(input *AuthenticationServer) {
 		input.oauthClient = client
 	}

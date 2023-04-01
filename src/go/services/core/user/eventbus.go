@@ -1,14 +1,14 @@
 package user
 
 import (
-	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
+	userv1 "github.com/koblas/grpc-todo/gen/core/user/v1"
 )
 
 const ENTITY_USER = "entity:user"
 const ENTITY_SETTINGS = "entity:user_settings"
 const ENTITY_SECURITY = "event:user_security"
 
-func (s *UserServer) toProtoUser(user *User) *corev1.User {
+func (s *UserServer) toProtoUser(user *User) *userv1.User {
 	if user == nil {
 		return nil
 	}
@@ -18,7 +18,7 @@ func (s *UserServer) toProtoUser(user *User) *corev1.User {
 		isVerified = isVerified || (v == user.Email)
 	}
 
-	return &corev1.User{
+	return &userv1.User{
 		Id:              user.ID,
 		Name:            user.Name,
 		Email:           user.Email,
@@ -28,21 +28,21 @@ func (s *UserServer) toProtoUser(user *User) *corev1.User {
 	}
 }
 
-func (s *UserServer) toProtoSettings(user *User) *corev1.UserSettings {
+func (s *UserServer) toProtoSettings(user *User) *userv1.UserSettings {
 	if user == nil {
 		return nil
 	}
 
-	output := map[string]*corev1.UserSettingGroup{}
+	output := map[string]*userv1.UserSettingGroup{}
 	for key, value := range user.Settings {
-		subgroup := corev1.UserSettingGroup{}
+		subgroup := userv1.UserSettingGroup{}
 		output[key] = &subgroup
 		for subkey, subvalue := range value {
 			subgroup.Values[subkey] = subvalue
 		}
 	}
 
-	return &corev1.UserSettings{
+	return &userv1.UserSettings{
 		UserId:   user.ID,
 		Settings: output,
 	}
