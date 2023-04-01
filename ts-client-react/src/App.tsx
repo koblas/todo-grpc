@@ -1,24 +1,17 @@
 import React, { useEffect, useMemo } from "react";
-import { ChakraProvider, CSSReset, Flex, Spinner, useToast } from "@chakra-ui/react";
-import { BrowserRouter, Routes, Route, Outlet, useNavigate } from "react-router-dom";
+import { ChakraProvider, CSSReset, Spinner, useToast } from "@chakra-ui/react";
+import { BrowserRouter, useNavigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { ErrorBoundary, FallbackProps } from "react-error-boundary";
 import * as Sentry from "@sentry/react";
 
-import { AuthPages } from "./pages/auth";
-import { SettingsPage } from "./pages/settings";
-import { ReportPage } from "./pages/report";
-import { TodoPage } from "./pages/TodoPage";
-import { GptPage } from "./pages/GptPage";
-import { UploadPage } from "./pages/UploadPage";
-import { HomePage } from "./pages/HomePage";
-import { Sidebar } from "./components/Sidebar";
 import { useAuth } from "./hooks/auth";
 import { WebsocketProvider } from "./rpc/websocket";
 import { FetchError } from "./rpc/utils";
 import { useTodoListener } from "./hooks/data/todo";
 import { useUserListener } from "./hooks/data/user";
-import ProtectedRoute from "./components/ProtectedRoute";
+import { AppRoutes } from "./AppRoutes";
+import { useMessageListener } from "./hooks/data/message";
 
 Sentry.init({
   debug: true,
@@ -40,59 +33,6 @@ function buildWebsocketUrl(): string {
 }
 
 const WS_URL = buildWebsocketUrl();
-
-function SiteLayout(): JSX.Element {
-  return (
-    <Flex w="100%">
-      <Sidebar />
-      <Outlet />
-    </Flex>
-  );
-}
-
-function Site() {
-  return (
-    <Routes>
-      <Route path="/report" element={<ReportPage />} />
-      <Route path="/" element={<SiteLayout />}>
-        <Route index element={<HomePage />} />
-        <Route
-          path="settings/*"
-          element={
-            <ProtectedRoute>
-              <SettingsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="todo/*"
-          element={
-            <ProtectedRoute>
-              <TodoPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="gpt/*"
-          element={
-            <ProtectedRoute>
-              <GptPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="upload/*"
-          element={
-            <ProtectedRoute>
-              <UploadPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="*" element={<HomePage />} />
-      </Route>
-    </Routes>
-  );
-}
 
 function AuthErrorBoundary({ error }: FallbackProps) {
   const navigate = useNavigate();
@@ -136,6 +76,7 @@ function ClearOnLogout({ queryClient }: { queryClient: QueryClient }) {
 
   useTodoListener(queryClient);
   useUserListener(queryClient);
+  useMessageListener(queryClient);
 
   return null;
 }
@@ -158,7 +99,6 @@ export default function App(): React.ReactElement {
             isClosable: true,
           });
         } else if (code === "unauthenticated") {
-          console.log("RETRYOW");
           throw error;
         } else if (code !== "invalid_argument" && code !== "unauthenticated") {
           toast({
@@ -207,10 +147,7 @@ export default function App(): React.ReactElement {
             <ClearOnLogout queryClient={queryClient} />
             <BrowserRouter>
               <ErrorBoundary FallbackComponent={AuthErrorBoundary}>
-                <Routes>
-                  <Route path="/auth/*" element={<AuthPages />} />
-                  <Route path="*" element={<Site />} />
-                </Routes>
+                <AppRoutes />
               </ErrorBoundary>
             </BrowserRouter>
           </React.Suspense>

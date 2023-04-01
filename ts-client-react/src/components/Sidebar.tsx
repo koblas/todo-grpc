@@ -97,8 +97,15 @@ function SidebarTopItems({ isExpanded }: { isExpanded: boolean }) {
       >
         GptTest
       </NavItem>
-      <NavItem expanded={isExpanded} icon={BsCurrencyDollar}>
-        Stocks
+      <NavItem
+        expanded={isExpanded}
+        icon={BsCurrencyDollar}
+        active={pathname === "/message"}
+        onClick={() => {
+          navigate("/message");
+        }}
+      >
+        Messages
       </NavItem>
       <NavItem expanded={isExpanded} icon={BsBriefcase}>
         Reports
