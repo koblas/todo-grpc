@@ -8,6 +8,7 @@ import (
 	context "context"
 	errors "errors"
 	connect_go "github.com/bufbuild/connect-go"
+	v11 "github.com/koblas/grpc-todo/gen/core/message/v1"
 	v1 "github.com/koblas/grpc-todo/gen/core/v1"
 	http "net/http"
 	strings "strings"
@@ -29,6 +30,8 @@ const (
 	TodoEventbusServiceName = "core.v1.TodoEventbusService"
 	// FileEventbusServiceName is the fully-qualified name of the FileEventbusService service.
 	FileEventbusServiceName = "core.v1.FileEventbusService"
+	// MessageEventbusServiceName is the fully-qualified name of the MessageEventbusService service.
+	MessageEventbusServiceName = "core.v1.MessageEventbusService"
 )
 
 // BroadcastEventbusServiceClient is a client for the core.v1.BroadcastEventbusService service.
@@ -388,4 +391,64 @@ func (UnimplementedFileEventbusServiceHandler) FileUploaded(context.Context, *co
 
 func (UnimplementedFileEventbusServiceHandler) FileComplete(context.Context, *connect_go.Request[v1.FileServiceCompleteEvent]) (*connect_go.Response[v1.FileEventbusFileCompleteResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("core.v1.FileEventbusService.FileComplete is not implemented"))
+}
+
+// MessageEventbusServiceClient is a client for the core.v1.MessageEventbusService service.
+type MessageEventbusServiceClient interface {
+	Change(context.Context, *connect_go.Request[v11.MessageChangeEvent]) (*connect_go.Response[v1.MessageEventbusServiceChangeResponse], error)
+}
+
+// NewMessageEventbusServiceClient constructs a client for the core.v1.MessageEventbusService
+// service. By default, it uses the Connect protocol with the binary Protobuf Codec, asks for
+// gzipped responses, and sends uncompressed requests. To use the gRPC or gRPC-Web protocols, supply
+// the connect.WithGRPC() or connect.WithGRPCWeb() options.
+//
+// The URL supplied here should be the base URL for the Connect or gRPC server (for example,
+// http://api.acme.com or https://acme.com/grpc).
+func NewMessageEventbusServiceClient(httpClient connect_go.HTTPClient, baseURL string, opts ...connect_go.ClientOption) MessageEventbusServiceClient {
+	baseURL = strings.TrimRight(baseURL, "/")
+	return &messageEventbusServiceClient{
+		change: connect_go.NewClient[v11.MessageChangeEvent, v1.MessageEventbusServiceChangeResponse](
+			httpClient,
+			baseURL+"/core.v1.MessageEventbusService/Change",
+			opts...,
+		),
+	}
+}
+
+// messageEventbusServiceClient implements MessageEventbusServiceClient.
+type messageEventbusServiceClient struct {
+	change *connect_go.Client[v11.MessageChangeEvent, v1.MessageEventbusServiceChangeResponse]
+}
+
+// Change calls core.v1.MessageEventbusService.Change.
+func (c *messageEventbusServiceClient) Change(ctx context.Context, req *connect_go.Request[v11.MessageChangeEvent]) (*connect_go.Response[v1.MessageEventbusServiceChangeResponse], error) {
+	return c.change.CallUnary(ctx, req)
+}
+
+// MessageEventbusServiceHandler is an implementation of the core.v1.MessageEventbusService service.
+type MessageEventbusServiceHandler interface {
+	Change(context.Context, *connect_go.Request[v11.MessageChangeEvent]) (*connect_go.Response[v1.MessageEventbusServiceChangeResponse], error)
+}
+
+// NewMessageEventbusServiceHandler builds an HTTP handler from the service implementation. It
+// returns the path on which to mount the handler and the handler itself.
+//
+// By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
+// and JSON codecs. They also support gzip compression.
+func NewMessageEventbusServiceHandler(svc MessageEventbusServiceHandler, opts ...connect_go.HandlerOption) (string, http.Handler) {
+	mux := http.NewServeMux()
+	mux.Handle("/core.v1.MessageEventbusService/Change", connect_go.NewUnaryHandler(
+		"/core.v1.MessageEventbusService/Change",
+		svc.Change,
+		opts...,
+	))
+	return "/core.v1.MessageEventbusService/", mux
+}
+
+// UnimplementedMessageEventbusServiceHandler returns CodeUnimplemented from all methods.
+type UnimplementedMessageEventbusServiceHandler struct{}
+
+func (UnimplementedMessageEventbusServiceHandler) Change(context.Context, *connect_go.Request[v11.MessageChangeEvent]) (*connect_go.Response[v1.MessageEventbusServiceChangeResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("core.v1.MessageEventbusService.Change is not implemented"))
 }

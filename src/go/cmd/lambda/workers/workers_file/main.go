@@ -38,7 +38,6 @@ func main() {
 				client,
 				config.BusEntityArn,
 			)),
-			// workers_file.WithFileService(corepbv1.NewFileServiceJSONClient("lambda://core-file", client)),
 			workers_file.WithFileService(filestore.NewAwsProvider()),
 			workers_file.WithUserService(corev1connect.NewUserServiceClient(
 				client,
