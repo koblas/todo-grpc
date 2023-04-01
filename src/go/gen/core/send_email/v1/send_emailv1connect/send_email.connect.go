@@ -23,8 +23,6 @@ const _ = connect_go.IsAtLeastVersion0_1_0
 const (
 	// SendEmailServiceName is the fully-qualified name of the SendEmailService service.
 	SendEmailServiceName = "core.send_email.v1.SendEmailService"
-	// SendEmailEventsServiceName is the fully-qualified name of the SendEmailEventsService service.
-	SendEmailEventsServiceName = "core.send_email.v1.SendEmailEventsService"
 )
 
 // SendEmailServiceClient is a client for the core.send_email.v1.SendEmailService service.
@@ -151,68 +149,4 @@ func (UnimplementedSendEmailServiceHandler) PasswordRecoveryMessage(context.Cont
 
 func (UnimplementedSendEmailServiceHandler) InviteUserMessage(context.Context, *connect_go.Request[v1.InviteUserMessageRequest]) (*connect_go.Response[v1.InviteUserMessageResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("core.send_email.v1.SendEmailService.InviteUserMessage is not implemented"))
-}
-
-// SendEmailEventsServiceClient is a client for the core.send_email.v1.SendEmailEventsService
-// service.
-type SendEmailEventsServiceClient interface {
-	// The notification channel
-	NotifyEmailSent(context.Context, *connect_go.Request[v1.NotifyEmailSentRequest]) (*connect_go.Response[v1.NotifyEmailSentResponse], error)
-}
-
-// NewSendEmailEventsServiceClient constructs a client for the
-// core.send_email.v1.SendEmailEventsService service. By default, it uses the Connect protocol with
-// the binary Protobuf Codec, asks for gzipped responses, and sends uncompressed requests. To use
-// the gRPC or gRPC-Web protocols, supply the connect.WithGRPC() or connect.WithGRPCWeb() options.
-//
-// The URL supplied here should be the base URL for the Connect or gRPC server (for example,
-// http://api.acme.com or https://acme.com/grpc).
-func NewSendEmailEventsServiceClient(httpClient connect_go.HTTPClient, baseURL string, opts ...connect_go.ClientOption) SendEmailEventsServiceClient {
-	baseURL = strings.TrimRight(baseURL, "/")
-	return &sendEmailEventsServiceClient{
-		notifyEmailSent: connect_go.NewClient[v1.NotifyEmailSentRequest, v1.NotifyEmailSentResponse](
-			httpClient,
-			baseURL+"/core.send_email.v1.SendEmailEventsService/NotifyEmailSent",
-			opts...,
-		),
-	}
-}
-
-// sendEmailEventsServiceClient implements SendEmailEventsServiceClient.
-type sendEmailEventsServiceClient struct {
-	notifyEmailSent *connect_go.Client[v1.NotifyEmailSentRequest, v1.NotifyEmailSentResponse]
-}
-
-// NotifyEmailSent calls core.send_email.v1.SendEmailEventsService.NotifyEmailSent.
-func (c *sendEmailEventsServiceClient) NotifyEmailSent(ctx context.Context, req *connect_go.Request[v1.NotifyEmailSentRequest]) (*connect_go.Response[v1.NotifyEmailSentResponse], error) {
-	return c.notifyEmailSent.CallUnary(ctx, req)
-}
-
-// SendEmailEventsServiceHandler is an implementation of the
-// core.send_email.v1.SendEmailEventsService service.
-type SendEmailEventsServiceHandler interface {
-	// The notification channel
-	NotifyEmailSent(context.Context, *connect_go.Request[v1.NotifyEmailSentRequest]) (*connect_go.Response[v1.NotifyEmailSentResponse], error)
-}
-
-// NewSendEmailEventsServiceHandler builds an HTTP handler from the service implementation. It
-// returns the path on which to mount the handler and the handler itself.
-//
-// By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
-// and JSON codecs. They also support gzip compression.
-func NewSendEmailEventsServiceHandler(svc SendEmailEventsServiceHandler, opts ...connect_go.HandlerOption) (string, http.Handler) {
-	mux := http.NewServeMux()
-	mux.Handle("/core.send_email.v1.SendEmailEventsService/NotifyEmailSent", connect_go.NewUnaryHandler(
-		"/core.send_email.v1.SendEmailEventsService/NotifyEmailSent",
-		svc.NotifyEmailSent,
-		opts...,
-	))
-	return "/core.send_email.v1.SendEmailEventsService/", mux
-}
-
-// UnimplementedSendEmailEventsServiceHandler returns CodeUnimplemented from all methods.
-type UnimplementedSendEmailEventsServiceHandler struct{}
-
-func (UnimplementedSendEmailEventsServiceHandler) NotifyEmailSent(context.Context, *connect_go.Request[v1.NotifyEmailSentRequest]) (*connect_go.Response[v1.NotifyEmailSentResponse], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("core.send_email.v1.SendEmailEventsService.NotifyEmailSent is not implemented"))
 }
