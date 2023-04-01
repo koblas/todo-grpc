@@ -5,7 +5,8 @@ import (
 	"testing"
 
 	"github.com/bufbuild/connect-go"
-	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
+	eventv1 "github.com/koblas/grpc-todo/gen/core/eventbus/v1"
+	todov1 "github.com/koblas/grpc-todo/gen/core/todo/v1"
 	"github.com/koblas/grpc-todo/services/core/todo"
 	"github.com/rs/xid"
 	"github.com/stretchr/testify/require"
@@ -25,9 +26,9 @@ type todoEventbus struct {
 	counter int
 }
 
-func (bus *todoEventbus) TodoChange(context.Context, *connect.Request[corev1.TodoChangeEvent]) (*connect.Response[corev1.TodoEventbusTodoChangeResponse], error) {
+func (bus *todoEventbus) TodoChange(context.Context, *connect.Request[todov1.TodoChangeEvent]) (*connect.Response[eventv1.TodoEventbusTodoChangeResponse], error) {
 	bus.counter += 1
-	return connect.NewResponse(&corev1.TodoEventbusTodoChangeResponse{}), nil
+	return connect.NewResponse(&eventv1.TodoEventbusTodoChangeResponse{}), nil
 }
 
 type TodoAddSuite struct {
@@ -50,7 +51,7 @@ func (suite *TodoAddSuite) TestTodoNoUser() {
 	server, _ := buildServer()
 
 	_, err := server.TodoAdd(context.TODO(), connect.NewRequest(
-		&corev1.TodoAddRequest{
+		&todov1.TodoAddRequest{
 			Task: "test",
 		},
 	))
@@ -63,7 +64,7 @@ func (suite *TodoAddSuite) TestTodoText() {
 	server, _ := buildServer()
 
 	_, err := server.TodoAdd(context.TODO(), connect.NewRequest(
-		&corev1.TodoAddRequest{
+		&todov1.TodoAddRequest{
 			UserId: "1234",
 			Task:   "",
 		},
@@ -77,7 +78,7 @@ func (suite *TodoAddSuite) TestTodoAdd() {
 	server, bus := buildServer()
 
 	res, err := server.TodoAdd(context.TODO(), connect.NewRequest(
-		&corev1.TodoAddRequest{
+		&todov1.TodoAddRequest{
 			UserId: "1234",
 			Task:   "test",
 		},
@@ -98,34 +99,34 @@ func (suite *TodoListSuite) TestTodoAdd() {
 	user2 := xid.New().String()
 
 	_, err := server.TodoAdd(context.TODO(), connect.NewRequest(
-		&corev1.TodoAddRequest{
+		&todov1.TodoAddRequest{
 			UserId: user1,
 			Task:   "test",
 		},
 	))
 	require.Nil(suite.T(), err, "no error")
 	_, err = server.TodoAdd(context.TODO(), connect.NewRequest(
-		&corev1.TodoAddRequest{
+		&todov1.TodoAddRequest{
 			UserId: user1,
 			Task:   "test",
 		},
 	))
 	require.Nil(suite.T(), err, "no error")
 	_, err = server.TodoAdd(context.TODO(), connect.NewRequest(
-		&corev1.TodoAddRequest{
+		&todov1.TodoAddRequest{
 			UserId: user2,
 			Task:   "test",
 		},
 	))
 	require.Nil(suite.T(), err, "no error")
 
-	res, err := server.TodoList(context.TODO(), connect.NewRequest(&corev1.TodoListRequest{
+	res, err := server.TodoList(context.TODO(), connect.NewRequest(&todov1.TodoListRequest{
 		UserId: user1,
 	}))
 	require.Nil(suite.T(), err, "no error")
 	require.Equal(suite.T(), 2, len(res.Msg.Todos), "user1")
 
-	res, err = server.TodoList(context.TODO(), connect.NewRequest(&corev1.TodoListRequest{
+	res, err = server.TodoList(context.TODO(), connect.NewRequest(&todov1.TodoListRequest{
 		UserId: user2,
 	}))
 	require.Nil(suite.T(), err, "no error")
@@ -140,7 +141,7 @@ func (suite *TodoDeleteSuite) TestTodoDelete() {
 	user2 := xid.New().String()
 
 	radd, err := server.TodoAdd(context.TODO(), connect.NewRequest(
-		&corev1.TodoAddRequest{
+		&todov1.TodoAddRequest{
 			UserId: user1,
 			Task:   "test",
 		},
@@ -148,7 +149,7 @@ func (suite *TodoDeleteSuite) TestTodoDelete() {
 	id1 := radd.Msg.Todo.Id
 	require.Nil(suite.T(), err, "no error")
 	radd, err = server.TodoAdd(context.TODO(), connect.NewRequest(
-		&corev1.TodoAddRequest{
+		&todov1.TodoAddRequest{
 			UserId: user1,
 			Task:   "test",
 		},
@@ -156,7 +157,7 @@ func (suite *TodoDeleteSuite) TestTodoDelete() {
 	id2 := radd.Msg.Todo.Id
 	require.Nil(suite.T(), err, "no error")
 	_, err = server.TodoAdd(context.TODO(), connect.NewRequest(
-		&corev1.TodoAddRequest{
+		&todov1.TodoAddRequest{
 			UserId: user2,
 			Task:   "test",
 		},
@@ -164,20 +165,20 @@ func (suite *TodoDeleteSuite) TestTodoDelete() {
 	// id3 := radd.Msg.Todo.Id
 	require.Nil(suite.T(), err, "no error")
 
-	_, err = server.TodoDelete(context.TODO(), connect.NewRequest(&corev1.TodoDeleteRequest{
+	_, err = server.TodoDelete(context.TODO(), connect.NewRequest(&todov1.TodoDeleteRequest{
 		UserId: user1,
 		Id:     id1,
 	}))
 	require.Nil(suite.T(), err, "no error")
 
-	resl, err := server.TodoList(context.TODO(), connect.NewRequest(&corev1.TodoListRequest{
+	resl, err := server.TodoList(context.TODO(), connect.NewRequest(&todov1.TodoListRequest{
 		UserId: user1,
 	}))
 	require.Nil(suite.T(), err, "no error")
 	require.Equal(suite.T(), 1, len(resl.Msg.Todos), "count is right")
 	require.Equal(suite.T(), id2, resl.Msg.Todos[0].Id, "check ids")
 
-	resl, err = server.TodoList(context.TODO(), connect.NewRequest(&corev1.TodoListRequest{
+	resl, err = server.TodoList(context.TODO(), connect.NewRequest(&todov1.TodoListRequest{
 		UserId: user2,
 	}))
 	require.Nil(suite.T(), err, "no error")

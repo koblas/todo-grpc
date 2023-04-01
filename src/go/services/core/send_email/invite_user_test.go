@@ -6,23 +6,23 @@ import (
 
 	"github.com/bufbuild/connect-go"
 	"github.com/go-faker/faker/v4"
-	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
+	emailv1 "github.com/koblas/grpc-todo/gen/core/send_email/v1"
 	"github.com/stretchr/testify/require"
 )
 
 func TestInviteUser(t *testing.T) {
 	svc, msgData := buildTestService()
 
-	params := connect.NewRequest(&corev1.InviteUserMessageRequest{
-		Sender: &corev1.EmailUser{
+	params := connect.NewRequest(&emailv1.InviteUserMessageRequest{
+		Sender: &emailv1.EmailUser{
 			Name:  faker.Name(),
 			Email: faker.Email(),
 		},
-		Recipient: &corev1.EmailUser{
+		Recipient: &emailv1.EmailUser{
 			Name:  faker.Name(),
 			Email: faker.Email(),
 		},
-		AppInfo: &corev1.EmailAppInfo{
+		AppInfo: &emailv1.EmailAppInfo{
 			AppName: faker.Name(),
 			UrlBase: faker.URL(),
 		},

@@ -8,8 +8,8 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/bufbuild/connect-go"
-	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
-	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
+	"github.com/koblas/grpc-todo/gen/core/eventbus/v1/eventbusv1connect"
+	filev1 "github.com/koblas/grpc-todo/gen/core/file/v1"
 	"github.com/minio/minio-go/v7/pkg/notification"
 
 	"github.com/koblas/grpc-todo/pkg/confmgr"
@@ -33,11 +33,11 @@ type Config struct {
 type handler struct {
 	conf     Config
 	nats     *natsutil.Client
-	producer corev1connect.FileEventbusServiceClient
+	producer eventbusv1connect.FileEventbusServiceClient
 	store    *filestore.MinioProvider
 }
 
-func newHandler(conf Config, nats *natsutil.Client, producer corev1connect.FileEventbusServiceClient) *handler {
+func newHandler(conf Config, nats *natsutil.Client, producer eventbusv1connect.FileEventbusServiceClient) *handler {
 	return &handler{
 		conf:     conf,
 		nats:     nats,
@@ -109,8 +109,8 @@ func (h *handler) Start(ctx context.Context) error {
 			log = log.With(zap.String("bucket", bucket), zap.String("key", key))
 			log.Info("translating event")
 			// got message
-			h.producer.FileUploaded(ctx, connect.NewRequest(&corev1.FileServiceUploadEvent{
-				Info: &corev1.FileServiceUploadInfo{
+			h.producer.FileUploaded(ctx, connect.NewRequest(&filev1.FileServiceUploadEvent{
+				Info: &filev1.FileServiceUploadInfo{
 					UserId:   &parts[1],
 					FileType: parts[0],
 					Url:      "s3://" + bucket + "/" + key,
@@ -135,7 +135,7 @@ func main() {
 
 	nats := natsutil.NewNatsClient(config.NatsAddr)
 
-	producer := corev1connect.NewFileEventbusServiceClient(
+	producer := eventbusv1connect.NewFileEventbusServiceClient(
 		nats,
 		"",
 	)

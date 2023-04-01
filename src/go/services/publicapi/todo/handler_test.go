@@ -9,8 +9,8 @@ import (
 	"github.com/go-faker/faker/v4"
 	"github.com/gojuno/minimock/v3"
 	apiv1 "github.com/koblas/grpc-todo/gen/api/v1"
-	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
-	"github.com/koblas/grpc-todo/gen/core/v1/corev1connect"
+	todov1 "github.com/koblas/grpc-todo/gen/core/todo/v1"
+	"github.com/koblas/grpc-todo/gen/core/todo/v1/todov1connect"
 	"github.com/koblas/grpc-todo/services/publicapi/todo"
 	"github.com/rs/xid"
 
@@ -30,9 +30,9 @@ func (p *userIdProvider) GetUserId(ctx context.Context) (string, error) {
 	return p.userId, nil
 }
 
-func buildServer(t *testing.T, userId string) (*todo.TodoServer, *corev1connect.TodoServiceClientMock) {
+func buildServer(t *testing.T, userId string) (*todo.TodoServer, *todov1connect.TodoServiceClientMock) {
 	mc := minimock.NewController(t)
-	mocked := corev1connect.NewTodoServiceClientMock(mc)
+	mocked := todov1connect.NewTodoServiceClientMock(mc)
 
 	return todo.NewTodoServer(
 		todo.WithTodoService(mocked),
@@ -53,9 +53,9 @@ func TestTodo(t *testing.T) {
 func (suite *TodoAddSuite) TestTodoAddSmoke() {
 	server, mock := buildServer(suite.T(), faker.UUIDHyphenated())
 
-	mock.TodoAddMock.Set(func(ctx context.Context, msg *connect.Request[corev1.TodoAddRequest]) (*connect.Response[corev1.TodoAddResponse], error) {
-		return connect.NewResponse(&corev1.TodoAddResponse{
-			Todo: &corev1.TodoObject{
+	mock.TodoAddMock.Set(func(ctx context.Context, msg *connect.Request[todov1.TodoAddRequest]) (*connect.Response[todov1.TodoAddResponse], error) {
+		return connect.NewResponse(&todov1.TodoAddResponse{
+			Todo: &todov1.TodoObject{
 				Task: msg.Msg.Task,
 				Id:   xid.New().String(),
 			},

@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/bufbuild/connect-go"
-	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
+	eventv1 "github.com/koblas/grpc-todo/gen/core/eventbus/v1"
 	"github.com/koblas/grpc-todo/services/core/send_email"
 )
 
@@ -23,7 +23,7 @@ func (svc *stubSender) SendEmail(ctx context.Context, sender, to, subject, html 
 type stubBus struct {
 }
 
-func (svc *stubBus) NotifyEmailSent(context.Context, *connect.Request[corev1.NotifyEmailSentRequest]) (*connect.Response[corev1.NotifyEmailSentResponse], error) {
+func (svc *stubBus) NotifyEmailSent(context.Context, *connect.Request[eventv1.NotifyEmailSentRequest]) (*connect.Response[eventv1.NotifyEmailSentResponse], error) {
 	return nil, nil
 }
 

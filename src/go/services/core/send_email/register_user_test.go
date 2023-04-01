@@ -6,7 +6,7 @@ import (
 
 	"github.com/bufbuild/connect-go"
 	"github.com/go-faker/faker/v4"
-	corev1 "github.com/koblas/grpc-todo/gen/core/v1"
+	corev1 "github.com/koblas/grpc-todo/gen/core/send_email/v1"
 	"github.com/stretchr/testify/require"
 )
 
