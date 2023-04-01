@@ -10,4 +10,5 @@ data:
   URL_BASE_UI: http://localhost:1234
   USER_SERVICE_ADDR: core-user:14586
   FILE_SERVICE_ADDR: core-file:14586
+  MESSAGE_SERVICE_ADDR: core-message:14586
   DYNAMO_STORE_ADDR: dynamodb:8000
