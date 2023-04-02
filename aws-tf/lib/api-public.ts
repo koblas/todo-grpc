@@ -56,7 +56,7 @@ export class PublicAuth extends Construct {
       lambda,
       apigw,
       apiPath: "auth",
-      targetPath: "api.v1.AuthenticationService",
+      targetPath: "api.auth.v1.AuthenticationService",
     });
   }
 }
@@ -85,7 +85,7 @@ export class PublicFile extends Construct {
       lambda,
       apigw,
       apiPath: "file",
-      targetPath: "api.v1.FileService",
+      targetPath: "api.file.v1.FileService",
     });
   }
 }
@@ -104,7 +104,7 @@ export class PublicTodo extends Construct {
       lambda,
       apigw,
       apiPath: "todo",
-      targetPath: "api.v1.TodoService",
+      targetPath: "api.todo.v1.TodoService",
     });
   }
 }
@@ -123,7 +123,7 @@ export class PublicUser extends Construct {
       lambda,
       apigw,
       apiPath: "user",
-      targetPath: "api.v1.UserService",
+      targetPath: "api.user.v1.UserService",
     });
   }
 }

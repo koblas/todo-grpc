@@ -5,7 +5,7 @@ import (
 
 	"github.com/PullRequestInc/go-gpt3"
 	"github.com/bufbuild/connect-go"
-	apiv1 "github.com/koblas/grpc-todo/gen/api/v1"
+	apiv1 "github.com/koblas/grpc-todo/gen/api/gpt/v1"
 	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/interceptors"
 	"github.com/koblas/grpc-todo/pkg/logger"

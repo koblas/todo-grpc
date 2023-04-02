@@ -8,7 +8,7 @@ import (
 	"github.com/bufbuild/connect-go"
 	"github.com/go-faker/faker/v4"
 	"github.com/gojuno/minimock/v3"
-	apiv1 "github.com/koblas/grpc-todo/gen/api/v1"
+	apiv1 "github.com/koblas/grpc-todo/gen/api/todo/v1"
 	todov1 "github.com/koblas/grpc-todo/gen/core/todo/v1"
 	"github.com/koblas/grpc-todo/gen/core/todo/v1/todov1connect"
 	"github.com/koblas/grpc-todo/services/publicapi/todo"

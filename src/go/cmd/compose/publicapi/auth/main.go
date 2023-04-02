@@ -7,7 +7,7 @@ import (
 	"github.com/bufbuild/connect-go"
 	grpchealth "github.com/bufbuild/connect-grpchealth-go"
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
-	"github.com/koblas/grpc-todo/gen/api/v1/apiv1connect"
+	"github.com/koblas/grpc-todo/gen/api/auth/v1/authv1connect"
 	"github.com/koblas/grpc-todo/gen/core/oauth_user/v1/oauth_userv1connect"
 	"github.com/koblas/grpc-todo/gen/core/user/v1/userv1connect"
 	"github.com/koblas/grpc-todo/pkg/bufcutil"
@@ -55,13 +55,13 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	mux.Handle(apiv1connect.NewAuthenticationServiceHandler(
+	mux.Handle(authv1connect.NewAuthenticationServiceHandler(
 		auth.NewAuthenticationServer(config.JwtSecret, opts...),
 		connect.WithCodec(bufcutil.NewJsonCodec()),
 		connect.WithCompressMinBytes(1024),
 	))
 	mux.Handle(grpchealth.NewHandler(
-		grpchealth.NewStaticChecker(apiv1connect.AuthenticationServiceName),
+		grpchealth.NewStaticChecker(authv1connect.AuthenticationServiceName),
 		connect.WithCompressMinBytes(1024),
 	))
 

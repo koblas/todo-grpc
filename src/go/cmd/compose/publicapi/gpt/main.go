@@ -7,7 +7,7 @@ import (
 	"github.com/bufbuild/connect-go"
 	grpchealth "github.com/bufbuild/connect-grpchealth-go"
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
-	"github.com/koblas/grpc-todo/gen/api/v1/apiv1connect"
+	"github.com/koblas/grpc-todo/gen/api/gpt/v1/gptv1connect"
 	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/interceptors"
@@ -38,13 +38,13 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	mux.Handle(apiv1connect.NewGptServiceHandler(
+	mux.Handle(gptv1connect.NewGptServiceHandler(
 		gpt.NewGptServer(opts...),
 		connect.WithCodec(bufcutil.NewJsonCodec()),
 		connect.WithInterceptors(interceptors.NewReqidInterceptor(), auth),
 	))
 	mux.Handle(grpchealth.NewHandler(
-		grpchealth.NewStaticChecker(apiv1connect.GptServiceName),
+		grpchealth.NewStaticChecker(gptv1connect.GptServiceName),
 		connect.WithCompressMinBytes(1024),
 	))
 

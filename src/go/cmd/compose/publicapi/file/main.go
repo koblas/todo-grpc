@@ -7,7 +7,7 @@ import (
 	"github.com/bufbuild/connect-go"
 	grpchealth "github.com/bufbuild/connect-grpchealth-go"
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
-	"github.com/koblas/grpc-todo/gen/api/v1/apiv1connect"
+	"github.com/koblas/grpc-todo/gen/api/file/v1/filev1connect"
 	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/filestore"
@@ -45,13 +45,13 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	mux.Handle(apiv1connect.NewFileServiceHandler(
+	mux.Handle(filev1connect.NewFileServiceHandler(
 		file.NewFileServer(opts...),
 		connect.WithCodec(bufcutil.NewJsonCodec()),
 		connect.WithInterceptors(interceptors.NewReqidInterceptor(), auth),
 	))
 	mux.Handle(grpchealth.NewHandler(
-		grpchealth.NewStaticChecker(apiv1connect.FileServiceName),
+		grpchealth.NewStaticChecker(filev1connect.FileServiceName),
 		connect.WithCompressMinBytes(1024),
 	))
 

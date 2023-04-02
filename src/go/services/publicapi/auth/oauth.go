@@ -2,7 +2,7 @@ package auth
 
 import (
 	"github.com/bufbuild/connect-go"
-	apiv1 "github.com/koblas/grpc-todo/gen/api/v1"
+	apiv1 "github.com/koblas/grpc-todo/gen/api/auth/v1"
 	oauthv1 "github.com/koblas/grpc-todo/gen/core/oauth_user/v1"
 	userv1 "github.com/koblas/grpc-todo/gen/core/user/v1"
 	"github.com/koblas/grpc-todo/pkg/bufcutil"

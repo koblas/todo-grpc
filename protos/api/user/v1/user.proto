@@ -1,6 +1,5 @@
 syntax = "proto3";
-
-package api.v1;
+package api.user.v1;
 
 option go_package = "github.com/koblas/grpc-todo/protos";
 

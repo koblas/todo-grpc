@@ -7,8 +7,8 @@ import (
 	"github.com/bufbuild/connect-go"
 	grpchealth "github.com/bufbuild/connect-grpchealth-go"
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
-	"github.com/koblas/grpc-todo/gen/api/v1/apiv1connect"
-	"github.com/koblas/grpc-todo/gen/core/user/v1/userv1connect"
+	"github.com/koblas/grpc-todo/gen/api/user/v1/userv1connect"
+	cuser "github.com/koblas/grpc-todo/gen/core/user/v1/userv1connect"
 	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/interceptors"
@@ -35,7 +35,7 @@ func main() {
 
 	opts := []user.Option{
 		user.WithUserService(
-			userv1connect.NewUserServiceClient(
+			cuser.NewUserServiceClient(
 				bufcutil.NewHttpClient(),
 				"http://"+config.UserServiceAddr,
 			),
@@ -44,13 +44,13 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	mux.Handle(apiv1connect.NewUserServiceHandler(
+	mux.Handle(userv1connect.NewUserServiceHandler(
 		user.NewUserServer(opts...),
 		connect.WithCodec(bufcutil.NewJsonCodec()),
 		connect.WithInterceptors(interceptors.NewReqidInterceptor(), auth),
 	))
 	mux.Handle(grpchealth.NewHandler(
-		grpchealth.NewStaticChecker(apiv1connect.UserServiceName),
+		grpchealth.NewStaticChecker(userv1connect.UserServiceName),
 		connect.WithCompressMinBytes(1024),
 	))
 

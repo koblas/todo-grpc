@@ -4,7 +4,7 @@ import (
 	"log"
 	"time"
 
-	apiv1 "github.com/koblas/grpc-todo/gen/api/v1"
+	apiv1 "github.com/koblas/grpc-todo/gen/api/auth/v1"
 	"github.com/koblas/grpc-todo/gen/core/oauth_user/v1/oauth_userv1connect"
 	"github.com/koblas/grpc-todo/gen/core/user/v1/userv1connect"
 	"github.com/koblas/grpc-todo/pkg/tokenmanager"

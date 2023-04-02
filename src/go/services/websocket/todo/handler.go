@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/bufbuild/connect-go"
-	apiv1 "github.com/koblas/grpc-todo/gen/api/v1"
+	apiv1 "github.com/koblas/grpc-todo/gen/api/todo/v1"
 	eventv1 "github.com/koblas/grpc-todo/gen/core/eventbus/v1"
 	"github.com/koblas/grpc-todo/gen/core/eventbus/v1/eventbusv1connect"
 	todov1 "github.com/koblas/grpc-todo/gen/core/todo/v1"

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/koblas/grpc-todo/gen/api/v1/apiv1connect"
+	"github.com/koblas/grpc-todo/gen/api/auth/v1/authv1connect"
 	"github.com/koblas/grpc-todo/gen/core/oauth_user/v1/oauth_userv1connect"
 	"github.com/koblas/grpc-todo/gen/core/user/v1/userv1connect"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
@@ -48,7 +48,7 @@ func main() {
 		opts = append(opts, auth.WithAttemptService(auth.NewAttemptCounter("publicapi:authentication", rdb)))
 	}
 
-	_, api := apiv1connect.NewAuthenticationServiceHandler(auth.NewAuthenticationServer(config.JwtSecret, opts...))
+	_, api := authv1connect.NewAuthenticationServiceHandler(auth.NewAuthenticationServer(config.JwtSecret, opts...))
 
 	mgr.Start(awsutil.HandleApiLambda(api))
 }

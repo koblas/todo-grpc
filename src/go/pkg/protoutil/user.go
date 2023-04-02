@@ -3,7 +3,7 @@ package protoutil
 import (
 	"net/url"
 
-	apiv1 "github.com/koblas/grpc-todo/gen/api/v1"
+	apiv1 "github.com/koblas/grpc-todo/gen/api/user/v1"
 	userv1 "github.com/koblas/grpc-todo/gen/core/user/v1"
 )
 

@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/bufbuild/connect-go"
-	"github.com/koblas/grpc-todo/gen/api/v1/apiv1connect"
+	"github.com/koblas/grpc-todo/gen/api/file/v1/filev1connect"
 	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
@@ -39,7 +39,7 @@ func main() {
 		file.WithUploadBucket(config.UploadBucket),
 	}
 
-	_, api := apiv1connect.NewFileServiceHandler(
+	_, api := filev1connect.NewFileServiceHandler(
 		file.NewFileServer(opts...),
 		connect.WithCodec(bufcutil.NewJsonCodec()),
 		connect.WithInterceptors(interceptors.NewReqidInterceptor(), auth),

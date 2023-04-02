@@ -5,7 +5,7 @@ import (
 
 	"github.com/bufbuild/connect-go"
 	"github.com/go-playground/validator/v10"
-	apiv1 "github.com/koblas/grpc-todo/gen/api/v1"
+	apiv1 "github.com/koblas/grpc-todo/gen/api/user/v1"
 	userv1 "github.com/koblas/grpc-todo/gen/core/user/v1"
 	"github.com/koblas/grpc-todo/gen/core/user/v1/userv1connect"
 	"github.com/koblas/grpc-todo/pkg/bufcutil"
