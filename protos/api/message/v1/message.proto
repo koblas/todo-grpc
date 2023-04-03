@@ -3,6 +3,11 @@ package api.message.v1;
 
 option go_package = "github.com/koblas/grpc-todo/protos";
 
+message RoomItem {
+  string id = 1;
+  string name = 2;
+}
+
 message MessageItem {
   string id = 1;
   string room_id = 2;
@@ -10,24 +15,38 @@ message MessageItem {
   string text = 4;
 }
 
-message ListRequest {
+message MsgListRequest {
   string room_id = 1;
 }
-message ListResponse { repeated MessageItem messages = 1; }
+message MsgListResponse { repeated MessageItem messages = 1; }
 
-message AddRequest { 
+message MsgCreateRequest { 
   string room_id = 1;
   string text = 2;
 }
-message AddResponse { MessageItem message = 1; }
+message MsgCreateResponse { MessageItem message = 1; }
 
-message DeleteRequest { 
+message MsgDeleteRequest { 
   string room_id = 1;
   string msg_id = 2; 
 }
-message DeleteResponse { }
+message MsgDeleteResponse { }
+
+message RoomJoinRequest { 
+  string name = 1;
+}
+message RoomJoinResponse { 
+  RoomItem room = 1;
+}
+
+message RoomListRequest { }
+message RoomListResponse { 
+  repeated RoomItem rooms = 1;
+}
 
 service MessageService {
-  rpc add(AddRequest) returns (AddResponse);
-  rpc list(ListRequest) returns (ListResponse);
+  rpc room_join(RoomJoinRequest) returns (RoomJoinResponse);
+  rpc room_list(RoomListRequest) returns (RoomListResponse);
+  rpc msg_create(MsgCreateRequest) returns (MsgCreateResponse);
+  rpc msg_list(MsgListRequest) returns (MsgListResponse);
 }

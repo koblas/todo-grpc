@@ -10,40 +10,70 @@ message MessageItem {
   string text = 4;
 }
 
+message RoomItem {
+  string id = 1;
+  string name = 2;
+}
+
 message ListRequest { 
-  string user_id = 1; 
-  string room_id = 2;
+  string org_id = 1;
+  string user_id = 2; 
+  string room_id = 3;
 }
 message ListResponse {
   repeated MessageItem messages = 1;
 }
 
 message AddRequest {
-  string user_id = 1;
-  string room_id = 2;
-  string text = 3;
+  string org_id = 1;
+  string user_id = 2;
+  string room_id = 3;
+  string text = 4;
 }
 message AddResponse {
   MessageItem message = 1;
 }
 
 message DeleteRequest {
-  string user_id = 1;
-  string room_id = 2;
-  string msg_id = 3;
+  string org_id = 1;
+  string user_id = 2;
+  string room_id = 3;
+  string msg_id = 4;
 }
 message DeleteResponse {
 }
 
+message RoomJoinRequest {
+  string org_id = 1;
+  string user_id = 2;
+  string name = 3;
+}
+message RoomJoinResponse {
+  RoomItem room = 1;
+}
+
+message RoomListRequest {
+  string org_id = 1;
+  string user_id = 2;
+}
+message RoomListResponse {
+  repeated RoomItem rooms = 1;
+}
+
 message MessageChangeEvent {
   string idemponcy_id = 1;
-  repeated string user_id = 2;
-  MessageItem current = 3;
-  MessageItem original = 4;
+  string org_id = 2;
+  repeated string user_id = 3;
+  MessageItem current = 4;
+  MessageItem original = 5;
 }
 
 service MessageService {
   rpc Add(AddRequest) returns (AddResponse);
   rpc Delete(DeleteRequest) returns (DeleteResponse);
   rpc List(ListRequest) returns (ListResponse);
+
+  // Room operations
+  rpc RoomList(RoomListRequest) returns (RoomListResponse);
+  rpc RoomJoin(RoomJoinRequest) returns (RoomJoinResponse);
 }

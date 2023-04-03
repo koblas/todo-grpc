@@ -24,7 +24,7 @@ const useMessageStore = create<{
         return {};
       }
 
-      return { messages: state.messages.concat(item) };
+      return { messages: [...state.messages, item] };
     }),
   update: (item: rpcMessage.MessageItemT) =>
     set((state) => ({
@@ -45,17 +45,65 @@ export function useMessages() {
     const client = newFetchClient({ token });
 
     return {
-      useListMessages(): RpcMutation<rpcMessage.ListRequestT, rpcMessage.ListResponseT> {
+      useListRooms(): RpcMutation<rpcMessage.RoomListRequestT, rpcMessage.RoomListResponseT> {
         const mutation = useMutation(
           CACHE_KEY,
-          (data: rpcMessage.ListRequestT) => client.POST<rpcMessage.ListResponseT>("/v1/message/list", data),
+          (data: rpcMessage.RoomListRequestT) =>
+            client.POST<rpcMessage.RoomListResponseT>("/v1/message/room_list", data),
           {},
         );
 
-        function action(data: rpcMessage.ListRequestT, handlers?: RpcOptions<rpcMessage.ListResponseT>) {
+        function action(data: rpcMessage.RoomListRequestT, handlers?: RpcOptions<rpcMessage.RoomListResponseT>) {
           mutation.mutate(
             data,
-            buildCallbacksTyped(queryClient, rpcMessage.ListResponse, {
+            buildCallbacksTyped(queryClient, rpcMessage.RoomListResponse, {
+              ...handlers,
+              onCompleted(payload, variables) {
+                // TODO payload.messages.forEach((item) => messageStore.add(item));
+                handlers?.onCompleted?.(payload, variables);
+              },
+            }),
+          );
+        }
+
+        return [action, { loading: mutation.isLoading }];
+      },
+
+      useRoomJoin(): RpcMutation<rpcMessage.RoomJoinRequestT, rpcMessage.RoomJoinResponseT> {
+        const mutation = useMutation(
+          CACHE_KEY,
+          (data: rpcMessage.RoomJoinRequestT) =>
+            client.POST<rpcMessage.RoomJoinResponseT>("/v1/message/room_join", data),
+          {},
+        );
+
+        function action(data: rpcMessage.RoomJoinRequestT, handlers?: RpcOptions<rpcMessage.RoomJoinResponseT>) {
+          mutation.mutate(
+            data,
+            buildCallbacksTyped(queryClient, rpcMessage.RoomJoinResponse, {
+              ...handlers,
+              onCompleted(payload, variables) {
+                // TODO payload.messages.forEach((item) => messageStore.add(item));
+                handlers?.onCompleted?.(payload, variables);
+              },
+            }),
+          );
+        }
+
+        return [action, { loading: mutation.isLoading }];
+      },
+
+      useListMessages(): RpcMutation<rpcMessage.MsgListRequestT, rpcMessage.MsgListResponseT> {
+        const mutation = useMutation(
+          CACHE_KEY,
+          (data: rpcMessage.MsgListRequestT) => client.POST<rpcMessage.MsgListResponseT>("/v1/message/msg_list", data),
+          {},
+        );
+
+        function action(data: rpcMessage.MsgListRequestT, handlers?: RpcOptions<rpcMessage.MsgListResponseT>) {
+          mutation.mutate(
+            data,
+            buildCallbacksTyped(queryClient, rpcMessage.MsgListResponse, {
               ...handlers,
               onCompleted(payload, variables) {
                 payload.messages.forEach((item) => messageStore.add(item));
@@ -68,18 +116,19 @@ export function useMessages() {
         return [action, { loading: mutation.isLoading }];
       },
 
-      useAddMessage(): RpcMutation<rpcMessage.AddRequestT, rpcMessage.AddResponseT> {
+      useAddMessage(): RpcMutation<rpcMessage.MsgCreateRequestT, rpcMessage.MsgCreateResponseT> {
         const mutation = useMutation(
           CACHE_KEY,
-          (data: rpcMessage.AddRequestT) => client.POST<rpcMessage.AddResponseT>("/v1/message/add", data),
+          (data: rpcMessage.MsgCreateRequestT) =>
+            client.POST<rpcMessage.MsgCreateResponseT>("/v1/message/msg_create", data),
           {},
         );
 
         // function action(data: RecoverVerifyParams, handlers?: RpcOptions<z.infer<typeof AuthOkResponse>>) {
-        function action(data: rpcMessage.AddRequestT, handlers?: RpcOptions<rpcMessage.AddResponseT>) {
+        function action(data: rpcMessage.MsgCreateRequestT, handlers?: RpcOptions<rpcMessage.MsgCreateResponseT>) {
           mutation.mutate(
             data,
-            buildCallbacksTyped(queryClient, rpcMessage.AddResponse, {
+            buildCallbacksTyped(queryClient, rpcMessage.MsgCreateResponse, {
               ...handlers,
               onCompleted(payload, variables) {
                 messageStore.add(payload.message);

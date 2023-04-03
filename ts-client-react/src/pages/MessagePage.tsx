@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Box, Spinner, Flex } from "@chakra-ui/react";
 import { useMessages } from "../hooks/data/message";
-import { Messages, Message } from "../components/chat/Messages";
+import { Messages } from "../components/chat/Messages";
 import { Header } from "../components/chat/Header";
 import { Footer } from "../components/chat/Footer";
 import { Divider } from "../components/chat/Divider";
@@ -18,19 +18,31 @@ import { Divider } from "../components/chat/Divider";
 // ];
 
 function Chat() {
-  const roomId = "xyzzy";
+  const [roomId, setRoomId] = useState("");
   const { messages, mutations } = useMessages();
+  const [roomJoin] = mutations.useRoomJoin();
   const [listMessages] = mutations.useListMessages();
   const [addMessage] = mutations.useAddMessage();
   // const [messages, setMessages] = useState(baseMessage);
   const [inputMessage, setInputMessage] = useState("");
 
+  console.log("ROOM ID", roomId, messages);
+
   useEffect(() => {
     const timer = setTimeout(() => {
-      listMessages({ roomId });
-    }, 1);
+      roomJoin(
+        { name: "xyzzy" },
+        {
+          onCompleted({ room }) {
+            console.log("COMPLETED ", room.id, roomId);
+            setRoomId(room.id);
+            listMessages({ roomId: room.id });
+          },
+        },
+      );
+    }, 10);
     return () => clearTimeout(timer);
-  }, []);
+  }, [roomId]);
 
   const handleSendMessage = useCallback(
     (msg: string) => {
@@ -49,7 +61,7 @@ function Chat() {
       //   addMessage("computer", msg);
       // }, 1000);
     },
-    [addMessage],
+    [addMessage, roomId],
   );
 
   return (
@@ -57,7 +69,7 @@ function Chat() {
       <Flex w={["100%", "100%", "40%"]} h="90%" flexDir="column">
         <Header />
         <Divider />
-        <Messages messages={messages} />
+        <Messages messages={messages.filter((m) => m.roomId === roomId)} />
         <Divider />
         <Footer inputMessage={inputMessage} setInputMessage={setInputMessage} handleSendMessage={handleSendMessage} />
       </Flex>

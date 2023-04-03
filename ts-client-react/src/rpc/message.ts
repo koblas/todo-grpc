@@ -9,16 +9,22 @@ export const MessageItem = z.object({
 });
 export type MessageItemT = z.infer<typeof MessageItem>;
 
-// todo_add
-export const AddRequest = z.object({
+export const RoomItem = z.object({
+  id: z.string(),
+  name: z.string(),
+});
+export type RoomItemT = z.infer<typeof RoomItem>;
+
+// message create
+export const MsgCreateRequest = z.object({
   roomId: z.string(),
   text: z.string(),
 });
-export const AddResponse = z.object({
+export const MsgCreateResponse = z.object({
   message: MessageItem,
 });
-export type AddRequestT = z.infer<typeof AddRequest>;
-export type AddResponseT = z.infer<typeof AddResponse>;
+export type MsgCreateRequestT = z.infer<typeof MsgCreateRequest>;
+export type MsgCreateResponseT = z.infer<typeof MsgCreateResponse>;
 
 // todo_delete
 export const DeleteRequest = z.object({
@@ -30,17 +36,33 @@ export type DeleteRequestT = z.infer<typeof DeleteRequest>;
 export type DeleteResponseT = z.infer<typeof DeleteResponse>;
 
 // todo_add
-export const ListRequest = z.object({
+export const MsgListRequest = z.object({
   roomId: z.string(),
 });
-export const ListResponse = z.object({
+export const MsgListResponse = z.object({
   messages: z.array(MessageItem),
 });
-export type ListRequestT = z.infer<typeof ListRequest>;
-export type ListResponseT = z.infer<typeof ListResponse>;
+export type MsgListRequestT = z.infer<typeof MsgListRequest>;
+export type MsgListResponseT = z.infer<typeof MsgListResponse>;
+
+//
+export const RoomListRequest = z.object({});
+export const RoomListResponse = z.object({
+  rooms: z.array(RoomItem),
+});
+export type RoomListRequestT = z.infer<typeof RoomListRequest>;
+export type RoomListResponseT = z.infer<typeof RoomListResponse>;
+
+//
+export const RoomJoinRequest = z.object({});
+export const RoomJoinResponse = z.object({
+  room: RoomItem,
+});
+export type RoomJoinRequestT = z.infer<typeof RoomJoinRequest>;
+export type RoomJoinResponseT = z.infer<typeof RoomJoinResponse>;
 
 export interface MessageService {
-  add(params: AddRequestT, options: RpcOptions<AddResponseT>): void;
+  add(params: MsgCreateRequestT, options: RpcOptions<MsgCreateResponseT>): void;
   list(params: DeleteRequestT, options: RpcOptions<DeleteResponseT>): void;
 }
 

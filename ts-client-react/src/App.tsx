@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from "react";
 import { ChakraProvider, CSSReset, Spinner, useToast } from "@chakra-ui/react";
-import { BrowserRouter, useNavigate } from "react-router-dom";
+import { BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { ErrorBoundary, FallbackProps } from "react-error-boundary";
 import * as Sentry from "@sentry/react";
@@ -12,6 +12,7 @@ import { useTodoListener } from "./hooks/data/todo";
 import { useUserListener } from "./hooks/data/user";
 import { AppRoutes } from "./AppRoutes";
 import { useMessageListener } from "./hooks/data/message";
+import { useAuthStore } from "./store/useAuthStore";
 
 Sentry.init({
   debug: true,
@@ -35,16 +36,18 @@ function buildWebsocketUrl(): string {
 const WS_URL = buildWebsocketUrl();
 
 function AuthErrorBoundary({ error }: FallbackProps) {
-  const navigate = useNavigate();
-  const { mutations } = useAuth();
-  const logout = mutations.useLogout();
+  // const navigate = useNavigate();
+  // const { mutations } = useAuth();
+  // const logout = mutations.useLogout();
+  const { setToken } = useAuthStore((s) => s);
 
   if (error instanceof FetchError && error.code === 401) {
-    logout({
-      onCompleted() {
-        navigate("/auth/login");
-      },
-    });
+    // logout({
+    //   onCompleted() {
+    //     navigate("/auth/login");
+    //   },
+    // });
+    setToken(null);
   } else {
     throw error;
   }
@@ -141,18 +144,18 @@ export default function App(): React.ReactElement {
   return (
     <ChakraProvider>
       <CSSReset />
-      <QueryClientProvider client={queryClient}>
-        <WebsocketProvider url={WS_URL}>
-          <React.Suspense fallback={<Spinner />}>
-            <ClearOnLogout queryClient={queryClient} />
-            <BrowserRouter>
-              <ErrorBoundary FallbackComponent={AuthErrorBoundary}>
+      <ErrorBoundary FallbackComponent={AuthErrorBoundary}>
+        <QueryClientProvider client={queryClient}>
+          <WebsocketProvider url={WS_URL}>
+            <React.Suspense fallback={<Spinner />}>
+              <ClearOnLogout queryClient={queryClient} />
+              <BrowserRouter>
                 <AppRoutes />
-              </ErrorBoundary>
-            </BrowserRouter>
-          </React.Suspense>
-        </WebsocketProvider>
-      </QueryClientProvider>
+              </BrowserRouter>
+            </React.Suspense>
+          </WebsocketProvider>
+        </QueryClientProvider>
+      </ErrorBoundary>
     </ChakraProvider>
   );
 }
