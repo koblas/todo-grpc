@@ -15,7 +15,7 @@ func buildServer() (*message.MessageServer, *messageEventbus) {
 	bus := &messageEventbus{}
 
 	return message.NewMessageServer(
-		message.WithMessageStore(message.NewMessageMemoryStore()),
+		message.WithMessageStore(message.NewMemoryStore()),
 		message.WithProducer(bus),
 	), bus
 }

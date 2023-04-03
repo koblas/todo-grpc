@@ -5,6 +5,7 @@ import (
 
 	"github.com/bufbuild/connect-go"
 	apiv1 "github.com/koblas/grpc-todo/gen/api/message/v1"
+	apicon "github.com/koblas/grpc-todo/gen/api/message/v1/messagev1connect"
 	corev1 "github.com/koblas/grpc-todo/gen/core/message/v1"
 	"github.com/koblas/grpc-todo/gen/core/message/v1/messagev1connect"
 	"github.com/koblas/grpc-todo/pkg/bufcutil"
@@ -34,6 +35,8 @@ func WithGetUserId(helper interceptors.UserIdFromContext) Option {
 	}
 }
 
+var _ apicon.MessageServiceHandler = (*MessageServer)(nil)
+
 func NewMessageServer(opts ...Option) *MessageServer {
 	svr := MessageServer{}
 
@@ -52,7 +55,7 @@ func NewMessageServer(opts ...Option) *MessageServer {
 }
 
 // SayHello generates response to a Ping request
-func (svc *MessageServer) Add(ctx context.Context, bufreq *connect.Request[apiv1.AddRequest]) (*connect.Response[apiv1.AddResponse], error) {
+func (svc *MessageServer) MsgCreate(ctx context.Context, bufreq *connect.Request[apiv1.MsgCreateRequest]) (*connect.Response[apiv1.MsgCreateResponse], error) {
 	msg := bufreq.Msg
 	log := logger.FromContext(ctx)
 	log.Info("AddMessage BEGIN")
@@ -73,7 +76,7 @@ func (svc *MessageServer) Add(ctx context.Context, bufreq *connect.Request[apiv1
 		return nil, bufcutil.InternalError(err)
 	}
 
-	return connect.NewResponse(&apiv1.AddResponse{
+	return connect.NewResponse(&apiv1.MsgCreateResponse{
 		Message: &apiv1.MessageItem{
 			Id:     resp.Msg.Message.Id,
 			Sender: resp.Msg.Message.UserId,
@@ -83,7 +86,7 @@ func (svc *MessageServer) Add(ctx context.Context, bufreq *connect.Request[apiv1
 	}), nil
 }
 
-func (svc *MessageServer) List(ctx context.Context, bufreq *connect.Request[apiv1.ListRequest]) (*connect.Response[apiv1.ListResponse], error) {
+func (svc *MessageServer) MsgList(ctx context.Context, bufreq *connect.Request[apiv1.MsgListRequest]) (*connect.Response[apiv1.MsgListResponse], error) {
 	msg := bufreq.Msg
 	log := logger.FromContext(ctx)
 	log.Info("List Message BEGIN")
@@ -115,5 +118,62 @@ func (svc *MessageServer) List(ctx context.Context, bufreq *connect.Request[apiv
 		}
 	}
 
-	return connect.NewResponse(&apiv1.ListResponse{Messages: messages}), nil
+	return connect.NewResponse(&apiv1.MsgListResponse{Messages: messages}), nil
+}
+
+func (svc *MessageServer) RoomJoin(ctx context.Context, bufreq *connect.Request[apiv1.RoomJoinRequest]) (*connect.Response[apiv1.RoomJoinResponse], error) {
+	msg := bufreq.Msg
+	log := logger.FromContext(ctx)
+	log.Info("Room Join BEGIN")
+
+	userId, err := svc.userHelper.GetUserId(ctx)
+	if err != nil {
+		log.With("error", err).Info("No user id found")
+		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("missing userid"))
+	}
+
+	out, err := svc.client.RoomJoin(ctx, connect.NewRequest(&corev1.RoomJoinRequest{
+		UserId: userId,
+		Name:   msg.Name,
+	}))
+	if err != nil {
+		return nil, bufcutil.InternalError(err)
+	}
+
+	return connect.NewResponse(&apiv1.RoomJoinResponse{
+		Room: &apiv1.RoomItem{
+			Id:   out.Msg.Room.Id,
+			Name: out.Msg.Room.Name,
+		},
+	}), nil
+}
+
+func (svc *MessageServer) RoomList(ctx context.Context, bufreq *connect.Request[apiv1.RoomListRequest]) (*connect.Response[apiv1.RoomListResponse], error) {
+	log := logger.FromContext(ctx)
+	log.Info("Room List BEGIN")
+
+	userId, err := svc.userHelper.GetUserId(ctx)
+	if err != nil {
+		log.With("error", err).Info("No user id found")
+		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("missing userid"))
+	}
+
+	out, err := svc.client.RoomList(ctx, connect.NewRequest(&corev1.RoomListRequest{
+		UserId: userId,
+	}))
+	if err != nil {
+		return nil, bufcutil.InternalError(err)
+	}
+
+	rooms := []*apiv1.RoomItem{}
+	for _, item := range out.Msg.Rooms {
+		rooms = append(rooms, &apiv1.RoomItem{
+			Id:   item.Id,
+			Name: item.Name,
+		})
+	}
+
+	return connect.NewResponse(&apiv1.RoomListResponse{
+		Rooms: rooms,
+	}), nil
 }

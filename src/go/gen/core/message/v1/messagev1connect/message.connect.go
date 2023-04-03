@@ -30,6 +30,9 @@ type MessageServiceClient interface {
 	Add(context.Context, *connect_go.Request[v1.AddRequest]) (*connect_go.Response[v1.AddResponse], error)
 	Delete(context.Context, *connect_go.Request[v1.DeleteRequest]) (*connect_go.Response[v1.DeleteResponse], error)
 	List(context.Context, *connect_go.Request[v1.ListRequest]) (*connect_go.Response[v1.ListResponse], error)
+	// Room operations
+	RoomList(context.Context, *connect_go.Request[v1.RoomListRequest]) (*connect_go.Response[v1.RoomListResponse], error)
+	RoomJoin(context.Context, *connect_go.Request[v1.RoomJoinRequest]) (*connect_go.Response[v1.RoomJoinResponse], error)
 }
 
 // NewMessageServiceClient constructs a client for the core.message.v1.MessageService service. By
@@ -57,14 +60,26 @@ func NewMessageServiceClient(httpClient connect_go.HTTPClient, baseURL string, o
 			baseURL+"/core.message.v1.MessageService/List",
 			opts...,
 		),
+		roomList: connect_go.NewClient[v1.RoomListRequest, v1.RoomListResponse](
+			httpClient,
+			baseURL+"/core.message.v1.MessageService/RoomList",
+			opts...,
+		),
+		roomJoin: connect_go.NewClient[v1.RoomJoinRequest, v1.RoomJoinResponse](
+			httpClient,
+			baseURL+"/core.message.v1.MessageService/RoomJoin",
+			opts...,
+		),
 	}
 }
 
 // messageServiceClient implements MessageServiceClient.
 type messageServiceClient struct {
-	add    *connect_go.Client[v1.AddRequest, v1.AddResponse]
-	delete *connect_go.Client[v1.DeleteRequest, v1.DeleteResponse]
-	list   *connect_go.Client[v1.ListRequest, v1.ListResponse]
+	add      *connect_go.Client[v1.AddRequest, v1.AddResponse]
+	delete   *connect_go.Client[v1.DeleteRequest, v1.DeleteResponse]
+	list     *connect_go.Client[v1.ListRequest, v1.ListResponse]
+	roomList *connect_go.Client[v1.RoomListRequest, v1.RoomListResponse]
+	roomJoin *connect_go.Client[v1.RoomJoinRequest, v1.RoomJoinResponse]
 }
 
 // Add calls core.message.v1.MessageService.Add.
@@ -82,11 +97,24 @@ func (c *messageServiceClient) List(ctx context.Context, req *connect_go.Request
 	return c.list.CallUnary(ctx, req)
 }
 
+// RoomList calls core.message.v1.MessageService.RoomList.
+func (c *messageServiceClient) RoomList(ctx context.Context, req *connect_go.Request[v1.RoomListRequest]) (*connect_go.Response[v1.RoomListResponse], error) {
+	return c.roomList.CallUnary(ctx, req)
+}
+
+// RoomJoin calls core.message.v1.MessageService.RoomJoin.
+func (c *messageServiceClient) RoomJoin(ctx context.Context, req *connect_go.Request[v1.RoomJoinRequest]) (*connect_go.Response[v1.RoomJoinResponse], error) {
+	return c.roomJoin.CallUnary(ctx, req)
+}
+
 // MessageServiceHandler is an implementation of the core.message.v1.MessageService service.
 type MessageServiceHandler interface {
 	Add(context.Context, *connect_go.Request[v1.AddRequest]) (*connect_go.Response[v1.AddResponse], error)
 	Delete(context.Context, *connect_go.Request[v1.DeleteRequest]) (*connect_go.Response[v1.DeleteResponse], error)
 	List(context.Context, *connect_go.Request[v1.ListRequest]) (*connect_go.Response[v1.ListResponse], error)
+	// Room operations
+	RoomList(context.Context, *connect_go.Request[v1.RoomListRequest]) (*connect_go.Response[v1.RoomListResponse], error)
+	RoomJoin(context.Context, *connect_go.Request[v1.RoomJoinRequest]) (*connect_go.Response[v1.RoomJoinResponse], error)
 }
 
 // NewMessageServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -111,6 +139,16 @@ func NewMessageServiceHandler(svc MessageServiceHandler, opts ...connect_go.Hand
 		svc.List,
 		opts...,
 	))
+	mux.Handle("/core.message.v1.MessageService/RoomList", connect_go.NewUnaryHandler(
+		"/core.message.v1.MessageService/RoomList",
+		svc.RoomList,
+		opts...,
+	))
+	mux.Handle("/core.message.v1.MessageService/RoomJoin", connect_go.NewUnaryHandler(
+		"/core.message.v1.MessageService/RoomJoin",
+		svc.RoomJoin,
+		opts...,
+	))
 	return "/core.message.v1.MessageService/", mux
 }
 
@@ -127,4 +165,12 @@ func (UnimplementedMessageServiceHandler) Delete(context.Context, *connect_go.Re
 
 func (UnimplementedMessageServiceHandler) List(context.Context, *connect_go.Request[v1.ListRequest]) (*connect_go.Response[v1.ListResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("core.message.v1.MessageService.List is not implemented"))
+}
+
+func (UnimplementedMessageServiceHandler) RoomList(context.Context, *connect_go.Request[v1.RoomListRequest]) (*connect_go.Response[v1.RoomListResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("core.message.v1.MessageService.RoomList is not implemented"))
+}
+
+func (UnimplementedMessageServiceHandler) RoomJoin(context.Context, *connect_go.Request[v1.RoomJoinRequest]) (*connect_go.Response[v1.RoomJoinResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("core.message.v1.MessageService.RoomJoin is not implemented"))
 }

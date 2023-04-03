@@ -63,10 +63,10 @@ func (suite *MessageAddSuite) TestMessageAddSmoke() {
 	})
 
 	text := faker.UUIDHyphenated()
-	req := apiv1.AddRequest{
+	req := apiv1.MsgCreateRequest{
 		Text: text + "test",
 	}
-	msg, err := server.Add(context.TODO(), connect.NewRequest(
+	msg, err := server.MsgCreate(context.TODO(), connect.NewRequest(
 		&req,
 	))
 
@@ -79,8 +79,8 @@ func (suite *MessageAddSuite) TestMessageAddNoUser() {
 	server, mock := buildServer(suite.T(), "")
 	mock.AddMock.Return(nil, errors.New("unknown"))
 
-	_, err := server.Add(context.TODO(), connect.NewRequest(
-		&apiv1.AddRequest{
+	_, err := server.MsgCreate(context.TODO(), connect.NewRequest(
+		&apiv1.MsgCreateRequest{
 			Text: faker.UUIDHyphenated(),
 		},
 	))
@@ -93,8 +93,8 @@ func (suite *MessageAddSuite) TestMessageAddError() {
 	server, mock := buildServer(suite.T(), faker.UUIDHyphenated())
 	mock.AddMock.Return(nil, errors.New("unknown"))
 
-	_, err := server.Add(context.TODO(), connect.NewRequest(
-		&apiv1.AddRequest{
+	_, err := server.MsgCreate(context.TODO(), connect.NewRequest(
+		&apiv1.MsgCreateRequest{
 			Text: faker.UUIDHyphenated(),
 		},
 	))

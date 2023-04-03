@@ -2,7 +2,6 @@ package message
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -12,19 +11,15 @@ import (
 	"github.com/koblas/grpc-todo/gen/core/eventbus/v1/eventbusv1connect"
 	mcorev1 "github.com/koblas/grpc-todo/gen/core/message/v1"
 	websocketv1 "github.com/koblas/grpc-todo/gen/core/websocket/v1"
+	"github.com/koblas/grpc-todo/pkg/bufcutil"
 	"github.com/koblas/grpc-todo/pkg/logger"
+	"github.com/koblas/grpc-todo/pkg/util"
 	"go.uber.org/zap"
 )
 
 type MessageServer struct {
 	producer eventbusv1connect.BroadcastEventbusServiceClient
-}
-
-type SocketMessage struct {
-	ObjectId string      `json:"object_id"`
-	Action   string      `json:"action"`
-	Topic    string      `json:"topic"`
-	Body     interface{} `json:"body"`
+	codec    connect.Codec
 }
 
 type Option func(*MessageServer)
@@ -36,7 +31,9 @@ func WithProducer(producer eventbusv1connect.BroadcastEventbusServiceClient) Opt
 }
 
 func NewMessageChangeServer(opts ...Option) map[string]http.Handler {
-	svr := MessageServer{}
+	svr := MessageServer{
+		codec: bufcutil.NewJsonCodec(),
+	}
 
 	for _, opt := range opts {
 		opt(&svr)
@@ -63,16 +60,11 @@ func (svc *MessageServer) Change(ctx context.Context, eventIn *connect.Request[m
 	if obj == nil {
 		return nil, errors.New("missing object")
 	}
-	data, err := json.Marshal(SocketMessage{
-		Topic:    "message",
-		ObjectId: obj.Id,
-		Action:   action,
-		Body: messagev1.MessageItem{
-			Id:     obj.Id,
-			RoomId: obj.RoomId,
-			Sender: obj.UserId,
-			Text:   obj.Text,
-		},
+	data, err := util.MarshalData("message", obj.Id, action, &messagev1.MessageItem{
+		Id:     obj.Id,
+		RoomId: obj.RoomId,
+		Sender: obj.UserId,
+		Text:   obj.Text,
 	})
 
 	if err != nil {

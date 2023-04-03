@@ -27,8 +27,10 @@ const (
 
 // MessageServiceClient is a client for the api.message.v1.MessageService service.
 type MessageServiceClient interface {
-	Add(context.Context, *connect_go.Request[v1.AddRequest]) (*connect_go.Response[v1.AddResponse], error)
-	List(context.Context, *connect_go.Request[v1.ListRequest]) (*connect_go.Response[v1.ListResponse], error)
+	RoomJoin(context.Context, *connect_go.Request[v1.RoomJoinRequest]) (*connect_go.Response[v1.RoomJoinResponse], error)
+	RoomList(context.Context, *connect_go.Request[v1.RoomListRequest]) (*connect_go.Response[v1.RoomListResponse], error)
+	MsgCreate(context.Context, *connect_go.Request[v1.MsgCreateRequest]) (*connect_go.Response[v1.MsgCreateResponse], error)
+	MsgList(context.Context, *connect_go.Request[v1.MsgListRequest]) (*connect_go.Response[v1.MsgListResponse], error)
 }
 
 // NewMessageServiceClient constructs a client for the api.message.v1.MessageService service. By
@@ -41,14 +43,24 @@ type MessageServiceClient interface {
 func NewMessageServiceClient(httpClient connect_go.HTTPClient, baseURL string, opts ...connect_go.ClientOption) MessageServiceClient {
 	baseURL = strings.TrimRight(baseURL, "/")
 	return &messageServiceClient{
-		add: connect_go.NewClient[v1.AddRequest, v1.AddResponse](
+		roomJoin: connect_go.NewClient[v1.RoomJoinRequest, v1.RoomJoinResponse](
 			httpClient,
-			baseURL+"/api.message.v1.MessageService/add",
+			baseURL+"/api.message.v1.MessageService/room_join",
 			opts...,
 		),
-		list: connect_go.NewClient[v1.ListRequest, v1.ListResponse](
+		roomList: connect_go.NewClient[v1.RoomListRequest, v1.RoomListResponse](
 			httpClient,
-			baseURL+"/api.message.v1.MessageService/list",
+			baseURL+"/api.message.v1.MessageService/room_list",
+			opts...,
+		),
+		msgCreate: connect_go.NewClient[v1.MsgCreateRequest, v1.MsgCreateResponse](
+			httpClient,
+			baseURL+"/api.message.v1.MessageService/msg_create",
+			opts...,
+		),
+		msgList: connect_go.NewClient[v1.MsgListRequest, v1.MsgListResponse](
+			httpClient,
+			baseURL+"/api.message.v1.MessageService/msg_list",
 			opts...,
 		),
 	}
@@ -56,24 +68,38 @@ func NewMessageServiceClient(httpClient connect_go.HTTPClient, baseURL string, o
 
 // messageServiceClient implements MessageServiceClient.
 type messageServiceClient struct {
-	add  *connect_go.Client[v1.AddRequest, v1.AddResponse]
-	list *connect_go.Client[v1.ListRequest, v1.ListResponse]
+	roomJoin  *connect_go.Client[v1.RoomJoinRequest, v1.RoomJoinResponse]
+	roomList  *connect_go.Client[v1.RoomListRequest, v1.RoomListResponse]
+	msgCreate *connect_go.Client[v1.MsgCreateRequest, v1.MsgCreateResponse]
+	msgList   *connect_go.Client[v1.MsgListRequest, v1.MsgListResponse]
 }
 
-// Add calls api.message.v1.MessageService.add.
-func (c *messageServiceClient) Add(ctx context.Context, req *connect_go.Request[v1.AddRequest]) (*connect_go.Response[v1.AddResponse], error) {
-	return c.add.CallUnary(ctx, req)
+// RoomJoin calls api.message.v1.MessageService.room_join.
+func (c *messageServiceClient) RoomJoin(ctx context.Context, req *connect_go.Request[v1.RoomJoinRequest]) (*connect_go.Response[v1.RoomJoinResponse], error) {
+	return c.roomJoin.CallUnary(ctx, req)
 }
 
-// List calls api.message.v1.MessageService.list.
-func (c *messageServiceClient) List(ctx context.Context, req *connect_go.Request[v1.ListRequest]) (*connect_go.Response[v1.ListResponse], error) {
-	return c.list.CallUnary(ctx, req)
+// RoomList calls api.message.v1.MessageService.room_list.
+func (c *messageServiceClient) RoomList(ctx context.Context, req *connect_go.Request[v1.RoomListRequest]) (*connect_go.Response[v1.RoomListResponse], error) {
+	return c.roomList.CallUnary(ctx, req)
+}
+
+// MsgCreate calls api.message.v1.MessageService.msg_create.
+func (c *messageServiceClient) MsgCreate(ctx context.Context, req *connect_go.Request[v1.MsgCreateRequest]) (*connect_go.Response[v1.MsgCreateResponse], error) {
+	return c.msgCreate.CallUnary(ctx, req)
+}
+
+// MsgList calls api.message.v1.MessageService.msg_list.
+func (c *messageServiceClient) MsgList(ctx context.Context, req *connect_go.Request[v1.MsgListRequest]) (*connect_go.Response[v1.MsgListResponse], error) {
+	return c.msgList.CallUnary(ctx, req)
 }
 
 // MessageServiceHandler is an implementation of the api.message.v1.MessageService service.
 type MessageServiceHandler interface {
-	Add(context.Context, *connect_go.Request[v1.AddRequest]) (*connect_go.Response[v1.AddResponse], error)
-	List(context.Context, *connect_go.Request[v1.ListRequest]) (*connect_go.Response[v1.ListResponse], error)
+	RoomJoin(context.Context, *connect_go.Request[v1.RoomJoinRequest]) (*connect_go.Response[v1.RoomJoinResponse], error)
+	RoomList(context.Context, *connect_go.Request[v1.RoomListRequest]) (*connect_go.Response[v1.RoomListResponse], error)
+	MsgCreate(context.Context, *connect_go.Request[v1.MsgCreateRequest]) (*connect_go.Response[v1.MsgCreateResponse], error)
+	MsgList(context.Context, *connect_go.Request[v1.MsgListRequest]) (*connect_go.Response[v1.MsgListResponse], error)
 }
 
 // NewMessageServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -83,14 +109,24 @@ type MessageServiceHandler interface {
 // and JSON codecs. They also support gzip compression.
 func NewMessageServiceHandler(svc MessageServiceHandler, opts ...connect_go.HandlerOption) (string, http.Handler) {
 	mux := http.NewServeMux()
-	mux.Handle("/api.message.v1.MessageService/add", connect_go.NewUnaryHandler(
-		"/api.message.v1.MessageService/add",
-		svc.Add,
+	mux.Handle("/api.message.v1.MessageService/room_join", connect_go.NewUnaryHandler(
+		"/api.message.v1.MessageService/room_join",
+		svc.RoomJoin,
 		opts...,
 	))
-	mux.Handle("/api.message.v1.MessageService/list", connect_go.NewUnaryHandler(
-		"/api.message.v1.MessageService/list",
-		svc.List,
+	mux.Handle("/api.message.v1.MessageService/room_list", connect_go.NewUnaryHandler(
+		"/api.message.v1.MessageService/room_list",
+		svc.RoomList,
+		opts...,
+	))
+	mux.Handle("/api.message.v1.MessageService/msg_create", connect_go.NewUnaryHandler(
+		"/api.message.v1.MessageService/msg_create",
+		svc.MsgCreate,
+		opts...,
+	))
+	mux.Handle("/api.message.v1.MessageService/msg_list", connect_go.NewUnaryHandler(
+		"/api.message.v1.MessageService/msg_list",
+		svc.MsgList,
 		opts...,
 	))
 	return "/api.message.v1.MessageService/", mux
@@ -99,10 +135,18 @@ func NewMessageServiceHandler(svc MessageServiceHandler, opts ...connect_go.Hand
 // UnimplementedMessageServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedMessageServiceHandler struct{}
 
-func (UnimplementedMessageServiceHandler) Add(context.Context, *connect_go.Request[v1.AddRequest]) (*connect_go.Response[v1.AddResponse], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("api.message.v1.MessageService.add is not implemented"))
+func (UnimplementedMessageServiceHandler) RoomJoin(context.Context, *connect_go.Request[v1.RoomJoinRequest]) (*connect_go.Response[v1.RoomJoinResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("api.message.v1.MessageService.room_join is not implemented"))
 }
 
-func (UnimplementedMessageServiceHandler) List(context.Context, *connect_go.Request[v1.ListRequest]) (*connect_go.Response[v1.ListResponse], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("api.message.v1.MessageService.list is not implemented"))
+func (UnimplementedMessageServiceHandler) RoomList(context.Context, *connect_go.Request[v1.RoomListRequest]) (*connect_go.Response[v1.RoomListResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("api.message.v1.MessageService.room_list is not implemented"))
+}
+
+func (UnimplementedMessageServiceHandler) MsgCreate(context.Context, *connect_go.Request[v1.MsgCreateRequest]) (*connect_go.Response[v1.MsgCreateResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("api.message.v1.MessageService.msg_create is not implemented"))
+}
+
+func (UnimplementedMessageServiceHandler) MsgList(context.Context, *connect_go.Request[v1.MsgListRequest]) (*connect_go.Response[v1.MsgListResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("api.message.v1.MessageService.msg_list is not implemented"))
 }

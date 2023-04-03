@@ -1,19 +1,15 @@
 package main
 
 import (
-	"context"
 	"net/http"
 	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/credentials"
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/bufbuild/connect-go"
 	grpchealth "github.com/bufbuild/connect-grpchealth-go"
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
 	"github.com/koblas/grpc-todo/gen/core/eventbus/v1/eventbusv1connect"
 	"github.com/koblas/grpc-todo/gen/core/user/v1/userv1connect"
+	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/interceptors"
 	"github.com/koblas/grpc-todo/pkg/manager"
@@ -23,39 +19,9 @@ import (
 	"go.uber.org/zap"
 )
 
-type endpointResolver struct {
-	hostname string
-}
-
-func (h *endpointResolver) ResolveEndpoint(service, region string, options ...interface{}) (aws.Endpoint, error) {
-	return aws.Endpoint{URL: "http://" + h.hostname}, nil
-}
-
-func dynamoClient(endpoint string) *dynamodb.Client {
-	if endpoint == "" {
-		return nil
-	}
-
-	cfg, err := config.LoadDefaultConfig(context.TODO(),
-		config.WithRegion("us-east-1"),
-		config.WithEndpointResolverWithOptions(aws.EndpointResolverWithOptions(&endpointResolver{endpoint})),
-		config.WithCredentialsProvider(credentials.StaticCredentialsProvider{
-			Value: aws.Credentials{
-				AccessKeyID: "dummy", SecretAccessKey: "dummy", SessionToken: "dummy",
-				Source: "Hard-coded credentials; values are irrelevant for local DynamoDB",
-			},
-		}),
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	return dynamodb.NewFromConfig(cfg)
-}
-
 type Config struct {
 	NatsAddr        string
-	DynamoStoreAddr *string `environment:"DYNAMO_STORE" json:"dynamo-store"`
+	DynamoStoreAddr *string `json:"dynamo-store"`
 }
 
 func main() {
@@ -87,7 +53,7 @@ func main() {
 			user.WithUserStore(
 				user.NewUserDynamoStore(
 					user.WithDynamoClient(
-						dynamoClient(*config.DynamoStoreAddr),
+						awsutil.LocalDynamoClient(*config.DynamoStoreAddr),
 					),
 				),
 			),

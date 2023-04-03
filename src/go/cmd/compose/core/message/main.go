@@ -9,6 +9,7 @@ import (
 	"github.com/koblas/grpc-todo/cmd/compose/shared_config"
 	"github.com/koblas/grpc-todo/gen/core/eventbus/v1/eventbusv1connect"
 	"github.com/koblas/grpc-todo/gen/core/message/v1/messagev1connect"
+	"github.com/koblas/grpc-todo/pkg/awsutil"
 	"github.com/koblas/grpc-todo/pkg/confmgr"
 	"github.com/koblas/grpc-todo/pkg/interceptors"
 	"github.com/koblas/grpc-todo/pkg/manager"
@@ -18,7 +19,8 @@ import (
 )
 
 type Config struct {
-	NatsAddr string
+	NatsAddr        string
+	DynamoStoreAddr *string `json:"dynamo-store"`
 }
 
 func main() {
@@ -38,7 +40,26 @@ func main() {
 
 	opts := []message.Option{
 		message.WithProducer(eventbus),
-		message.WithMessageStore(message.NewMessageMemoryStore()),
+		// message.WithMessageStore(message.NewMemoryStore()),
+		message.WithMessageStore(message.NewDynamoStore()),
+	}
+
+	if config.DynamoStoreAddr == nil || *config.DynamoStoreAddr == "" {
+		log.Info("Starting up with Memory store")
+		opts = append(opts, message.WithMessageStore(message.NewMemoryStore()))
+	} else {
+		log.With(
+			zap.String("dynamoAddr", *config.DynamoStoreAddr),
+		).Info("Starting up with DynamoDB store")
+		opts = append(opts,
+			message.WithMessageStore(
+				message.NewDynamoStore(
+					message.WithDynamoClient(
+						awsutil.LocalDynamoClient(*config.DynamoStoreAddr),
+					),
+				),
+			),
+		)
 	}
 
 	mux := http.NewServeMux()

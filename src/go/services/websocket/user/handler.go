@@ -2,7 +2,6 @@ package user
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -13,15 +12,9 @@ import (
 	websocketv1 "github.com/koblas/grpc-todo/gen/core/websocket/v1"
 	"github.com/koblas/grpc-todo/pkg/logger"
 	"github.com/koblas/grpc-todo/pkg/protoutil"
+	"github.com/koblas/grpc-todo/pkg/util"
 	"go.uber.org/zap"
 )
-
-type SocketMessage struct {
-	ObjectId string      `json:"object_id"`
-	Action   string      `json:"action"`
-	Topic    string      `json:"topic"`
-	Body     interface{} `json:"body"`
-}
 
 type UserServer struct {
 	producer eventbusv1connect.BroadcastEventbusServiceClient
@@ -73,12 +66,8 @@ func (svc *UserServer) UserChange(ctx context.Context, eventIn *connect.Request[
 	if obj == nil {
 		return nil, errors.New("missing object")
 	}
-	data, err := json.Marshal(SocketMessage{
-		Topic:    "user",
-		ObjectId: obj.Id,
-		Action:   action,
-		Body:     protoutil.UserCoreToApi(obj),
-	})
+
+	data, err := util.MarshalData("user", obj.Id, action, protoutil.UserCoreToApi(obj))
 
 	if err != nil {
 		log.With(zap.Error(err)).Error("failed to marshal")

@@ -2,98 +2,169 @@ package message
 
 import (
 	"context"
+	"errors"
 
 	"github.com/oklog/ulid/v2"
+	"github.com/rs/xid"
 )
 
-type memoryMessages struct {
-	messages map[string][]*Message
-	members  map[string]map[string]struct{}
+type memoryRoom struct {
+	id       string
+	orgId    string
+	name     string
+	messages []*Message
+	members  map[string]struct{}
 }
 
-var _ MessageStore = (*memoryMessages)(nil)
-
-func NewMessageMemoryStore() *memoryMessages {
-	return &memoryMessages{
-		messages: map[string][]*Message{},
-		members:  map[string]map[string]struct{}{},
+func (room memoryRoom) unmarshal() *Room {
+	return &Room{
+		ID:    room.id,
+		OrgId: room.orgId,
+		Name:  room.name,
 	}
 }
 
-func (store *memoryMessages) Join(ctx context.Context, roomId string, userId string) error {
-	members, found := store.members[roomId]
+type memoryData struct {
+	rooms map[[2]string]*memoryRoom
+}
+
+var _ MessageStore = (*memoryData)(nil)
+
+func NewMemoryStore() *memoryData {
+	return &memoryData{
+		rooms: map[[2]string]*memoryRoom{},
+	}
+}
+
+func (store *memoryData) CreateRoom(ctx context.Context, orgId, userId string, name string) (*Room, error) {
+	id := xid.New().String()
+
+	// TODO -- for a given org cannot create a duplciate named room
+
+	data := &memoryRoom{
+		id:       id,
+		orgId:    orgId,
+		name:     name,
+		messages: []*Message{},
+		members:  map[string]struct{}{},
+	}
+
+	store.rooms[[2]string{orgId, id}] = data
+
+	return data.unmarshal(), nil
+}
+
+func (store *memoryData) ListRooms(ctx context.Context, orgId string, userId *string) ([]*Room, error) {
+	rooms := []*Room{}
+
+	for _, room := range store.rooms {
+		if room.orgId != orgId {
+			continue
+		}
+		if userId != nil {
+			_, found := room.members[*userId]
+			if !found {
+				continue
+			}
+		}
+		rooms = append(rooms, room.unmarshal())
+	}
+
+	return rooms, nil
+}
+
+func (store *memoryData) fetchRoom(ctx context.Context, orgId, roomId string) (*memoryRoom, bool) {
+	room, found := store.rooms[[2]string{orgId, roomId}]
+
+	return room, found
+}
+
+func (store *memoryData) Join(ctx context.Context, orgId, roomId string, userId string) error {
+	room, found := store.fetchRoom(ctx, orgId, roomId)
 	if !found {
-		members = map[string]struct{}{}
-		store.members[roomId] = members
+		return errors.New("room not found")
 	}
 
-	members[userId] = struct{}{}
+	room.members[userId] = struct{}{}
 
 	return nil
 }
 
-func (store *memoryMessages) Leave(ctx context.Context, roomId string, userId string) error {
-	members, found := store.members[roomId]
+func (store *memoryData) Leave(ctx context.Context, orgId, roomId string, userId string) error {
+	room, found := store.fetchRoom(ctx, orgId, roomId)
 	if !found {
 		return nil
 	}
 
-	delete(members, userId)
+	delete(room.members, userId)
 
 	return nil
 }
 
-func (store *memoryMessages) Members(ctx context.Context, roomId string) ([]string, error) {
-	members, found := store.members[roomId]
+func (store *memoryData) Members(ctx context.Context, orgId, roomId string) ([]string, error) {
+	room, found := store.fetchRoom(ctx, orgId, roomId)
 	if !found {
 		return []string{}, nil
 	}
 
 	users := []string{}
-	for k := range members {
+	for k := range room.members {
 		users = append(users, k)
 	}
 
 	return users, nil
 }
 
-func (store *memoryMessages) FindByRoom(ctx context.Context, roomId string) ([]*Message, error) {
-	if todos, found := store.messages[roomId]; found {
-		return todos, nil
+func (store *memoryData) ListMessages(ctx context.Context, orgId, roomId string) ([]*Message, error) {
+	if room, found := store.fetchRoom(ctx, orgId, roomId); found {
+		return room.messages, nil
 	}
 
 	return []*Message{}, nil
 }
 
-func (store *memoryMessages) DeleteOne(ctx context.Context, roomId string, id string) (*Message, error) {
-	todos, found := store.messages[roomId]
+func (store *memoryData) GetMessage(ctx context.Context, orgId, roomId string, msgId string) (*Message, error) {
+	room, found := store.fetchRoom(ctx, orgId, roomId)
 	if !found {
 		return nil, nil
 	}
 
-	filtered := []*Message{}
-	var matched *Message
-	for _, todo := range todos {
-		if todo.ID == id {
-			matched = todo
-			continue
+	for _, item := range room.messages {
+		if item.ID == msgId {
+			return item, nil
 		}
-		filtered = append(filtered, todo)
 	}
 
-	store.messages[roomId] = filtered
-
-	return matched, nil
+	return nil, nil
 }
 
-func (store *memoryMessages) Create(ctx context.Context, message Message) (*Message, error) {
-	todos, found := store.messages[message.RoomId]
+func (store *memoryData) DeleteOne(ctx context.Context, orgId, roomId string, msgId string) error {
+	room, found := store.fetchRoom(ctx, orgId, roomId)
 	if !found {
-		todos = []*Message{}
+		return nil
+	}
+
+	filtered := []*Message{}
+	for _, item := range room.messages {
+		if item.ID == msgId {
+			continue
+		}
+		filtered = append(filtered, item)
+	}
+
+	room.messages = filtered
+
+	return nil
+}
+
+func (store *memoryData) CreateMessage(ctx context.Context, orgId, roomId string, message Message) (*Message, error) {
+	room, found := store.fetchRoom(ctx, orgId, roomId)
+	if !found {
+		return nil, errors.New("room does not exist")
 	}
 
 	message.ID = ulid.Make().String()
-	store.messages[message.RoomId] = append(todos, &message)
+	room.messages = append(room.messages, &message)
 
 	return &message, nil
 }

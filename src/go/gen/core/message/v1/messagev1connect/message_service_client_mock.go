@@ -36,6 +36,18 @@ type MessageServiceClientMock struct {
 	afterListCounter  uint64
 	beforeListCounter uint64
 	ListMock          mMessageServiceClientMockList
+
+	funcRoomJoin          func(ctx context.Context, pp1 *connect_go.Request[v1.RoomJoinRequest]) (pp2 *connect_go.Response[v1.RoomJoinResponse], err error)
+	inspectFuncRoomJoin   func(ctx context.Context, pp1 *connect_go.Request[v1.RoomJoinRequest])
+	afterRoomJoinCounter  uint64
+	beforeRoomJoinCounter uint64
+	RoomJoinMock          mMessageServiceClientMockRoomJoin
+
+	funcRoomList          func(ctx context.Context, pp1 *connect_go.Request[v1.RoomListRequest]) (pp2 *connect_go.Response[v1.RoomListResponse], err error)
+	inspectFuncRoomList   func(ctx context.Context, pp1 *connect_go.Request[v1.RoomListRequest])
+	afterRoomListCounter  uint64
+	beforeRoomListCounter uint64
+	RoomListMock          mMessageServiceClientMockRoomList
 }
 
 // NewMessageServiceClientMock returns a mock for MessageServiceClient
@@ -53,6 +65,12 @@ func NewMessageServiceClientMock(t minimock.Tester) *MessageServiceClientMock {
 
 	m.ListMock = mMessageServiceClientMockList{mock: m}
 	m.ListMock.callArgs = []*MessageServiceClientMockListParams{}
+
+	m.RoomJoinMock = mMessageServiceClientMockRoomJoin{mock: m}
+	m.RoomJoinMock.callArgs = []*MessageServiceClientMockRoomJoinParams{}
+
+	m.RoomListMock = mMessageServiceClientMockRoomList{mock: m}
+	m.RoomListMock.callArgs = []*MessageServiceClientMockRoomListParams{}
 
 	return m
 }
@@ -708,6 +726,440 @@ func (m *MessageServiceClientMock) MinimockListInspect() {
 	}
 }
 
+type mMessageServiceClientMockRoomJoin struct {
+	mock               *MessageServiceClientMock
+	defaultExpectation *MessageServiceClientMockRoomJoinExpectation
+	expectations       []*MessageServiceClientMockRoomJoinExpectation
+
+	callArgs []*MessageServiceClientMockRoomJoinParams
+	mutex    sync.RWMutex
+}
+
+// MessageServiceClientMockRoomJoinExpectation specifies expectation struct of the MessageServiceClient.RoomJoin
+type MessageServiceClientMockRoomJoinExpectation struct {
+	mock    *MessageServiceClientMock
+	params  *MessageServiceClientMockRoomJoinParams
+	results *MessageServiceClientMockRoomJoinResults
+	Counter uint64
+}
+
+// MessageServiceClientMockRoomJoinParams contains parameters of the MessageServiceClient.RoomJoin
+type MessageServiceClientMockRoomJoinParams struct {
+	ctx context.Context
+	pp1 *connect_go.Request[v1.RoomJoinRequest]
+}
+
+// MessageServiceClientMockRoomJoinResults contains results of the MessageServiceClient.RoomJoin
+type MessageServiceClientMockRoomJoinResults struct {
+	pp2 *connect_go.Response[v1.RoomJoinResponse]
+	err error
+}
+
+// Expect sets up expected params for MessageServiceClient.RoomJoin
+func (mmRoomJoin *mMessageServiceClientMockRoomJoin) Expect(ctx context.Context, pp1 *connect_go.Request[v1.RoomJoinRequest]) *mMessageServiceClientMockRoomJoin {
+	if mmRoomJoin.mock.funcRoomJoin != nil {
+		mmRoomJoin.mock.t.Fatalf("MessageServiceClientMock.RoomJoin mock is already set by Set")
+	}
+
+	if mmRoomJoin.defaultExpectation == nil {
+		mmRoomJoin.defaultExpectation = &MessageServiceClientMockRoomJoinExpectation{}
+	}
+
+	mmRoomJoin.defaultExpectation.params = &MessageServiceClientMockRoomJoinParams{ctx, pp1}
+	for _, e := range mmRoomJoin.expectations {
+		if minimock.Equal(e.params, mmRoomJoin.defaultExpectation.params) {
+			mmRoomJoin.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmRoomJoin.defaultExpectation.params)
+		}
+	}
+
+	return mmRoomJoin
+}
+
+// Inspect accepts an inspector function that has same arguments as the MessageServiceClient.RoomJoin
+func (mmRoomJoin *mMessageServiceClientMockRoomJoin) Inspect(f func(ctx context.Context, pp1 *connect_go.Request[v1.RoomJoinRequest])) *mMessageServiceClientMockRoomJoin {
+	if mmRoomJoin.mock.inspectFuncRoomJoin != nil {
+		mmRoomJoin.mock.t.Fatalf("Inspect function is already set for MessageServiceClientMock.RoomJoin")
+	}
+
+	mmRoomJoin.mock.inspectFuncRoomJoin = f
+
+	return mmRoomJoin
+}
+
+// Return sets up results that will be returned by MessageServiceClient.RoomJoin
+func (mmRoomJoin *mMessageServiceClientMockRoomJoin) Return(pp2 *connect_go.Response[v1.RoomJoinResponse], err error) *MessageServiceClientMock {
+	if mmRoomJoin.mock.funcRoomJoin != nil {
+		mmRoomJoin.mock.t.Fatalf("MessageServiceClientMock.RoomJoin mock is already set by Set")
+	}
+
+	if mmRoomJoin.defaultExpectation == nil {
+		mmRoomJoin.defaultExpectation = &MessageServiceClientMockRoomJoinExpectation{mock: mmRoomJoin.mock}
+	}
+	mmRoomJoin.defaultExpectation.results = &MessageServiceClientMockRoomJoinResults{pp2, err}
+	return mmRoomJoin.mock
+}
+
+// Set uses given function f to mock the MessageServiceClient.RoomJoin method
+func (mmRoomJoin *mMessageServiceClientMockRoomJoin) Set(f func(ctx context.Context, pp1 *connect_go.Request[v1.RoomJoinRequest]) (pp2 *connect_go.Response[v1.RoomJoinResponse], err error)) *MessageServiceClientMock {
+	if mmRoomJoin.defaultExpectation != nil {
+		mmRoomJoin.mock.t.Fatalf("Default expectation is already set for the MessageServiceClient.RoomJoin method")
+	}
+
+	if len(mmRoomJoin.expectations) > 0 {
+		mmRoomJoin.mock.t.Fatalf("Some expectations are already set for the MessageServiceClient.RoomJoin method")
+	}
+
+	mmRoomJoin.mock.funcRoomJoin = f
+	return mmRoomJoin.mock
+}
+
+// When sets expectation for the MessageServiceClient.RoomJoin which will trigger the result defined by the following
+// Then helper
+func (mmRoomJoin *mMessageServiceClientMockRoomJoin) When(ctx context.Context, pp1 *connect_go.Request[v1.RoomJoinRequest]) *MessageServiceClientMockRoomJoinExpectation {
+	if mmRoomJoin.mock.funcRoomJoin != nil {
+		mmRoomJoin.mock.t.Fatalf("MessageServiceClientMock.RoomJoin mock is already set by Set")
+	}
+
+	expectation := &MessageServiceClientMockRoomJoinExpectation{
+		mock:   mmRoomJoin.mock,
+		params: &MessageServiceClientMockRoomJoinParams{ctx, pp1},
+	}
+	mmRoomJoin.expectations = append(mmRoomJoin.expectations, expectation)
+	return expectation
+}
+
+// Then sets up MessageServiceClient.RoomJoin return parameters for the expectation previously defined by the When method
+func (e *MessageServiceClientMockRoomJoinExpectation) Then(pp2 *connect_go.Response[v1.RoomJoinResponse], err error) *MessageServiceClientMock {
+	e.results = &MessageServiceClientMockRoomJoinResults{pp2, err}
+	return e.mock
+}
+
+// RoomJoin implements MessageServiceClient
+func (mmRoomJoin *MessageServiceClientMock) RoomJoin(ctx context.Context, pp1 *connect_go.Request[v1.RoomJoinRequest]) (pp2 *connect_go.Response[v1.RoomJoinResponse], err error) {
+	mm_atomic.AddUint64(&mmRoomJoin.beforeRoomJoinCounter, 1)
+	defer mm_atomic.AddUint64(&mmRoomJoin.afterRoomJoinCounter, 1)
+
+	if mmRoomJoin.inspectFuncRoomJoin != nil {
+		mmRoomJoin.inspectFuncRoomJoin(ctx, pp1)
+	}
+
+	mm_params := &MessageServiceClientMockRoomJoinParams{ctx, pp1}
+
+	// Record call args
+	mmRoomJoin.RoomJoinMock.mutex.Lock()
+	mmRoomJoin.RoomJoinMock.callArgs = append(mmRoomJoin.RoomJoinMock.callArgs, mm_params)
+	mmRoomJoin.RoomJoinMock.mutex.Unlock()
+
+	for _, e := range mmRoomJoin.RoomJoinMock.expectations {
+		if minimock.Equal(e.params, mm_params) {
+			mm_atomic.AddUint64(&e.Counter, 1)
+			return e.results.pp2, e.results.err
+		}
+	}
+
+	if mmRoomJoin.RoomJoinMock.defaultExpectation != nil {
+		mm_atomic.AddUint64(&mmRoomJoin.RoomJoinMock.defaultExpectation.Counter, 1)
+		mm_want := mmRoomJoin.RoomJoinMock.defaultExpectation.params
+		mm_got := MessageServiceClientMockRoomJoinParams{ctx, pp1}
+		if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
+			mmRoomJoin.t.Errorf("MessageServiceClientMock.RoomJoin got unexpected parameters, want: %#v, got: %#v%s\n", *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
+		}
+
+		mm_results := mmRoomJoin.RoomJoinMock.defaultExpectation.results
+		if mm_results == nil {
+			mmRoomJoin.t.Fatal("No results are set for the MessageServiceClientMock.RoomJoin")
+		}
+		return (*mm_results).pp2, (*mm_results).err
+	}
+	if mmRoomJoin.funcRoomJoin != nil {
+		return mmRoomJoin.funcRoomJoin(ctx, pp1)
+	}
+	mmRoomJoin.t.Fatalf("Unexpected call to MessageServiceClientMock.RoomJoin. %v %v", ctx, pp1)
+	return
+}
+
+// RoomJoinAfterCounter returns a count of finished MessageServiceClientMock.RoomJoin invocations
+func (mmRoomJoin *MessageServiceClientMock) RoomJoinAfterCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmRoomJoin.afterRoomJoinCounter)
+}
+
+// RoomJoinBeforeCounter returns a count of MessageServiceClientMock.RoomJoin invocations
+func (mmRoomJoin *MessageServiceClientMock) RoomJoinBeforeCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmRoomJoin.beforeRoomJoinCounter)
+}
+
+// Calls returns a list of arguments used in each call to MessageServiceClientMock.RoomJoin.
+// The list is in the same order as the calls were made (i.e. recent calls have a higher index)
+func (mmRoomJoin *mMessageServiceClientMockRoomJoin) Calls() []*MessageServiceClientMockRoomJoinParams {
+	mmRoomJoin.mutex.RLock()
+
+	argCopy := make([]*MessageServiceClientMockRoomJoinParams, len(mmRoomJoin.callArgs))
+	copy(argCopy, mmRoomJoin.callArgs)
+
+	mmRoomJoin.mutex.RUnlock()
+
+	return argCopy
+}
+
+// MinimockRoomJoinDone returns true if the count of the RoomJoin invocations corresponds
+// the number of defined expectations
+func (m *MessageServiceClientMock) MinimockRoomJoinDone() bool {
+	for _, e := range m.RoomJoinMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			return false
+		}
+	}
+
+	// if default expectation was set then invocations count should be greater than zero
+	if m.RoomJoinMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterRoomJoinCounter) < 1 {
+		return false
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcRoomJoin != nil && mm_atomic.LoadUint64(&m.afterRoomJoinCounter) < 1 {
+		return false
+	}
+	return true
+}
+
+// MinimockRoomJoinInspect logs each unmet expectation
+func (m *MessageServiceClientMock) MinimockRoomJoinInspect() {
+	for _, e := range m.RoomJoinMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			m.t.Errorf("Expected call to MessageServiceClientMock.RoomJoin with params: %#v", *e.params)
+		}
+	}
+
+	// if default expectation was set then invocations count should be greater than zero
+	if m.RoomJoinMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterRoomJoinCounter) < 1 {
+		if m.RoomJoinMock.defaultExpectation.params == nil {
+			m.t.Error("Expected call to MessageServiceClientMock.RoomJoin")
+		} else {
+			m.t.Errorf("Expected call to MessageServiceClientMock.RoomJoin with params: %#v", *m.RoomJoinMock.defaultExpectation.params)
+		}
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcRoomJoin != nil && mm_atomic.LoadUint64(&m.afterRoomJoinCounter) < 1 {
+		m.t.Error("Expected call to MessageServiceClientMock.RoomJoin")
+	}
+}
+
+type mMessageServiceClientMockRoomList struct {
+	mock               *MessageServiceClientMock
+	defaultExpectation *MessageServiceClientMockRoomListExpectation
+	expectations       []*MessageServiceClientMockRoomListExpectation
+
+	callArgs []*MessageServiceClientMockRoomListParams
+	mutex    sync.RWMutex
+}
+
+// MessageServiceClientMockRoomListExpectation specifies expectation struct of the MessageServiceClient.RoomList
+type MessageServiceClientMockRoomListExpectation struct {
+	mock    *MessageServiceClientMock
+	params  *MessageServiceClientMockRoomListParams
+	results *MessageServiceClientMockRoomListResults
+	Counter uint64
+}
+
+// MessageServiceClientMockRoomListParams contains parameters of the MessageServiceClient.RoomList
+type MessageServiceClientMockRoomListParams struct {
+	ctx context.Context
+	pp1 *connect_go.Request[v1.RoomListRequest]
+}
+
+// MessageServiceClientMockRoomListResults contains results of the MessageServiceClient.RoomList
+type MessageServiceClientMockRoomListResults struct {
+	pp2 *connect_go.Response[v1.RoomListResponse]
+	err error
+}
+
+// Expect sets up expected params for MessageServiceClient.RoomList
+func (mmRoomList *mMessageServiceClientMockRoomList) Expect(ctx context.Context, pp1 *connect_go.Request[v1.RoomListRequest]) *mMessageServiceClientMockRoomList {
+	if mmRoomList.mock.funcRoomList != nil {
+		mmRoomList.mock.t.Fatalf("MessageServiceClientMock.RoomList mock is already set by Set")
+	}
+
+	if mmRoomList.defaultExpectation == nil {
+		mmRoomList.defaultExpectation = &MessageServiceClientMockRoomListExpectation{}
+	}
+
+	mmRoomList.defaultExpectation.params = &MessageServiceClientMockRoomListParams{ctx, pp1}
+	for _, e := range mmRoomList.expectations {
+		if minimock.Equal(e.params, mmRoomList.defaultExpectation.params) {
+			mmRoomList.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmRoomList.defaultExpectation.params)
+		}
+	}
+
+	return mmRoomList
+}
+
+// Inspect accepts an inspector function that has same arguments as the MessageServiceClient.RoomList
+func (mmRoomList *mMessageServiceClientMockRoomList) Inspect(f func(ctx context.Context, pp1 *connect_go.Request[v1.RoomListRequest])) *mMessageServiceClientMockRoomList {
+	if mmRoomList.mock.inspectFuncRoomList != nil {
+		mmRoomList.mock.t.Fatalf("Inspect function is already set for MessageServiceClientMock.RoomList")
+	}
+
+	mmRoomList.mock.inspectFuncRoomList = f
+
+	return mmRoomList
+}
+
+// Return sets up results that will be returned by MessageServiceClient.RoomList
+func (mmRoomList *mMessageServiceClientMockRoomList) Return(pp2 *connect_go.Response[v1.RoomListResponse], err error) *MessageServiceClientMock {
+	if mmRoomList.mock.funcRoomList != nil {
+		mmRoomList.mock.t.Fatalf("MessageServiceClientMock.RoomList mock is already set by Set")
+	}
+
+	if mmRoomList.defaultExpectation == nil {
+		mmRoomList.defaultExpectation = &MessageServiceClientMockRoomListExpectation{mock: mmRoomList.mock}
+	}
+	mmRoomList.defaultExpectation.results = &MessageServiceClientMockRoomListResults{pp2, err}
+	return mmRoomList.mock
+}
+
+// Set uses given function f to mock the MessageServiceClient.RoomList method
+func (mmRoomList *mMessageServiceClientMockRoomList) Set(f func(ctx context.Context, pp1 *connect_go.Request[v1.RoomListRequest]) (pp2 *connect_go.Response[v1.RoomListResponse], err error)) *MessageServiceClientMock {
+	if mmRoomList.defaultExpectation != nil {
+		mmRoomList.mock.t.Fatalf("Default expectation is already set for the MessageServiceClient.RoomList method")
+	}
+
+	if len(mmRoomList.expectations) > 0 {
+		mmRoomList.mock.t.Fatalf("Some expectations are already set for the MessageServiceClient.RoomList method")
+	}
+
+	mmRoomList.mock.funcRoomList = f
+	return mmRoomList.mock
+}
+
+// When sets expectation for the MessageServiceClient.RoomList which will trigger the result defined by the following
+// Then helper
+func (mmRoomList *mMessageServiceClientMockRoomList) When(ctx context.Context, pp1 *connect_go.Request[v1.RoomListRequest]) *MessageServiceClientMockRoomListExpectation {
+	if mmRoomList.mock.funcRoomList != nil {
+		mmRoomList.mock.t.Fatalf("MessageServiceClientMock.RoomList mock is already set by Set")
+	}
+
+	expectation := &MessageServiceClientMockRoomListExpectation{
+		mock:   mmRoomList.mock,
+		params: &MessageServiceClientMockRoomListParams{ctx, pp1},
+	}
+	mmRoomList.expectations = append(mmRoomList.expectations, expectation)
+	return expectation
+}
+
+// Then sets up MessageServiceClient.RoomList return parameters for the expectation previously defined by the When method
+func (e *MessageServiceClientMockRoomListExpectation) Then(pp2 *connect_go.Response[v1.RoomListResponse], err error) *MessageServiceClientMock {
+	e.results = &MessageServiceClientMockRoomListResults{pp2, err}
+	return e.mock
+}
+
+// RoomList implements MessageServiceClient
+func (mmRoomList *MessageServiceClientMock) RoomList(ctx context.Context, pp1 *connect_go.Request[v1.RoomListRequest]) (pp2 *connect_go.Response[v1.RoomListResponse], err error) {
+	mm_atomic.AddUint64(&mmRoomList.beforeRoomListCounter, 1)
+	defer mm_atomic.AddUint64(&mmRoomList.afterRoomListCounter, 1)
+
+	if mmRoomList.inspectFuncRoomList != nil {
+		mmRoomList.inspectFuncRoomList(ctx, pp1)
+	}
+
+	mm_params := &MessageServiceClientMockRoomListParams{ctx, pp1}
+
+	// Record call args
+	mmRoomList.RoomListMock.mutex.Lock()
+	mmRoomList.RoomListMock.callArgs = append(mmRoomList.RoomListMock.callArgs, mm_params)
+	mmRoomList.RoomListMock.mutex.Unlock()
+
+	for _, e := range mmRoomList.RoomListMock.expectations {
+		if minimock.Equal(e.params, mm_params) {
+			mm_atomic.AddUint64(&e.Counter, 1)
+			return e.results.pp2, e.results.err
+		}
+	}
+
+	if mmRoomList.RoomListMock.defaultExpectation != nil {
+		mm_atomic.AddUint64(&mmRoomList.RoomListMock.defaultExpectation.Counter, 1)
+		mm_want := mmRoomList.RoomListMock.defaultExpectation.params
+		mm_got := MessageServiceClientMockRoomListParams{ctx, pp1}
+		if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
+			mmRoomList.t.Errorf("MessageServiceClientMock.RoomList got unexpected parameters, want: %#v, got: %#v%s\n", *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
+		}
+
+		mm_results := mmRoomList.RoomListMock.defaultExpectation.results
+		if mm_results == nil {
+			mmRoomList.t.Fatal("No results are set for the MessageServiceClientMock.RoomList")
+		}
+		return (*mm_results).pp2, (*mm_results).err
+	}
+	if mmRoomList.funcRoomList != nil {
+		return mmRoomList.funcRoomList(ctx, pp1)
+	}
+	mmRoomList.t.Fatalf("Unexpected call to MessageServiceClientMock.RoomList. %v %v", ctx, pp1)
+	return
+}
+
+// RoomListAfterCounter returns a count of finished MessageServiceClientMock.RoomList invocations
+func (mmRoomList *MessageServiceClientMock) RoomListAfterCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmRoomList.afterRoomListCounter)
+}
+
+// RoomListBeforeCounter returns a count of MessageServiceClientMock.RoomList invocations
+func (mmRoomList *MessageServiceClientMock) RoomListBeforeCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmRoomList.beforeRoomListCounter)
+}
+
+// Calls returns a list of arguments used in each call to MessageServiceClientMock.RoomList.
+// The list is in the same order as the calls were made (i.e. recent calls have a higher index)
+func (mmRoomList *mMessageServiceClientMockRoomList) Calls() []*MessageServiceClientMockRoomListParams {
+	mmRoomList.mutex.RLock()
+
+	argCopy := make([]*MessageServiceClientMockRoomListParams, len(mmRoomList.callArgs))
+	copy(argCopy, mmRoomList.callArgs)
+
+	mmRoomList.mutex.RUnlock()
+
+	return argCopy
+}
+
+// MinimockRoomListDone returns true if the count of the RoomList invocations corresponds
+// the number of defined expectations
+func (m *MessageServiceClientMock) MinimockRoomListDone() bool {
+	for _, e := range m.RoomListMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			return false
+		}
+	}
+
+	// if default expectation was set then invocations count should be greater than zero
+	if m.RoomListMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterRoomListCounter) < 1 {
+		return false
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcRoomList != nil && mm_atomic.LoadUint64(&m.afterRoomListCounter) < 1 {
+		return false
+	}
+	return true
+}
+
+// MinimockRoomListInspect logs each unmet expectation
+func (m *MessageServiceClientMock) MinimockRoomListInspect() {
+	for _, e := range m.RoomListMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			m.t.Errorf("Expected call to MessageServiceClientMock.RoomList with params: %#v", *e.params)
+		}
+	}
+
+	// if default expectation was set then invocations count should be greater than zero
+	if m.RoomListMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterRoomListCounter) < 1 {
+		if m.RoomListMock.defaultExpectation.params == nil {
+			m.t.Error("Expected call to MessageServiceClientMock.RoomList")
+		} else {
+			m.t.Errorf("Expected call to MessageServiceClientMock.RoomList with params: %#v", *m.RoomListMock.defaultExpectation.params)
+		}
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcRoomList != nil && mm_atomic.LoadUint64(&m.afterRoomListCounter) < 1 {
+		m.t.Error("Expected call to MessageServiceClientMock.RoomList")
+	}
+}
+
 // MinimockFinish checks that all mocked methods have been called the expected number of times
 func (m *MessageServiceClientMock) MinimockFinish() {
 	if !m.minimockDone() {
@@ -716,6 +1168,10 @@ func (m *MessageServiceClientMock) MinimockFinish() {
 		m.MinimockDeleteInspect()
 
 		m.MinimockListInspect()
+
+		m.MinimockRoomJoinInspect()
+
+		m.MinimockRoomListInspect()
 		m.t.FailNow()
 	}
 }
@@ -741,5 +1197,7 @@ func (m *MessageServiceClientMock) minimockDone() bool {
 	return done &&
 		m.MinimockAddDone() &&
 		m.MinimockDeleteDone() &&
-		m.MinimockListDone()
+		m.MinimockListDone() &&
+		m.MinimockRoomJoinDone() &&
+		m.MinimockRoomListDone()
 }
