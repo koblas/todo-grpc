@@ -1,0 +1,35 @@
+name: "Deploy updated code"
+on: 
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+    secrets: 
+      AWS_DEFAULT_REGION: 
+        required: true
+      AWS_ACCESS_KEY_ID: 
+        required: true
+      AWS_SECRET_ACCESS_KEY: 
+        required: true
+
+jobs:
+  deploy:
+    environment: ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+
+    #defaults:
+    #  run:
+    #    working-directory: aws-tf
+
+    steps:
+      - uses: actions/checkout@v3 # setup the repository in the runner
+      - uses: actions/download-artifact@v3
+        id: frontend
+        with:
+          name: frontend
+          path: ts-client-react/dist
+      - uses: actions/download-artifact@v3
+        with:
+          name: backend-go
+          path: src/go/build

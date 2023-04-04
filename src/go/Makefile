@@ -2,6 +2,8 @@ LDFLAGS="-s -w"
 
 REGISTRY=`minikube ip`:5000
 
+BUILDDIR=build
+
 all: build-lambda build-compose
 
 proto:
@@ -30,50 +32,67 @@ start:
 
 
 build-lambda:
-	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/publicapi-websocket ./cmd/lambda/publicapi/websocket/main.go
-	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/publicapi-auth ./cmd/lambda/publicapi/auth/main.go
-	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/publicapi-file ./cmd/lambda/publicapi/file/main.go
-	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/publicapi-gpt ./cmd/lambda/publicapi/user/main.go
-	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/publicapi-todo ./cmd/lambda/publicapi/todo/main.go
-	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/publicapi-user ./cmd/lambda/publicapi/user/main.go
-	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/websocket-file ./cmd/lambda/websocket/file/main.go
-	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/websocket-todo ./cmd/lambda/websocket/todo/main.go
-	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/websocket-user ./cmd/lambda/websocket/user/main.go
-	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/websocket-broadcast ./cmd/lambda/websocket/broadcast/main.go
-	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/core-todo ./cmd/lambda/core/todo/main.go
-	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/core-user ./cmd/lambda/core/user/main.go
-	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/core-oauth-user ./cmd/lambda/core/oauth_user/main.go
-	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/core-send-email ./cmd/lambda/core/send_email/main.go
-	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/workers-user ./cmd/lambda/workers/workers_user/main.go
-	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/workers-file ./cmd/lambda/workers/workers_file/main.go
-	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o build/trigger-s3 ./cmd/lambda/trigger/s3/main.go
+	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o $(BUILDDIR)/publicapi-auth ./cmd/lambda/publicapi/auth/main.go
+	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o $(BUILDDIR)/publicapi-file ./cmd/lambda/publicapi/file/main.go
+	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o $(BUILDDIR)/publicapi-gpt ./cmd/lambda/publicapi/user/main.go
+	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o $(BUILDDIR)/publicapi-todo ./cmd/lambda/publicapi/todo/main.go
+	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o $(BUILDDIR)/publicapi-user ./cmd/lambda/publicapi/user/main.go
+	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o $(BUILDDIR)/publicapi-websocket ./cmd/lambda/publicapi/websocket/main.go
+	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o $(BUILDDIR)/websocket-file ./cmd/lambda/websocket/file/main.go
+	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o $(BUILDDIR)/websocket-todo ./cmd/lambda/websocket/todo/main.go
+	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o $(BUILDDIR)/websocket-user ./cmd/lambda/websocket/user/main.go
+	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o $(BUILDDIR)/websocket-broadcast ./cmd/lambda/websocket/broadcast/main.go
+	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o $(BUILDDIR)/core-oauth-user ./cmd/lambda/core/oauth_user/main.go
+	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o $(BUILDDIR)/core-send-email ./cmd/lambda/core/send_email/main.go
+	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o $(BUILDDIR)/core-todo ./cmd/lambda/core/todo/main.go
+	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o $(BUILDDIR)/core-user ./cmd/lambda/core/user/main.go
+	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o $(BUILDDIR)/workers-user ./cmd/lambda/workers/workers_user/main.go
+	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o $(BUILDDIR)/workers-file ./cmd/lambda/workers/workers_file/main.go
+	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o $(BUILDDIR)/trigger-s3 ./cmd/lambda/trigger/s3/main.go
 
 build-compose:
-	go build -o build/publicapi-auth ./cmd/compose/publicapi/auth/main.go
-	go build -o build/publicapi-file ./cmd/compose/publicapi/file/main.go
-	go build -o build/publicapi-gpt ./cmd/compose/publicapi/gpt/main.go
-	go build -o build/publicapi-message ./cmd/compose/publicapi/message/main.go
-	go build -o build/publicapi-todo ./cmd/compose/publicapi/todo/main.go
-	go build -o build/publicapi-user ./cmd/compose/publicapi/user/main.go
-	go build -o build/publicapi-websocket ./cmd/compose/publicapi/websocket/main.go
-	go build -o build/websocket-file ./cmd/compose/websocket/file/main.go
-	go build -o build/websocket-message ./cmd/compose/websocket/message/main.go
-	go build -o build/websocket-todo ./cmd/compose/websocket/todo/main.go
-	go build -o build/websocket-user ./cmd/compose/websocket/user/main.go
-	go build -o build/websocket-broadcast ./cmd/compose/websocket/broadcast/main.go
-	go build -o build/core-oauth-user ./cmd/compose/core/oauth_user/main.go
-	go build -o build/core-message ./cmd/compose/core/message/main.go
-	go build -o build/core-send-email ./cmd/compose/core/send_email/main.go
-	go build -o build/core-todo ./cmd/compose/core/todo/main.go
-	go build -o build/core-user ./cmd/compose/core/user/main.go
-	go build -o build/workers-user ./cmd/compose/workers/workers_user/main.go
-	go build -o build/workers-file ./cmd/compose/workers/workers_file/main.go
+	go build -o $(BUILDDIR)/publicapi-auth ./cmd/compose/publicapi/auth/main.go
+	go build -o $(BUILDDIR)/publicapi-file ./cmd/compose/publicapi/file/main.go
+	go build -o $(BUILDDIR)/publicapi-gpt ./cmd/compose/publicapi/gpt/main.go
+	go build -o $(BUILDDIR)/publicapi-message ./cmd/compose/publicapi/message/main.go
+	go build -o $(BUILDDIR)/publicapi-todo ./cmd/compose/publicapi/todo/main.go
+	go build -o $(BUILDDIR)/publicapi-user ./cmd/compose/publicapi/user/main.go
+	go build -o $(BUILDDIR)/publicapi-websocket ./cmd/compose/publicapi/websocket/main.go
+	go build -o $(BUILDDIR)/websocket-file ./cmd/compose/websocket/file/main.go
+	go build -o $(BUILDDIR)/websocket-message ./cmd/compose/websocket/message/main.go
+	go build -o $(BUILDDIR)/websocket-todo ./cmd/compose/websocket/todo/main.go
+	go build -o $(BUILDDIR)/websocket-user ./cmd/compose/websocket/user/main.go
+	go build -o $(BUILDDIR)/websocket-broadcast ./cmd/compose/websocket/broadcast/main.go
+	go build -o $(BUILDDIR)/core-oauth-user ./cmd/compose/core/oauth_user/main.go
+	go build -o $(BUILDDIR)/core-message ./cmd/compose/core/message/main.go
+	go build -o $(BUILDDIR)/core-send-email ./cmd/compose/core/send_email/main.go
+	go build -o $(BUILDDIR)/core-todo ./cmd/compose/core/todo/main.go
+	go build -o $(BUILDDIR)/core-user ./cmd/compose/core/user/main.go
+	go build -o $(BUILDDIR)/workers-user ./cmd/compose/workers/workers_user/main.go
+	go build -o $(BUILDDIR)/workers-file ./cmd/compose/workers/workers_file/main.go
+
+build-lambda-assets: build-lambda
+	( cd $(BUILDDIR) ; ln -f publicapi-auth bootstrap ; zip publicapi-auth.zip bootstrap ; rm bootstrap )
+	( cd $(BUILDDIR) ; ln -f publicapi-file bootstrap ; zip publicapi-file.zip bootstrap ; rm bootstrap )
+	( cd $(BUILDDIR) ; ln -f publicapi-gpt bootstrap ; zip publicapi-gpt.zip bootstrap ; rm bootstrap )
+	( cd $(BUILDDIR) ; ln -f publicapi-todo bootstrap ; zip publicapi-todo.zip bootstrap ; rm bootstrap )
+	( cd $(BUILDDIR) ; ln -f publicapi-user bootstrap ; zip publicapi-user.zip bootstrap ; rm bootstrap )
+	( cd $(BUILDDIR) ; ln -f publicapi-websocket bootstrap ; zip publicapi-websocket.zip bootstrap ; rm bootstrap )
+	( cd $(BUILDDIR) ; ln -f websocket-file bootstrap ; zip websocket-file.zip bootstrap ; rm bootstrap )
+	( cd $(BUILDDIR) ; ln -f websocket-todo bootstrap ; zip websocket-todo.zip bootstrap ; rm bootstrap )
+	( cd $(BUILDDIR) ; ln -f websocket-user bootstrap ; zip websocket-user.zip bootstrap ; rm bootstrap )
+	( cd $(BUILDDIR) ; ln -f websocket-broadcast bootstrap ; zip websocket-broadcast.zip bootstrap ; rm bootstrap )
+	( cd $(BUILDDIR) ; ln -f core-oauth-user bootstrap ; zip core-oauth-user.zip bootstrap ; rm bootstrap )
+	( cd $(BUILDDIR) ; ln -f core-send-email bootstrap ; zip core-send-email.zip bootstrap ; rm bootstrap )
+	( cd $(BUILDDIR) ; ln -f core-todo bootstrap ; zip core-todo.zip bootstrap ; rm bootstrap )
+	( cd $(BUILDDIR) ; ln -f core-user bootstrap ; zip core-user.zip bootstrap ; rm bootstrap )
+	( cd $(BUILDDIR) ; ln -f workers-user bootstrap ; zip workers-user.zip bootstrap ; rm bootstrap )
+	( cd $(BUILDDIR) ; ln -f workers-file bootstrap ; zip workers-file.zip bootstrap ; rm bootstrap )
+	( cd $(BUILDDIR) ; ln -f trigger-s3 bootstrap ; zip trigger-s3.zip bootstrap ; rm bootstrap )
+
 
 run-lambda: build-lambda
 	sam local start-api --template-file ./lambda/template.yaml --env-vars ../../dev-variables.json
-
-deploy: 
-	( cd deploy && npx cdk deploy)
 
 minikube:
 	minikube image build -f ./cmd/compose/publicapi/todo/Dockerfile --tag todo-grpc/publicapi-todo  . 

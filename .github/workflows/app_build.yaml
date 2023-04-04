@@ -43,7 +43,7 @@ jobs:
           go-version: '^1.19'
       - run: go version
       - run: go mod download # install packages
-      - run: make build-lambda  # make the packages
+      - run: make build-lambda-assets  # make the packages
       - uses: actions/upload-artifact@v3
         with:
           retention-days: 1
