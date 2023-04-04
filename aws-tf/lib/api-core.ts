@@ -10,16 +10,16 @@ export class CoreMessage extends Construct {
   constructor(scope: Construct, id: string, { eventbus }: { eventbus: aws.snsTopic.SnsTopic }) {
     super(scope, id);
 
-    const dynamo = new aws.dynamodbTable.DynamodbTable(this, "db", {
-      name: "app-messages",
-      billingMode: "PAY_PER_REQUEST",
-    });
+    // const dynamo = new aws.dynamodbTable.DynamodbTable(this, "db", {
+    //   name: "app-messages",
+    //   billingMode: "PAY_PER_REQUEST",
+    // });
 
     new GoHandler(this, "core-message", {
       // path: ["core", "oauth-user"],
       eventbus,
       parameters: ["/common/*"],
-      dynamo,
+      dynamo: { name: "api-messages" },
       environment: {
         variables: {
           BUS_ENTITY_ARN: eventbus.arn,

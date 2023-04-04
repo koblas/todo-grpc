@@ -11,7 +11,7 @@ interface Props extends Partial<StackLambdaConfig> {
   path?: string[];
 
   apiTrigger?: aws.apigatewayv2Api.Apigatewayv2Api;
-  dynamo?: aws.dynamodbTable.DynamodbTable;
+  dynamo?: Pick<aws.dynamodbTable.DynamodbTable, "name">;
   eventbus?: aws.snsTopic.SnsTopic;
   parameters?: string[];
   s3buckets?: aws.s3Bucket.S3Bucket[];
@@ -223,7 +223,7 @@ export function createPolicies(
     dynamo,
     s3buckets,
   }: {
-    dynamo?: aws.dynamodbTable.DynamodbTable;
+    dynamo?: Pick<aws.dynamodbTable.DynamodbTable, "name">;
     eventbus?: aws.snsTopic.SnsTopic;
     parameters?: string[];
     s3buckets?: aws.s3Bucket.S3Bucket[];
