@@ -21,7 +21,7 @@ jobs:
     needs: 
       - assets
       - infra
-    uses: ./github/workflows/deploy_code.yaml
+    uses: ./.github/workflows/deploy_code.yaml
     with:
       environment: production
     secrets: inherit
