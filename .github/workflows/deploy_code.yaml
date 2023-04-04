@@ -57,24 +57,29 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
 
+      - name: Setup variables
+        id: awsvar
+        run: |
+            echo "::set-output source=ts-client-react/build"
+            echo "::set-output s3bucket=s3://"$(aws s3 ls | awk '{print $NF}'| grep webapp)
+            echo "::set-output distribution="$(aws cloudfront list-distributions --query "DistributionList.Items[?contains(Aliases.Items, 'app.iqvine.com')].Id | [0]")
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+
       - name: Upload Single Page App
         run: |
-            echo "starting run" $SHELL
-
-            source="ts-client-react/build"
-            s3bucket=s3://$(aws s3 ls | awk '{print $NF}'| grep webapp)
-            distribution=$(aws cloudfront list-distributions --query "DistributionList.Items[?contains(Aliases.Items, 'app.iqvine.com')].Id | [0]")
-
             aws s3 cp --cache-control max-age=2592000,public \
                     --exclude index.html \
-                    --recursive $(source) $(s3bucket)
+                    --recursive ${{ steps.awsvar.outputs.source }} ${{ steps.awsvar.outputs.s3bucket }}
 
             aws s3 cp --cache-control max-age=max-age=3600,must-revalidate,public \
-                    $(source)/index.html $(s3bucket)/index.html
+                    ${{ steps.awsvar.outputs.source }}/index.html ${{ steps.awsvar.outputs.s3bucket }}/index.html
 
-            aws s3 sync $(source) $(s3bucket) --delete
+            aws s3 sync ${{ steps.awsvar.outputs.source }} ${{ steps.awsvar.outputs.s3bucket }} --delete
 
-            aws cloudfront create-invalidation --distribution-id $(distribution) --paths /index.html /
+            aws cloudfront create-invalidation --distribution-id ${{ steps.awsvar.outputs.distribution }} --paths /index.html /
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
