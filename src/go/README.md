@@ -19,5 +19,3 @@ General structure:
        websocket/   -- eventbus: translate events to websocket payloads
        workers/     -- eventbus: further processing
 ```
-
-
