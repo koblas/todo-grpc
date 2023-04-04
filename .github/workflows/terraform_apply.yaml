@@ -26,15 +26,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3 # setup the repository in the runner
-      - uses: actions/download-artifact@v3
-        id: frontend
-        with:
-          name: frontend
-          path: ts-client-react/dist
-      - uses: actions/download-artifact@v3
-        with:
-          name: backend-go
-          path: src/go/build
       - name: Setup Node.js # setup Node.js in the runner
         uses: actions/setup-node@v3
         with:
