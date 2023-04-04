@@ -1,2 +1,1 @@
 # React Typescript SPA
-
