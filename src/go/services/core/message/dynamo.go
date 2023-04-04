@@ -206,8 +206,8 @@ func (store *dynamoStore) checkCreateTable(ctx context.Context) error {
 					},
 				},
 				Projection: &types.Projection{
-					NonKeyAttributes: []string{},
-					ProjectionType:   types.ProjectionTypeAll,
+					// NonKeyAttributes: []string{},
+					ProjectionType: types.ProjectionTypeAll,
 				},
 			},
 		},
