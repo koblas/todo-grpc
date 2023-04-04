@@ -36,22 +36,22 @@ jobs:
 
       - name: Upload new Lambda functions
         run: |
-          aws lambda update-function-code --function-name publicapi-auth --zip-file src/go/build/publicapi-auth.zip
-          aws lambda update-function-code --function-name publicapi-file --zip-file src/go/build/publicapi-file.zip
+          aws lambda update-function-code --function-name publicapi-auth --zip-file fileb://src/go/build/publicapi-auth.zip
+          aws lambda update-function-code --function-name publicapi-file --zip-file fileb://src/go/build/publicapi-file.zip
           # aws lambda update-function-code publicapi-gpt --zip-file src/go/build/publicapi-gpt.zip
-          aws lambda update-function-code --function-name publicapi-todo --zip-file src/go/build/publicapi-todo.zip
-          aws lambda update-function-code --function-name publicapi-user --zip-file src/go/build/publicapi-user.zip
-          aws lambda update-function-code --function-name publicapi-websocket --zip-file src/go/build/publicapi-websocket.zip
-          aws lambda update-function-code --function-name websocket-file --zip-file src/go/build/websocket-file.zip
-          aws lambda update-function-code --function-name websocket-todo --zip-file src/go/build/websocket-todo.zip
-          aws lambda update-function-code --function-name websocket-user --zip-file src/go/build/websocket-user.zip
-          aws lambda update-function-code --function-name core-oauth-user --zip-file src/go/build/core-oauth-user.zip
-          aws lambda update-function-code --function-name core-send-email --zip-file src/go/build/core-send-email.zip
-          aws lambda update-function-code --function-name core-todo --zip-file src/go/build/core-todo.zip
-          aws lambda update-function-code --function-name core-user --zip-file src/go/build/core-user.zip
-          aws lambda update-function-code --function-name workers-user --zip-file src/go/build/workers-user.zip
-          aws lambda update-function-code --function-name workers-file --zip-file src/go/build/workers-file.zip
-          aws lambda update-function-code --function-name trigger-s3 --zip-file src/go/build/trigger-s3.zip
+          aws lambda update-function-code --function-name publicapi-todo --zip-file fileb://src/go/build/publicapi-todo.zip
+          aws lambda update-function-code --function-name publicapi-user --zip-file fileb://src/go/build/publicapi-user.zip
+          aws lambda update-function-code --function-name publicapi-websocket --zip-file fileb://src/go/build/publicapi-websocket.zip
+          aws lambda update-function-code --function-name websocket-file --zip-file fileb://src/go/build/websocket-file.zip
+          aws lambda update-function-code --function-name websocket-todo --zip-file fileb://src/go/build/websocket-todo.zip
+          aws lambda update-function-code --function-name websocket-user --zip-file fileb://src/go/build/websocket-user.zip
+          aws lambda update-function-code --function-name core-oauth-user --zip-file fileb://src/go/build/core-oauth-user.zip
+          aws lambda update-function-code --function-name core-send-email --zip-file fileb://src/go/build/core-send-email.zip
+          aws lambda update-function-code --function-name core-todo --zip-file fileb://src/go/build/core-todo.zip
+          aws lambda update-function-code --function-name core-user --zip-file fileb://src/go/build/core-user.zip
+          aws lambda update-function-code --function-name workers-user --zip-file fileb://src/go/build/workers-user.zip
+          aws lambda update-function-code --function-name workers-file --zip-file fileb://src/go/build/workers-file.zip
+          aws lambda update-function-code --function-name trigger-s3 --zip-file fileb://src/go/build/trigger-s3.zip
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
