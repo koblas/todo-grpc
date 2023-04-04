@@ -1,5 +1,7 @@
 name: "Deploy production"
 
+on: push
+
 jobs:
   tests:
     uses: ./.github/workflows/app_test.yaml
