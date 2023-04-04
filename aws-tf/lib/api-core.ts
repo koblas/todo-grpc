@@ -19,7 +19,7 @@ export class CoreMessage extends Construct {
       // path: ["core", "oauth-user"],
       eventbus,
       parameters: ["/common/*"],
-      dynamo: { name: "api-messages" },
+      dynamo: { name: "app-messages" },
       environment: {
         variables: {
           BUS_ENTITY_ARN: eventbus.arn,
