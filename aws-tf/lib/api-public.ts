@@ -90,6 +90,25 @@ export class PublicFile extends Construct {
   }
 }
 
+export class PublicMessage extends Construct {
+  constructor(scope: Construct, id: string, { apigw }: { apigw: aws.apigatewayv2Api.Apigatewayv2Api }) {
+    super(scope, id);
+
+    const { lambda } = new GoHandler(this, "publicapi-message", {
+      // path: ["publicapi", "todo"],
+      apiTrigger: apigw,
+      parameters: ["/common/*"],
+    });
+
+    createApi(this, {
+      lambda,
+      apigw,
+      apiPath: "message",
+      targetPath: "api.message.v1.MessageService",
+    });
+  }
+}
+
 export class PublicTodo extends Construct {
   constructor(scope: Construct, id: string, { apigw }: { apigw: aws.apigatewayv2Api.Apigatewayv2Api }) {
     super(scope, id);

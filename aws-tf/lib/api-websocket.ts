@@ -31,6 +31,29 @@ export class WebsocketFile extends Construct {
   }
 }
 
+export class WebsocketMessage extends Construct {
+  constructor(scope: Construct, id: string, { eventbus }: { eventbus: aws.snsTopic.SnsTopic }) {
+    super(scope, id);
+
+    const handler = new GoHandler(this, "websocket-message", {
+      // path: ["websocket", "todo"],
+      eventbus,
+      parameters: ["/common/*"],
+      environment: {
+        variables: {
+          BUS_ENTITY_ARN: eventbus.arn,
+        },
+      },
+    });
+
+    handler.eventQueue("websocket-message", eventbus, {
+      filterPolicy: JSON.stringify({
+        "twirp.path": ["/core.eventbus.v1.MessageEventbusService/MessageChange"],
+      }),
+    });
+  }
+}
+
 export class WebsocketTodo extends Construct {
   constructor(scope: Construct, id: string, { eventbus }: { eventbus: aws.snsTopic.SnsTopic }) {
     super(scope, id);

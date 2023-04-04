@@ -1,8 +1,8 @@
 import { Construct } from "constructs";
 import * as aws from "@cdktf/provider-aws";
-import { PublicAuth, PublicFile, PublicTodo, PublicUser } from "./api-public";
+import { PublicAuth, PublicFile, PublicMessage, PublicTodo, PublicUser } from "./api-public";
 import { CoreMessage, CoreOauthUser, CoreSendEmailQueue, CoreTodo, CoreUser } from "./api-core";
-import { WebsocketBroadcast, WebsocketFile, WebsocketTodo, WebsocketUser } from "./api-websocket";
+import { WebsocketBroadcast, WebsocketFile, WebsocketMessage, WebsocketTodo, WebsocketUser } from "./api-websocket";
 import { WorkerFile, WorkerUser } from "./api-workers";
 import { TriggerS3 } from "./api-trigger";
 import * as rand from "@cdktf/provider-random";
@@ -35,8 +35,9 @@ export class Backend extends Construct {
     new CoreTodo(this, "core-todo", { eventbus });
     new CoreUser(this, "core-user", { eventbus });
 
-    new PublicFile(this, "public-file", { apigw: props.apigw, bucket: props.uploadBucket });
     new PublicAuth(this, "public-auth", { apigw: props.apigw });
+    new PublicFile(this, "public-file", { apigw: props.apigw, bucket: props.uploadBucket });
+    new PublicMessage(this, "public-message", { apigw: props.apigw });
     new PublicTodo(this, "public-todo", { apigw: props.apigw });
     new PublicUser(this, "public-user", { apigw: props.apigw });
 
@@ -49,6 +50,7 @@ export class Backend extends Construct {
     });
 
     new WebsocketFile(this, "websocket-file", { eventbus });
+    new WebsocketMessage(this, "websocket-message", { eventbus });
     new WebsocketTodo(this, "websocket-todo", { eventbus });
     new WebsocketUser(this, "websocket-user", { eventbus });
     new WebsocketBroadcast(this, "websocket-broadcast", {
