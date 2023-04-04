@@ -226,26 +226,26 @@ export class Frontend extends Construct {
     });
 
     // Add Assets
-    const { hash, s3objects } = bucketDeployment(this, "spa", {
-      source: path.join(__dirname, "../../ts-client-react/dist"),
-      bucket,
-      distribution: this.distribution,
-      invalidations: [],
-    });
+    // const { hash, s3objects } = bucketDeployment(this, "spa", {
+    //   source: path.join(__dirname, "../../ts-client-react/dist"),
+    //   bucket,
+    //   distribution: this.distribution,
+    //   invalidations: [],
+    // });
 
-    new nullp.resource.Resource(this, "invalidate", {
-      dependsOn: s3objects,
+    // new nullp.resource.Resource(this, "invalidate", {
+    //   dependsOn: s3objects,
 
-      triggers: {
-        hash,
-      },
+    //   triggers: {
+    //     hash,
+    //   },
 
-      provisioners: [
-        {
-          type: "local-exec",
-          command: `aws cloudfront create-invalidation --distribution-id ${this.distribution.id} --paths /index.html`,
-        },
-      ],
+    //   provisioners: [
+    //     {
+    //       type: "local-exec",
+    //       command: `aws cloudfront create-invalidation --distribution-id ${this.distribution.id} --paths /index.html`,
+    //     },
+    //   ],
     });
 
     const s3policy = new aws.dataAwsIamPolicyDocument.DataAwsIamPolicyDocument(this, "s3policy", {
