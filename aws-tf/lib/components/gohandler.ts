@@ -185,6 +185,7 @@ function createStubAsset(scope: Construct, name: string): TerraformAsset {
   const archive = new zip();
 
   const output = path.join("/tmp/", `${name}-stub.zip`);
+  archive.addFile("boostrap", Buffer.from(new Uint8Array()));
   const data = archive.toBuffer();
 
   fs.writeFileSync(output, data);
