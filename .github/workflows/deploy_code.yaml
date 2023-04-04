@@ -59,20 +59,22 @@ jobs:
 
       - name: Upload Single Page App
         run: |
-            SOURCE=ts-client-react/build
-            S3BUCKET=s3://`aws s3 ls | awk '{print $NF}'|grep webapp`
-            DISTRIBUTION=`aws cloudfront list-distributions --query "DistributionList.Items[?contains(Aliases.Items, 'app.iqvine.com')].Id | [0]"`
+            echo "starting run" $SHELL
+
+            source="ts-client-react/build"
+            s3bucket=s3://$(aws s3 ls | awk '{print $NF}'| grep webapp)
+            distribution=$(aws cloudfront list-distributions --query "DistributionList.Items[?contains(Aliases.Items, 'app.iqvine.com')].Id | [0]")
 
             aws s3 cp --cache-control max-age=2592000,public \
                     --exclude index.html \
-                    --recursive $(SOURCE) $(S3BUCKET)
+                    --recursive $(source) $(s3bucket)
 
             aws s3 cp --cache-control max-age=max-age=3600,must-revalidate,public \
-                    $(SOURCE)/index.html $(S3BUCKET)/index.html
+                    $(source)/index.html $(s3bucket)/index.html
 
-            aws s3 sync $(SOURCE) $(S3BUCKET)--delete
+            aws s3 sync $(source) $(s3bucket) --delete
 
-            aws cloudfront create-invalidation --distribution-id $(DISTRIBUTION) --paths /index.html /
+            aws cloudfront create-invalidation --distribution-id $(distribution) --paths /index.html /
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
