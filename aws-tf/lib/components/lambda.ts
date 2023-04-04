@@ -573,6 +573,7 @@ export class StackLambda extends Construct {
         //   }
 
         ...(props.snapStart ? { snapStart: { applyOn: "PublishedVersions" } } : {}),
+        lifecycle: props.lifecycle ?? {},
 
         tags: props.tags,
       });
