@@ -28,7 +28,7 @@ export class CoreOauthUser extends Construct {
     super(scope, id);
 
     new GoHandler(this, "core-oauth-user", {
-      path: ["core", "oauth-user"],
+      // path: ["core", "oauth-user"],
       eventbus,
       parameters: ["/common/*", "/oauth/*"],
       environment: {
@@ -45,7 +45,7 @@ export class CoreSendEmailQueue extends Construct {
     super(scope, id);
 
     const handler = new GoHandler(this, "core-send-email", {
-      path: ["core", "send-email"],
+      // path: ["core", "send-email"],
       environment: {
         variables: {
           BUS_ENTITY_ARN: eventbus.arn,
@@ -76,7 +76,7 @@ export class CoreTodo extends Construct {
     });
 
     new GoHandler(this, "core-todo", {
-      path: ["core", "todo"],
+      // path: ["core", "todo"],
       eventbus,
       parameters: ["/common/*"],
       dynamo: db,
@@ -107,7 +107,7 @@ export class CoreUser extends Construct {
     });
 
     new GoHandler(this, "core-user", {
-      path: ["core", "user"],
+      // path: ["core", "user"],
       eventbus,
       parameters: ["/common/*"],
       dynamo: db,

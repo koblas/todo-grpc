@@ -13,7 +13,7 @@ export class WebsocketFile extends Construct {
     super(scope, id);
 
     const handler = new GoHandler(this, "websocket-file", {
-      path: ["websocket", "file"],
+      // path: ["websocket", "file"],
       eventbus,
       parameters: ["/common/*"],
       environment: {
@@ -36,7 +36,7 @@ export class WebsocketTodo extends Construct {
     super(scope, id);
 
     const handler = new GoHandler(this, "websocket-todo", {
-      path: ["websocket", "todo"],
+      // path: ["websocket", "todo"],
       eventbus,
       parameters: ["/common/*"],
       environment: {
@@ -59,7 +59,7 @@ export class WebsocketUser extends Construct {
     super(scope, id);
 
     const handler = new GoHandler(this, "websocket-user", {
-      path: ["websocket", "user"],
+      // path: ["websocket", "user"],
       eventbus,
       parameters: ["/common/*"],
       environment: {
@@ -108,7 +108,7 @@ export class WebsocketBroadcast extends Construct {
     });
 
     const handler = new GoHandler(this, "websocket-broadcast", {
-      path: ["websocket", "broadcast"],
+      // path: ["websocket", "broadcast"],
       environment: {
         variables: {
           CONN_DB: wsconf.wsdb.name,

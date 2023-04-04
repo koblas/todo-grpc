@@ -25,7 +25,7 @@ export class WorkerFile extends Construct {
     super(scope, id);
 
     const handler = new GoHandler(this, "worker-file", {
-      path: ["workers", "file"],
+      // path: ["workers", "file"],
       memorySize: 512,
       environment: {
         variables: {
@@ -60,7 +60,7 @@ export class WorkerUser extends Construct {
     super(scope, id);
 
     const handler = new GoHandler(this, "worker-user", {
-      path: ["workers", "user"],
+      // path: ["workers", "user"],
       memorySize: 512,
       environment: {
         variables: {

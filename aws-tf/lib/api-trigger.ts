@@ -15,7 +15,7 @@ export class TriggerS3 extends Construct {
     super(scope, id);
 
     const handler = new GoHandler(this, "trigger-s3", {
-      path: ["trigger", "s3"],
+      // path: ["trigger", "s3"],
       eventbus,
       parameters: ["/common/*"],
       allowedTriggers: [

@@ -47,7 +47,7 @@ export class PublicAuth extends Construct {
     super(scope, id);
 
     const { lambda } = new GoHandler(this, "publicapi-auth", {
-      path: ["publicapi", "auth"],
+      // path: ["publicapi", "auth"],
       apiTrigger: apigw,
       parameters: ["/common/*"],
     });
@@ -70,7 +70,7 @@ export class PublicFile extends Construct {
     super(scope, id);
 
     const { lambda } = new GoHandler(this, "publicapi-file", {
-      path: ["publicapi", "file"],
+      // path: ["publicapi", "file"],
       environment: {
         variables: {
           UPLOAD_BUCKET: bucket.bucket,
@@ -95,7 +95,7 @@ export class PublicTodo extends Construct {
     super(scope, id);
 
     const { lambda } = new GoHandler(this, "publicapi-todo", {
-      path: ["publicapi", "todo"],
+      // path: ["publicapi", "todo"],
       apiTrigger: apigw,
       parameters: ["/common/*"],
     });
@@ -114,7 +114,7 @@ export class PublicUser extends Construct {
     super(scope, id);
 
     const { lambda } = new GoHandler(this, "publicapi-user", {
-      path: ["publicapi", "user"],
+      // path: ["publicapi", "user"],
       apiTrigger: apigw,
       parameters: ["/common/*"],
     });
