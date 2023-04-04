@@ -17,7 +17,8 @@ on:
 
 jobs:
   deploy:
-    environment: ${{ inputs.environment }}
+    #environment: ${{ inputs.environment }}
+    environment: production
     runs-on: ubuntu-latest
 
     defaults:

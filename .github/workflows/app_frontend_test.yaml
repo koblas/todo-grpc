@@ -1,0 +1,20 @@
+name: "Run Tests"
+on: workflow_call
+
+jobs:
+  test-app:
+    environment: test
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ts-client-react
+    
+    steps:
+      - uses: actions/checkout@v3 # setup the repository in the runner
+      - name: Setup Node.js # setup Node.js in the runner
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - run: npm ci # install dependencies
+      - run: npm test

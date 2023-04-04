@@ -3,11 +3,16 @@ name: "Deploy production"
 on: push
 
 jobs:
-  tests:
-    uses: ./.github/workflows/app_test.yaml
-  assets:
-    needs: tests
-    uses: ./.github/workflows/app_build.yaml
+  tests_frontend:
+    uses: ./.github/workflows/app_frontend_test.yaml
+  assets_frontend:
+    needs: tests_frontend
+    uses: ./.github/workflows/app_frontend_build.yaml
+  tests_lambda:
+    uses: ./.github/workflows/app_lambda_test.yaml
+  assets_lambda:
+    needs: tests_lambda
+    uses: ./.github/workflows/app_lambda_build.yaml
 # infra:
 #   needs: assets
 #   uses: ./.github/workflows/terraform_apply.yaml
@@ -16,7 +21,8 @@ jobs:
 #   secrets: inherit
   deploy_code:
     needs: 
-      - assets
+      - assets_lambda
+      - assets_frontend
 #     - infra
     uses: ./.github/workflows/deploy_code.yaml
     with:

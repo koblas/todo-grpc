@@ -1,0 +1,27 @@
+name: Build Artifacts
+on: workflow_call
+
+jobs:
+  build-go:
+    environment: production
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: src/go
+
+    steps:
+      - uses: actions/checkout@v3 # setup the repository in the runner
+      - name: Setup Golang
+        uses: actions/setup-go@v3
+        with:
+          go-version: '^1.19'
+      - run: go version
+      - run: go mod download # install packages
+      - run: make build-lambda-assets  # make the packages
+      - uses: actions/upload-artifact@v3
+        with:
+          retention-days: 1
+          name: backend-go
+          path: src/go/build
+          if-no-files-found: error
