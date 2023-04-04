@@ -246,7 +246,7 @@ export class Frontend extends Construct {
     //       command: `aws cloudfront create-invalidation --distribution-id ${this.distribution.id} --paths /index.html`,
     //     },
     //   ],
-    });
+    // });
 
     const s3policy = new aws.dataAwsIamPolicyDocument.DataAwsIamPolicyDocument(this, "s3policy", {
       statement: [
