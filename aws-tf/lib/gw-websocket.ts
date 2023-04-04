@@ -106,7 +106,7 @@ export class WebsocketHandler extends Construct {
     });
 
     const handler = new GoHandler(this, "publicapi-websocket", {
-      path: ["publicapi", "websocket"],
+      // path: ["publicapi", "websocket"],
       apiTrigger: this.wsconf.wsapi,
       environment: {
         variables: {
