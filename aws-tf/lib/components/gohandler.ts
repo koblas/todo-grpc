@@ -319,7 +319,10 @@ export function createPolicies(
             "dynamodb:Update*",
             "dynamodb:PutItem",
           ],
-          resources: [formatArn({ service: "dynamodb", resource: `table/${dynamo.name}` })],
+          resources: [
+            formatArn({ service: "dynamodb", resource: `table/${dynamo.name}` }),
+            formatArn({ service: "dynamodb", resource: `table/${dynamo.name}/index/*` }),
+          ],
         },
       ],
     });
