@@ -1,0 +1,22 @@
+name: "Deploy lambda production"
+
+on: 
+  push:
+    branches:
+    - main
+    paths:
+    - 'src/go/**'
+
+jobs:
+  tests:
+    uses: ./.github/workflows/app_lambda_test.yaml
+  assets:
+    needs: tests
+    uses: ./.github/workflows/app_lambda_build.yaml
+  deploy:
+    needs: 
+      - assets
+    uses: ./.github/workflows/deploy_lambda.yaml
+    with:
+      environment: production
+    secrets: inherit

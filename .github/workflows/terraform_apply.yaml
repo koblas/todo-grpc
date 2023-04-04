@@ -5,7 +5,6 @@ on:
     - main
     paths:
     - 'aws-tf/**'
-    - 'ts-client-react/**'
 # workflow_call:
 #   inputs:
 #     environment:

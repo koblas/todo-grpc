@@ -1,4 +1,4 @@
-name: "Deploy updated code"
+name: "Workflow for frontend"
 #on: 
 # workflow_run:
 #   workflows: "Build Frontend Assets"

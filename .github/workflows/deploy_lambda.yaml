@@ -1,21 +1,21 @@
-name: "Deploy updated code"
+name: "Deploy lambda code"
 on: 
-  workflow_run:
-    workflows: "Build Lambda Assets"
-    branches:
-      - main
-# workflow_call:
-#   inputs:
-#     environment:
-#       required: true
-#       type: string
-#   secrets: 
-#     AWS_DEFAULT_REGION: 
-#       required: true
-#     AWS_ACCESS_KEY_ID: 
-#       required: true
-#     AWS_SECRET_ACCESS_KEY: 
-#       required: true
+# workflow_run:
+#   workflows: "Build Lambda Assets"
+#   branches:
+#     - main
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+    secrets: 
+      AWS_DEFAULT_REGION: 
+        required: true
+      AWS_ACCESS_KEY_ID: 
+        required: true
+      AWS_SECRET_ACCESS_KEY: 
+        required: true
 
 jobs:
   deploy:

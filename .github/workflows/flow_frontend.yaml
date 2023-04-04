@@ -1,0 +1,22 @@
+name: "Deploy frontend production"
+
+on: 
+  push:
+    branches:
+    - main
+    paths:
+    - ts-client-react/**
+
+jobs:
+  tests:
+    uses: ./.github/workflows/app_frontend_test.yaml
+  assets:
+    needs: tests
+    uses: ./.github/workflows/app_frontend_build.yaml
+  deploy:
+    needs: 
+      - assets
+    uses: ./.github/workflows/deploy_frontend.yaml
+    with:
+      environment: production
+    secrets: inherit
