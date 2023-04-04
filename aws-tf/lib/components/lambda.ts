@@ -427,6 +427,9 @@ export interface StackLambdaConfig {
    * List of additional trusted entities for assuming Lambda Function role (trust relationship)
    */
   trustedEntities?: ({ type: string; indentifiers: string[] } | { services: string[] })[];
+
+  // Lifecycle rules
+  lifecycle?: aws.lambdaFunction.LambdaFunction["lifecycle"];
 }
 
 function assertString(value: unknown, msg: string): asserts value is string {

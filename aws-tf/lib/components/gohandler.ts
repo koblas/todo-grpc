@@ -8,7 +8,7 @@ import { AssetType, TerraformAsset } from "cdktf";
 
 interface Props extends Partial<StackLambdaConfig> {
   // environment?: Record<string, string>;
-  path: string[];
+  path?: string[];
 
   apiTrigger?: aws.apigatewayv2Api.Apigatewayv2Api;
   dynamo?: aws.dynamodbTable.DynamodbTable;
@@ -29,7 +29,7 @@ export class GoHandler extends Construct {
 
     const handler = new StackLambda(this, "lambda", {
       functionName: id,
-      asset: createBootstrapAsset(this, props.path.join("-")),
+      asset: props.path ? createBootstrapAsset(this, props.path.join("-")) : createStubAsset(this, id),
       architecture: Architecture.ARM,
       runtime: Runtime.AL2,
       handler: "bootstrap",
@@ -56,6 +56,13 @@ export class GoHandler extends Construct {
         }),
         ...(props.attachPolicies ?? []),
       ],
+      ...(props.path
+        ? {}
+        : {
+            lifecycle: {
+              ignoreChanges: ["source_code_hash", "filename"],
+            },
+          }),
     });
 
     if (!handler.lambda) {
@@ -172,6 +179,20 @@ export class GoHandler extends Construct {
 
     return queue;
   }
+}
+
+function createStubAsset(scope: Construct, name: string): TerraformAsset {
+  const archive = new zip();
+
+  const output = path.join("/tmp/", `${name}-stub.zip`);
+  const data = archive.toBuffer();
+
+  fs.writeFileSync(output, data);
+
+  return new TerraformAsset(scope, name, {
+    path: output,
+    type: AssetType.FILE,
+  });
 }
 
 function createBootstrapAsset(scope: Construct, name: string): TerraformAsset {

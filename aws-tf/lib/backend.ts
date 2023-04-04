@@ -1,7 +1,7 @@
 import { Construct } from "constructs";
 import * as aws from "@cdktf/provider-aws";
 import { PublicAuth, PublicFile, PublicTodo, PublicUser } from "./api-public";
-import { CoreOauthUser, CoreSendEmailQueue, CoreTodo, CoreUser } from "./api-core";
+import { CoreMessage, CoreOauthUser, CoreSendEmailQueue, CoreTodo, CoreUser } from "./api-core";
 import { WebsocketBroadcast, WebsocketFile, WebsocketTodo, WebsocketUser } from "./api-websocket";
 import { WorkerFile, WorkerUser } from "./api-workers";
 import { TriggerS3 } from "./api-trigger";
@@ -29,10 +29,11 @@ export class Backend extends Construct {
     // // NOT USED const coreFile = new FileStorage(this, "core-file", { eventbus, hostedZone: props.hostedZone, hostname: "files" });
     // // NOT USED new CoreSendEmail(this, "core-send-email", { eventbus });
 
-    new CoreUser(this, "core-user", { eventbus });
-    new CoreTodo(this, "core-todo", { eventbus });
+    new CoreMessage(this, "core-message", { eventbus });
     new CoreOauthUser(this, "core-oauth-user", { eventbus });
     new CoreSendEmailQueue(this, "send-email-queue", { eventbus });
+    new CoreTodo(this, "core-todo", { eventbus });
+    new CoreUser(this, "core-user", { eventbus });
 
     new PublicFile(this, "public-file", { apigw: props.apigw, bucket: props.uploadBucket });
     new PublicAuth(this, "public-auth", { apigw: props.apigw });

@@ -6,6 +6,58 @@ export interface Props {
   apigw: aws.apigatewayv2Api.Apigatewayv2Api;
 }
 
+export class CoreMessage extends Construct {
+  constructor(scope: Construct, id: string, { eventbus }: { eventbus: aws.snsTopic.SnsTopic }) {
+    super(scope, id);
+
+    new GoHandler(this, "core-message", {
+      // path: ["core", "oauth-user"],
+      eventbus,
+      parameters: ["/common/*"],
+      environment: {
+        variables: {
+          BUS_ENTITY_ARN: eventbus.arn,
+        },
+      },
+    });
+  }
+}
+
+export class CoreOauthUser extends Construct {
+  constructor(scope: Construct, id: string, { eventbus }: { eventbus: aws.snsTopic.SnsTopic }) {
+    super(scope, id);
+
+    new GoHandler(this, "core-oauth-user", {
+      path: ["core", "oauth-user"],
+      eventbus,
+      parameters: ["/common/*", "/oauth/*"],
+      environment: {
+        variables: {
+          BUS_ENTITY_ARN: eventbus.arn,
+        },
+      },
+    });
+  }
+}
+
+export class CoreSendEmailQueue extends Construct {
+  constructor(scope: Construct, id: string, { eventbus }: { eventbus: aws.snsTopic.SnsTopic }) {
+    super(scope, id);
+
+    const handler = new GoHandler(this, "core-send-email", {
+      path: ["core", "send-email"],
+      environment: {
+        variables: {
+          BUS_ENTITY_ARN: eventbus.arn,
+        },
+      },
+      parameters: ["/common/*", "/smtp/*"],
+    });
+
+    handler.listenQueue("send-email");
+  }
+}
+
 export class CoreTodo extends Construct {
   constructor(scope: Construct, id: string, { eventbus }: { eventbus: aws.snsTopic.SnsTopic }) {
     super(scope, id);
@@ -65,40 +117,5 @@ export class CoreUser extends Construct {
         },
       },
     });
-  }
-}
-
-export class CoreOauthUser extends Construct {
-  constructor(scope: Construct, id: string, { eventbus }: { eventbus: aws.snsTopic.SnsTopic }) {
-    super(scope, id);
-
-    new GoHandler(this, "core-oauth-user", {
-      path: ["core", "oauth-user"],
-      eventbus,
-      parameters: ["/common/*", "/oauth/*"],
-      environment: {
-        variables: {
-          BUS_ENTITY_ARN: eventbus.arn,
-        },
-      },
-    });
-  }
-}
-
-export class CoreSendEmailQueue extends Construct {
-  constructor(scope: Construct, id: string, { eventbus }: { eventbus: aws.snsTopic.SnsTopic }) {
-    super(scope, id);
-
-    const handler = new GoHandler(this, "core-send-email", {
-      path: ["core", "send-email"],
-      environment: {
-        variables: {
-          BUS_ENTITY_ARN: eventbus.arn,
-        },
-      },
-      parameters: ["/common/*", "/smtp/*"],
-    });
-
-    handler.listenQueue("send-email");
   }
 }
