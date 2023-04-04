@@ -35,15 +35,18 @@ build-lambda:
 	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o $(BUILDDIR)/publicapi-auth ./cmd/lambda/publicapi/auth/main.go
 	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o $(BUILDDIR)/publicapi-file ./cmd/lambda/publicapi/file/main.go
 	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o $(BUILDDIR)/publicapi-gpt ./cmd/lambda/publicapi/user/main.go
+	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o $(BUILDDIR)/publicapi-message ./cmd/lambda/publicapi/message/main.go
 	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o $(BUILDDIR)/publicapi-todo ./cmd/lambda/publicapi/todo/main.go
 	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o $(BUILDDIR)/publicapi-user ./cmd/lambda/publicapi/user/main.go
 	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o $(BUILDDIR)/publicapi-websocket ./cmd/lambda/publicapi/websocket/main.go
 	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o $(BUILDDIR)/websocket-file ./cmd/lambda/websocket/file/main.go
+	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o $(BUILDDIR)/websocket-message ./cmd/lambda/websocket/message/main.go
 	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o $(BUILDDIR)/websocket-todo ./cmd/lambda/websocket/todo/main.go
 	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o $(BUILDDIR)/websocket-user ./cmd/lambda/websocket/user/main.go
 	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o $(BUILDDIR)/websocket-broadcast ./cmd/lambda/websocket/broadcast/main.go
 	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o $(BUILDDIR)/core-oauth-user ./cmd/lambda/core/oauth_user/main.go
 	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o $(BUILDDIR)/core-send-email ./cmd/lambda/core/send_email/main.go
+	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o $(BUILDDIR)/core-message ./cmd/lambda/core/message/main.go
 	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o $(BUILDDIR)/core-todo ./cmd/lambda/core/todo/main.go
 	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o $(BUILDDIR)/core-user ./cmd/lambda/core/user/main.go
 	GOOS=linux GOARCH=arm64 go build -ldflags=$(LDFLAGS) -o $(BUILDDIR)/workers-user ./cmd/lambda/workers/workers_user/main.go
