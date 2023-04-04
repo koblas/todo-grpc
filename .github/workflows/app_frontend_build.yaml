@@ -1,4 +1,4 @@
-name: Build Artifacts
+name: Build Frontend Assets
 on: workflow_call
 
 jobs:

@@ -1,0 +1,65 @@
+name: "Deploy updated code"
+on: 
+  workflow_run:
+    workflows: "Build Frontend Assets"
+    branches:
+      - main
+
+# workflow_call:
+#   inputs:
+#     environment:
+#       required: true
+#       type: string
+#   secrets: 
+#     AWS_DEFAULT_REGION: 
+#       required: true
+#     AWS_ACCESS_KEY_ID: 
+#       required: true
+#     AWS_SECRET_ACCESS_KEY: 
+#       required: true
+
+jobs:
+  deploy:
+    #environment: ${{ inputs.environment }}
+    environment: production
+    runs-on: ubuntu-latest
+
+    #defaults:
+    #  run:
+    #    working-directory: aws-tf
+
+    steps:
+      - uses: actions/checkout@v3 # setup the repository in the runner
+      - uses: actions/download-artifact@v3
+        id: frontend
+        with:
+          name: frontend
+          path: ts-client-react/dist
+
+      - name: Setup variables
+        id: awsvar
+        run: |
+            echo "::set-output source=ts-client-react/build"
+            echo "::set-output s3bucket=s3://"$(aws s3 ls | awk '{print $NF}'| grep webapp)
+            echo "::set-output distribution="$(aws cloudfront list-distributions --query "DistributionList.Items[?contains(Aliases.Items, 'app.iqvine.com')].Id | [0]")
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+
+      - name: Upload Single Page App
+        run: |
+            aws s3 cp --cache-control max-age=2592000,public \
+                    --exclude index.html \
+                    --recursive ${{ steps.awsvar.outputs.source }} ${{ steps.awsvar.outputs.s3bucket }}
+
+            aws s3 cp --cache-control max-age=max-age=3600,must-revalidate,public \
+                    ${{ steps.awsvar.outputs.source }}/index.html ${{ steps.awsvar.outputs.s3bucket }}/index.html
+
+            aws s3 sync ${{ steps.awsvar.outputs.source }} ${{ steps.awsvar.outputs.s3bucket }} --delete
+
+            aws cloudfront create-invalidation --distribution-id ${{ steps.awsvar.outputs.distribution }} --paths /index.html /
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}

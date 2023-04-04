@@ -1,21 +1,26 @@
 name: "Deploy updated code"
 on: 
-  workflow_call:
-    inputs:
-      environment:
-        required: true
-        type: string
-    secrets: 
-      AWS_DEFAULT_REGION: 
-        required: true
-      AWS_ACCESS_KEY_ID: 
-        required: true
-      AWS_SECRET_ACCESS_KEY: 
-        required: true
+  workflow_run:
+    workflows: "Build Lambda Assets"
+    branches:
+      - main
+# workflow_call:
+#   inputs:
+#     environment:
+#       required: true
+#       type: string
+#   secrets: 
+#     AWS_DEFAULT_REGION: 
+#       required: true
+#     AWS_ACCESS_KEY_ID: 
+#       required: true
+#     AWS_SECRET_ACCESS_KEY: 
+#       required: true
 
 jobs:
   deploy:
-    environment: ${{ inputs.environment }}
+#   environment: ${{ inputs.environment }}
+    environment: production
     runs-on: ubuntu-latest
 
     #defaults:
@@ -29,10 +34,6 @@ jobs:
         with:
           name: frontend
           path: ts-client-react/dist
-      - uses: actions/download-artifact@v3
-        with:
-          name: backend-go
-          path: src/go/build
 
       - name: Upload new Lambda functions
         run: |
@@ -52,34 +53,6 @@ jobs:
           aws lambda update-function-code --function-name worker-user --zip-file fileb://src/go/build/workers-user.zip
           aws lambda update-function-code --function-name worker-file --zip-file fileb://src/go/build/workers-file.zip
           aws lambda update-function-code --function-name trigger-s3 --zip-file fileb://src/go/build/trigger-s3.zip
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
-
-      - name: Setup variables
-        id: awsvar
-        run: |
-            echo "::set-output source=ts-client-react/build"
-            echo "::set-output s3bucket=s3://"$(aws s3 ls | awk '{print $NF}'| grep webapp)
-            echo "::set-output distribution="$(aws cloudfront list-distributions --query "DistributionList.Items[?contains(Aliases.Items, 'app.iqvine.com')].Id | [0]")
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
-
-      - name: Upload Single Page App
-        run: |
-            aws s3 cp --cache-control max-age=2592000,public \
-                    --exclude index.html \
-                    --recursive ${{ steps.awsvar.outputs.source }} ${{ steps.awsvar.outputs.s3bucket }}
-
-            aws s3 cp --cache-control max-age=max-age=3600,must-revalidate,public \
-                    ${{ steps.awsvar.outputs.source }}/index.html ${{ steps.awsvar.outputs.s3bucket }}/index.html
-
-            aws s3 sync ${{ steps.awsvar.outputs.source }} ${{ steps.awsvar.outputs.s3bucket }} --delete
-
-            aws cloudfront create-invalidation --distribution-id ${{ steps.awsvar.outputs.distribution }} --paths /index.html /
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
