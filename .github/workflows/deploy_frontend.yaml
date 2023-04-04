@@ -40,7 +40,7 @@ jobs:
       - name: Setup variables
         id: awsvar
         run: |
-            echo "source=ts-client-react/build" >> $GITHUB_OUTPUT
+            echo "source=ts-client-react/dist" >> $GITHUB_OUTPUT
             echo "s3bucket=s3://"$(aws s3 ls | awk '{print $NF}'| grep webapp) >> $GITHUB_OUTPUT
             echo "distribution="$(aws cloudfront list-distributions --query "DistributionList.Items[?contains(Aliases.Items, 'app.iqvine.com')].Id | [0]") >> $GITHUB_OUTPUT
         env:
