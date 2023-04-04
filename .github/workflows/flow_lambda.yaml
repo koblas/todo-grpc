@@ -9,10 +9,10 @@ on:
 
 jobs:
   tests:
-    uses: ./.github/workflows/app_lambda_test.yaml
+    uses: ./.github/workflows/test_lambda.yaml
   assets:
     needs: tests
-    uses: ./.github/workflows/app_lambda_build.yaml
+    uses: ./.github/workflows/build_lambda.yaml
   deploy:
     needs: 
       - assets

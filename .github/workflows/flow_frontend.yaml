@@ -9,10 +9,10 @@ on:
 
 jobs:
   tests:
-    uses: ./.github/workflows/app_frontend_test.yaml
+    uses: ./.github/workflows/test_frontend.yaml
   assets:
     needs: tests
-    uses: ./.github/workflows/app_frontend_build.yaml
+    uses: ./.github/workflows/build_frontend.yaml
   deploy:
     needs: 
       - assets

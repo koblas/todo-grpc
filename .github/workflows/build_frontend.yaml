@@ -3,7 +3,7 @@ on: workflow_call
 
 jobs:
   build-app:
-    environment: production
+    #environment: production
     runs-on: ubuntu-latest
 
     defaults:
