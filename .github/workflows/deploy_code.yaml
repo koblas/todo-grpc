@@ -49,9 +49,30 @@ jobs:
           aws lambda update-function-code --function-name core-send-email --zip-file fileb://src/go/build/core-send-email.zip
           aws lambda update-function-code --function-name core-todo --zip-file fileb://src/go/build/core-todo.zip
           aws lambda update-function-code --function-name core-user --zip-file fileb://src/go/build/core-user.zip
-          aws lambda update-function-code --function-name workers-user --zip-file fileb://src/go/build/workers-user.zip
-          aws lambda update-function-code --function-name workers-file --zip-file fileb://src/go/build/workers-file.zip
+          aws lambda update-function-code --function-name worker-user --zip-file fileb://src/go/build/workers-user.zip
+          aws lambda update-function-code --function-name worker-file --zip-file fileb://src/go/build/workers-file.zip
           aws lambda update-function-code --function-name trigger-s3 --zip-file fileb://src/go/build/trigger-s3.zip
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+
+      - name: Upload Single Page App
+        run: |
+            SOURCE=ts-client-react/build
+            S3BUCKET=s3://`aws s3 ls | awk '{print $NF}'|grep webapp`
+            DISTRIBUTION=`aws cloudfront list-distributions --query "DistributionList.Items[?contains(Aliases.Items, 'app.iqvine.com')].Id | [0]"`
+
+            aws s3 cp --cache-control max-age=2592000,public \
+                    --exclude index.html \
+                    --recursive $(SOURCE) $(S3BUCKET)
+
+            aws s3 cp --cache-control max-age=max-age=3600,must-revalidate,public \
+                    $(SOURCE)/index.html $(S3BUCKET)/index.html
+
+            aws s3 sync $(SOURCE) $(S3BUCKET)--delete
+
+            aws cloudfront create-invalidation --distribution-id $(DISTRIBUTION) --paths /index.html /
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

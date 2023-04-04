@@ -8,12 +8,12 @@ jobs:
   assets:
     needs: tests
     uses: ./.github/workflows/app_build.yaml
-  infra:
-    needs: assets
-    uses: ./.github/workflows/terraform_apply.yaml
-    with:
-      environment: production
-    secrets: inherit
+# infra:
+#   needs: assets
+#   uses: ./.github/workflows/terraform_apply.yaml
+#   with:
+#     environment: production
+#   secrets: inherit
   deploy_code:
     needs: 
       - assets
