@@ -1,13 +1,12 @@
-import * as path from "path";
-import * as crypto from "crypto";
-import * as fs from "fs";
-import * as mime from "mime-types";
+// import * as path from "path";
+// import * as crypto from "crypto";
+// import * as fs from "fs";
+// import * as mime from "mime-types";
 import * as aws from "@cdktf/provider-aws";
-import * as nullp from "@cdktf/provider-null";
 import { Construct } from "constructs";
 import { CertificateDomain } from "./components/certificate";
 import { StateS3Bucket } from "./components/s3bucket";
-import { Fn, TerraformAsset } from "cdktf";
+import { Fn } from "cdktf";
 import { WebsocketConfig, WebsocketHandler } from "./gw-websocket";
 
 export interface Props {
@@ -412,67 +411,67 @@ export class Frontend extends Construct {
   createWebsocket(_: Props) {}
 }
 
-function bucketDeployment(
-  scope: Construct,
-  id: string,
-  params: {
-    source: string;
-    bucket: aws.s3Bucket.S3Bucket;
-    distribution: aws.cloudfrontDistribution.CloudfrontDistribution;
-    invalidations: string[];
-  },
-) {
-  const s3objects: aws.s3Object.S3Object[] = [];
-  const assets = [];
+// function bucketDeployment(
+//   scope: Construct,
+//   id: string,
+//   params: {
+//     source: string;
+//     bucket: aws.s3Bucket.S3Bucket;
+//     distribution: aws.cloudfrontDistribution.CloudfrontDistribution;
+//     invalidations: string[];
+//   },
+// ) {
+//   const s3objects: aws.s3Object.S3Object[] = [];
+//   const assets = [];
 
-  for (const path of getFiles(params.source)) {
-    const nm = path.replace(params.source, "").replace(/[^A-Za-z_-]/, "_");
+//   for (const path of getFiles(params.source)) {
+//     const nm = path.replace(params.source, "").replace(/[^A-Za-z_-]/, "_");
 
-    assets.push(
-      new TerraformAsset(scope, `${id}-${nm}-assets`, {
-        path,
-        // type: AssetType.ARCHIVE, // if left empty it infers directory and file
-      }),
-    );
-  }
+//     assets.push(
+//       new TerraformAsset(scope, `${id}-${nm}-assets`, {
+//         path,
+//         // type: AssetType.ARCHIVE, // if left empty it infers directory and file
+//       }),
+//     );
+//   }
 
-  const hash = crypto.createHash("md5");
+//   const hash = crypto.createHash("md5");
 
-  const ONE_HOUR = 1 * 60 * 60;
-  const ONE_YEAR = 365 * 24 * 60 * 60;
+//   const ONE_HOUR = 1 * 60 * 60;
+//   const ONE_YEAR = 365 * 24 * 60 * 60;
 
-  assets.map((asset) => {
-    const s3o = new aws.s3Object.S3Object(scope, `${id}-${asset.assetHash}-objects`, {
-      bucket: params.bucket.bucket,
-      sourceHash: asset.assetHash,
-      key: asset.fileName,
-      source: asset.path, // returns a posix path
-      contentType: mime.lookup(asset.fileName) || "application/octet-stream",
-      cacheControl: `public, max-age=${asset.fileName === "index.html" ? ONE_HOUR : ONE_YEAR}`,
-    });
+//   assets.map((asset) => {
+//     const s3o = new aws.s3Object.S3Object(scope, `${id}-${asset.assetHash}-objects`, {
+//       bucket: params.bucket.bucket,
+//       sourceHash: asset.assetHash,
+//       key: asset.fileName,
+//       source: asset.path, // returns a posix path
+//       contentType: mime.lookup(asset.fileName) || "application/octet-stream",
+//       cacheControl: `public, max-age=${asset.fileName === "index.html" ? ONE_HOUR : ONE_YEAR}`,
+//     });
 
-    hash.update(asset.assetHash);
-    s3objects.push(s3o);
-  });
+//     hash.update(asset.assetHash);
+//     s3objects.push(s3o);
+//   });
 
-  return { hash: hash.digest("hex"), s3objects };
-}
+//   return { hash: hash.digest("hex"), s3objects };
+// }
 
-function* getFiles(item: string): IterableIterator<string> {
-  const s = fs.statSync(item);
+// function* getFiles(item: string): IterableIterator<string> {
+//   const s = fs.statSync(item);
 
-  if (!s.isDirectory()) {
-    yield item;
-  }
+//   if (!s.isDirectory()) {
+//     yield item;
+//   }
 
-  const dirents = fs.readdirSync(item, { withFileTypes: true });
+//   const dirents = fs.readdirSync(item, { withFileTypes: true });
 
-  for (const dirent of dirents) {
-    const res = path.resolve(item, dirent.name);
-    if (dirent.isDirectory()) {
-      yield* getFiles(res);
-    } else {
-      yield res;
-    }
-  }
-}
+//   for (const dirent of dirents) {
+//     const res = path.resolve(item, dirent.name);
+//     if (dirent.isDirectory()) {
+//       yield* getFiles(res);
+//     } else {
+//       yield res;
+//     }
+//   }
+// }
