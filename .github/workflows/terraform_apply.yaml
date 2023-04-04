@@ -1,5 +1,11 @@
 name: "Terraform Deploy"
 on: 
+  push:
+    branches:
+    - main
+    paths:
+    - 'aws-tf/**'
+    - 'ts-client-react/**'
   workflow_call:
     inputs:
       environment:

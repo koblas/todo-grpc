@@ -1,6 +1,8 @@
 name: Build Artifacts
 on: workflow_call
-
+  push:
+    branches:
+      - main
 
 jobs:
   build-app:
