@@ -25,6 +25,7 @@ def go_docker(name, path):
 #)
 docker_build('todo-grpc/ts-client-react', './ts-client-react', 
   dockerfile='./ts-client-react/Dockerfile.tilt',
+  #dockerfile='./ts-client-react/Dockerfile',
   live_update=[
     sync('./ts-client-react', '/app'),
   ],
@@ -35,6 +36,17 @@ docker_build('todo-grpc/ts-client-react', './ts-client-react',
 #    'kubectl delete secret common-secrets --ignore-not-found',
 #    ['./.env'],
 #)
+helm_remote('ingress-nginx',
+            version="4.6.0",
+            repo_name='ingress-nginx',
+            set=[
+                'controller.admissionWebhooks.enabled=false',
+                'controller.ingressClassResource.default=true',
+            ],
+            repo_url='https://kubernetes.github.io/ingress-nginx')
+
+#k8s_yaml('./charts/ingress-nginx.yaml')
+#k8s_yaml('./ingress.yaml')
 
 k8s_yaml(helm('./charts/'))
 

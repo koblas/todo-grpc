@@ -137,3 +137,11 @@ Cleanup disk space
 ```
 minikube ssh -- docker system prune
 ```
+
+## K3S
+
+```
+k3d cluster create mycluster --registry-create mycluster-registry --k3s-arg "--disable=traefik@server:0" -p "8000:80@loadbalancer"
+kubectl create secret generic common-secrets --from-env-file=.env
+sudo kubectl port-forward svc/ingress-nginx-controller 80:80
+```
