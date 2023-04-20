@@ -37,7 +37,7 @@ func main() {
 
 	opts := []user.Option{
 		user.WithProducer(producer),
-		user.WithUserStore(user.NewUserDynamoStore()),
+		user.WithStore(user.NewDynamoStore()),
 	}
 
 	_, api := userv1connect.NewUserServiceHandler(

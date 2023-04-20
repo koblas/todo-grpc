@@ -1,8 +1,7 @@
 FROM golang:1.19-alpine3.16
 WORKDIR /build
-COPY go.mod .
-COPY go.sum .
+ADD go.mod go.sum /build/
 RUN go mod download
-COPY . .
+ADD . .
 EXPOSE 14586
 CMD ["./tilt-scripts/start.sh", "go", "run", "./cmd/compose/publicapi/message/main.go"]

@@ -1,9 +1,8 @@
 FROM golang:1.19-alpine3.16 as builder
 WORKDIR /build
-COPY go.mod .
-COPY go.sum .
+ADD go.mod go.sum /build/
 RUN go mod download
-COPY . .
+ADD . .
 RUN CGO_ENABLED=0 GOOS=linux go build -o /app cmd/compose/core/user/*.go
 
 FROM alpine:3.16

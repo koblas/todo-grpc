@@ -44,14 +44,14 @@ func main() {
 
 	if config.DynamoStoreAddr == nil || *config.DynamoStoreAddr == "" {
 		log.Info("Starting up with Memory store")
-		opts = append(opts, user.WithUserStore(user.NewUserMemoryStore()))
+		opts = append(opts, user.WithStore(user.NewUserMemoryStore()))
 	} else {
 		log.With(
 			zap.String("dynamoAddr", *config.DynamoStoreAddr),
 		).Info("Starting up with DynamoDB store")
 		opts = append(opts,
-			user.WithUserStore(
-				user.NewUserDynamoStore(
+			user.WithStore(
+				user.NewDynamoStore(
 					user.WithDynamoClient(
 						awsutil.LocalDynamoClient(*config.DynamoStoreAddr),
 					),

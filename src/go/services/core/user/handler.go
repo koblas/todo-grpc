@@ -22,9 +22,15 @@ type UserId struct{}
 
 func (UserId) Prefix() string { return "U" }
 
+type Store interface {
+	UserStore
+	OAuthStore
+	TeamStore
+}
+
 // Server represents the gRPC server
 type UserServer struct {
-	users  UserStore
+	users  Store
 	pubsub eventbusv1connect.UserEventbusServiceClient
 	kms    key_manager.Encoder
 }
@@ -44,7 +50,7 @@ var statusToPbStatus = map[UserStatus]userv1.UserStatus{
 
 type Option func(*UserServer)
 
-func WithUserStore(store UserStore) Option {
+func WithStore(store Store) Option {
 	return func(cfg *UserServer) {
 		cfg.users = store
 	}
