@@ -1,4 +1,4 @@
-FROM golang:1.19-alpine3.16 as builder
+FROM golang:1.20-alpine as builder
 WORKDIR /build
 COPY go.mod .
 COPY go.sum .
@@ -6,7 +6,7 @@ RUN go mod download
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -o /app cmd/compose/publicapi/todo/*.go
 
-FROM alpine:3.16
+FROM scratch
 COPY --from=builder /app ./
 EXPOSE 14586
 ENTRYPOINT ["./app"]
