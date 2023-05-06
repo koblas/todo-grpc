@@ -44,7 +44,7 @@ func main() {
 
 	_, api := messagev1connect.NewMessageServiceHandler(
 		message.NewMessageServer(opts...),
-		connect.WithCodec(bufcutil.NewJsonCodec()),
+		bufcutil.WithJSON(),
 		connect.WithInterceptors(interceptors.NewReqidInterceptor(), auth),
 	)
 

@@ -47,7 +47,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.Handle(filev1connect.NewFileServiceHandler(
 		file.NewFileServer(opts...),
-		connect.WithCodec(bufcutil.NewJsonCodec()),
+		bufcutil.WithJSON(),
 		connect.WithInterceptors(interceptors.NewReqidInterceptor(), auth),
 	))
 	mux.Handle(grpchealth.NewHandler(

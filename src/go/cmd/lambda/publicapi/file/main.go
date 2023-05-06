@@ -41,7 +41,7 @@ func main() {
 
 	_, api := filev1connect.NewFileServiceHandler(
 		file.NewFileServer(opts...),
-		connect.WithCodec(bufcutil.NewJsonCodec()),
+		bufcutil.WithJSON(),
 		connect.WithInterceptors(interceptors.NewReqidInterceptor(), auth),
 	)
 

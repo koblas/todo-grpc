@@ -46,7 +46,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.Handle(userv1connect.NewUserServiceHandler(
 		user.NewUserServer(opts...),
-		connect.WithCodec(bufcutil.NewJsonCodec()),
+		bufcutil.WithJSON(),
 		connect.WithInterceptors(interceptors.NewReqidInterceptor(), auth),
 	))
 	mux.Handle(grpchealth.NewHandler(

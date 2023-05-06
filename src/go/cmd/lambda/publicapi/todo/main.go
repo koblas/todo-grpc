@@ -44,7 +44,7 @@ func main() {
 
 	_, api := todov1connect.NewTodoServiceHandler(
 		todo.NewTodoServer(opts...),
-		connect.WithCodec(bufcutil.NewJsonCodec()),
+		bufcutil.WithJSON(),
 		connect.WithInterceptors(interceptors.NewReqidInterceptor(), auth),
 	)
 

@@ -50,7 +50,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.Handle(todov1connect.NewTodoServiceHandler(
 		todo.NewTodoServer(opts...),
-		connect.WithCodec(bufcutil.NewJsonCodec()),
+		bufcutil.WithJSON(),
 		connect.WithInterceptors(interceptors.NewReqidInterceptor(), auth),
 	))
 	mux.Handle(grpchealth.NewHandler(

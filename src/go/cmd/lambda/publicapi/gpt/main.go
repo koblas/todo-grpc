@@ -36,7 +36,7 @@ func main() {
 
 	_, api := gptv1connect.NewGptServiceHandler(
 		gpt.NewGptServer(opts...),
-		connect.WithCodec(bufcutil.NewJsonCodec()),
+		bufcutil.WithJSON(),
 		connect.WithInterceptors(interceptors.NewReqidInterceptor(), auth),
 	)
 

@@ -57,7 +57,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.Handle(authv1connect.NewAuthenticationServiceHandler(
 		auth.NewAuthenticationServer(config.JwtSecret, opts...),
-		connect.WithCodec(bufcutil.NewJsonCodec()),
+		bufcutil.WithJSON(),
 		connect.WithCompressMinBytes(1024),
 	))
 	mux.Handle(grpchealth.NewHandler(

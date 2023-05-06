@@ -7,32 +7,53 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/runtime/protoiface"
 )
 
-func NewJsonCodec() *protoJSONCodec {
-	return &protoJSONCodec{"json"}
+func WithJSON() connect.Option {
+	return connect.WithOptions(
+		connect.WithCodec(newJsonCodec("json")),
+		connect.WithCodec(newJsonCodec("json; charset=utf-8")),
+	)
 }
 
-type protoJSONCodec struct {
+func NewJsonCodec() *JsonCodec {
+	return newJsonCodec("json")
+}
+
+func newJsonCodec(name string) *JsonCodec {
+	marshal := protojson.MarshalOptions{
+		UseProtoNames:   true,
+		EmitUnpopulated: true,
+	}
+	unmarshal := protojson.UnmarshalOptions{
+		DiscardUnknown: true,
+	}
+
+	return &JsonCodec{name: name, marshal: marshal, unmarshal: unmarshal}
+}
+
+type JsonCodec struct {
 	name string
+
+	marshal   protojson.MarshalOptions
+	unmarshal protojson.UnmarshalOptions
 }
 
-var _ connect.Codec = (*protoJSONCodec)(nil)
+var _ connect.Codec = (*JsonCodec)(nil)
 
-func (c *protoJSONCodec) Name() string { return c.name }
+func (c *JsonCodec) Name() string   { return c.name }
+func (c *JsonCodec) IsBinary() bool { return false }
 
-func (c *protoJSONCodec) Marshal(message any) ([]byte, error) {
+func (c *JsonCodec) Marshal(message any) ([]byte, error) {
 	protoMessage, ok := message.(proto.Message)
 	if !ok {
 		return nil, errNotProto(message)
 	}
-	options := protojson.MarshalOptions{
-		EmitUnpopulated: true,
-	}
-	return options.Marshal(protoMessage)
+	return c.marshal.Marshal(protoMessage)
 }
 
-func (c *protoJSONCodec) Unmarshal(binary []byte, message any) error {
+func (c *JsonCodec) Unmarshal(binary []byte, message any) error {
 	protoMessage, ok := message.(proto.Message)
 	if !ok {
 		return errNotProto(message)
@@ -40,10 +61,13 @@ func (c *protoJSONCodec) Unmarshal(binary []byte, message any) error {
 	if len(binary) == 0 {
 		return errors.New("zero-length payload is not a valid JSON object")
 	}
-	options := protojson.UnmarshalOptions{DiscardUnknown: true}
-	return options.Unmarshal(binary, protoMessage)
+	return c.unmarshal.Unmarshal(binary, protoMessage)
 }
 
 func errNotProto(message any) error {
+	if _, ok := message.(protoiface.MessageV1); ok {
+		return fmt.Errorf("%T uses github.com/golang/protobuf, but connect-go only supports google.golang.org/protobuf: see https://go.dev/blog/protobuf-apiv2", message)
+	}
+
 	return fmt.Errorf("%T doesn't implement proto.Message", message)
 }
