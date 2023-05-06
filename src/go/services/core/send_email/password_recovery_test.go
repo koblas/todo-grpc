@@ -33,5 +33,5 @@ func TestPasswordRecovery(t *testing.T) {
 
 	require.Contains(t, msgData.body, params.Msg.AppInfo.UrlBase, "Mesage doesn't contain url")
 	require.Contains(t, msgData.body, params.Msg.Token, "Mesage doesn't contain token")
-	require.Contains(t, msgData.body, params.Msg.Recipient.Name, "Mesage doesn't contain sender's firstname")
+	require.Contains(t, msgData.body, params.Msg.Recipient.Name, "Mesage doesn't contain sender's name: "+params.Msg.Recipient.Name)
 }
