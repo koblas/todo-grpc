@@ -1,0 +1,86 @@
+syntax = "proto3";
+package core.user.v1;
+
+option go_package = "github.com/koblas/grpc-todo/protos";
+
+// import "google/protobuf/timestamp.proto";
+// import "core/v1/secure_value.proto";
+
+
+enum TeamStatus {
+  TEAM_STATUS_UNSPECIFIED = 0;
+  TEAM_STATUS_INVITED = 1;
+  TEAM_STATUS_ACTIVE = 2;
+}
+
+// Team operations
+message TeamMember {
+  string id = 1;
+  string user_id = 2;
+  string team_id = 3;
+  TeamStatus status = 4;
+  string role = 5;
+  // Name is present in some API responses
+  string name = 6;
+}
+
+message Team {
+  string id = 1;
+  string name = 2;
+}
+
+// Begin API data structures
+
+message TeamCreateRequest {
+  string user_id = 1;
+  string name = 2;
+}
+message TeamCreateResponse {
+  string team_id = 1;
+}
+
+message TeamDeleteRequest {
+  string user_id = 1;
+  string team_id = 2;
+}
+message TeamDeleteResponse {
+}
+
+message TeamListRequest {
+  string user_id = 1;
+}
+message TeamListResponse {
+  repeated TeamMember teams = 1;
+}
+
+message TeamAddMembersRequest {
+  string team_id = 1;
+  string user_id = 2;
+  // Use TeamMember hear since it's encapulated status and role along with the user_id
+  repeated TeamMember members = 3;
+}
+message TeamAddMembersResponse {
+}
+
+message TeamAcceptInviteRequest {
+  string user_id = 1;
+  repeated string team_ids = 2;
+}
+message TeamAcceptInviteResponse {
+}
+
+message TeamRemoveMembersRequest {
+  string team_id = 1;
+  string user_id = 2;
+  repeated string user_ids = 3;
+}
+message TeamRemoveMembersResponse {
+}
+
+message TeamListMembersRequest {
+  string user_id = 1;
+  string team_id = 2;
+}
+message TeamListMembersResponse {
+  repeated TeamMember members = 1;
+}

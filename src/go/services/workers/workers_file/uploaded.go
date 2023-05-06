@@ -188,7 +188,7 @@ func (cfg *fileUploaded) updateUser(ctx context.Context, log logger.Logger, user
 	_, span := otel.Tracer("upload").Start(ctx, "post_event")
 	defer span.End()
 
-	if _, err := cfg.userService.Update(ctx, connect.NewRequest(&userv1.UserServiceUpdateRequest{
+	if _, err := cfg.userService.Update(ctx, connect.NewRequest(&userv1.UpdateRequest{
 		UserId:    userId,
 		AvatarUrl: &avatarUrl,
 	})); err != nil {

@@ -31,8 +31,8 @@ type UserServiceClientMock struct {
 	beforeComparePasswordCounter uint64
 	ComparePasswordMock          mUserServiceClientMockComparePassword
 
-	funcCreate          func(ctx context.Context, pp1 *connect_go.Request[v1.UserServiceCreateRequest]) (pp2 *connect_go.Response[v1.UserServiceCreateResponse], err error)
-	inspectFuncCreate   func(ctx context.Context, pp1 *connect_go.Request[v1.UserServiceCreateRequest])
+	funcCreate          func(ctx context.Context, pp1 *connect_go.Request[v1.CreateRequest]) (pp2 *connect_go.Response[v1.CreateResponse], err error)
+	inspectFuncCreate   func(ctx context.Context, pp1 *connect_go.Request[v1.CreateRequest])
 	afterCreateCounter  uint64
 	beforeCreateCounter uint64
 	CreateMock          mUserServiceClientMockCreate
@@ -73,8 +73,50 @@ type UserServiceClientMock struct {
 	beforeSetSettingsCounter uint64
 	SetSettingsMock          mUserServiceClientMockSetSettings
 
-	funcUpdate          func(ctx context.Context, pp1 *connect_go.Request[v1.UserServiceUpdateRequest]) (pp2 *connect_go.Response[v1.UserServiceUpdateResponse], err error)
-	inspectFuncUpdate   func(ctx context.Context, pp1 *connect_go.Request[v1.UserServiceUpdateRequest])
+	funcTeamAcceptInvite          func(ctx context.Context, pp1 *connect_go.Request[v1.TeamAcceptInviteRequest]) (pp2 *connect_go.Response[v1.TeamAcceptInviteResponse], err error)
+	inspectFuncTeamAcceptInvite   func(ctx context.Context, pp1 *connect_go.Request[v1.TeamAcceptInviteRequest])
+	afterTeamAcceptInviteCounter  uint64
+	beforeTeamAcceptInviteCounter uint64
+	TeamAcceptInviteMock          mUserServiceClientMockTeamAcceptInvite
+
+	funcTeamAddMembers          func(ctx context.Context, pp1 *connect_go.Request[v1.TeamAddMembersRequest]) (pp2 *connect_go.Response[v1.TeamAddMembersResponse], err error)
+	inspectFuncTeamAddMembers   func(ctx context.Context, pp1 *connect_go.Request[v1.TeamAddMembersRequest])
+	afterTeamAddMembersCounter  uint64
+	beforeTeamAddMembersCounter uint64
+	TeamAddMembersMock          mUserServiceClientMockTeamAddMembers
+
+	funcTeamCreate          func(ctx context.Context, pp1 *connect_go.Request[v1.TeamCreateRequest]) (pp2 *connect_go.Response[v1.TeamCreateResponse], err error)
+	inspectFuncTeamCreate   func(ctx context.Context, pp1 *connect_go.Request[v1.TeamCreateRequest])
+	afterTeamCreateCounter  uint64
+	beforeTeamCreateCounter uint64
+	TeamCreateMock          mUserServiceClientMockTeamCreate
+
+	funcTeamDelete          func(ctx context.Context, pp1 *connect_go.Request[v1.TeamDeleteRequest]) (pp2 *connect_go.Response[v1.TeamDeleteResponse], err error)
+	inspectFuncTeamDelete   func(ctx context.Context, pp1 *connect_go.Request[v1.TeamDeleteRequest])
+	afterTeamDeleteCounter  uint64
+	beforeTeamDeleteCounter uint64
+	TeamDeleteMock          mUserServiceClientMockTeamDelete
+
+	funcTeamList          func(ctx context.Context, pp1 *connect_go.Request[v1.TeamListRequest]) (pp2 *connect_go.Response[v1.TeamListResponse], err error)
+	inspectFuncTeamList   func(ctx context.Context, pp1 *connect_go.Request[v1.TeamListRequest])
+	afterTeamListCounter  uint64
+	beforeTeamListCounter uint64
+	TeamListMock          mUserServiceClientMockTeamList
+
+	funcTeamListMembers          func(ctx context.Context, pp1 *connect_go.Request[v1.TeamListMembersRequest]) (pp2 *connect_go.Response[v1.TeamListMembersResponse], err error)
+	inspectFuncTeamListMembers   func(ctx context.Context, pp1 *connect_go.Request[v1.TeamListMembersRequest])
+	afterTeamListMembersCounter  uint64
+	beforeTeamListMembersCounter uint64
+	TeamListMembersMock          mUserServiceClientMockTeamListMembers
+
+	funcTeamRemoveMembers          func(ctx context.Context, pp1 *connect_go.Request[v1.TeamRemoveMembersRequest]) (pp2 *connect_go.Response[v1.TeamRemoveMembersResponse], err error)
+	inspectFuncTeamRemoveMembers   func(ctx context.Context, pp1 *connect_go.Request[v1.TeamRemoveMembersRequest])
+	afterTeamRemoveMembersCounter  uint64
+	beforeTeamRemoveMembersCounter uint64
+	TeamRemoveMembersMock          mUserServiceClientMockTeamRemoveMembers
+
+	funcUpdate          func(ctx context.Context, pp1 *connect_go.Request[v1.UpdateRequest]) (pp2 *connect_go.Response[v1.UpdateResponse], err error)
+	inspectFuncUpdate   func(ctx context.Context, pp1 *connect_go.Request[v1.UpdateRequest])
 	afterUpdateCounter  uint64
 	beforeUpdateCounter uint64
 	UpdateMock          mUserServiceClientMockUpdate
@@ -119,6 +161,27 @@ func NewUserServiceClientMock(t minimock.Tester) *UserServiceClientMock {
 
 	m.SetSettingsMock = mUserServiceClientMockSetSettings{mock: m}
 	m.SetSettingsMock.callArgs = []*UserServiceClientMockSetSettingsParams{}
+
+	m.TeamAcceptInviteMock = mUserServiceClientMockTeamAcceptInvite{mock: m}
+	m.TeamAcceptInviteMock.callArgs = []*UserServiceClientMockTeamAcceptInviteParams{}
+
+	m.TeamAddMembersMock = mUserServiceClientMockTeamAddMembers{mock: m}
+	m.TeamAddMembersMock.callArgs = []*UserServiceClientMockTeamAddMembersParams{}
+
+	m.TeamCreateMock = mUserServiceClientMockTeamCreate{mock: m}
+	m.TeamCreateMock.callArgs = []*UserServiceClientMockTeamCreateParams{}
+
+	m.TeamDeleteMock = mUserServiceClientMockTeamDelete{mock: m}
+	m.TeamDeleteMock.callArgs = []*UserServiceClientMockTeamDeleteParams{}
+
+	m.TeamListMock = mUserServiceClientMockTeamList{mock: m}
+	m.TeamListMock.callArgs = []*UserServiceClientMockTeamListParams{}
+
+	m.TeamListMembersMock = mUserServiceClientMockTeamListMembers{mock: m}
+	m.TeamListMembersMock.callArgs = []*UserServiceClientMockTeamListMembersParams{}
+
+	m.TeamRemoveMembersMock = mUserServiceClientMockTeamRemoveMembers{mock: m}
+	m.TeamRemoveMembersMock.callArgs = []*UserServiceClientMockTeamRemoveMembersParams{}
 
 	m.UpdateMock = mUserServiceClientMockUpdate{mock: m}
 	m.UpdateMock.callArgs = []*UserServiceClientMockUpdateParams{}
@@ -583,17 +646,17 @@ type UserServiceClientMockCreateExpectation struct {
 // UserServiceClientMockCreateParams contains parameters of the UserServiceClient.Create
 type UserServiceClientMockCreateParams struct {
 	ctx context.Context
-	pp1 *connect_go.Request[v1.UserServiceCreateRequest]
+	pp1 *connect_go.Request[v1.CreateRequest]
 }
 
 // UserServiceClientMockCreateResults contains results of the UserServiceClient.Create
 type UserServiceClientMockCreateResults struct {
-	pp2 *connect_go.Response[v1.UserServiceCreateResponse]
+	pp2 *connect_go.Response[v1.CreateResponse]
 	err error
 }
 
 // Expect sets up expected params for UserServiceClient.Create
-func (mmCreate *mUserServiceClientMockCreate) Expect(ctx context.Context, pp1 *connect_go.Request[v1.UserServiceCreateRequest]) *mUserServiceClientMockCreate {
+func (mmCreate *mUserServiceClientMockCreate) Expect(ctx context.Context, pp1 *connect_go.Request[v1.CreateRequest]) *mUserServiceClientMockCreate {
 	if mmCreate.mock.funcCreate != nil {
 		mmCreate.mock.t.Fatalf("UserServiceClientMock.Create mock is already set by Set")
 	}
@@ -613,7 +676,7 @@ func (mmCreate *mUserServiceClientMockCreate) Expect(ctx context.Context, pp1 *c
 }
 
 // Inspect accepts an inspector function that has same arguments as the UserServiceClient.Create
-func (mmCreate *mUserServiceClientMockCreate) Inspect(f func(ctx context.Context, pp1 *connect_go.Request[v1.UserServiceCreateRequest])) *mUserServiceClientMockCreate {
+func (mmCreate *mUserServiceClientMockCreate) Inspect(f func(ctx context.Context, pp1 *connect_go.Request[v1.CreateRequest])) *mUserServiceClientMockCreate {
 	if mmCreate.mock.inspectFuncCreate != nil {
 		mmCreate.mock.t.Fatalf("Inspect function is already set for UserServiceClientMock.Create")
 	}
@@ -624,7 +687,7 @@ func (mmCreate *mUserServiceClientMockCreate) Inspect(f func(ctx context.Context
 }
 
 // Return sets up results that will be returned by UserServiceClient.Create
-func (mmCreate *mUserServiceClientMockCreate) Return(pp2 *connect_go.Response[v1.UserServiceCreateResponse], err error) *UserServiceClientMock {
+func (mmCreate *mUserServiceClientMockCreate) Return(pp2 *connect_go.Response[v1.CreateResponse], err error) *UserServiceClientMock {
 	if mmCreate.mock.funcCreate != nil {
 		mmCreate.mock.t.Fatalf("UserServiceClientMock.Create mock is already set by Set")
 	}
@@ -637,7 +700,7 @@ func (mmCreate *mUserServiceClientMockCreate) Return(pp2 *connect_go.Response[v1
 }
 
 // Set uses given function f to mock the UserServiceClient.Create method
-func (mmCreate *mUserServiceClientMockCreate) Set(f func(ctx context.Context, pp1 *connect_go.Request[v1.UserServiceCreateRequest]) (pp2 *connect_go.Response[v1.UserServiceCreateResponse], err error)) *UserServiceClientMock {
+func (mmCreate *mUserServiceClientMockCreate) Set(f func(ctx context.Context, pp1 *connect_go.Request[v1.CreateRequest]) (pp2 *connect_go.Response[v1.CreateResponse], err error)) *UserServiceClientMock {
 	if mmCreate.defaultExpectation != nil {
 		mmCreate.mock.t.Fatalf("Default expectation is already set for the UserServiceClient.Create method")
 	}
@@ -652,7 +715,7 @@ func (mmCreate *mUserServiceClientMockCreate) Set(f func(ctx context.Context, pp
 
 // When sets expectation for the UserServiceClient.Create which will trigger the result defined by the following
 // Then helper
-func (mmCreate *mUserServiceClientMockCreate) When(ctx context.Context, pp1 *connect_go.Request[v1.UserServiceCreateRequest]) *UserServiceClientMockCreateExpectation {
+func (mmCreate *mUserServiceClientMockCreate) When(ctx context.Context, pp1 *connect_go.Request[v1.CreateRequest]) *UserServiceClientMockCreateExpectation {
 	if mmCreate.mock.funcCreate != nil {
 		mmCreate.mock.t.Fatalf("UserServiceClientMock.Create mock is already set by Set")
 	}
@@ -666,13 +729,13 @@ func (mmCreate *mUserServiceClientMockCreate) When(ctx context.Context, pp1 *con
 }
 
 // Then sets up UserServiceClient.Create return parameters for the expectation previously defined by the When method
-func (e *UserServiceClientMockCreateExpectation) Then(pp2 *connect_go.Response[v1.UserServiceCreateResponse], err error) *UserServiceClientMock {
+func (e *UserServiceClientMockCreateExpectation) Then(pp2 *connect_go.Response[v1.CreateResponse], err error) *UserServiceClientMock {
 	e.results = &UserServiceClientMockCreateResults{pp2, err}
 	return e.mock
 }
 
 // Create implements UserServiceClient
-func (mmCreate *UserServiceClientMock) Create(ctx context.Context, pp1 *connect_go.Request[v1.UserServiceCreateRequest]) (pp2 *connect_go.Response[v1.UserServiceCreateResponse], err error) {
+func (mmCreate *UserServiceClientMock) Create(ctx context.Context, pp1 *connect_go.Request[v1.CreateRequest]) (pp2 *connect_go.Response[v1.CreateResponse], err error) {
 	mm_atomic.AddUint64(&mmCreate.beforeCreateCounter, 1)
 	defer mm_atomic.AddUint64(&mmCreate.afterCreateCounter, 1)
 
@@ -2082,6 +2145,1525 @@ func (m *UserServiceClientMock) MinimockSetSettingsInspect() {
 	}
 }
 
+type mUserServiceClientMockTeamAcceptInvite struct {
+	mock               *UserServiceClientMock
+	defaultExpectation *UserServiceClientMockTeamAcceptInviteExpectation
+	expectations       []*UserServiceClientMockTeamAcceptInviteExpectation
+
+	callArgs []*UserServiceClientMockTeamAcceptInviteParams
+	mutex    sync.RWMutex
+}
+
+// UserServiceClientMockTeamAcceptInviteExpectation specifies expectation struct of the UserServiceClient.TeamAcceptInvite
+type UserServiceClientMockTeamAcceptInviteExpectation struct {
+	mock    *UserServiceClientMock
+	params  *UserServiceClientMockTeamAcceptInviteParams
+	results *UserServiceClientMockTeamAcceptInviteResults
+	Counter uint64
+}
+
+// UserServiceClientMockTeamAcceptInviteParams contains parameters of the UserServiceClient.TeamAcceptInvite
+type UserServiceClientMockTeamAcceptInviteParams struct {
+	ctx context.Context
+	pp1 *connect_go.Request[v1.TeamAcceptInviteRequest]
+}
+
+// UserServiceClientMockTeamAcceptInviteResults contains results of the UserServiceClient.TeamAcceptInvite
+type UserServiceClientMockTeamAcceptInviteResults struct {
+	pp2 *connect_go.Response[v1.TeamAcceptInviteResponse]
+	err error
+}
+
+// Expect sets up expected params for UserServiceClient.TeamAcceptInvite
+func (mmTeamAcceptInvite *mUserServiceClientMockTeamAcceptInvite) Expect(ctx context.Context, pp1 *connect_go.Request[v1.TeamAcceptInviteRequest]) *mUserServiceClientMockTeamAcceptInvite {
+	if mmTeamAcceptInvite.mock.funcTeamAcceptInvite != nil {
+		mmTeamAcceptInvite.mock.t.Fatalf("UserServiceClientMock.TeamAcceptInvite mock is already set by Set")
+	}
+
+	if mmTeamAcceptInvite.defaultExpectation == nil {
+		mmTeamAcceptInvite.defaultExpectation = &UserServiceClientMockTeamAcceptInviteExpectation{}
+	}
+
+	mmTeamAcceptInvite.defaultExpectation.params = &UserServiceClientMockTeamAcceptInviteParams{ctx, pp1}
+	for _, e := range mmTeamAcceptInvite.expectations {
+		if minimock.Equal(e.params, mmTeamAcceptInvite.defaultExpectation.params) {
+			mmTeamAcceptInvite.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmTeamAcceptInvite.defaultExpectation.params)
+		}
+	}
+
+	return mmTeamAcceptInvite
+}
+
+// Inspect accepts an inspector function that has same arguments as the UserServiceClient.TeamAcceptInvite
+func (mmTeamAcceptInvite *mUserServiceClientMockTeamAcceptInvite) Inspect(f func(ctx context.Context, pp1 *connect_go.Request[v1.TeamAcceptInviteRequest])) *mUserServiceClientMockTeamAcceptInvite {
+	if mmTeamAcceptInvite.mock.inspectFuncTeamAcceptInvite != nil {
+		mmTeamAcceptInvite.mock.t.Fatalf("Inspect function is already set for UserServiceClientMock.TeamAcceptInvite")
+	}
+
+	mmTeamAcceptInvite.mock.inspectFuncTeamAcceptInvite = f
+
+	return mmTeamAcceptInvite
+}
+
+// Return sets up results that will be returned by UserServiceClient.TeamAcceptInvite
+func (mmTeamAcceptInvite *mUserServiceClientMockTeamAcceptInvite) Return(pp2 *connect_go.Response[v1.TeamAcceptInviteResponse], err error) *UserServiceClientMock {
+	if mmTeamAcceptInvite.mock.funcTeamAcceptInvite != nil {
+		mmTeamAcceptInvite.mock.t.Fatalf("UserServiceClientMock.TeamAcceptInvite mock is already set by Set")
+	}
+
+	if mmTeamAcceptInvite.defaultExpectation == nil {
+		mmTeamAcceptInvite.defaultExpectation = &UserServiceClientMockTeamAcceptInviteExpectation{mock: mmTeamAcceptInvite.mock}
+	}
+	mmTeamAcceptInvite.defaultExpectation.results = &UserServiceClientMockTeamAcceptInviteResults{pp2, err}
+	return mmTeamAcceptInvite.mock
+}
+
+// Set uses given function f to mock the UserServiceClient.TeamAcceptInvite method
+func (mmTeamAcceptInvite *mUserServiceClientMockTeamAcceptInvite) Set(f func(ctx context.Context, pp1 *connect_go.Request[v1.TeamAcceptInviteRequest]) (pp2 *connect_go.Response[v1.TeamAcceptInviteResponse], err error)) *UserServiceClientMock {
+	if mmTeamAcceptInvite.defaultExpectation != nil {
+		mmTeamAcceptInvite.mock.t.Fatalf("Default expectation is already set for the UserServiceClient.TeamAcceptInvite method")
+	}
+
+	if len(mmTeamAcceptInvite.expectations) > 0 {
+		mmTeamAcceptInvite.mock.t.Fatalf("Some expectations are already set for the UserServiceClient.TeamAcceptInvite method")
+	}
+
+	mmTeamAcceptInvite.mock.funcTeamAcceptInvite = f
+	return mmTeamAcceptInvite.mock
+}
+
+// When sets expectation for the UserServiceClient.TeamAcceptInvite which will trigger the result defined by the following
+// Then helper
+func (mmTeamAcceptInvite *mUserServiceClientMockTeamAcceptInvite) When(ctx context.Context, pp1 *connect_go.Request[v1.TeamAcceptInviteRequest]) *UserServiceClientMockTeamAcceptInviteExpectation {
+	if mmTeamAcceptInvite.mock.funcTeamAcceptInvite != nil {
+		mmTeamAcceptInvite.mock.t.Fatalf("UserServiceClientMock.TeamAcceptInvite mock is already set by Set")
+	}
+
+	expectation := &UserServiceClientMockTeamAcceptInviteExpectation{
+		mock:   mmTeamAcceptInvite.mock,
+		params: &UserServiceClientMockTeamAcceptInviteParams{ctx, pp1},
+	}
+	mmTeamAcceptInvite.expectations = append(mmTeamAcceptInvite.expectations, expectation)
+	return expectation
+}
+
+// Then sets up UserServiceClient.TeamAcceptInvite return parameters for the expectation previously defined by the When method
+func (e *UserServiceClientMockTeamAcceptInviteExpectation) Then(pp2 *connect_go.Response[v1.TeamAcceptInviteResponse], err error) *UserServiceClientMock {
+	e.results = &UserServiceClientMockTeamAcceptInviteResults{pp2, err}
+	return e.mock
+}
+
+// TeamAcceptInvite implements UserServiceClient
+func (mmTeamAcceptInvite *UserServiceClientMock) TeamAcceptInvite(ctx context.Context, pp1 *connect_go.Request[v1.TeamAcceptInviteRequest]) (pp2 *connect_go.Response[v1.TeamAcceptInviteResponse], err error) {
+	mm_atomic.AddUint64(&mmTeamAcceptInvite.beforeTeamAcceptInviteCounter, 1)
+	defer mm_atomic.AddUint64(&mmTeamAcceptInvite.afterTeamAcceptInviteCounter, 1)
+
+	if mmTeamAcceptInvite.inspectFuncTeamAcceptInvite != nil {
+		mmTeamAcceptInvite.inspectFuncTeamAcceptInvite(ctx, pp1)
+	}
+
+	mm_params := &UserServiceClientMockTeamAcceptInviteParams{ctx, pp1}
+
+	// Record call args
+	mmTeamAcceptInvite.TeamAcceptInviteMock.mutex.Lock()
+	mmTeamAcceptInvite.TeamAcceptInviteMock.callArgs = append(mmTeamAcceptInvite.TeamAcceptInviteMock.callArgs, mm_params)
+	mmTeamAcceptInvite.TeamAcceptInviteMock.mutex.Unlock()
+
+	for _, e := range mmTeamAcceptInvite.TeamAcceptInviteMock.expectations {
+		if minimock.Equal(e.params, mm_params) {
+			mm_atomic.AddUint64(&e.Counter, 1)
+			return e.results.pp2, e.results.err
+		}
+	}
+
+	if mmTeamAcceptInvite.TeamAcceptInviteMock.defaultExpectation != nil {
+		mm_atomic.AddUint64(&mmTeamAcceptInvite.TeamAcceptInviteMock.defaultExpectation.Counter, 1)
+		mm_want := mmTeamAcceptInvite.TeamAcceptInviteMock.defaultExpectation.params
+		mm_got := UserServiceClientMockTeamAcceptInviteParams{ctx, pp1}
+		if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
+			mmTeamAcceptInvite.t.Errorf("UserServiceClientMock.TeamAcceptInvite got unexpected parameters, want: %#v, got: %#v%s\n", *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
+		}
+
+		mm_results := mmTeamAcceptInvite.TeamAcceptInviteMock.defaultExpectation.results
+		if mm_results == nil {
+			mmTeamAcceptInvite.t.Fatal("No results are set for the UserServiceClientMock.TeamAcceptInvite")
+		}
+		return (*mm_results).pp2, (*mm_results).err
+	}
+	if mmTeamAcceptInvite.funcTeamAcceptInvite != nil {
+		return mmTeamAcceptInvite.funcTeamAcceptInvite(ctx, pp1)
+	}
+	mmTeamAcceptInvite.t.Fatalf("Unexpected call to UserServiceClientMock.TeamAcceptInvite. %v %v", ctx, pp1)
+	return
+}
+
+// TeamAcceptInviteAfterCounter returns a count of finished UserServiceClientMock.TeamAcceptInvite invocations
+func (mmTeamAcceptInvite *UserServiceClientMock) TeamAcceptInviteAfterCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmTeamAcceptInvite.afterTeamAcceptInviteCounter)
+}
+
+// TeamAcceptInviteBeforeCounter returns a count of UserServiceClientMock.TeamAcceptInvite invocations
+func (mmTeamAcceptInvite *UserServiceClientMock) TeamAcceptInviteBeforeCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmTeamAcceptInvite.beforeTeamAcceptInviteCounter)
+}
+
+// Calls returns a list of arguments used in each call to UserServiceClientMock.TeamAcceptInvite.
+// The list is in the same order as the calls were made (i.e. recent calls have a higher index)
+func (mmTeamAcceptInvite *mUserServiceClientMockTeamAcceptInvite) Calls() []*UserServiceClientMockTeamAcceptInviteParams {
+	mmTeamAcceptInvite.mutex.RLock()
+
+	argCopy := make([]*UserServiceClientMockTeamAcceptInviteParams, len(mmTeamAcceptInvite.callArgs))
+	copy(argCopy, mmTeamAcceptInvite.callArgs)
+
+	mmTeamAcceptInvite.mutex.RUnlock()
+
+	return argCopy
+}
+
+// MinimockTeamAcceptInviteDone returns true if the count of the TeamAcceptInvite invocations corresponds
+// the number of defined expectations
+func (m *UserServiceClientMock) MinimockTeamAcceptInviteDone() bool {
+	for _, e := range m.TeamAcceptInviteMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			return false
+		}
+	}
+
+	// if default expectation was set then invocations count should be greater than zero
+	if m.TeamAcceptInviteMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterTeamAcceptInviteCounter) < 1 {
+		return false
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcTeamAcceptInvite != nil && mm_atomic.LoadUint64(&m.afterTeamAcceptInviteCounter) < 1 {
+		return false
+	}
+	return true
+}
+
+// MinimockTeamAcceptInviteInspect logs each unmet expectation
+func (m *UserServiceClientMock) MinimockTeamAcceptInviteInspect() {
+	for _, e := range m.TeamAcceptInviteMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			m.t.Errorf("Expected call to UserServiceClientMock.TeamAcceptInvite with params: %#v", *e.params)
+		}
+	}
+
+	// if default expectation was set then invocations count should be greater than zero
+	if m.TeamAcceptInviteMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterTeamAcceptInviteCounter) < 1 {
+		if m.TeamAcceptInviteMock.defaultExpectation.params == nil {
+			m.t.Error("Expected call to UserServiceClientMock.TeamAcceptInvite")
+		} else {
+			m.t.Errorf("Expected call to UserServiceClientMock.TeamAcceptInvite with params: %#v", *m.TeamAcceptInviteMock.defaultExpectation.params)
+		}
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcTeamAcceptInvite != nil && mm_atomic.LoadUint64(&m.afterTeamAcceptInviteCounter) < 1 {
+		m.t.Error("Expected call to UserServiceClientMock.TeamAcceptInvite")
+	}
+}
+
+type mUserServiceClientMockTeamAddMembers struct {
+	mock               *UserServiceClientMock
+	defaultExpectation *UserServiceClientMockTeamAddMembersExpectation
+	expectations       []*UserServiceClientMockTeamAddMembersExpectation
+
+	callArgs []*UserServiceClientMockTeamAddMembersParams
+	mutex    sync.RWMutex
+}
+
+// UserServiceClientMockTeamAddMembersExpectation specifies expectation struct of the UserServiceClient.TeamAddMembers
+type UserServiceClientMockTeamAddMembersExpectation struct {
+	mock    *UserServiceClientMock
+	params  *UserServiceClientMockTeamAddMembersParams
+	results *UserServiceClientMockTeamAddMembersResults
+	Counter uint64
+}
+
+// UserServiceClientMockTeamAddMembersParams contains parameters of the UserServiceClient.TeamAddMembers
+type UserServiceClientMockTeamAddMembersParams struct {
+	ctx context.Context
+	pp1 *connect_go.Request[v1.TeamAddMembersRequest]
+}
+
+// UserServiceClientMockTeamAddMembersResults contains results of the UserServiceClient.TeamAddMembers
+type UserServiceClientMockTeamAddMembersResults struct {
+	pp2 *connect_go.Response[v1.TeamAddMembersResponse]
+	err error
+}
+
+// Expect sets up expected params for UserServiceClient.TeamAddMembers
+func (mmTeamAddMembers *mUserServiceClientMockTeamAddMembers) Expect(ctx context.Context, pp1 *connect_go.Request[v1.TeamAddMembersRequest]) *mUserServiceClientMockTeamAddMembers {
+	if mmTeamAddMembers.mock.funcTeamAddMembers != nil {
+		mmTeamAddMembers.mock.t.Fatalf("UserServiceClientMock.TeamAddMembers mock is already set by Set")
+	}
+
+	if mmTeamAddMembers.defaultExpectation == nil {
+		mmTeamAddMembers.defaultExpectation = &UserServiceClientMockTeamAddMembersExpectation{}
+	}
+
+	mmTeamAddMembers.defaultExpectation.params = &UserServiceClientMockTeamAddMembersParams{ctx, pp1}
+	for _, e := range mmTeamAddMembers.expectations {
+		if minimock.Equal(e.params, mmTeamAddMembers.defaultExpectation.params) {
+			mmTeamAddMembers.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmTeamAddMembers.defaultExpectation.params)
+		}
+	}
+
+	return mmTeamAddMembers
+}
+
+// Inspect accepts an inspector function that has same arguments as the UserServiceClient.TeamAddMembers
+func (mmTeamAddMembers *mUserServiceClientMockTeamAddMembers) Inspect(f func(ctx context.Context, pp1 *connect_go.Request[v1.TeamAddMembersRequest])) *mUserServiceClientMockTeamAddMembers {
+	if mmTeamAddMembers.mock.inspectFuncTeamAddMembers != nil {
+		mmTeamAddMembers.mock.t.Fatalf("Inspect function is already set for UserServiceClientMock.TeamAddMembers")
+	}
+
+	mmTeamAddMembers.mock.inspectFuncTeamAddMembers = f
+
+	return mmTeamAddMembers
+}
+
+// Return sets up results that will be returned by UserServiceClient.TeamAddMembers
+func (mmTeamAddMembers *mUserServiceClientMockTeamAddMembers) Return(pp2 *connect_go.Response[v1.TeamAddMembersResponse], err error) *UserServiceClientMock {
+	if mmTeamAddMembers.mock.funcTeamAddMembers != nil {
+		mmTeamAddMembers.mock.t.Fatalf("UserServiceClientMock.TeamAddMembers mock is already set by Set")
+	}
+
+	if mmTeamAddMembers.defaultExpectation == nil {
+		mmTeamAddMembers.defaultExpectation = &UserServiceClientMockTeamAddMembersExpectation{mock: mmTeamAddMembers.mock}
+	}
+	mmTeamAddMembers.defaultExpectation.results = &UserServiceClientMockTeamAddMembersResults{pp2, err}
+	return mmTeamAddMembers.mock
+}
+
+// Set uses given function f to mock the UserServiceClient.TeamAddMembers method
+func (mmTeamAddMembers *mUserServiceClientMockTeamAddMembers) Set(f func(ctx context.Context, pp1 *connect_go.Request[v1.TeamAddMembersRequest]) (pp2 *connect_go.Response[v1.TeamAddMembersResponse], err error)) *UserServiceClientMock {
+	if mmTeamAddMembers.defaultExpectation != nil {
+		mmTeamAddMembers.mock.t.Fatalf("Default expectation is already set for the UserServiceClient.TeamAddMembers method")
+	}
+
+	if len(mmTeamAddMembers.expectations) > 0 {
+		mmTeamAddMembers.mock.t.Fatalf("Some expectations are already set for the UserServiceClient.TeamAddMembers method")
+	}
+
+	mmTeamAddMembers.mock.funcTeamAddMembers = f
+	return mmTeamAddMembers.mock
+}
+
+// When sets expectation for the UserServiceClient.TeamAddMembers which will trigger the result defined by the following
+// Then helper
+func (mmTeamAddMembers *mUserServiceClientMockTeamAddMembers) When(ctx context.Context, pp1 *connect_go.Request[v1.TeamAddMembersRequest]) *UserServiceClientMockTeamAddMembersExpectation {
+	if mmTeamAddMembers.mock.funcTeamAddMembers != nil {
+		mmTeamAddMembers.mock.t.Fatalf("UserServiceClientMock.TeamAddMembers mock is already set by Set")
+	}
+
+	expectation := &UserServiceClientMockTeamAddMembersExpectation{
+		mock:   mmTeamAddMembers.mock,
+		params: &UserServiceClientMockTeamAddMembersParams{ctx, pp1},
+	}
+	mmTeamAddMembers.expectations = append(mmTeamAddMembers.expectations, expectation)
+	return expectation
+}
+
+// Then sets up UserServiceClient.TeamAddMembers return parameters for the expectation previously defined by the When method
+func (e *UserServiceClientMockTeamAddMembersExpectation) Then(pp2 *connect_go.Response[v1.TeamAddMembersResponse], err error) *UserServiceClientMock {
+	e.results = &UserServiceClientMockTeamAddMembersResults{pp2, err}
+	return e.mock
+}
+
+// TeamAddMembers implements UserServiceClient
+func (mmTeamAddMembers *UserServiceClientMock) TeamAddMembers(ctx context.Context, pp1 *connect_go.Request[v1.TeamAddMembersRequest]) (pp2 *connect_go.Response[v1.TeamAddMembersResponse], err error) {
+	mm_atomic.AddUint64(&mmTeamAddMembers.beforeTeamAddMembersCounter, 1)
+	defer mm_atomic.AddUint64(&mmTeamAddMembers.afterTeamAddMembersCounter, 1)
+
+	if mmTeamAddMembers.inspectFuncTeamAddMembers != nil {
+		mmTeamAddMembers.inspectFuncTeamAddMembers(ctx, pp1)
+	}
+
+	mm_params := &UserServiceClientMockTeamAddMembersParams{ctx, pp1}
+
+	// Record call args
+	mmTeamAddMembers.TeamAddMembersMock.mutex.Lock()
+	mmTeamAddMembers.TeamAddMembersMock.callArgs = append(mmTeamAddMembers.TeamAddMembersMock.callArgs, mm_params)
+	mmTeamAddMembers.TeamAddMembersMock.mutex.Unlock()
+
+	for _, e := range mmTeamAddMembers.TeamAddMembersMock.expectations {
+		if minimock.Equal(e.params, mm_params) {
+			mm_atomic.AddUint64(&e.Counter, 1)
+			return e.results.pp2, e.results.err
+		}
+	}
+
+	if mmTeamAddMembers.TeamAddMembersMock.defaultExpectation != nil {
+		mm_atomic.AddUint64(&mmTeamAddMembers.TeamAddMembersMock.defaultExpectation.Counter, 1)
+		mm_want := mmTeamAddMembers.TeamAddMembersMock.defaultExpectation.params
+		mm_got := UserServiceClientMockTeamAddMembersParams{ctx, pp1}
+		if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
+			mmTeamAddMembers.t.Errorf("UserServiceClientMock.TeamAddMembers got unexpected parameters, want: %#v, got: %#v%s\n", *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
+		}
+
+		mm_results := mmTeamAddMembers.TeamAddMembersMock.defaultExpectation.results
+		if mm_results == nil {
+			mmTeamAddMembers.t.Fatal("No results are set for the UserServiceClientMock.TeamAddMembers")
+		}
+		return (*mm_results).pp2, (*mm_results).err
+	}
+	if mmTeamAddMembers.funcTeamAddMembers != nil {
+		return mmTeamAddMembers.funcTeamAddMembers(ctx, pp1)
+	}
+	mmTeamAddMembers.t.Fatalf("Unexpected call to UserServiceClientMock.TeamAddMembers. %v %v", ctx, pp1)
+	return
+}
+
+// TeamAddMembersAfterCounter returns a count of finished UserServiceClientMock.TeamAddMembers invocations
+func (mmTeamAddMembers *UserServiceClientMock) TeamAddMembersAfterCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmTeamAddMembers.afterTeamAddMembersCounter)
+}
+
+// TeamAddMembersBeforeCounter returns a count of UserServiceClientMock.TeamAddMembers invocations
+func (mmTeamAddMembers *UserServiceClientMock) TeamAddMembersBeforeCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmTeamAddMembers.beforeTeamAddMembersCounter)
+}
+
+// Calls returns a list of arguments used in each call to UserServiceClientMock.TeamAddMembers.
+// The list is in the same order as the calls were made (i.e. recent calls have a higher index)
+func (mmTeamAddMembers *mUserServiceClientMockTeamAddMembers) Calls() []*UserServiceClientMockTeamAddMembersParams {
+	mmTeamAddMembers.mutex.RLock()
+
+	argCopy := make([]*UserServiceClientMockTeamAddMembersParams, len(mmTeamAddMembers.callArgs))
+	copy(argCopy, mmTeamAddMembers.callArgs)
+
+	mmTeamAddMembers.mutex.RUnlock()
+
+	return argCopy
+}
+
+// MinimockTeamAddMembersDone returns true if the count of the TeamAddMembers invocations corresponds
+// the number of defined expectations
+func (m *UserServiceClientMock) MinimockTeamAddMembersDone() bool {
+	for _, e := range m.TeamAddMembersMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			return false
+		}
+	}
+
+	// if default expectation was set then invocations count should be greater than zero
+	if m.TeamAddMembersMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterTeamAddMembersCounter) < 1 {
+		return false
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcTeamAddMembers != nil && mm_atomic.LoadUint64(&m.afterTeamAddMembersCounter) < 1 {
+		return false
+	}
+	return true
+}
+
+// MinimockTeamAddMembersInspect logs each unmet expectation
+func (m *UserServiceClientMock) MinimockTeamAddMembersInspect() {
+	for _, e := range m.TeamAddMembersMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			m.t.Errorf("Expected call to UserServiceClientMock.TeamAddMembers with params: %#v", *e.params)
+		}
+	}
+
+	// if default expectation was set then invocations count should be greater than zero
+	if m.TeamAddMembersMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterTeamAddMembersCounter) < 1 {
+		if m.TeamAddMembersMock.defaultExpectation.params == nil {
+			m.t.Error("Expected call to UserServiceClientMock.TeamAddMembers")
+		} else {
+			m.t.Errorf("Expected call to UserServiceClientMock.TeamAddMembers with params: %#v", *m.TeamAddMembersMock.defaultExpectation.params)
+		}
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcTeamAddMembers != nil && mm_atomic.LoadUint64(&m.afterTeamAddMembersCounter) < 1 {
+		m.t.Error("Expected call to UserServiceClientMock.TeamAddMembers")
+	}
+}
+
+type mUserServiceClientMockTeamCreate struct {
+	mock               *UserServiceClientMock
+	defaultExpectation *UserServiceClientMockTeamCreateExpectation
+	expectations       []*UserServiceClientMockTeamCreateExpectation
+
+	callArgs []*UserServiceClientMockTeamCreateParams
+	mutex    sync.RWMutex
+}
+
+// UserServiceClientMockTeamCreateExpectation specifies expectation struct of the UserServiceClient.TeamCreate
+type UserServiceClientMockTeamCreateExpectation struct {
+	mock    *UserServiceClientMock
+	params  *UserServiceClientMockTeamCreateParams
+	results *UserServiceClientMockTeamCreateResults
+	Counter uint64
+}
+
+// UserServiceClientMockTeamCreateParams contains parameters of the UserServiceClient.TeamCreate
+type UserServiceClientMockTeamCreateParams struct {
+	ctx context.Context
+	pp1 *connect_go.Request[v1.TeamCreateRequest]
+}
+
+// UserServiceClientMockTeamCreateResults contains results of the UserServiceClient.TeamCreate
+type UserServiceClientMockTeamCreateResults struct {
+	pp2 *connect_go.Response[v1.TeamCreateResponse]
+	err error
+}
+
+// Expect sets up expected params for UserServiceClient.TeamCreate
+func (mmTeamCreate *mUserServiceClientMockTeamCreate) Expect(ctx context.Context, pp1 *connect_go.Request[v1.TeamCreateRequest]) *mUserServiceClientMockTeamCreate {
+	if mmTeamCreate.mock.funcTeamCreate != nil {
+		mmTeamCreate.mock.t.Fatalf("UserServiceClientMock.TeamCreate mock is already set by Set")
+	}
+
+	if mmTeamCreate.defaultExpectation == nil {
+		mmTeamCreate.defaultExpectation = &UserServiceClientMockTeamCreateExpectation{}
+	}
+
+	mmTeamCreate.defaultExpectation.params = &UserServiceClientMockTeamCreateParams{ctx, pp1}
+	for _, e := range mmTeamCreate.expectations {
+		if minimock.Equal(e.params, mmTeamCreate.defaultExpectation.params) {
+			mmTeamCreate.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmTeamCreate.defaultExpectation.params)
+		}
+	}
+
+	return mmTeamCreate
+}
+
+// Inspect accepts an inspector function that has same arguments as the UserServiceClient.TeamCreate
+func (mmTeamCreate *mUserServiceClientMockTeamCreate) Inspect(f func(ctx context.Context, pp1 *connect_go.Request[v1.TeamCreateRequest])) *mUserServiceClientMockTeamCreate {
+	if mmTeamCreate.mock.inspectFuncTeamCreate != nil {
+		mmTeamCreate.mock.t.Fatalf("Inspect function is already set for UserServiceClientMock.TeamCreate")
+	}
+
+	mmTeamCreate.mock.inspectFuncTeamCreate = f
+
+	return mmTeamCreate
+}
+
+// Return sets up results that will be returned by UserServiceClient.TeamCreate
+func (mmTeamCreate *mUserServiceClientMockTeamCreate) Return(pp2 *connect_go.Response[v1.TeamCreateResponse], err error) *UserServiceClientMock {
+	if mmTeamCreate.mock.funcTeamCreate != nil {
+		mmTeamCreate.mock.t.Fatalf("UserServiceClientMock.TeamCreate mock is already set by Set")
+	}
+
+	if mmTeamCreate.defaultExpectation == nil {
+		mmTeamCreate.defaultExpectation = &UserServiceClientMockTeamCreateExpectation{mock: mmTeamCreate.mock}
+	}
+	mmTeamCreate.defaultExpectation.results = &UserServiceClientMockTeamCreateResults{pp2, err}
+	return mmTeamCreate.mock
+}
+
+// Set uses given function f to mock the UserServiceClient.TeamCreate method
+func (mmTeamCreate *mUserServiceClientMockTeamCreate) Set(f func(ctx context.Context, pp1 *connect_go.Request[v1.TeamCreateRequest]) (pp2 *connect_go.Response[v1.TeamCreateResponse], err error)) *UserServiceClientMock {
+	if mmTeamCreate.defaultExpectation != nil {
+		mmTeamCreate.mock.t.Fatalf("Default expectation is already set for the UserServiceClient.TeamCreate method")
+	}
+
+	if len(mmTeamCreate.expectations) > 0 {
+		mmTeamCreate.mock.t.Fatalf("Some expectations are already set for the UserServiceClient.TeamCreate method")
+	}
+
+	mmTeamCreate.mock.funcTeamCreate = f
+	return mmTeamCreate.mock
+}
+
+// When sets expectation for the UserServiceClient.TeamCreate which will trigger the result defined by the following
+// Then helper
+func (mmTeamCreate *mUserServiceClientMockTeamCreate) When(ctx context.Context, pp1 *connect_go.Request[v1.TeamCreateRequest]) *UserServiceClientMockTeamCreateExpectation {
+	if mmTeamCreate.mock.funcTeamCreate != nil {
+		mmTeamCreate.mock.t.Fatalf("UserServiceClientMock.TeamCreate mock is already set by Set")
+	}
+
+	expectation := &UserServiceClientMockTeamCreateExpectation{
+		mock:   mmTeamCreate.mock,
+		params: &UserServiceClientMockTeamCreateParams{ctx, pp1},
+	}
+	mmTeamCreate.expectations = append(mmTeamCreate.expectations, expectation)
+	return expectation
+}
+
+// Then sets up UserServiceClient.TeamCreate return parameters for the expectation previously defined by the When method
+func (e *UserServiceClientMockTeamCreateExpectation) Then(pp2 *connect_go.Response[v1.TeamCreateResponse], err error) *UserServiceClientMock {
+	e.results = &UserServiceClientMockTeamCreateResults{pp2, err}
+	return e.mock
+}
+
+// TeamCreate implements UserServiceClient
+func (mmTeamCreate *UserServiceClientMock) TeamCreate(ctx context.Context, pp1 *connect_go.Request[v1.TeamCreateRequest]) (pp2 *connect_go.Response[v1.TeamCreateResponse], err error) {
+	mm_atomic.AddUint64(&mmTeamCreate.beforeTeamCreateCounter, 1)
+	defer mm_atomic.AddUint64(&mmTeamCreate.afterTeamCreateCounter, 1)
+
+	if mmTeamCreate.inspectFuncTeamCreate != nil {
+		mmTeamCreate.inspectFuncTeamCreate(ctx, pp1)
+	}
+
+	mm_params := &UserServiceClientMockTeamCreateParams{ctx, pp1}
+
+	// Record call args
+	mmTeamCreate.TeamCreateMock.mutex.Lock()
+	mmTeamCreate.TeamCreateMock.callArgs = append(mmTeamCreate.TeamCreateMock.callArgs, mm_params)
+	mmTeamCreate.TeamCreateMock.mutex.Unlock()
+
+	for _, e := range mmTeamCreate.TeamCreateMock.expectations {
+		if minimock.Equal(e.params, mm_params) {
+			mm_atomic.AddUint64(&e.Counter, 1)
+			return e.results.pp2, e.results.err
+		}
+	}
+
+	if mmTeamCreate.TeamCreateMock.defaultExpectation != nil {
+		mm_atomic.AddUint64(&mmTeamCreate.TeamCreateMock.defaultExpectation.Counter, 1)
+		mm_want := mmTeamCreate.TeamCreateMock.defaultExpectation.params
+		mm_got := UserServiceClientMockTeamCreateParams{ctx, pp1}
+		if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
+			mmTeamCreate.t.Errorf("UserServiceClientMock.TeamCreate got unexpected parameters, want: %#v, got: %#v%s\n", *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
+		}
+
+		mm_results := mmTeamCreate.TeamCreateMock.defaultExpectation.results
+		if mm_results == nil {
+			mmTeamCreate.t.Fatal("No results are set for the UserServiceClientMock.TeamCreate")
+		}
+		return (*mm_results).pp2, (*mm_results).err
+	}
+	if mmTeamCreate.funcTeamCreate != nil {
+		return mmTeamCreate.funcTeamCreate(ctx, pp1)
+	}
+	mmTeamCreate.t.Fatalf("Unexpected call to UserServiceClientMock.TeamCreate. %v %v", ctx, pp1)
+	return
+}
+
+// TeamCreateAfterCounter returns a count of finished UserServiceClientMock.TeamCreate invocations
+func (mmTeamCreate *UserServiceClientMock) TeamCreateAfterCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmTeamCreate.afterTeamCreateCounter)
+}
+
+// TeamCreateBeforeCounter returns a count of UserServiceClientMock.TeamCreate invocations
+func (mmTeamCreate *UserServiceClientMock) TeamCreateBeforeCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmTeamCreate.beforeTeamCreateCounter)
+}
+
+// Calls returns a list of arguments used in each call to UserServiceClientMock.TeamCreate.
+// The list is in the same order as the calls were made (i.e. recent calls have a higher index)
+func (mmTeamCreate *mUserServiceClientMockTeamCreate) Calls() []*UserServiceClientMockTeamCreateParams {
+	mmTeamCreate.mutex.RLock()
+
+	argCopy := make([]*UserServiceClientMockTeamCreateParams, len(mmTeamCreate.callArgs))
+	copy(argCopy, mmTeamCreate.callArgs)
+
+	mmTeamCreate.mutex.RUnlock()
+
+	return argCopy
+}
+
+// MinimockTeamCreateDone returns true if the count of the TeamCreate invocations corresponds
+// the number of defined expectations
+func (m *UserServiceClientMock) MinimockTeamCreateDone() bool {
+	for _, e := range m.TeamCreateMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			return false
+		}
+	}
+
+	// if default expectation was set then invocations count should be greater than zero
+	if m.TeamCreateMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterTeamCreateCounter) < 1 {
+		return false
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcTeamCreate != nil && mm_atomic.LoadUint64(&m.afterTeamCreateCounter) < 1 {
+		return false
+	}
+	return true
+}
+
+// MinimockTeamCreateInspect logs each unmet expectation
+func (m *UserServiceClientMock) MinimockTeamCreateInspect() {
+	for _, e := range m.TeamCreateMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			m.t.Errorf("Expected call to UserServiceClientMock.TeamCreate with params: %#v", *e.params)
+		}
+	}
+
+	// if default expectation was set then invocations count should be greater than zero
+	if m.TeamCreateMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterTeamCreateCounter) < 1 {
+		if m.TeamCreateMock.defaultExpectation.params == nil {
+			m.t.Error("Expected call to UserServiceClientMock.TeamCreate")
+		} else {
+			m.t.Errorf("Expected call to UserServiceClientMock.TeamCreate with params: %#v", *m.TeamCreateMock.defaultExpectation.params)
+		}
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcTeamCreate != nil && mm_atomic.LoadUint64(&m.afterTeamCreateCounter) < 1 {
+		m.t.Error("Expected call to UserServiceClientMock.TeamCreate")
+	}
+}
+
+type mUserServiceClientMockTeamDelete struct {
+	mock               *UserServiceClientMock
+	defaultExpectation *UserServiceClientMockTeamDeleteExpectation
+	expectations       []*UserServiceClientMockTeamDeleteExpectation
+
+	callArgs []*UserServiceClientMockTeamDeleteParams
+	mutex    sync.RWMutex
+}
+
+// UserServiceClientMockTeamDeleteExpectation specifies expectation struct of the UserServiceClient.TeamDelete
+type UserServiceClientMockTeamDeleteExpectation struct {
+	mock    *UserServiceClientMock
+	params  *UserServiceClientMockTeamDeleteParams
+	results *UserServiceClientMockTeamDeleteResults
+	Counter uint64
+}
+
+// UserServiceClientMockTeamDeleteParams contains parameters of the UserServiceClient.TeamDelete
+type UserServiceClientMockTeamDeleteParams struct {
+	ctx context.Context
+	pp1 *connect_go.Request[v1.TeamDeleteRequest]
+}
+
+// UserServiceClientMockTeamDeleteResults contains results of the UserServiceClient.TeamDelete
+type UserServiceClientMockTeamDeleteResults struct {
+	pp2 *connect_go.Response[v1.TeamDeleteResponse]
+	err error
+}
+
+// Expect sets up expected params for UserServiceClient.TeamDelete
+func (mmTeamDelete *mUserServiceClientMockTeamDelete) Expect(ctx context.Context, pp1 *connect_go.Request[v1.TeamDeleteRequest]) *mUserServiceClientMockTeamDelete {
+	if mmTeamDelete.mock.funcTeamDelete != nil {
+		mmTeamDelete.mock.t.Fatalf("UserServiceClientMock.TeamDelete mock is already set by Set")
+	}
+
+	if mmTeamDelete.defaultExpectation == nil {
+		mmTeamDelete.defaultExpectation = &UserServiceClientMockTeamDeleteExpectation{}
+	}
+
+	mmTeamDelete.defaultExpectation.params = &UserServiceClientMockTeamDeleteParams{ctx, pp1}
+	for _, e := range mmTeamDelete.expectations {
+		if minimock.Equal(e.params, mmTeamDelete.defaultExpectation.params) {
+			mmTeamDelete.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmTeamDelete.defaultExpectation.params)
+		}
+	}
+
+	return mmTeamDelete
+}
+
+// Inspect accepts an inspector function that has same arguments as the UserServiceClient.TeamDelete
+func (mmTeamDelete *mUserServiceClientMockTeamDelete) Inspect(f func(ctx context.Context, pp1 *connect_go.Request[v1.TeamDeleteRequest])) *mUserServiceClientMockTeamDelete {
+	if mmTeamDelete.mock.inspectFuncTeamDelete != nil {
+		mmTeamDelete.mock.t.Fatalf("Inspect function is already set for UserServiceClientMock.TeamDelete")
+	}
+
+	mmTeamDelete.mock.inspectFuncTeamDelete = f
+
+	return mmTeamDelete
+}
+
+// Return sets up results that will be returned by UserServiceClient.TeamDelete
+func (mmTeamDelete *mUserServiceClientMockTeamDelete) Return(pp2 *connect_go.Response[v1.TeamDeleteResponse], err error) *UserServiceClientMock {
+	if mmTeamDelete.mock.funcTeamDelete != nil {
+		mmTeamDelete.mock.t.Fatalf("UserServiceClientMock.TeamDelete mock is already set by Set")
+	}
+
+	if mmTeamDelete.defaultExpectation == nil {
+		mmTeamDelete.defaultExpectation = &UserServiceClientMockTeamDeleteExpectation{mock: mmTeamDelete.mock}
+	}
+	mmTeamDelete.defaultExpectation.results = &UserServiceClientMockTeamDeleteResults{pp2, err}
+	return mmTeamDelete.mock
+}
+
+// Set uses given function f to mock the UserServiceClient.TeamDelete method
+func (mmTeamDelete *mUserServiceClientMockTeamDelete) Set(f func(ctx context.Context, pp1 *connect_go.Request[v1.TeamDeleteRequest]) (pp2 *connect_go.Response[v1.TeamDeleteResponse], err error)) *UserServiceClientMock {
+	if mmTeamDelete.defaultExpectation != nil {
+		mmTeamDelete.mock.t.Fatalf("Default expectation is already set for the UserServiceClient.TeamDelete method")
+	}
+
+	if len(mmTeamDelete.expectations) > 0 {
+		mmTeamDelete.mock.t.Fatalf("Some expectations are already set for the UserServiceClient.TeamDelete method")
+	}
+
+	mmTeamDelete.mock.funcTeamDelete = f
+	return mmTeamDelete.mock
+}
+
+// When sets expectation for the UserServiceClient.TeamDelete which will trigger the result defined by the following
+// Then helper
+func (mmTeamDelete *mUserServiceClientMockTeamDelete) When(ctx context.Context, pp1 *connect_go.Request[v1.TeamDeleteRequest]) *UserServiceClientMockTeamDeleteExpectation {
+	if mmTeamDelete.mock.funcTeamDelete != nil {
+		mmTeamDelete.mock.t.Fatalf("UserServiceClientMock.TeamDelete mock is already set by Set")
+	}
+
+	expectation := &UserServiceClientMockTeamDeleteExpectation{
+		mock:   mmTeamDelete.mock,
+		params: &UserServiceClientMockTeamDeleteParams{ctx, pp1},
+	}
+	mmTeamDelete.expectations = append(mmTeamDelete.expectations, expectation)
+	return expectation
+}
+
+// Then sets up UserServiceClient.TeamDelete return parameters for the expectation previously defined by the When method
+func (e *UserServiceClientMockTeamDeleteExpectation) Then(pp2 *connect_go.Response[v1.TeamDeleteResponse], err error) *UserServiceClientMock {
+	e.results = &UserServiceClientMockTeamDeleteResults{pp2, err}
+	return e.mock
+}
+
+// TeamDelete implements UserServiceClient
+func (mmTeamDelete *UserServiceClientMock) TeamDelete(ctx context.Context, pp1 *connect_go.Request[v1.TeamDeleteRequest]) (pp2 *connect_go.Response[v1.TeamDeleteResponse], err error) {
+	mm_atomic.AddUint64(&mmTeamDelete.beforeTeamDeleteCounter, 1)
+	defer mm_atomic.AddUint64(&mmTeamDelete.afterTeamDeleteCounter, 1)
+
+	if mmTeamDelete.inspectFuncTeamDelete != nil {
+		mmTeamDelete.inspectFuncTeamDelete(ctx, pp1)
+	}
+
+	mm_params := &UserServiceClientMockTeamDeleteParams{ctx, pp1}
+
+	// Record call args
+	mmTeamDelete.TeamDeleteMock.mutex.Lock()
+	mmTeamDelete.TeamDeleteMock.callArgs = append(mmTeamDelete.TeamDeleteMock.callArgs, mm_params)
+	mmTeamDelete.TeamDeleteMock.mutex.Unlock()
+
+	for _, e := range mmTeamDelete.TeamDeleteMock.expectations {
+		if minimock.Equal(e.params, mm_params) {
+			mm_atomic.AddUint64(&e.Counter, 1)
+			return e.results.pp2, e.results.err
+		}
+	}
+
+	if mmTeamDelete.TeamDeleteMock.defaultExpectation != nil {
+		mm_atomic.AddUint64(&mmTeamDelete.TeamDeleteMock.defaultExpectation.Counter, 1)
+		mm_want := mmTeamDelete.TeamDeleteMock.defaultExpectation.params
+		mm_got := UserServiceClientMockTeamDeleteParams{ctx, pp1}
+		if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
+			mmTeamDelete.t.Errorf("UserServiceClientMock.TeamDelete got unexpected parameters, want: %#v, got: %#v%s\n", *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
+		}
+
+		mm_results := mmTeamDelete.TeamDeleteMock.defaultExpectation.results
+		if mm_results == nil {
+			mmTeamDelete.t.Fatal("No results are set for the UserServiceClientMock.TeamDelete")
+		}
+		return (*mm_results).pp2, (*mm_results).err
+	}
+	if mmTeamDelete.funcTeamDelete != nil {
+		return mmTeamDelete.funcTeamDelete(ctx, pp1)
+	}
+	mmTeamDelete.t.Fatalf("Unexpected call to UserServiceClientMock.TeamDelete. %v %v", ctx, pp1)
+	return
+}
+
+// TeamDeleteAfterCounter returns a count of finished UserServiceClientMock.TeamDelete invocations
+func (mmTeamDelete *UserServiceClientMock) TeamDeleteAfterCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmTeamDelete.afterTeamDeleteCounter)
+}
+
+// TeamDeleteBeforeCounter returns a count of UserServiceClientMock.TeamDelete invocations
+func (mmTeamDelete *UserServiceClientMock) TeamDeleteBeforeCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmTeamDelete.beforeTeamDeleteCounter)
+}
+
+// Calls returns a list of arguments used in each call to UserServiceClientMock.TeamDelete.
+// The list is in the same order as the calls were made (i.e. recent calls have a higher index)
+func (mmTeamDelete *mUserServiceClientMockTeamDelete) Calls() []*UserServiceClientMockTeamDeleteParams {
+	mmTeamDelete.mutex.RLock()
+
+	argCopy := make([]*UserServiceClientMockTeamDeleteParams, len(mmTeamDelete.callArgs))
+	copy(argCopy, mmTeamDelete.callArgs)
+
+	mmTeamDelete.mutex.RUnlock()
+
+	return argCopy
+}
+
+// MinimockTeamDeleteDone returns true if the count of the TeamDelete invocations corresponds
+// the number of defined expectations
+func (m *UserServiceClientMock) MinimockTeamDeleteDone() bool {
+	for _, e := range m.TeamDeleteMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			return false
+		}
+	}
+
+	// if default expectation was set then invocations count should be greater than zero
+	if m.TeamDeleteMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterTeamDeleteCounter) < 1 {
+		return false
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcTeamDelete != nil && mm_atomic.LoadUint64(&m.afterTeamDeleteCounter) < 1 {
+		return false
+	}
+	return true
+}
+
+// MinimockTeamDeleteInspect logs each unmet expectation
+func (m *UserServiceClientMock) MinimockTeamDeleteInspect() {
+	for _, e := range m.TeamDeleteMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			m.t.Errorf("Expected call to UserServiceClientMock.TeamDelete with params: %#v", *e.params)
+		}
+	}
+
+	// if default expectation was set then invocations count should be greater than zero
+	if m.TeamDeleteMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterTeamDeleteCounter) < 1 {
+		if m.TeamDeleteMock.defaultExpectation.params == nil {
+			m.t.Error("Expected call to UserServiceClientMock.TeamDelete")
+		} else {
+			m.t.Errorf("Expected call to UserServiceClientMock.TeamDelete with params: %#v", *m.TeamDeleteMock.defaultExpectation.params)
+		}
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcTeamDelete != nil && mm_atomic.LoadUint64(&m.afterTeamDeleteCounter) < 1 {
+		m.t.Error("Expected call to UserServiceClientMock.TeamDelete")
+	}
+}
+
+type mUserServiceClientMockTeamList struct {
+	mock               *UserServiceClientMock
+	defaultExpectation *UserServiceClientMockTeamListExpectation
+	expectations       []*UserServiceClientMockTeamListExpectation
+
+	callArgs []*UserServiceClientMockTeamListParams
+	mutex    sync.RWMutex
+}
+
+// UserServiceClientMockTeamListExpectation specifies expectation struct of the UserServiceClient.TeamList
+type UserServiceClientMockTeamListExpectation struct {
+	mock    *UserServiceClientMock
+	params  *UserServiceClientMockTeamListParams
+	results *UserServiceClientMockTeamListResults
+	Counter uint64
+}
+
+// UserServiceClientMockTeamListParams contains parameters of the UserServiceClient.TeamList
+type UserServiceClientMockTeamListParams struct {
+	ctx context.Context
+	pp1 *connect_go.Request[v1.TeamListRequest]
+}
+
+// UserServiceClientMockTeamListResults contains results of the UserServiceClient.TeamList
+type UserServiceClientMockTeamListResults struct {
+	pp2 *connect_go.Response[v1.TeamListResponse]
+	err error
+}
+
+// Expect sets up expected params for UserServiceClient.TeamList
+func (mmTeamList *mUserServiceClientMockTeamList) Expect(ctx context.Context, pp1 *connect_go.Request[v1.TeamListRequest]) *mUserServiceClientMockTeamList {
+	if mmTeamList.mock.funcTeamList != nil {
+		mmTeamList.mock.t.Fatalf("UserServiceClientMock.TeamList mock is already set by Set")
+	}
+
+	if mmTeamList.defaultExpectation == nil {
+		mmTeamList.defaultExpectation = &UserServiceClientMockTeamListExpectation{}
+	}
+
+	mmTeamList.defaultExpectation.params = &UserServiceClientMockTeamListParams{ctx, pp1}
+	for _, e := range mmTeamList.expectations {
+		if minimock.Equal(e.params, mmTeamList.defaultExpectation.params) {
+			mmTeamList.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmTeamList.defaultExpectation.params)
+		}
+	}
+
+	return mmTeamList
+}
+
+// Inspect accepts an inspector function that has same arguments as the UserServiceClient.TeamList
+func (mmTeamList *mUserServiceClientMockTeamList) Inspect(f func(ctx context.Context, pp1 *connect_go.Request[v1.TeamListRequest])) *mUserServiceClientMockTeamList {
+	if mmTeamList.mock.inspectFuncTeamList != nil {
+		mmTeamList.mock.t.Fatalf("Inspect function is already set for UserServiceClientMock.TeamList")
+	}
+
+	mmTeamList.mock.inspectFuncTeamList = f
+
+	return mmTeamList
+}
+
+// Return sets up results that will be returned by UserServiceClient.TeamList
+func (mmTeamList *mUserServiceClientMockTeamList) Return(pp2 *connect_go.Response[v1.TeamListResponse], err error) *UserServiceClientMock {
+	if mmTeamList.mock.funcTeamList != nil {
+		mmTeamList.mock.t.Fatalf("UserServiceClientMock.TeamList mock is already set by Set")
+	}
+
+	if mmTeamList.defaultExpectation == nil {
+		mmTeamList.defaultExpectation = &UserServiceClientMockTeamListExpectation{mock: mmTeamList.mock}
+	}
+	mmTeamList.defaultExpectation.results = &UserServiceClientMockTeamListResults{pp2, err}
+	return mmTeamList.mock
+}
+
+// Set uses given function f to mock the UserServiceClient.TeamList method
+func (mmTeamList *mUserServiceClientMockTeamList) Set(f func(ctx context.Context, pp1 *connect_go.Request[v1.TeamListRequest]) (pp2 *connect_go.Response[v1.TeamListResponse], err error)) *UserServiceClientMock {
+	if mmTeamList.defaultExpectation != nil {
+		mmTeamList.mock.t.Fatalf("Default expectation is already set for the UserServiceClient.TeamList method")
+	}
+
+	if len(mmTeamList.expectations) > 0 {
+		mmTeamList.mock.t.Fatalf("Some expectations are already set for the UserServiceClient.TeamList method")
+	}
+
+	mmTeamList.mock.funcTeamList = f
+	return mmTeamList.mock
+}
+
+// When sets expectation for the UserServiceClient.TeamList which will trigger the result defined by the following
+// Then helper
+func (mmTeamList *mUserServiceClientMockTeamList) When(ctx context.Context, pp1 *connect_go.Request[v1.TeamListRequest]) *UserServiceClientMockTeamListExpectation {
+	if mmTeamList.mock.funcTeamList != nil {
+		mmTeamList.mock.t.Fatalf("UserServiceClientMock.TeamList mock is already set by Set")
+	}
+
+	expectation := &UserServiceClientMockTeamListExpectation{
+		mock:   mmTeamList.mock,
+		params: &UserServiceClientMockTeamListParams{ctx, pp1},
+	}
+	mmTeamList.expectations = append(mmTeamList.expectations, expectation)
+	return expectation
+}
+
+// Then sets up UserServiceClient.TeamList return parameters for the expectation previously defined by the When method
+func (e *UserServiceClientMockTeamListExpectation) Then(pp2 *connect_go.Response[v1.TeamListResponse], err error) *UserServiceClientMock {
+	e.results = &UserServiceClientMockTeamListResults{pp2, err}
+	return e.mock
+}
+
+// TeamList implements UserServiceClient
+func (mmTeamList *UserServiceClientMock) TeamList(ctx context.Context, pp1 *connect_go.Request[v1.TeamListRequest]) (pp2 *connect_go.Response[v1.TeamListResponse], err error) {
+	mm_atomic.AddUint64(&mmTeamList.beforeTeamListCounter, 1)
+	defer mm_atomic.AddUint64(&mmTeamList.afterTeamListCounter, 1)
+
+	if mmTeamList.inspectFuncTeamList != nil {
+		mmTeamList.inspectFuncTeamList(ctx, pp1)
+	}
+
+	mm_params := &UserServiceClientMockTeamListParams{ctx, pp1}
+
+	// Record call args
+	mmTeamList.TeamListMock.mutex.Lock()
+	mmTeamList.TeamListMock.callArgs = append(mmTeamList.TeamListMock.callArgs, mm_params)
+	mmTeamList.TeamListMock.mutex.Unlock()
+
+	for _, e := range mmTeamList.TeamListMock.expectations {
+		if minimock.Equal(e.params, mm_params) {
+			mm_atomic.AddUint64(&e.Counter, 1)
+			return e.results.pp2, e.results.err
+		}
+	}
+
+	if mmTeamList.TeamListMock.defaultExpectation != nil {
+		mm_atomic.AddUint64(&mmTeamList.TeamListMock.defaultExpectation.Counter, 1)
+		mm_want := mmTeamList.TeamListMock.defaultExpectation.params
+		mm_got := UserServiceClientMockTeamListParams{ctx, pp1}
+		if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
+			mmTeamList.t.Errorf("UserServiceClientMock.TeamList got unexpected parameters, want: %#v, got: %#v%s\n", *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
+		}
+
+		mm_results := mmTeamList.TeamListMock.defaultExpectation.results
+		if mm_results == nil {
+			mmTeamList.t.Fatal("No results are set for the UserServiceClientMock.TeamList")
+		}
+		return (*mm_results).pp2, (*mm_results).err
+	}
+	if mmTeamList.funcTeamList != nil {
+		return mmTeamList.funcTeamList(ctx, pp1)
+	}
+	mmTeamList.t.Fatalf("Unexpected call to UserServiceClientMock.TeamList. %v %v", ctx, pp1)
+	return
+}
+
+// TeamListAfterCounter returns a count of finished UserServiceClientMock.TeamList invocations
+func (mmTeamList *UserServiceClientMock) TeamListAfterCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmTeamList.afterTeamListCounter)
+}
+
+// TeamListBeforeCounter returns a count of UserServiceClientMock.TeamList invocations
+func (mmTeamList *UserServiceClientMock) TeamListBeforeCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmTeamList.beforeTeamListCounter)
+}
+
+// Calls returns a list of arguments used in each call to UserServiceClientMock.TeamList.
+// The list is in the same order as the calls were made (i.e. recent calls have a higher index)
+func (mmTeamList *mUserServiceClientMockTeamList) Calls() []*UserServiceClientMockTeamListParams {
+	mmTeamList.mutex.RLock()
+
+	argCopy := make([]*UserServiceClientMockTeamListParams, len(mmTeamList.callArgs))
+	copy(argCopy, mmTeamList.callArgs)
+
+	mmTeamList.mutex.RUnlock()
+
+	return argCopy
+}
+
+// MinimockTeamListDone returns true if the count of the TeamList invocations corresponds
+// the number of defined expectations
+func (m *UserServiceClientMock) MinimockTeamListDone() bool {
+	for _, e := range m.TeamListMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			return false
+		}
+	}
+
+	// if default expectation was set then invocations count should be greater than zero
+	if m.TeamListMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterTeamListCounter) < 1 {
+		return false
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcTeamList != nil && mm_atomic.LoadUint64(&m.afterTeamListCounter) < 1 {
+		return false
+	}
+	return true
+}
+
+// MinimockTeamListInspect logs each unmet expectation
+func (m *UserServiceClientMock) MinimockTeamListInspect() {
+	for _, e := range m.TeamListMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			m.t.Errorf("Expected call to UserServiceClientMock.TeamList with params: %#v", *e.params)
+		}
+	}
+
+	// if default expectation was set then invocations count should be greater than zero
+	if m.TeamListMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterTeamListCounter) < 1 {
+		if m.TeamListMock.defaultExpectation.params == nil {
+			m.t.Error("Expected call to UserServiceClientMock.TeamList")
+		} else {
+			m.t.Errorf("Expected call to UserServiceClientMock.TeamList with params: %#v", *m.TeamListMock.defaultExpectation.params)
+		}
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcTeamList != nil && mm_atomic.LoadUint64(&m.afterTeamListCounter) < 1 {
+		m.t.Error("Expected call to UserServiceClientMock.TeamList")
+	}
+}
+
+type mUserServiceClientMockTeamListMembers struct {
+	mock               *UserServiceClientMock
+	defaultExpectation *UserServiceClientMockTeamListMembersExpectation
+	expectations       []*UserServiceClientMockTeamListMembersExpectation
+
+	callArgs []*UserServiceClientMockTeamListMembersParams
+	mutex    sync.RWMutex
+}
+
+// UserServiceClientMockTeamListMembersExpectation specifies expectation struct of the UserServiceClient.TeamListMembers
+type UserServiceClientMockTeamListMembersExpectation struct {
+	mock    *UserServiceClientMock
+	params  *UserServiceClientMockTeamListMembersParams
+	results *UserServiceClientMockTeamListMembersResults
+	Counter uint64
+}
+
+// UserServiceClientMockTeamListMembersParams contains parameters of the UserServiceClient.TeamListMembers
+type UserServiceClientMockTeamListMembersParams struct {
+	ctx context.Context
+	pp1 *connect_go.Request[v1.TeamListMembersRequest]
+}
+
+// UserServiceClientMockTeamListMembersResults contains results of the UserServiceClient.TeamListMembers
+type UserServiceClientMockTeamListMembersResults struct {
+	pp2 *connect_go.Response[v1.TeamListMembersResponse]
+	err error
+}
+
+// Expect sets up expected params for UserServiceClient.TeamListMembers
+func (mmTeamListMembers *mUserServiceClientMockTeamListMembers) Expect(ctx context.Context, pp1 *connect_go.Request[v1.TeamListMembersRequest]) *mUserServiceClientMockTeamListMembers {
+	if mmTeamListMembers.mock.funcTeamListMembers != nil {
+		mmTeamListMembers.mock.t.Fatalf("UserServiceClientMock.TeamListMembers mock is already set by Set")
+	}
+
+	if mmTeamListMembers.defaultExpectation == nil {
+		mmTeamListMembers.defaultExpectation = &UserServiceClientMockTeamListMembersExpectation{}
+	}
+
+	mmTeamListMembers.defaultExpectation.params = &UserServiceClientMockTeamListMembersParams{ctx, pp1}
+	for _, e := range mmTeamListMembers.expectations {
+		if minimock.Equal(e.params, mmTeamListMembers.defaultExpectation.params) {
+			mmTeamListMembers.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmTeamListMembers.defaultExpectation.params)
+		}
+	}
+
+	return mmTeamListMembers
+}
+
+// Inspect accepts an inspector function that has same arguments as the UserServiceClient.TeamListMembers
+func (mmTeamListMembers *mUserServiceClientMockTeamListMembers) Inspect(f func(ctx context.Context, pp1 *connect_go.Request[v1.TeamListMembersRequest])) *mUserServiceClientMockTeamListMembers {
+	if mmTeamListMembers.mock.inspectFuncTeamListMembers != nil {
+		mmTeamListMembers.mock.t.Fatalf("Inspect function is already set for UserServiceClientMock.TeamListMembers")
+	}
+
+	mmTeamListMembers.mock.inspectFuncTeamListMembers = f
+
+	return mmTeamListMembers
+}
+
+// Return sets up results that will be returned by UserServiceClient.TeamListMembers
+func (mmTeamListMembers *mUserServiceClientMockTeamListMembers) Return(pp2 *connect_go.Response[v1.TeamListMembersResponse], err error) *UserServiceClientMock {
+	if mmTeamListMembers.mock.funcTeamListMembers != nil {
+		mmTeamListMembers.mock.t.Fatalf("UserServiceClientMock.TeamListMembers mock is already set by Set")
+	}
+
+	if mmTeamListMembers.defaultExpectation == nil {
+		mmTeamListMembers.defaultExpectation = &UserServiceClientMockTeamListMembersExpectation{mock: mmTeamListMembers.mock}
+	}
+	mmTeamListMembers.defaultExpectation.results = &UserServiceClientMockTeamListMembersResults{pp2, err}
+	return mmTeamListMembers.mock
+}
+
+// Set uses given function f to mock the UserServiceClient.TeamListMembers method
+func (mmTeamListMembers *mUserServiceClientMockTeamListMembers) Set(f func(ctx context.Context, pp1 *connect_go.Request[v1.TeamListMembersRequest]) (pp2 *connect_go.Response[v1.TeamListMembersResponse], err error)) *UserServiceClientMock {
+	if mmTeamListMembers.defaultExpectation != nil {
+		mmTeamListMembers.mock.t.Fatalf("Default expectation is already set for the UserServiceClient.TeamListMembers method")
+	}
+
+	if len(mmTeamListMembers.expectations) > 0 {
+		mmTeamListMembers.mock.t.Fatalf("Some expectations are already set for the UserServiceClient.TeamListMembers method")
+	}
+
+	mmTeamListMembers.mock.funcTeamListMembers = f
+	return mmTeamListMembers.mock
+}
+
+// When sets expectation for the UserServiceClient.TeamListMembers which will trigger the result defined by the following
+// Then helper
+func (mmTeamListMembers *mUserServiceClientMockTeamListMembers) When(ctx context.Context, pp1 *connect_go.Request[v1.TeamListMembersRequest]) *UserServiceClientMockTeamListMembersExpectation {
+	if mmTeamListMembers.mock.funcTeamListMembers != nil {
+		mmTeamListMembers.mock.t.Fatalf("UserServiceClientMock.TeamListMembers mock is already set by Set")
+	}
+
+	expectation := &UserServiceClientMockTeamListMembersExpectation{
+		mock:   mmTeamListMembers.mock,
+		params: &UserServiceClientMockTeamListMembersParams{ctx, pp1},
+	}
+	mmTeamListMembers.expectations = append(mmTeamListMembers.expectations, expectation)
+	return expectation
+}
+
+// Then sets up UserServiceClient.TeamListMembers return parameters for the expectation previously defined by the When method
+func (e *UserServiceClientMockTeamListMembersExpectation) Then(pp2 *connect_go.Response[v1.TeamListMembersResponse], err error) *UserServiceClientMock {
+	e.results = &UserServiceClientMockTeamListMembersResults{pp2, err}
+	return e.mock
+}
+
+// TeamListMembers implements UserServiceClient
+func (mmTeamListMembers *UserServiceClientMock) TeamListMembers(ctx context.Context, pp1 *connect_go.Request[v1.TeamListMembersRequest]) (pp2 *connect_go.Response[v1.TeamListMembersResponse], err error) {
+	mm_atomic.AddUint64(&mmTeamListMembers.beforeTeamListMembersCounter, 1)
+	defer mm_atomic.AddUint64(&mmTeamListMembers.afterTeamListMembersCounter, 1)
+
+	if mmTeamListMembers.inspectFuncTeamListMembers != nil {
+		mmTeamListMembers.inspectFuncTeamListMembers(ctx, pp1)
+	}
+
+	mm_params := &UserServiceClientMockTeamListMembersParams{ctx, pp1}
+
+	// Record call args
+	mmTeamListMembers.TeamListMembersMock.mutex.Lock()
+	mmTeamListMembers.TeamListMembersMock.callArgs = append(mmTeamListMembers.TeamListMembersMock.callArgs, mm_params)
+	mmTeamListMembers.TeamListMembersMock.mutex.Unlock()
+
+	for _, e := range mmTeamListMembers.TeamListMembersMock.expectations {
+		if minimock.Equal(e.params, mm_params) {
+			mm_atomic.AddUint64(&e.Counter, 1)
+			return e.results.pp2, e.results.err
+		}
+	}
+
+	if mmTeamListMembers.TeamListMembersMock.defaultExpectation != nil {
+		mm_atomic.AddUint64(&mmTeamListMembers.TeamListMembersMock.defaultExpectation.Counter, 1)
+		mm_want := mmTeamListMembers.TeamListMembersMock.defaultExpectation.params
+		mm_got := UserServiceClientMockTeamListMembersParams{ctx, pp1}
+		if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
+			mmTeamListMembers.t.Errorf("UserServiceClientMock.TeamListMembers got unexpected parameters, want: %#v, got: %#v%s\n", *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
+		}
+
+		mm_results := mmTeamListMembers.TeamListMembersMock.defaultExpectation.results
+		if mm_results == nil {
+			mmTeamListMembers.t.Fatal("No results are set for the UserServiceClientMock.TeamListMembers")
+		}
+		return (*mm_results).pp2, (*mm_results).err
+	}
+	if mmTeamListMembers.funcTeamListMembers != nil {
+		return mmTeamListMembers.funcTeamListMembers(ctx, pp1)
+	}
+	mmTeamListMembers.t.Fatalf("Unexpected call to UserServiceClientMock.TeamListMembers. %v %v", ctx, pp1)
+	return
+}
+
+// TeamListMembersAfterCounter returns a count of finished UserServiceClientMock.TeamListMembers invocations
+func (mmTeamListMembers *UserServiceClientMock) TeamListMembersAfterCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmTeamListMembers.afterTeamListMembersCounter)
+}
+
+// TeamListMembersBeforeCounter returns a count of UserServiceClientMock.TeamListMembers invocations
+func (mmTeamListMembers *UserServiceClientMock) TeamListMembersBeforeCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmTeamListMembers.beforeTeamListMembersCounter)
+}
+
+// Calls returns a list of arguments used in each call to UserServiceClientMock.TeamListMembers.
+// The list is in the same order as the calls were made (i.e. recent calls have a higher index)
+func (mmTeamListMembers *mUserServiceClientMockTeamListMembers) Calls() []*UserServiceClientMockTeamListMembersParams {
+	mmTeamListMembers.mutex.RLock()
+
+	argCopy := make([]*UserServiceClientMockTeamListMembersParams, len(mmTeamListMembers.callArgs))
+	copy(argCopy, mmTeamListMembers.callArgs)
+
+	mmTeamListMembers.mutex.RUnlock()
+
+	return argCopy
+}
+
+// MinimockTeamListMembersDone returns true if the count of the TeamListMembers invocations corresponds
+// the number of defined expectations
+func (m *UserServiceClientMock) MinimockTeamListMembersDone() bool {
+	for _, e := range m.TeamListMembersMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			return false
+		}
+	}
+
+	// if default expectation was set then invocations count should be greater than zero
+	if m.TeamListMembersMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterTeamListMembersCounter) < 1 {
+		return false
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcTeamListMembers != nil && mm_atomic.LoadUint64(&m.afterTeamListMembersCounter) < 1 {
+		return false
+	}
+	return true
+}
+
+// MinimockTeamListMembersInspect logs each unmet expectation
+func (m *UserServiceClientMock) MinimockTeamListMembersInspect() {
+	for _, e := range m.TeamListMembersMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			m.t.Errorf("Expected call to UserServiceClientMock.TeamListMembers with params: %#v", *e.params)
+		}
+	}
+
+	// if default expectation was set then invocations count should be greater than zero
+	if m.TeamListMembersMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterTeamListMembersCounter) < 1 {
+		if m.TeamListMembersMock.defaultExpectation.params == nil {
+			m.t.Error("Expected call to UserServiceClientMock.TeamListMembers")
+		} else {
+			m.t.Errorf("Expected call to UserServiceClientMock.TeamListMembers with params: %#v", *m.TeamListMembersMock.defaultExpectation.params)
+		}
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcTeamListMembers != nil && mm_atomic.LoadUint64(&m.afterTeamListMembersCounter) < 1 {
+		m.t.Error("Expected call to UserServiceClientMock.TeamListMembers")
+	}
+}
+
+type mUserServiceClientMockTeamRemoveMembers struct {
+	mock               *UserServiceClientMock
+	defaultExpectation *UserServiceClientMockTeamRemoveMembersExpectation
+	expectations       []*UserServiceClientMockTeamRemoveMembersExpectation
+
+	callArgs []*UserServiceClientMockTeamRemoveMembersParams
+	mutex    sync.RWMutex
+}
+
+// UserServiceClientMockTeamRemoveMembersExpectation specifies expectation struct of the UserServiceClient.TeamRemoveMembers
+type UserServiceClientMockTeamRemoveMembersExpectation struct {
+	mock    *UserServiceClientMock
+	params  *UserServiceClientMockTeamRemoveMembersParams
+	results *UserServiceClientMockTeamRemoveMembersResults
+	Counter uint64
+}
+
+// UserServiceClientMockTeamRemoveMembersParams contains parameters of the UserServiceClient.TeamRemoveMembers
+type UserServiceClientMockTeamRemoveMembersParams struct {
+	ctx context.Context
+	pp1 *connect_go.Request[v1.TeamRemoveMembersRequest]
+}
+
+// UserServiceClientMockTeamRemoveMembersResults contains results of the UserServiceClient.TeamRemoveMembers
+type UserServiceClientMockTeamRemoveMembersResults struct {
+	pp2 *connect_go.Response[v1.TeamRemoveMembersResponse]
+	err error
+}
+
+// Expect sets up expected params for UserServiceClient.TeamRemoveMembers
+func (mmTeamRemoveMembers *mUserServiceClientMockTeamRemoveMembers) Expect(ctx context.Context, pp1 *connect_go.Request[v1.TeamRemoveMembersRequest]) *mUserServiceClientMockTeamRemoveMembers {
+	if mmTeamRemoveMembers.mock.funcTeamRemoveMembers != nil {
+		mmTeamRemoveMembers.mock.t.Fatalf("UserServiceClientMock.TeamRemoveMembers mock is already set by Set")
+	}
+
+	if mmTeamRemoveMembers.defaultExpectation == nil {
+		mmTeamRemoveMembers.defaultExpectation = &UserServiceClientMockTeamRemoveMembersExpectation{}
+	}
+
+	mmTeamRemoveMembers.defaultExpectation.params = &UserServiceClientMockTeamRemoveMembersParams{ctx, pp1}
+	for _, e := range mmTeamRemoveMembers.expectations {
+		if minimock.Equal(e.params, mmTeamRemoveMembers.defaultExpectation.params) {
+			mmTeamRemoveMembers.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmTeamRemoveMembers.defaultExpectation.params)
+		}
+	}
+
+	return mmTeamRemoveMembers
+}
+
+// Inspect accepts an inspector function that has same arguments as the UserServiceClient.TeamRemoveMembers
+func (mmTeamRemoveMembers *mUserServiceClientMockTeamRemoveMembers) Inspect(f func(ctx context.Context, pp1 *connect_go.Request[v1.TeamRemoveMembersRequest])) *mUserServiceClientMockTeamRemoveMembers {
+	if mmTeamRemoveMembers.mock.inspectFuncTeamRemoveMembers != nil {
+		mmTeamRemoveMembers.mock.t.Fatalf("Inspect function is already set for UserServiceClientMock.TeamRemoveMembers")
+	}
+
+	mmTeamRemoveMembers.mock.inspectFuncTeamRemoveMembers = f
+
+	return mmTeamRemoveMembers
+}
+
+// Return sets up results that will be returned by UserServiceClient.TeamRemoveMembers
+func (mmTeamRemoveMembers *mUserServiceClientMockTeamRemoveMembers) Return(pp2 *connect_go.Response[v1.TeamRemoveMembersResponse], err error) *UserServiceClientMock {
+	if mmTeamRemoveMembers.mock.funcTeamRemoveMembers != nil {
+		mmTeamRemoveMembers.mock.t.Fatalf("UserServiceClientMock.TeamRemoveMembers mock is already set by Set")
+	}
+
+	if mmTeamRemoveMembers.defaultExpectation == nil {
+		mmTeamRemoveMembers.defaultExpectation = &UserServiceClientMockTeamRemoveMembersExpectation{mock: mmTeamRemoveMembers.mock}
+	}
+	mmTeamRemoveMembers.defaultExpectation.results = &UserServiceClientMockTeamRemoveMembersResults{pp2, err}
+	return mmTeamRemoveMembers.mock
+}
+
+// Set uses given function f to mock the UserServiceClient.TeamRemoveMembers method
+func (mmTeamRemoveMembers *mUserServiceClientMockTeamRemoveMembers) Set(f func(ctx context.Context, pp1 *connect_go.Request[v1.TeamRemoveMembersRequest]) (pp2 *connect_go.Response[v1.TeamRemoveMembersResponse], err error)) *UserServiceClientMock {
+	if mmTeamRemoveMembers.defaultExpectation != nil {
+		mmTeamRemoveMembers.mock.t.Fatalf("Default expectation is already set for the UserServiceClient.TeamRemoveMembers method")
+	}
+
+	if len(mmTeamRemoveMembers.expectations) > 0 {
+		mmTeamRemoveMembers.mock.t.Fatalf("Some expectations are already set for the UserServiceClient.TeamRemoveMembers method")
+	}
+
+	mmTeamRemoveMembers.mock.funcTeamRemoveMembers = f
+	return mmTeamRemoveMembers.mock
+}
+
+// When sets expectation for the UserServiceClient.TeamRemoveMembers which will trigger the result defined by the following
+// Then helper
+func (mmTeamRemoveMembers *mUserServiceClientMockTeamRemoveMembers) When(ctx context.Context, pp1 *connect_go.Request[v1.TeamRemoveMembersRequest]) *UserServiceClientMockTeamRemoveMembersExpectation {
+	if mmTeamRemoveMembers.mock.funcTeamRemoveMembers != nil {
+		mmTeamRemoveMembers.mock.t.Fatalf("UserServiceClientMock.TeamRemoveMembers mock is already set by Set")
+	}
+
+	expectation := &UserServiceClientMockTeamRemoveMembersExpectation{
+		mock:   mmTeamRemoveMembers.mock,
+		params: &UserServiceClientMockTeamRemoveMembersParams{ctx, pp1},
+	}
+	mmTeamRemoveMembers.expectations = append(mmTeamRemoveMembers.expectations, expectation)
+	return expectation
+}
+
+// Then sets up UserServiceClient.TeamRemoveMembers return parameters for the expectation previously defined by the When method
+func (e *UserServiceClientMockTeamRemoveMembersExpectation) Then(pp2 *connect_go.Response[v1.TeamRemoveMembersResponse], err error) *UserServiceClientMock {
+	e.results = &UserServiceClientMockTeamRemoveMembersResults{pp2, err}
+	return e.mock
+}
+
+// TeamRemoveMembers implements UserServiceClient
+func (mmTeamRemoveMembers *UserServiceClientMock) TeamRemoveMembers(ctx context.Context, pp1 *connect_go.Request[v1.TeamRemoveMembersRequest]) (pp2 *connect_go.Response[v1.TeamRemoveMembersResponse], err error) {
+	mm_atomic.AddUint64(&mmTeamRemoveMembers.beforeTeamRemoveMembersCounter, 1)
+	defer mm_atomic.AddUint64(&mmTeamRemoveMembers.afterTeamRemoveMembersCounter, 1)
+
+	if mmTeamRemoveMembers.inspectFuncTeamRemoveMembers != nil {
+		mmTeamRemoveMembers.inspectFuncTeamRemoveMembers(ctx, pp1)
+	}
+
+	mm_params := &UserServiceClientMockTeamRemoveMembersParams{ctx, pp1}
+
+	// Record call args
+	mmTeamRemoveMembers.TeamRemoveMembersMock.mutex.Lock()
+	mmTeamRemoveMembers.TeamRemoveMembersMock.callArgs = append(mmTeamRemoveMembers.TeamRemoveMembersMock.callArgs, mm_params)
+	mmTeamRemoveMembers.TeamRemoveMembersMock.mutex.Unlock()
+
+	for _, e := range mmTeamRemoveMembers.TeamRemoveMembersMock.expectations {
+		if minimock.Equal(e.params, mm_params) {
+			mm_atomic.AddUint64(&e.Counter, 1)
+			return e.results.pp2, e.results.err
+		}
+	}
+
+	if mmTeamRemoveMembers.TeamRemoveMembersMock.defaultExpectation != nil {
+		mm_atomic.AddUint64(&mmTeamRemoveMembers.TeamRemoveMembersMock.defaultExpectation.Counter, 1)
+		mm_want := mmTeamRemoveMembers.TeamRemoveMembersMock.defaultExpectation.params
+		mm_got := UserServiceClientMockTeamRemoveMembersParams{ctx, pp1}
+		if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
+			mmTeamRemoveMembers.t.Errorf("UserServiceClientMock.TeamRemoveMembers got unexpected parameters, want: %#v, got: %#v%s\n", *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
+		}
+
+		mm_results := mmTeamRemoveMembers.TeamRemoveMembersMock.defaultExpectation.results
+		if mm_results == nil {
+			mmTeamRemoveMembers.t.Fatal("No results are set for the UserServiceClientMock.TeamRemoveMembers")
+		}
+		return (*mm_results).pp2, (*mm_results).err
+	}
+	if mmTeamRemoveMembers.funcTeamRemoveMembers != nil {
+		return mmTeamRemoveMembers.funcTeamRemoveMembers(ctx, pp1)
+	}
+	mmTeamRemoveMembers.t.Fatalf("Unexpected call to UserServiceClientMock.TeamRemoveMembers. %v %v", ctx, pp1)
+	return
+}
+
+// TeamRemoveMembersAfterCounter returns a count of finished UserServiceClientMock.TeamRemoveMembers invocations
+func (mmTeamRemoveMembers *UserServiceClientMock) TeamRemoveMembersAfterCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmTeamRemoveMembers.afterTeamRemoveMembersCounter)
+}
+
+// TeamRemoveMembersBeforeCounter returns a count of UserServiceClientMock.TeamRemoveMembers invocations
+func (mmTeamRemoveMembers *UserServiceClientMock) TeamRemoveMembersBeforeCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmTeamRemoveMembers.beforeTeamRemoveMembersCounter)
+}
+
+// Calls returns a list of arguments used in each call to UserServiceClientMock.TeamRemoveMembers.
+// The list is in the same order as the calls were made (i.e. recent calls have a higher index)
+func (mmTeamRemoveMembers *mUserServiceClientMockTeamRemoveMembers) Calls() []*UserServiceClientMockTeamRemoveMembersParams {
+	mmTeamRemoveMembers.mutex.RLock()
+
+	argCopy := make([]*UserServiceClientMockTeamRemoveMembersParams, len(mmTeamRemoveMembers.callArgs))
+	copy(argCopy, mmTeamRemoveMembers.callArgs)
+
+	mmTeamRemoveMembers.mutex.RUnlock()
+
+	return argCopy
+}
+
+// MinimockTeamRemoveMembersDone returns true if the count of the TeamRemoveMembers invocations corresponds
+// the number of defined expectations
+func (m *UserServiceClientMock) MinimockTeamRemoveMembersDone() bool {
+	for _, e := range m.TeamRemoveMembersMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			return false
+		}
+	}
+
+	// if default expectation was set then invocations count should be greater than zero
+	if m.TeamRemoveMembersMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterTeamRemoveMembersCounter) < 1 {
+		return false
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcTeamRemoveMembers != nil && mm_atomic.LoadUint64(&m.afterTeamRemoveMembersCounter) < 1 {
+		return false
+	}
+	return true
+}
+
+// MinimockTeamRemoveMembersInspect logs each unmet expectation
+func (m *UserServiceClientMock) MinimockTeamRemoveMembersInspect() {
+	for _, e := range m.TeamRemoveMembersMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			m.t.Errorf("Expected call to UserServiceClientMock.TeamRemoveMembers with params: %#v", *e.params)
+		}
+	}
+
+	// if default expectation was set then invocations count should be greater than zero
+	if m.TeamRemoveMembersMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterTeamRemoveMembersCounter) < 1 {
+		if m.TeamRemoveMembersMock.defaultExpectation.params == nil {
+			m.t.Error("Expected call to UserServiceClientMock.TeamRemoveMembers")
+		} else {
+			m.t.Errorf("Expected call to UserServiceClientMock.TeamRemoveMembers with params: %#v", *m.TeamRemoveMembersMock.defaultExpectation.params)
+		}
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcTeamRemoveMembers != nil && mm_atomic.LoadUint64(&m.afterTeamRemoveMembersCounter) < 1 {
+		m.t.Error("Expected call to UserServiceClientMock.TeamRemoveMembers")
+	}
+}
+
 type mUserServiceClientMockUpdate struct {
 	mock               *UserServiceClientMock
 	defaultExpectation *UserServiceClientMockUpdateExpectation
@@ -2102,17 +3684,17 @@ type UserServiceClientMockUpdateExpectation struct {
 // UserServiceClientMockUpdateParams contains parameters of the UserServiceClient.Update
 type UserServiceClientMockUpdateParams struct {
 	ctx context.Context
-	pp1 *connect_go.Request[v1.UserServiceUpdateRequest]
+	pp1 *connect_go.Request[v1.UpdateRequest]
 }
 
 // UserServiceClientMockUpdateResults contains results of the UserServiceClient.Update
 type UserServiceClientMockUpdateResults struct {
-	pp2 *connect_go.Response[v1.UserServiceUpdateResponse]
+	pp2 *connect_go.Response[v1.UpdateResponse]
 	err error
 }
 
 // Expect sets up expected params for UserServiceClient.Update
-func (mmUpdate *mUserServiceClientMockUpdate) Expect(ctx context.Context, pp1 *connect_go.Request[v1.UserServiceUpdateRequest]) *mUserServiceClientMockUpdate {
+func (mmUpdate *mUserServiceClientMockUpdate) Expect(ctx context.Context, pp1 *connect_go.Request[v1.UpdateRequest]) *mUserServiceClientMockUpdate {
 	if mmUpdate.mock.funcUpdate != nil {
 		mmUpdate.mock.t.Fatalf("UserServiceClientMock.Update mock is already set by Set")
 	}
@@ -2132,7 +3714,7 @@ func (mmUpdate *mUserServiceClientMockUpdate) Expect(ctx context.Context, pp1 *c
 }
 
 // Inspect accepts an inspector function that has same arguments as the UserServiceClient.Update
-func (mmUpdate *mUserServiceClientMockUpdate) Inspect(f func(ctx context.Context, pp1 *connect_go.Request[v1.UserServiceUpdateRequest])) *mUserServiceClientMockUpdate {
+func (mmUpdate *mUserServiceClientMockUpdate) Inspect(f func(ctx context.Context, pp1 *connect_go.Request[v1.UpdateRequest])) *mUserServiceClientMockUpdate {
 	if mmUpdate.mock.inspectFuncUpdate != nil {
 		mmUpdate.mock.t.Fatalf("Inspect function is already set for UserServiceClientMock.Update")
 	}
@@ -2143,7 +3725,7 @@ func (mmUpdate *mUserServiceClientMockUpdate) Inspect(f func(ctx context.Context
 }
 
 // Return sets up results that will be returned by UserServiceClient.Update
-func (mmUpdate *mUserServiceClientMockUpdate) Return(pp2 *connect_go.Response[v1.UserServiceUpdateResponse], err error) *UserServiceClientMock {
+func (mmUpdate *mUserServiceClientMockUpdate) Return(pp2 *connect_go.Response[v1.UpdateResponse], err error) *UserServiceClientMock {
 	if mmUpdate.mock.funcUpdate != nil {
 		mmUpdate.mock.t.Fatalf("UserServiceClientMock.Update mock is already set by Set")
 	}
@@ -2156,7 +3738,7 @@ func (mmUpdate *mUserServiceClientMockUpdate) Return(pp2 *connect_go.Response[v1
 }
 
 // Set uses given function f to mock the UserServiceClient.Update method
-func (mmUpdate *mUserServiceClientMockUpdate) Set(f func(ctx context.Context, pp1 *connect_go.Request[v1.UserServiceUpdateRequest]) (pp2 *connect_go.Response[v1.UserServiceUpdateResponse], err error)) *UserServiceClientMock {
+func (mmUpdate *mUserServiceClientMockUpdate) Set(f func(ctx context.Context, pp1 *connect_go.Request[v1.UpdateRequest]) (pp2 *connect_go.Response[v1.UpdateResponse], err error)) *UserServiceClientMock {
 	if mmUpdate.defaultExpectation != nil {
 		mmUpdate.mock.t.Fatalf("Default expectation is already set for the UserServiceClient.Update method")
 	}
@@ -2171,7 +3753,7 @@ func (mmUpdate *mUserServiceClientMockUpdate) Set(f func(ctx context.Context, pp
 
 // When sets expectation for the UserServiceClient.Update which will trigger the result defined by the following
 // Then helper
-func (mmUpdate *mUserServiceClientMockUpdate) When(ctx context.Context, pp1 *connect_go.Request[v1.UserServiceUpdateRequest]) *UserServiceClientMockUpdateExpectation {
+func (mmUpdate *mUserServiceClientMockUpdate) When(ctx context.Context, pp1 *connect_go.Request[v1.UpdateRequest]) *UserServiceClientMockUpdateExpectation {
 	if mmUpdate.mock.funcUpdate != nil {
 		mmUpdate.mock.t.Fatalf("UserServiceClientMock.Update mock is already set by Set")
 	}
@@ -2185,13 +3767,13 @@ func (mmUpdate *mUserServiceClientMockUpdate) When(ctx context.Context, pp1 *con
 }
 
 // Then sets up UserServiceClient.Update return parameters for the expectation previously defined by the When method
-func (e *UserServiceClientMockUpdateExpectation) Then(pp2 *connect_go.Response[v1.UserServiceUpdateResponse], err error) *UserServiceClientMock {
+func (e *UserServiceClientMockUpdateExpectation) Then(pp2 *connect_go.Response[v1.UpdateResponse], err error) *UserServiceClientMock {
 	e.results = &UserServiceClientMockUpdateResults{pp2, err}
 	return e.mock
 }
 
 // Update implements UserServiceClient
-func (mmUpdate *UserServiceClientMock) Update(ctx context.Context, pp1 *connect_go.Request[v1.UserServiceUpdateRequest]) (pp2 *connect_go.Response[v1.UserServiceUpdateResponse], err error) {
+func (mmUpdate *UserServiceClientMock) Update(ctx context.Context, pp1 *connect_go.Request[v1.UpdateRequest]) (pp2 *connect_go.Response[v1.UpdateResponse], err error) {
 	mm_atomic.AddUint64(&mmUpdate.beforeUpdateCounter, 1)
 	defer mm_atomic.AddUint64(&mmUpdate.afterUpdateCounter, 1)
 
@@ -2537,6 +4119,20 @@ func (m *UserServiceClientMock) MinimockFinish() {
 
 		m.MinimockSetSettingsInspect()
 
+		m.MinimockTeamAcceptInviteInspect()
+
+		m.MinimockTeamAddMembersInspect()
+
+		m.MinimockTeamCreateInspect()
+
+		m.MinimockTeamDeleteInspect()
+
+		m.MinimockTeamListInspect()
+
+		m.MinimockTeamListMembersInspect()
+
+		m.MinimockTeamRemoveMembersInspect()
+
 		m.MinimockUpdateInspect()
 
 		m.MinimockVerificationVerifyInspect()
@@ -2572,6 +4168,13 @@ func (m *UserServiceClientMock) minimockDone() bool {
 		m.MinimockForgotVerifyDone() &&
 		m.MinimockGetSettingsDone() &&
 		m.MinimockSetSettingsDone() &&
+		m.MinimockTeamAcceptInviteDone() &&
+		m.MinimockTeamAddMembersDone() &&
+		m.MinimockTeamCreateDone() &&
+		m.MinimockTeamDeleteDone() &&
+		m.MinimockTeamListDone() &&
+		m.MinimockTeamListMembersDone() &&
+		m.MinimockTeamRemoveMembersDone() &&
 		m.MinimockUpdateDone() &&
 		m.MinimockVerificationVerifyDone()
 }

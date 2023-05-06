@@ -83,7 +83,7 @@ func (suite *DynamoBasicSuite) SetupSuite() {
 
 	require.Equal(t, status.Table.TableStatus, types.TableStatusActive)
 
-	suite.store = user.NewUserDynamoStore(
+	suite.store = user.NewDynamoStore(
 		user.WithDynamoClient(suite.client),
 		user.WithDynamoTable(suite.tableName),
 	)
@@ -104,7 +104,7 @@ func (suite *DynamoBasicSuite) createUser(t *testing.T) user.User {
 		Email: faker.Email(),
 	}
 
-	err := suite.store.CreateUser(context.TODO(), user)
+	_, err := suite.store.CreateUser(context.TODO(), user)
 	require.NoError(t, err, "Create user error")
 
 	time.Sleep(time.Millisecond * 1000)
@@ -147,7 +147,7 @@ func (suite *DynamoBasicSuite) TestUpdateUser() {
 	t := suite.T()
 	u0 := suite.createUser(t)
 
-	u0.Status = user.UserStatus(shortuuid.New())
+	u0.Status = user.UserStatus_ACTIVE
 
 	err := suite.store.UpdateUser(context.TODO(), &u0)
 	require.NoError(t, err, "update user 1")

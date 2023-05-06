@@ -128,7 +128,7 @@ func (svc *UserServer) UpdateUser(ctx context.Context, updateIn *connect.Request
 		}
 	}
 
-	user, err := svc.user.Update(ctx, connect.NewRequest(&userv1.UserServiceUpdateRequest{
+	user, err := svc.user.Update(ctx, connect.NewRequest(&userv1.UpdateRequest{
 		UserId:      userId,
 		Name:        update.Name,
 		Email:       update.Email,

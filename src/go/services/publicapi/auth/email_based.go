@@ -67,7 +67,7 @@ func (s AuthenticationServer) Register(ctx context.Context, paramsIn *connect.Re
 		return nil, bufcutil.InvalidArgumentError("password", "Password too short must be 8 characters (password_short)")
 	}
 
-	user, err := s.userClient.Create(ctx, connect.NewRequest(&userv1.UserServiceCreateRequest{
+	user, err := s.userClient.Create(ctx, connect.NewRequest(&userv1.CreateRequest{
 		Status:   userv1.UserStatus_USER_STATUS_REGISTERED,
 		Email:    params.Email,
 		Password: params.Password,

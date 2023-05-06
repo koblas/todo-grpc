@@ -151,31 +151,39 @@ func (svc *OauthUserServer) UpsertUser(ctx context.Context, request *connect.Req
 			Email: info.Email,
 		},
 	}))
-	if err != nil {
-		if connect.CodeOf(err) != connect.CodeNotFound {
-			log.With(zap.Error(err)).Info("Failed to lookup user")
-			return nil, bufcutil.InternalError(err)
-		}
+	if err != nil && connect.CodeOf(err) != connect.CodeNotFound {
+		log.With(zap.Error(err)).Info("Failed to lookup user")
+		return nil, bufcutil.InternalError(err)
 	}
-
-	userId := ""
+	var userId string
 	created := false
-	if findBy == nil || findBy.Msg.User.Id == "" {
-		log.With(zap.String("email", info.Email)).Info("Creating new user")
-		created = true
-		newUser, err := svc.user.Create(ctx, connect.NewRequest(&userv1.UserServiceCreateRequest{
+	if findBy != nil {
+		userId = findBy.Msg.User.Id
+
+		if findBy.Msg.User.Status == userv1.UserStatus_USER_STATUS_REGISTERED {
+			// Since we're confirming by email we can update to "ACTIVE"
+			status := userv1.UserStatus_USER_STATUS_ACTIVE
+			_, err := svc.user.Update(ctx, connect.NewRequest(&userv1.UpdateRequest{
+				UserId: userId,
+				Status: &status,
+			}))
+			if err != nil {
+				log.With(zap.Error(err)).Error("update user failed")
+				return nil, bufcutil.InternalError(err)
+			}
+		}
+	} else {
+		createUser, err := svc.user.Create(ctx, connect.NewRequest(&userv1.CreateRequest{
 			Email:  info.Email,
 			Name:   info.Name,
 			Status: userv1.UserStatus_USER_STATUS_ACTIVE,
 		}))
 		if err != nil {
-			log.With(zap.Error(err)).Error("Unable to create user")
+			log.With(zap.Error(err)).Error("create user failed")
 			return nil, bufcutil.InternalError(err)
 		}
-		userId = newUser.Msg.User.Id
-	} else {
-		userId = findBy.Msg.User.Id
-		log.With(zap.String("email", findBy.Msg.User.Email)).Info("User already exists, associating")
+		userId = createUser.Msg.User.Id
+		created = true
 	}
 
 	// Now associate the OAuth token and the UserId

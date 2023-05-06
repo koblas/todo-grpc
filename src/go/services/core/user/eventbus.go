@@ -23,6 +23,7 @@ func (s *UserServer) toProtoUser(user *User) *userv1.User {
 		Name:            user.Name,
 		Email:           user.Email,
 		Status:          statusToPbStatus[user.Status],
+		ClosedStatus:    closedStatusToPbStatus[user.ClosedStatus],
 		EmailIsVerified: isVerified,
 		AvatarUrl:       user.AvatarUrl,
 	}

@@ -1,0 +1,11 @@
+version: '2'
+services:
+ dynamodb:
+  image: amazon/dynamodb-local
+    #constainer_name: "dynamo_db"
+  volumes:
+   - ./dynamodb_data:/home/thegeekyasian/dynamodblocal/data
+  command: -jar DynamoDBLocal.jar -inMemory
+  ports:
+   - 8000:8000
+

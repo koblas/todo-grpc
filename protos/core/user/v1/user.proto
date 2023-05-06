@@ -5,14 +5,26 @@ option go_package = "github.com/koblas/grpc-todo/protos";
 
 import "google/protobuf/timestamp.proto";
 import "core/v1/secure_value.proto";
+import "core/user/v1/team.proto";
 
 
 enum UserStatus {
+  // Unset
   USER_STATUS_UNSPECIFIED = 0;
-  USER_STATUS_REGISTERED = 1;
-  USER_STATUS_INVITED = 2;
+  // User is invited -- more to do with generating emails
+  USER_STATUS_INVITED = 1;
+  // User is registered, but has not confirmed their email
+  USER_STATUS_REGISTERED = 10;
+  // The email is verified
   USER_STATUS_ACTIVE = 100;
-  USER_STATUS_DISABLED = 200;
+}
+
+enum ClosedStatus {
+  CLOSED_STATUS_UNSPECIFIED = 0;
+  // Disabled for some reason after activation
+  CLOSED_STATUS_DISABLED = 1;
+  // Deleted for some reason after activation
+  CLOSED_STATUS_DELETED = 2;
 }
 
 enum UserSecurity {
@@ -33,6 +45,8 @@ message User {
   bool has_tfa = 7;
   bool email_is_verified = 8;
   optional string avatar_url = 9;
+  ClosedStatus closed_status = 10;
+  optional google.protobuf.Timestamp deleted_at = 11;
 }
 
 // Used for ForgotPassword / Registration events
@@ -121,14 +135,28 @@ message AuthAssociateRequest {
   AuthInfo auth = 2;
 }
 
-message UserServiceCreateRequest {
+message CreateRequest {
   string email = 1;
   string password = 2;
   string name = 3;
   UserStatus status = 4;
 }
+message CreateResponse {
+  User user = 1;
+}
 
-message UserServiceUpdateRequest {
+// Invite a user to a given Team
+message InviteRequest {
+  string team_id = 1;
+  string user_id = 2;
+  string email = 3;
+  string name = 4;
+}
+message InviteResponse {
+  User user = 1;
+}
+
+message UpdateRequest {
   string user_id = 1;
   optional string email = 2;
   optional string password = 3;
@@ -137,6 +165,10 @@ message UserServiceUpdateRequest {
   optional UserStatus status = 6;
   optional UserSettings settings = 7;
   optional string avatar_url = 8;
+  optional ClosedStatus closed_status = 9;
+}
+message UpdateResponse {
+  User user = 1;
 }
 
 message Verification{
@@ -164,13 +196,7 @@ message ForgotUpdateResponse {
 message VerificationVerifyResponse {
   User user = 1;
 }
-message UserServiceCreateResponse {
-  User user = 1;
-}
 message FindByResponse {
-  User user = 1;
-}
-message UserServiceUpdateResponse {
   User user = 1;
 }
 
@@ -184,11 +210,16 @@ message ForgotUpdateRequest {
   Verification verification = 1; 
 }
 
+//
+
 service UserService {
   rpc FindBy(FindByRequest) returns (FindByResponse) {}
 
-  rpc Create(UserServiceCreateRequest) returns (UserServiceCreateResponse) {}
-  rpc Update(UserServiceUpdateRequest) returns (UserServiceUpdateResponse) {}
+  // Create a new user (e.g. registration flow)
+  rpc Create(CreateRequest) returns (CreateResponse) {}
+
+  // Update user information
+  rpc Update(UpdateRequest) returns (UpdateResponse) {}
 
   rpc ComparePassword(ComparePasswordRequest) returns (ComparePasswordResponse) {}
   rpc AuthAssociate(AuthAssociateRequest) returns (AuthAssociateResponse) {}
@@ -203,4 +234,22 @@ service UserService {
   rpc ForgotSend(ForgotSendRequest) returns (ForgotSendResponse) {}
   rpc ForgotVerify(ForgotVerifyRequest) returns (ForgotVerifyResponse) {}
   rpc ForgotUpdate(ForgotUpdateRequest) returns (ForgotUpdateResponse) {}
+
+  // Team operations
+
+  // Create a new team
+  rpc TeamCreate(TeamCreateRequest) returns (TeamCreateResponse) {}
+  // Create a new team
+  rpc TeamDelete(TeamDeleteRequest) returns (TeamDeleteResponse) {}
+  // List all teams this user is a member of
+  rpc TeamList(TeamListRequest) returns (TeamListResponse) {}
+  // Add members to a given team (in INVITED status)
+  rpc TeamAddMembers(TeamAddMembersRequest) returns (TeamAddMembersResponse) {}
+  // Add members to a given team
+  rpc TeamAcceptInvite(TeamAcceptInviteRequest) returns (TeamAcceptInviteResponse) {}
+  // Delete members from a given team
+  rpc TeamRemoveMembers(TeamRemoveMembersRequest) returns (TeamRemoveMembersResponse) {}
+  // For a given Team show get all members
+  rpc TeamListMembers(TeamListMembersRequest) returns (TeamListMembersResponse) {}
+  // rpc TeamUpdate(TeamUpdateRequest) return (ListTeamsResponse) {}
 }

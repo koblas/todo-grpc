@@ -38,11 +38,13 @@ type dynamoUser struct {
 	Name           string                       `dynamodbav:"name"`
 	Email          string                       `dynamodbav:"email"`
 	VerifiedEmails []string                     `dynamodbav:"verified_email"`
-	Status         UserStatus                   `dynamodbav:"status"`
+	Status         string                       `dynamodbav:"status"`
+	ClosedStatus   string                       `dynamodbav:"closed_status"`
 	Settings       map[string]map[string]string `dynamodbav:"settings"`
 	AvatarUrl      *string                      `dynamodbav:"avatar_url,nullempty"`
 
 	// For email address confirmation
+	EmailVerifyNonce     []byte     `dynamodbav:"email_verify_nonce,nullempty"`
 	EmailVerifyToken     []byte     `dynamodbav:"email_verify_token,nullempty"`
 	EmailVerifyExpiresAt *time.Time `dynamodbav:"email_verify_expires_at,nullempty"`
 }
@@ -57,9 +59,11 @@ func (store *DynamoStore) marshalUser(user *User) *dynamoUser {
 		Name:                 user.Name,
 		Email:                user.Email,
 		VerifiedEmails:       user.VerifiedEmails,
-		Status:               user.Status,
+		Status:               user.Status.String(),
+		ClosedStatus:         user.ClosedStatus.String(),
 		Settings:             user.Settings,
 		AvatarUrl:            user.AvatarUrl,
+		EmailVerifyNonce:     user.EmailVerifyNonce,
 		EmailVerifyToken:     user.EmailVerifyToken,
 		EmailVerifyExpiresAt: user.EmailVerifyExpiresAt,
 	}
@@ -71,9 +75,11 @@ func (obj dynamoUser) unmarshal() *User {
 		Name:                 obj.Name,
 		Email:                obj.Email,
 		VerifiedEmails:       obj.VerifiedEmails,
-		Status:               obj.Status,
+		Status:               UserStatusFromString(obj.Status),
+		ClosedStatus:         ClosedStatusFromString(obj.ClosedStatus),
 		Settings:             obj.Settings,
 		AvatarUrl:            obj.AvatarUrl,
+		EmailVerifyNonce:     obj.EmailVerifyNonce,
 		EmailVerifyToken:     obj.EmailVerifyToken,
 		EmailVerifyExpiresAt: obj.EmailVerifyExpiresAt,
 	}
@@ -268,8 +274,6 @@ func (store *DynamoStore) GetByEmail(ctx context.Context, email string) (*User, 
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("GETTING  pk=", av["pk"])
-	fmt.Println("GETTING  sk=", av["sk"])
 	out, err := store.client.GetItem(ctx, &dynamodb.GetItemInput{
 		TableName: store.table,
 		Key: map[string]types.AttributeValue{
@@ -290,27 +294,30 @@ func (store *DynamoStore) GetByEmail(ctx context.Context, email string) (*User, 
 	return store.GetById(ctx, user.UserID)
 }
 
-func (store *DynamoStore) CreateUser(ctx context.Context, user User) error {
+func (store *DynamoStore) CreateUser(ctx context.Context, user User) (*User, error) {
+	user.ID = xid.New().String()
+
 	if err := store.checkCreateTable(ctx); err != nil {
-		return err
+		return nil, err
 	}
 	userAv, err := attributevalue.MarshalMap(store.marshalUser(&user))
 	if err != nil {
-		return err
+		return nil, err
 	}
 	emailAv, err := attributevalue.MarshalMap(store.marshalUserEmail(&user))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// By default every user is a member of their own "default" team
-	_, teamItems, err := store.teamCreateItems(ctx, "", TeamUser{
+	membership := TeamMember{
 		UserId: user.ID,
-		TeamId: "",
+		Status: TeamStatus_ACTIVE,
 		Role:   "admin",
-	})
+	}
+	_, teamItems, err := store.teamCreateItems(ctx, "", membership)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	transaction := []types.TransactWriteItem{
@@ -342,7 +349,7 @@ func (store *DynamoStore) CreateUser(ctx context.Context, user User) error {
 		TransactItems: transaction,
 	})
 
-	return err
+	return &user, err
 }
 
 func (store *DynamoStore) UpdateUser(ctx context.Context, user *User) error {
@@ -538,14 +545,6 @@ type dynamoTeam struct {
 	Id   string `dynamodbav:"team_id"`
 	Name string `dynamodbav:"name"`
 }
-type dynamoTeamUser struct {
-	Pk     string `dynamodbav:"pk"`
-	Sk     string `dynamodbav:"sk"`
-	Type   string `dynamodbav:"type"`
-	UserId string `dynamodbav:"user_id"`
-	TeamId string `dynamodbav:"team_id"`
-	Role   string `dynamodbav:"role"`
-}
 
 func (store *DynamoStore) marshalTeam(team *Team) *dynamoTeam {
 	return &dynamoTeam{
@@ -557,28 +556,6 @@ func (store *DynamoStore) marshalTeam(team *Team) *dynamoTeam {
 	}
 }
 
-func (store *DynamoStore) marshalTeamUser(teamId string, userId string, role string) *dynamoTeamUser {
-	return &dynamoTeamUser{
-		Pk:     store.makeTeamKey(teamId),
-		Sk:     store.makeUserKey(userId),
-		Type:   "teamUser",
-		TeamId: teamId,
-		UserId: userId,
-		Role:   role,
-	}
-}
-
-func (store *DynamoStore) marshalUserTeam(teamId string, userId string, role string) *dynamoTeamUser {
-	return &dynamoTeamUser{
-		Pk:     store.makeUserKey(userId),
-		Sk:     store.makeTeamKey(teamId),
-		Type:   "userTeam",
-		TeamId: teamId,
-		UserId: userId,
-		Role:   role,
-	}
-}
-
 func (team dynamoTeam) unmarshal() *Team {
 	return &Team{
 		TeamId: team.Id,
@@ -586,40 +563,7 @@ func (team dynamoTeam) unmarshal() *Team {
 	}
 }
 
-func (store *DynamoStore) createUserItems(ctx context.Context, teamId string, tuser ...TeamUser) ([]types.WriteRequest, error) {
-	items := []types.WriteRequest{}
-	for _, item := range tuser {
-		tuserAv, err := attributevalue.MarshalMap(store.marshalTeamUser(teamId, item.UserId, item.Role))
-		if err != nil {
-			return nil, err
-		}
-		uteamAv, err := attributevalue.MarshalMap(store.marshalUserTeam(teamId, item.UserId, item.Role))
-		if err != nil {
-			return nil, err
-		}
-
-		// Write both keys
-		items = append(items,
-			types.WriteRequest{
-				PutRequest: &types.PutRequest{
-					Item: tuserAv,
-				},
-			},
-			types.WriteRequest{
-				PutRequest: &types.PutRequest{
-					Item: uteamAv,
-				},
-			},
-		)
-	}
-
-	return items, nil
-}
-
-func (store *DynamoStore) teamCreateItems(ctx context.Context, name string, tuser ...TeamUser) (*Team, []types.WriteRequest, error) {
-	if err := store.checkCreateTable(ctx); err != nil {
-		return nil, nil, err
-	}
+func (store *DynamoStore) teamCreateItems(ctx context.Context, name string, tuser ...TeamMember) (*Team, []types.WriteRequest, error) {
 	teamId := xid.New().String()
 	team := Team{
 		TeamId: teamId,
@@ -644,7 +588,7 @@ func (store *DynamoStore) teamCreateItems(ctx context.Context, name string, tuse
 	return &team, items, nil
 }
 
-func (store *DynamoStore) TeamCreate(ctx context.Context, name string, tuser ...TeamUser) (*Team, error) {
+func (store *DynamoStore) TeamCreate(ctx context.Context, name string, tuser ...TeamMember) (*Team, error) {
 	team, items, err := store.teamCreateItems(ctx, name, tuser...)
 	if err != nil {
 		return nil, err
@@ -686,22 +630,179 @@ func (store *DynamoStore) TeamGet(ctx context.Context, teamId string) (*Team, er
 	return msg.unmarshal(), nil
 }
 
-func (store *DynamoStore) TeamAddUsers(ctx context.Context, tuser ...TeamUser) error {
+func (store *DynamoStore) TeamList(ctx context.Context, userId string) ([]TeamMember, error) {
+	_, uteam := store.marshalTeamMemberKey("", userId)
+	uteamAv, err := attributevalue.MarshalMap(uteam)
+	if err != nil {
+		return nil, err
+	}
+
+	out, err := store.client.Query(ctx, &dynamodb.QueryInput{
+		TableName:              store.table,
+		KeyConditionExpression: aws.String("pk = :pk AND begins_with(sk, :prefix)"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":pk":     uteamAv["pk"],
+			":prefix": uteamAv["sk"],
+		},
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	teams := []TeamMember{}
+	for _, item := range out.Items {
+		dteam := dynamoTeamMember{}
+		if err := attributevalue.UnmarshalMap(item, &dteam); err != nil {
+			return nil, err
+		}
+
+		teams = append(teams, dteam.unmarshal())
+	}
+
+	return teams, nil
+}
+
+// TeamDelete will remove all the users from a given team
+func (store *DynamoStore) TeamDelete(ctx context.Context, teamId string) error {
+	// Batch operations are max of 25 items, which means our chunk size must respect
+	// the number of batch records and scale approprately
+	const CHUNKSIZE = 25 / 2
+
+	tuser, err := store.TeamListMembers(ctx, teamId)
+	if err != nil {
+		return err
+	}
+
+	for ; len(tuser) > 0; tuser = tuser[CHUNKSIZE:] {
+		userIds := []string{}
+		for _, item := range tuser[0:CHUNKSIZE] {
+			userIds = append(userIds, item.UserId)
+		}
+
+		if err := store.TeamDeleteMembers(ctx, teamId, userIds...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// Team membership
+//  this is stored as a pair of record in the forward and backwards direction (e.g. Team=>[]User  and User=>[]Team ])
+// This avoids the GSI for the list, since it's typically not needed and we can batch write easy enough
+
+type dynamoTeamMember struct {
+	Pk       string `dynamodbav:"pk"`
+	Sk       string `dynamodbav:"sk"`
+	Type     string `dynamodbav:"type"`
+	Status   string `dynamodbav:"status"`
+	MemberId string `dynamodbav:"member_id"`
+	UserId   string `dynamodbav:"user_id"`
+	TeamId   string `dynamodbav:"team_id"`
+	Role     string `dynamodbav:"role"`
+}
+
+func (store *DynamoStore) marshalTeamMemberKey(teamId string, userId string) (*dynamoTeamMember, *dynamoTeamMember) {
+	teamUser := &dynamoTeamMember{
+		Pk:     store.makeTeamKey(teamId),
+		Sk:     store.makeUserKey(userId),
+		Type:   "memberTeamUser",
+		TeamId: teamId,
+		UserId: userId,
+	}
+	userTeam := &dynamoTeamMember{
+		Pk:     store.makeUserKey(userId),
+		Sk:     store.makeTeamKey(teamId),
+		Type:   "memberUserTeam",
+		TeamId: teamId,
+		UserId: userId,
+	}
+
+	return teamUser, userTeam
+}
+
+func (store *DynamoStore) marshalTeamUser(teamId string, member TeamMember) *dynamoTeamMember {
+	value, _ := store.marshalTeamMemberKey(teamId, member.UserId)
+
+	value.Status = member.Status.String()
+	value.Role = member.Role
+
+	return value
+}
+
+func (store *DynamoStore) marshalUserTeam(teamId string, member TeamMember) *dynamoTeamMember {
+	_, value := store.marshalTeamMemberKey(teamId, member.UserId)
+
+	value.Status = member.Status.String()
+	value.Role = member.Role
+
+	return value
+}
+
+func (item dynamoTeamMember) unmarshal() TeamMember {
+	return TeamMember{
+		MemberId: item.MemberId,
+		UserId:   item.UserId,
+		TeamId:   item.TeamId,
+		Status:   TeamStatusFromString(item.Status),
+		Role:     item.Role,
+	}
+}
+
+func (store *DynamoStore) createUserItems(ctx context.Context, teamId string, tuser ...TeamMember) ([]types.WriteRequest, error) {
+	items := []types.WriteRequest{}
+	for _, item := range tuser {
+		// We're using a computed identifier, such that if you're removed and re-added you restore all of
+		//  the content that was linked to a specific user in a team
+		item.MemberId = "member#" + teamId + "#" + item.UserId
+
+		tuserAv, err := attributevalue.MarshalMap(store.marshalTeamUser(teamId, item))
+		if err != nil {
+			return nil, err
+		}
+		uteamAv, err := attributevalue.MarshalMap(store.marshalUserTeam(teamId, item))
+		if err != nil {
+			return nil, err
+		}
+
+		// Write both keys
+		items = append(items,
+			types.WriteRequest{
+				PutRequest: &types.PutRequest{
+					Item: tuserAv,
+				},
+			},
+			types.WriteRequest{
+				PutRequest: &types.PutRequest{
+					Item: uteamAv,
+				},
+			},
+		)
+	}
+
+	return items, nil
+}
+
+func (store *DynamoStore) TeamAddMembers(ctx context.Context, tuser ...TeamMember) error {
 	if len(tuser) == 0 {
 		return nil
 	}
+
+	// Make sure they're all being added to the same team
 	for _, item := range tuser {
-		if item.TeamId != tuser[0].Role {
+		if item.TeamId != tuser[0].TeamId {
 			return errors.New("team id mismatch")
 		}
+		if item.Status == TeamStatus_UNSET {
+			return errors.New("missing status")
+		}
 	}
-	teamId := tuser[0].TeamId
-
 	if err := store.checkCreateTable(ctx); err != nil {
 		return err
 	}
 
-	items, err := store.createUserItems(ctx, teamId, tuser...)
+	items, err := store.createUserItems(ctx, tuser[0].TeamId, tuser...)
 	if err != nil {
 		return err
 	}
@@ -718,14 +819,68 @@ func (store *DynamoStore) TeamAddUsers(ctx context.Context, tuser ...TeamUser) e
 	return nil
 }
 
-func (store *DynamoStore) TeamDeleteUsers(ctx context.Context, teamId string, userIds ...string) error {
+func (store *DynamoStore) TeamAcceptInvite(ctx context.Context, teamId, userId string) error {
+	tuser, uteam := store.marshalTeamMemberKey(teamId, userId)
+	tuserAv, err := attributevalue.MarshalMap(tuser)
+	if err != nil {
+		return err
+	}
+	uteamAv, err := attributevalue.MarshalMap(uteam)
+	if err != nil {
+		return err
+	}
+
+	// We're using a transaction here just to make sure we always
+	//  update both elements
+	transaction := []types.TransactWriteItem{
+		{
+			Update: &types.Update{
+				TableName: store.table,
+				Key: map[string]types.AttributeValue{
+					"pk": tuserAv["pk"],
+					"sk": tuserAv["sk"],
+				},
+				UpdateExpression: aws.String("SET status = :status"),
+				ExpressionAttributeValues: map[string]types.AttributeValue{
+					":status": &types.AttributeValueMemberS{
+						Value: TeamStatus_ACTIVE.String(),
+					},
+				},
+			},
+		},
+		{
+			Update: &types.Update{
+				TableName: store.table,
+				Key: map[string]types.AttributeValue{
+					"pk": uteamAv["pk"],
+					"sk": uteamAv["sk"],
+				},
+				UpdateExpression: aws.String("SET status = :status"),
+				ExpressionAttributeValues: map[string]types.AttributeValue{
+					":status": &types.AttributeValueMemberS{
+						Value: TeamStatus_ACTIVE.String(),
+					},
+				},
+			},
+		},
+	}
+
+	_, err = store.client.TransactWriteItems(ctx, &dynamodb.TransactWriteItemsInput{
+		TransactItems: transaction,
+	})
+
+	return err
+}
+
+func (store *DynamoStore) TeamDeleteMembers(ctx context.Context, teamId string, userIds ...string) error {
 	items := []types.WriteRequest{}
 	for _, userId := range userIds {
-		tuserAv, err := attributevalue.MarshalMap(store.marshalTeamUser(teamId, userId, ""))
+		tuser, uteam := store.marshalTeamMemberKey(teamId, userId)
+		tuserAv, err := attributevalue.MarshalMap(tuser)
 		if err != nil {
 			return err
 		}
-		uteamAv, err := attributevalue.MarshalMap(store.marshalTeamUser(teamId, userId, ""))
+		uteamAv, err := attributevalue.MarshalMap(uteam)
 		if err != nil {
 			return err
 		}
@@ -758,8 +913,41 @@ func (store *DynamoStore) TeamDeleteUsers(ctx context.Context, teamId string, us
 	return err
 }
 
-func (store *DynamoStore) TeamListUsers(ctx context.Context, teamId string) ([]TeamUser, error) {
-	tuserAv, err := attributevalue.MarshalMap(store.marshalTeamUser(teamId, "", ""))
+func (store *DynamoStore) TeamGetMember(ctx context.Context, teamId, userId string) (*TeamMember, error) {
+	tuser, _ := store.marshalTeamMemberKey(teamId, userId)
+	tuserAv, err := attributevalue.MarshalMap(tuser)
+	if err != nil {
+		return nil, err
+	}
+
+	out, err := store.client.GetItem(ctx, &dynamodb.GetItemInput{
+		TableName: store.table,
+		Key: map[string]types.AttributeValue{
+			"pk": tuserAv["pk"],
+			"sk": tuserAv["sk"],
+		},
+	})
+
+	if err != nil {
+		return nil, err
+	}
+	if len(out.Item) == 0 {
+		return nil, ErrorUserNotFound
+	}
+
+	dmember := dynamoTeamMember{}
+	if err := attributevalue.UnmarshalMap(out.Item, &dmember); err != nil {
+		return nil, err
+	}
+
+	member := dmember.unmarshal()
+
+	return &member, nil
+}
+
+func (store *DynamoStore) TeamListMembers(ctx context.Context, teamId string) ([]TeamMember, error) {
+	tuser, _ := store.marshalTeamMemberKey(teamId, "")
+	tuserAv, err := attributevalue.MarshalMap(tuser)
 	if err != nil {
 		return nil, err
 	}
@@ -777,76 +965,15 @@ func (store *DynamoStore) TeamListUsers(ctx context.Context, teamId string) ([]T
 		return nil, err
 	}
 
-	users := []TeamUser{}
+	users := []TeamMember{}
 	for _, item := range out.Items {
-		member := dynamoTeamUser{}
+		member := dynamoTeamMember{}
 		if err := attributevalue.UnmarshalMap(item, &member); err != nil {
 			return nil, err
 		}
 
-		users = append(users, TeamUser{
-			TeamId: teamId,
-			UserId: member.UserId,
-			Role:   member.Role,
-		})
+		users = append(users, (member).unmarshal())
 	}
 
 	return users, nil
-}
-
-func (store *DynamoStore) TeamList(ctx context.Context, userId string) ([]*Team, error) {
-	uteamAv, err := attributevalue.MarshalMap(store.marshalUserTeam("", userId, ""))
-	if err != nil {
-		return nil, err
-	}
-
-	out, err := store.client.Query(ctx, &dynamodb.QueryInput{
-		TableName:              store.table,
-		KeyConditionExpression: aws.String("pk = :pk AND begins_with(sk, :prefix)"),
-		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":pk":     uteamAv["pk"],
-			":prefix": uteamAv["sk"],
-		},
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	teams := []*Team{}
-	for _, item := range out.Items {
-		dteam := dynamoTeam{}
-		if err := attributevalue.UnmarshalMap(item, &dteam); err != nil {
-			return nil, err
-		}
-
-		teams = append(teams, dteam.unmarshal())
-	}
-
-	return teams, nil
-}
-
-// TeamDelete will remove all the users from a given team
-func (store *DynamoStore) TeamDelete(ctx context.Context, teamId string) error {
-	// Batch operations are max of 25 items, which means our chunk size must respect
-	// the number of batch records and scale approprately
-	const CHUNKSIZE = 25 / 2
-
-	tuser, err := store.TeamListUsers(ctx, teamId)
-	if err != nil {
-		return err
-	}
-
-	for ; len(tuser) > 0; tuser = tuser[CHUNKSIZE:] {
-		userIds := []string{}
-		for _, item := range tuser[0:CHUNKSIZE] {
-			userIds = append(userIds, item.UserId)
-		}
-
-		if err := store.TeamDeleteUsers(ctx, teamId, userIds...); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }

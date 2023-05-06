@@ -28,8 +28,10 @@ const (
 // UserServiceClient is a client for the core.user.v1.UserService service.
 type UserServiceClient interface {
 	FindBy(context.Context, *connect_go.Request[v1.FindByRequest]) (*connect_go.Response[v1.FindByResponse], error)
-	Create(context.Context, *connect_go.Request[v1.UserServiceCreateRequest]) (*connect_go.Response[v1.UserServiceCreateResponse], error)
-	Update(context.Context, *connect_go.Request[v1.UserServiceUpdateRequest]) (*connect_go.Response[v1.UserServiceUpdateResponse], error)
+	// Create a new user (e.g. registration flow)
+	Create(context.Context, *connect_go.Request[v1.CreateRequest]) (*connect_go.Response[v1.CreateResponse], error)
+	// Update user information
+	Update(context.Context, *connect_go.Request[v1.UpdateRequest]) (*connect_go.Response[v1.UpdateResponse], error)
 	ComparePassword(context.Context, *connect_go.Request[v1.ComparePasswordRequest]) (*connect_go.Response[v1.ComparePasswordResponse], error)
 	AuthAssociate(context.Context, *connect_go.Request[v1.AuthAssociateRequest]) (*connect_go.Response[v1.AuthAssociateResponse], error)
 	GetSettings(context.Context, *connect_go.Request[v1.UserServiceGetSettingsRequest]) (*connect_go.Response[v1.UserServiceGetSettingsResponse], error)
@@ -40,6 +42,20 @@ type UserServiceClient interface {
 	ForgotSend(context.Context, *connect_go.Request[v1.ForgotSendRequest]) (*connect_go.Response[v1.ForgotSendResponse], error)
 	ForgotVerify(context.Context, *connect_go.Request[v1.ForgotVerifyRequest]) (*connect_go.Response[v1.ForgotVerifyResponse], error)
 	ForgotUpdate(context.Context, *connect_go.Request[v1.ForgotUpdateRequest]) (*connect_go.Response[v1.ForgotUpdateResponse], error)
+	// Create a new team
+	TeamCreate(context.Context, *connect_go.Request[v1.TeamCreateRequest]) (*connect_go.Response[v1.TeamCreateResponse], error)
+	// Create a new team
+	TeamDelete(context.Context, *connect_go.Request[v1.TeamDeleteRequest]) (*connect_go.Response[v1.TeamDeleteResponse], error)
+	// List all teams this user is a member of
+	TeamList(context.Context, *connect_go.Request[v1.TeamListRequest]) (*connect_go.Response[v1.TeamListResponse], error)
+	// Add members to a given team (in INVITED status)
+	TeamAddMembers(context.Context, *connect_go.Request[v1.TeamAddMembersRequest]) (*connect_go.Response[v1.TeamAddMembersResponse], error)
+	// Add members to a given team
+	TeamAcceptInvite(context.Context, *connect_go.Request[v1.TeamAcceptInviteRequest]) (*connect_go.Response[v1.TeamAcceptInviteResponse], error)
+	// Delete members from a given team
+	TeamRemoveMembers(context.Context, *connect_go.Request[v1.TeamRemoveMembersRequest]) (*connect_go.Response[v1.TeamRemoveMembersResponse], error)
+	// For a given Team show get all members
+	TeamListMembers(context.Context, *connect_go.Request[v1.TeamListMembersRequest]) (*connect_go.Response[v1.TeamListMembersResponse], error)
 }
 
 // NewUserServiceClient constructs a client for the core.user.v1.UserService service. By default, it
@@ -57,12 +73,12 @@ func NewUserServiceClient(httpClient connect_go.HTTPClient, baseURL string, opts
 			baseURL+"/core.user.v1.UserService/FindBy",
 			opts...,
 		),
-		create: connect_go.NewClient[v1.UserServiceCreateRequest, v1.UserServiceCreateResponse](
+		create: connect_go.NewClient[v1.CreateRequest, v1.CreateResponse](
 			httpClient,
 			baseURL+"/core.user.v1.UserService/Create",
 			opts...,
 		),
-		update: connect_go.NewClient[v1.UserServiceUpdateRequest, v1.UserServiceUpdateResponse](
+		update: connect_go.NewClient[v1.UpdateRequest, v1.UpdateResponse](
 			httpClient,
 			baseURL+"/core.user.v1.UserService/Update",
 			opts...,
@@ -107,14 +123,49 @@ func NewUserServiceClient(httpClient connect_go.HTTPClient, baseURL string, opts
 			baseURL+"/core.user.v1.UserService/ForgotUpdate",
 			opts...,
 		),
+		teamCreate: connect_go.NewClient[v1.TeamCreateRequest, v1.TeamCreateResponse](
+			httpClient,
+			baseURL+"/core.user.v1.UserService/TeamCreate",
+			opts...,
+		),
+		teamDelete: connect_go.NewClient[v1.TeamDeleteRequest, v1.TeamDeleteResponse](
+			httpClient,
+			baseURL+"/core.user.v1.UserService/TeamDelete",
+			opts...,
+		),
+		teamList: connect_go.NewClient[v1.TeamListRequest, v1.TeamListResponse](
+			httpClient,
+			baseURL+"/core.user.v1.UserService/TeamList",
+			opts...,
+		),
+		teamAddMembers: connect_go.NewClient[v1.TeamAddMembersRequest, v1.TeamAddMembersResponse](
+			httpClient,
+			baseURL+"/core.user.v1.UserService/TeamAddMembers",
+			opts...,
+		),
+		teamAcceptInvite: connect_go.NewClient[v1.TeamAcceptInviteRequest, v1.TeamAcceptInviteResponse](
+			httpClient,
+			baseURL+"/core.user.v1.UserService/TeamAcceptInvite",
+			opts...,
+		),
+		teamRemoveMembers: connect_go.NewClient[v1.TeamRemoveMembersRequest, v1.TeamRemoveMembersResponse](
+			httpClient,
+			baseURL+"/core.user.v1.UserService/TeamRemoveMembers",
+			opts...,
+		),
+		teamListMembers: connect_go.NewClient[v1.TeamListMembersRequest, v1.TeamListMembersResponse](
+			httpClient,
+			baseURL+"/core.user.v1.UserService/TeamListMembers",
+			opts...,
+		),
 	}
 }
 
 // userServiceClient implements UserServiceClient.
 type userServiceClient struct {
 	findBy             *connect_go.Client[v1.FindByRequest, v1.FindByResponse]
-	create             *connect_go.Client[v1.UserServiceCreateRequest, v1.UserServiceCreateResponse]
-	update             *connect_go.Client[v1.UserServiceUpdateRequest, v1.UserServiceUpdateResponse]
+	create             *connect_go.Client[v1.CreateRequest, v1.CreateResponse]
+	update             *connect_go.Client[v1.UpdateRequest, v1.UpdateResponse]
 	comparePassword    *connect_go.Client[v1.ComparePasswordRequest, v1.ComparePasswordResponse]
 	authAssociate      *connect_go.Client[v1.AuthAssociateRequest, v1.AuthAssociateResponse]
 	getSettings        *connect_go.Client[v1.UserServiceGetSettingsRequest, v1.UserServiceGetSettingsResponse]
@@ -123,6 +174,13 @@ type userServiceClient struct {
 	forgotSend         *connect_go.Client[v1.ForgotSendRequest, v1.ForgotSendResponse]
 	forgotVerify       *connect_go.Client[v1.ForgotVerifyRequest, v1.ForgotVerifyResponse]
 	forgotUpdate       *connect_go.Client[v1.ForgotUpdateRequest, v1.ForgotUpdateResponse]
+	teamCreate         *connect_go.Client[v1.TeamCreateRequest, v1.TeamCreateResponse]
+	teamDelete         *connect_go.Client[v1.TeamDeleteRequest, v1.TeamDeleteResponse]
+	teamList           *connect_go.Client[v1.TeamListRequest, v1.TeamListResponse]
+	teamAddMembers     *connect_go.Client[v1.TeamAddMembersRequest, v1.TeamAddMembersResponse]
+	teamAcceptInvite   *connect_go.Client[v1.TeamAcceptInviteRequest, v1.TeamAcceptInviteResponse]
+	teamRemoveMembers  *connect_go.Client[v1.TeamRemoveMembersRequest, v1.TeamRemoveMembersResponse]
+	teamListMembers    *connect_go.Client[v1.TeamListMembersRequest, v1.TeamListMembersResponse]
 }
 
 // FindBy calls core.user.v1.UserService.FindBy.
@@ -131,12 +189,12 @@ func (c *userServiceClient) FindBy(ctx context.Context, req *connect_go.Request[
 }
 
 // Create calls core.user.v1.UserService.Create.
-func (c *userServiceClient) Create(ctx context.Context, req *connect_go.Request[v1.UserServiceCreateRequest]) (*connect_go.Response[v1.UserServiceCreateResponse], error) {
+func (c *userServiceClient) Create(ctx context.Context, req *connect_go.Request[v1.CreateRequest]) (*connect_go.Response[v1.CreateResponse], error) {
 	return c.create.CallUnary(ctx, req)
 }
 
 // Update calls core.user.v1.UserService.Update.
-func (c *userServiceClient) Update(ctx context.Context, req *connect_go.Request[v1.UserServiceUpdateRequest]) (*connect_go.Response[v1.UserServiceUpdateResponse], error) {
+func (c *userServiceClient) Update(ctx context.Context, req *connect_go.Request[v1.UpdateRequest]) (*connect_go.Response[v1.UpdateResponse], error) {
 	return c.update.CallUnary(ctx, req)
 }
 
@@ -180,11 +238,48 @@ func (c *userServiceClient) ForgotUpdate(ctx context.Context, req *connect_go.Re
 	return c.forgotUpdate.CallUnary(ctx, req)
 }
 
+// TeamCreate calls core.user.v1.UserService.TeamCreate.
+func (c *userServiceClient) TeamCreate(ctx context.Context, req *connect_go.Request[v1.TeamCreateRequest]) (*connect_go.Response[v1.TeamCreateResponse], error) {
+	return c.teamCreate.CallUnary(ctx, req)
+}
+
+// TeamDelete calls core.user.v1.UserService.TeamDelete.
+func (c *userServiceClient) TeamDelete(ctx context.Context, req *connect_go.Request[v1.TeamDeleteRequest]) (*connect_go.Response[v1.TeamDeleteResponse], error) {
+	return c.teamDelete.CallUnary(ctx, req)
+}
+
+// TeamList calls core.user.v1.UserService.TeamList.
+func (c *userServiceClient) TeamList(ctx context.Context, req *connect_go.Request[v1.TeamListRequest]) (*connect_go.Response[v1.TeamListResponse], error) {
+	return c.teamList.CallUnary(ctx, req)
+}
+
+// TeamAddMembers calls core.user.v1.UserService.TeamAddMembers.
+func (c *userServiceClient) TeamAddMembers(ctx context.Context, req *connect_go.Request[v1.TeamAddMembersRequest]) (*connect_go.Response[v1.TeamAddMembersResponse], error) {
+	return c.teamAddMembers.CallUnary(ctx, req)
+}
+
+// TeamAcceptInvite calls core.user.v1.UserService.TeamAcceptInvite.
+func (c *userServiceClient) TeamAcceptInvite(ctx context.Context, req *connect_go.Request[v1.TeamAcceptInviteRequest]) (*connect_go.Response[v1.TeamAcceptInviteResponse], error) {
+	return c.teamAcceptInvite.CallUnary(ctx, req)
+}
+
+// TeamRemoveMembers calls core.user.v1.UserService.TeamRemoveMembers.
+func (c *userServiceClient) TeamRemoveMembers(ctx context.Context, req *connect_go.Request[v1.TeamRemoveMembersRequest]) (*connect_go.Response[v1.TeamRemoveMembersResponse], error) {
+	return c.teamRemoveMembers.CallUnary(ctx, req)
+}
+
+// TeamListMembers calls core.user.v1.UserService.TeamListMembers.
+func (c *userServiceClient) TeamListMembers(ctx context.Context, req *connect_go.Request[v1.TeamListMembersRequest]) (*connect_go.Response[v1.TeamListMembersResponse], error) {
+	return c.teamListMembers.CallUnary(ctx, req)
+}
+
 // UserServiceHandler is an implementation of the core.user.v1.UserService service.
 type UserServiceHandler interface {
 	FindBy(context.Context, *connect_go.Request[v1.FindByRequest]) (*connect_go.Response[v1.FindByResponse], error)
-	Create(context.Context, *connect_go.Request[v1.UserServiceCreateRequest]) (*connect_go.Response[v1.UserServiceCreateResponse], error)
-	Update(context.Context, *connect_go.Request[v1.UserServiceUpdateRequest]) (*connect_go.Response[v1.UserServiceUpdateResponse], error)
+	// Create a new user (e.g. registration flow)
+	Create(context.Context, *connect_go.Request[v1.CreateRequest]) (*connect_go.Response[v1.CreateResponse], error)
+	// Update user information
+	Update(context.Context, *connect_go.Request[v1.UpdateRequest]) (*connect_go.Response[v1.UpdateResponse], error)
 	ComparePassword(context.Context, *connect_go.Request[v1.ComparePasswordRequest]) (*connect_go.Response[v1.ComparePasswordResponse], error)
 	AuthAssociate(context.Context, *connect_go.Request[v1.AuthAssociateRequest]) (*connect_go.Response[v1.AuthAssociateResponse], error)
 	GetSettings(context.Context, *connect_go.Request[v1.UserServiceGetSettingsRequest]) (*connect_go.Response[v1.UserServiceGetSettingsResponse], error)
@@ -195,6 +290,20 @@ type UserServiceHandler interface {
 	ForgotSend(context.Context, *connect_go.Request[v1.ForgotSendRequest]) (*connect_go.Response[v1.ForgotSendResponse], error)
 	ForgotVerify(context.Context, *connect_go.Request[v1.ForgotVerifyRequest]) (*connect_go.Response[v1.ForgotVerifyResponse], error)
 	ForgotUpdate(context.Context, *connect_go.Request[v1.ForgotUpdateRequest]) (*connect_go.Response[v1.ForgotUpdateResponse], error)
+	// Create a new team
+	TeamCreate(context.Context, *connect_go.Request[v1.TeamCreateRequest]) (*connect_go.Response[v1.TeamCreateResponse], error)
+	// Create a new team
+	TeamDelete(context.Context, *connect_go.Request[v1.TeamDeleteRequest]) (*connect_go.Response[v1.TeamDeleteResponse], error)
+	// List all teams this user is a member of
+	TeamList(context.Context, *connect_go.Request[v1.TeamListRequest]) (*connect_go.Response[v1.TeamListResponse], error)
+	// Add members to a given team (in INVITED status)
+	TeamAddMembers(context.Context, *connect_go.Request[v1.TeamAddMembersRequest]) (*connect_go.Response[v1.TeamAddMembersResponse], error)
+	// Add members to a given team
+	TeamAcceptInvite(context.Context, *connect_go.Request[v1.TeamAcceptInviteRequest]) (*connect_go.Response[v1.TeamAcceptInviteResponse], error)
+	// Delete members from a given team
+	TeamRemoveMembers(context.Context, *connect_go.Request[v1.TeamRemoveMembersRequest]) (*connect_go.Response[v1.TeamRemoveMembersResponse], error)
+	// For a given Team show get all members
+	TeamListMembers(context.Context, *connect_go.Request[v1.TeamListMembersRequest]) (*connect_go.Response[v1.TeamListMembersResponse], error)
 }
 
 // NewUserServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -259,6 +368,41 @@ func NewUserServiceHandler(svc UserServiceHandler, opts ...connect_go.HandlerOpt
 		svc.ForgotUpdate,
 		opts...,
 	))
+	mux.Handle("/core.user.v1.UserService/TeamCreate", connect_go.NewUnaryHandler(
+		"/core.user.v1.UserService/TeamCreate",
+		svc.TeamCreate,
+		opts...,
+	))
+	mux.Handle("/core.user.v1.UserService/TeamDelete", connect_go.NewUnaryHandler(
+		"/core.user.v1.UserService/TeamDelete",
+		svc.TeamDelete,
+		opts...,
+	))
+	mux.Handle("/core.user.v1.UserService/TeamList", connect_go.NewUnaryHandler(
+		"/core.user.v1.UserService/TeamList",
+		svc.TeamList,
+		opts...,
+	))
+	mux.Handle("/core.user.v1.UserService/TeamAddMembers", connect_go.NewUnaryHandler(
+		"/core.user.v1.UserService/TeamAddMembers",
+		svc.TeamAddMembers,
+		opts...,
+	))
+	mux.Handle("/core.user.v1.UserService/TeamAcceptInvite", connect_go.NewUnaryHandler(
+		"/core.user.v1.UserService/TeamAcceptInvite",
+		svc.TeamAcceptInvite,
+		opts...,
+	))
+	mux.Handle("/core.user.v1.UserService/TeamRemoveMembers", connect_go.NewUnaryHandler(
+		"/core.user.v1.UserService/TeamRemoveMembers",
+		svc.TeamRemoveMembers,
+		opts...,
+	))
+	mux.Handle("/core.user.v1.UserService/TeamListMembers", connect_go.NewUnaryHandler(
+		"/core.user.v1.UserService/TeamListMembers",
+		svc.TeamListMembers,
+		opts...,
+	))
 	return "/core.user.v1.UserService/", mux
 }
 
@@ -269,11 +413,11 @@ func (UnimplementedUserServiceHandler) FindBy(context.Context, *connect_go.Reque
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("core.user.v1.UserService.FindBy is not implemented"))
 }
 
-func (UnimplementedUserServiceHandler) Create(context.Context, *connect_go.Request[v1.UserServiceCreateRequest]) (*connect_go.Response[v1.UserServiceCreateResponse], error) {
+func (UnimplementedUserServiceHandler) Create(context.Context, *connect_go.Request[v1.CreateRequest]) (*connect_go.Response[v1.CreateResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("core.user.v1.UserService.Create is not implemented"))
 }
 
-func (UnimplementedUserServiceHandler) Update(context.Context, *connect_go.Request[v1.UserServiceUpdateRequest]) (*connect_go.Response[v1.UserServiceUpdateResponse], error) {
+func (UnimplementedUserServiceHandler) Update(context.Context, *connect_go.Request[v1.UpdateRequest]) (*connect_go.Response[v1.UpdateResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("core.user.v1.UserService.Update is not implemented"))
 }
 
@@ -307,4 +451,32 @@ func (UnimplementedUserServiceHandler) ForgotVerify(context.Context, *connect_go
 
 func (UnimplementedUserServiceHandler) ForgotUpdate(context.Context, *connect_go.Request[v1.ForgotUpdateRequest]) (*connect_go.Response[v1.ForgotUpdateResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("core.user.v1.UserService.ForgotUpdate is not implemented"))
+}
+
+func (UnimplementedUserServiceHandler) TeamCreate(context.Context, *connect_go.Request[v1.TeamCreateRequest]) (*connect_go.Response[v1.TeamCreateResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("core.user.v1.UserService.TeamCreate is not implemented"))
+}
+
+func (UnimplementedUserServiceHandler) TeamDelete(context.Context, *connect_go.Request[v1.TeamDeleteRequest]) (*connect_go.Response[v1.TeamDeleteResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("core.user.v1.UserService.TeamDelete is not implemented"))
+}
+
+func (UnimplementedUserServiceHandler) TeamList(context.Context, *connect_go.Request[v1.TeamListRequest]) (*connect_go.Response[v1.TeamListResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("core.user.v1.UserService.TeamList is not implemented"))
+}
+
+func (UnimplementedUserServiceHandler) TeamAddMembers(context.Context, *connect_go.Request[v1.TeamAddMembersRequest]) (*connect_go.Response[v1.TeamAddMembersResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("core.user.v1.UserService.TeamAddMembers is not implemented"))
+}
+
+func (UnimplementedUserServiceHandler) TeamAcceptInvite(context.Context, *connect_go.Request[v1.TeamAcceptInviteRequest]) (*connect_go.Response[v1.TeamAcceptInviteResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("core.user.v1.UserService.TeamAcceptInvite is not implemented"))
+}
+
+func (UnimplementedUserServiceHandler) TeamRemoveMembers(context.Context, *connect_go.Request[v1.TeamRemoveMembersRequest]) (*connect_go.Response[v1.TeamRemoveMembersResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("core.user.v1.UserService.TeamRemoveMembers is not implemented"))
+}
+
+func (UnimplementedUserServiceHandler) TeamListMembers(context.Context, *connect_go.Request[v1.TeamListMembersRequest]) (*connect_go.Response[v1.TeamListMembersResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("core.user.v1.UserService.TeamListMembers is not implemented"))
 }

@@ -6,16 +6,21 @@ import (
 	"github.com/rs/xid"
 )
 
+type memoryTeamInfo struct {
+	role   string
+	status TeamStatus
+}
+
 type memoryTeam struct {
 	id    string
 	name  string
-	users map[string]string
+	users map[string]*memoryTeamInfo
 }
 
 type memoryStore struct {
 	database map[string]User
 	auth     map[string]UserAuth
-	team     map[string]memoryTeam
+	team     map[string]*memoryTeam
 }
 
 var _ UserStore = (*memoryStore)(nil)
@@ -26,7 +31,7 @@ func NewUserMemoryStore() *memoryStore {
 	return &memoryStore{
 		database: map[string]User{},
 		auth:     map[string]UserAuth{},
-		team:     map[string]memoryTeam{},
+		team:     map[string]*memoryTeam{},
 	}
 }
 
@@ -48,11 +53,12 @@ func (store *memoryStore) GetByEmail(ctx context.Context, email string) (*User, 
 	return nil, ErrorUserNotFound
 }
 
-func (store *memoryStore) CreateUser(ctx context.Context, user User) error {
+func (store *memoryStore) CreateUser(ctx context.Context, user User) (*User, error) {
+	user.ID = xid.New().String()
 	store.database[user.ID] = user
-	store.TeamCreate(ctx, "", TeamUser{UserId: user.ID, Role: "admin"})
+	store.TeamCreate(ctx, "", TeamMember{UserId: user.ID, Role: "admin"})
 
-	return nil
+	return &user, nil
 }
 
 func (store *memoryStore) UpdateUser(ctx context.Context, user *User) error {
@@ -98,15 +104,18 @@ func (team *memoryTeam) unmarshal() *Team {
 	}
 }
 
-func (store *memoryStore) TeamCreate(ctx context.Context, name string, tuser ...TeamUser) (*Team, error) {
+func (store *memoryStore) TeamCreate(ctx context.Context, name string, tuser ...TeamMember) (*Team, error) {
 	teamId := xid.New().String()
 
-	users := map[string]string{}
+	users := map[string]*memoryTeamInfo{}
 	for _, item := range tuser {
-		users[item.UserId] = item.Role
+		users[item.UserId] = &memoryTeamInfo{
+			role:   item.Role,
+			status: item.Status,
+		}
 	}
 
-	store.team[teamId] = memoryTeam{
+	store.team[teamId] = &memoryTeam{
 		id:    teamId,
 		name:  name,
 		users: users,
@@ -121,10 +130,10 @@ func (store *memoryStore) TeamGet(ctx context.Context, teamId string) (*Team, er
 		return nil, ErrorTeamNotFound
 	}
 
-	return (&team).unmarshal(), nil
+	return (team).unmarshal(), nil
 }
 
-func (store *memoryStore) TeamAddUsers(ctx context.Context, tuser ...TeamUser) error {
+func (store *memoryStore) TeamAddMembers(ctx context.Context, tuser ...TeamMember) error {
 	if len(tuser) == 0 {
 		return nil
 	}
@@ -133,12 +142,29 @@ func (store *memoryStore) TeamAddUsers(ctx context.Context, tuser ...TeamUser) e
 		return ErrorTeamNotFound
 	}
 	for _, item := range tuser {
-		team.users[item.UserId] = item.Role
+		team.users[item.UserId] = &memoryTeamInfo{
+			role:   item.Role,
+			status: item.Status,
+		}
 	}
 	return nil
 }
 
-func (store *memoryStore) TeamDeleteUsers(ctx context.Context, teamId string, userIds ...string) error {
+func (store *memoryStore) TeamAcceptInvite(ctx context.Context, teamId, userId string) error {
+	team, found := store.team[teamId]
+	if !found {
+		return ErrorTeamNotFound
+	}
+	member, found := team.users[userId]
+	if !found {
+		return ErrorUserNotFound
+	}
+	member.status = TeamStatus_ACTIVE
+
+	return nil
+}
+
+func (store *memoryStore) TeamDeleteMembers(ctx context.Context, teamId string, userIds ...string) error {
 	team, found := store.team[teamId]
 	if !found {
 		return ErrorTeamNotFound
@@ -149,36 +175,65 @@ func (store *memoryStore) TeamDeleteUsers(ctx context.Context, teamId string, us
 	return nil
 }
 
-func (store *memoryStore) TeamListUsers(ctx context.Context, teamId string) ([]TeamUser, error) {
+func (store *memoryStore) TeamGetMember(ctx context.Context, teamId, userId string) (*TeamMember, error) {
 	team, found := store.team[teamId]
 	if !found {
 		return nil, ErrorTeamNotFound
 	}
-	users := []TeamUser{}
-	for userId, role := range team.users {
+
+	for userId, data := range team.users {
 		if _, found := store.database[userId]; !found {
 			// This is bad
 			return nil, ErrorUserNotFound
 		}
-		users = append(users, TeamUser{
+		return &TeamMember{
 			TeamId: teamId,
 			UserId: userId,
-			Role:   role,
+			Role:   data.role,
+			Status: data.status,
+		}, nil
+	}
+
+	return nil, ErrorUserNotFound
+}
+
+func (store *memoryStore) TeamListMembers(ctx context.Context, teamId string) ([]TeamMember, error) {
+	team, found := store.team[teamId]
+	if !found {
+		return nil, ErrorTeamNotFound
+	}
+	users := []TeamMember{}
+	for userId, data := range team.users {
+		if _, found := store.database[userId]; !found {
+			// This is bad
+			return nil, ErrorUserNotFound
+		}
+		users = append(users, TeamMember{
+			TeamId: teamId,
+			UserId: userId,
+			Role:   data.role,
+			Status: data.status,
 		})
 	}
 	return users, nil
 }
 
-func (store *memoryStore) TeamList(ctx context.Context, userId string) ([]*Team, error) {
-	teams := []*Team{}
+func (store *memoryStore) TeamList(ctx context.Context, userId string) ([]TeamMember, error) {
+	members := []TeamMember{}
 
 	for _, team := range store.team {
-		if _, found := team.users[userId]; found {
-			teams = append(teams, (&team).unmarshal())
+		if member, found := team.users[userId]; found {
+			members = append(members, TeamMember{
+				MemberId: team.id + "#" + userId,
+				UserId:   userId,
+				TeamId:   team.id,
+				Status:   member.status,
+				Role:     member.role,
+			})
 		}
 	}
 
-	return teams, nil
+	return members, nil
 }
 
 func (store *memoryStore) TeamDelete(ctx context.Context, teamId string) error {
