@@ -160,7 +160,7 @@ func (svc *OauthUserServer) UpsertUser(ctx context.Context, request *connect.Req
 	if findBy != nil {
 		userId = findBy.Msg.User.Id
 
-		if findBy.Msg.User.Status == userv1.UserStatus_USER_STATUS_REGISTERED {
+		if findBy.Msg.User.Status == userv1.UserStatus_USER_STATUS_REGISTERED || findBy.Msg.User.Status == userv1.UserStatus_USER_STATUS_INVITED {
 			// Since we're confirming by email we can update to "ACTIVE"
 			status := userv1.UserStatus_USER_STATUS_ACTIVE
 			_, err := svc.user.Update(ctx, connect.NewRequest(&userv1.UpdateRequest{
