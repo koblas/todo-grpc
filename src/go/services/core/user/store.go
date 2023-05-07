@@ -114,6 +114,7 @@ func TeamStatusFromString(value string) TeamStatus {
 var (
 	ErrorTeamNotFound = errors.New("team not found")
 	ErrorUserNotFound = errors.New("user not found")
+	ErrorAuthNotFound = errors.New("auth not found")
 )
 
 type User struct {

@@ -127,7 +127,7 @@ type dynamoUserEmail struct {
 
 func (store *DynamoStore) marshalUserEmail(user *User) *dynamoUserEmail {
 	return &dynamoUserEmail{
-		Pk:     store.makeUserEmailKey(user.Email),
+		Pk:     store.makeUserEmailKey(strings.ToLower(user.Email)),
 		Sk:     "A",
 		Type:   "userEmail",
 		UserID: user.ID,
@@ -282,8 +282,11 @@ func (store *DynamoStore) GetByEmail(ctx context.Context, email string) (*User, 
 		},
 	})
 
-	if err != nil || len(out.Item) == 0 {
+	if err != nil {
 		return nil, err
+	}
+	if len(out.Item) == 0 {
+		return nil, ErrorUserNotFound
 	}
 
 	user := dynamoUserEmail{}
@@ -405,7 +408,7 @@ func (store *DynamoStore) UpdateUser(ctx context.Context, user *User) error {
 					TableName: store.table,
 					Key: map[string]types.AttributeValue{
 						"pk": oldAv["pk"],
-						"sk": oldAv["pk"],
+						"sk": oldAv["sk"],
 					},
 				},
 			},
@@ -475,7 +478,6 @@ func (store *DynamoStore) AuthGet(ctx context.Context, provider, provider_id str
 			"sk": av["sk"],
 		},
 	})
-
 	if err != nil || len(out.Item) == 0 {
 		return nil, err
 	}

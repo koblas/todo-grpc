@@ -97,7 +97,7 @@ func (s *UserServer) FindBy(ctx context.Context, request *connect.Request[userv1
 	var auth *UserAuth
 	var err error
 	if params.Email != "" {
-		user, err = s.store.GetByEmail(ctx, params.Email)
+		user, err = s.store.GetByEmail(ctx, strings.ToLower(params.Email))
 	} else if params.UserId != "" {
 		user, err = s.store.GetById(ctx, params.UserId)
 	} else if params.Auth.Provider != "" && params.Auth.ProviderId != "" {
@@ -143,7 +143,7 @@ func (s *UserServer) Create(ctx context.Context, request *connect.Request[userv1
 	}
 
 	log.Info("Looking up user")
-	user, err := s.store.GetByEmail(ctx, params.Email)
+	user, err := s.store.GetByEmail(ctx, strings.ToLower(params.Email))
 	if err != nil && err != ErrorUserNotFound {
 		log.With(zap.Error(err)).Error("GetByEmail failed")
 		return nil, bufcutil.InternalError(err)
@@ -166,61 +166,62 @@ func (s *UserServer) Create(ctx context.Context, request *connect.Request[userv1
 	}
 	log.Info("DONE encrypt password")
 
-	// If user exists, then we're coming in through an "authenticated" channel
-	var secret string
-	created := false
-	if user == nil {
-		user = &User{
-			Name:         params.Name,
-			Email:        params.Email,
-			Status:       pbStatusToStatus[params.Status],
-			ClosedStatus: ClosedStatus_ACTIVE,
-			Settings:     map[string]map[string]string{},
-		}
-
-		if params.Status != userv1.UserStatus_USER_STATUS_ACTIVE {
-			var err error
-			vExpires := time.Now().Add(time.Duration(24 * time.Hour))
-			vNonce, err := randomBytes(20)
-			if err != nil {
-				return nil, bufcutil.InternalError(err, "failed to generate nonce")
-			}
-			secret, err = randomString(20)
-			if err != nil {
-				return nil, bufcutil.InternalError(err, "failed to generate secret")
-			}
-			vToken, err := hmacCreate(vNonce, secret)
-			if err != nil {
-				return nil, bufcutil.InternalError(err, "failed to hash token")
-			}
-
-			user.EmailVerifyNonce = vNonce
-			user.EmailVerifyToken = vToken
-			user.EmailVerifyExpiresAt = &vExpires
-			log.Info("verification token creation done")
-		}
-
-		log.Info("Saving user to store")
-		if u, err := s.store.CreateUser(ctx, *user); err != nil {
-			return nil, bufcutil.InternalError(err, "db create failed")
-		} else {
-			user = u
-		}
-		log = log.With("userId", user.ID)
-		log.Info("user created")
-		created = true
-	} else {
+	if user != nil {
 		log = log.With("userId", user.ID)
 		log.Info("user use existing")
+
+		return nil, connect.NewError(connect.CodeAlreadyExists, nil)
 	}
+	// If user exists, then we're coming in through an "authenticated" channel
+	var secret string
+	user = &User{
+		Name:         params.Name,
+		Email:        params.Email,
+		Status:       pbStatusToStatus[params.Status],
+		ClosedStatus: ClosedStatus_ACTIVE,
+		Settings:     map[string]map[string]string{},
+	}
+
+	if params.Status != userv1.UserStatus_USER_STATUS_ACTIVE {
+		var err error
+		vExpires := time.Now().Add(time.Duration(24 * time.Hour))
+		vNonce, err := randomBytes(20)
+		if err != nil {
+			return nil, bufcutil.InternalError(err, "failed to generate nonce")
+		}
+		secret, err = randomString(20)
+		if err != nil {
+			return nil, bufcutil.InternalError(err, "failed to generate secret")
+		}
+		vToken, err := hmacCreate(vNonce, secret)
+		if err != nil {
+			return nil, bufcutil.InternalError(err, "failed to hash token")
+		}
+
+		user.EmailVerifyNonce = vNonce
+		user.EmailVerifyToken = vToken
+		user.EmailVerifyExpiresAt = &vExpires
+		log.Info("verification token creation done")
+	}
+
+	log.Info("Saving user to store")
+	if u, err := s.store.CreateUser(ctx, *user); err != nil {
+		return nil, bufcutil.InternalError(err, "db create failed")
+	} else {
+		user = u
+	}
+	log = log.With("userId", user.ID)
+	log.Info("user created")
 
 	// If we have a password created for this user save it
 	if len(pass) != 0 {
+		lcEmail := strings.ToLower(user.Email)
+
 		auth := UserAuth{
 			UserID:   user.ID,
 			Password: pass,
 		}
-		if err := s.store.AuthUpsert(ctx, EMAIL_PROVIDER, strings.ToLower(user.Email), auth); err != nil {
+		if err := s.store.AuthUpsert(ctx, EMAIL_PROVIDER, lcEmail, auth); err != nil {
 			return nil, bufcutil.InternalError(err, "db authentication create failed")
 		}
 		log.Info("Password authentication created")
@@ -233,61 +234,36 @@ func (s *UserServer) Create(ctx context.Context, request *connect.Request[userv1
 		}
 	}
 
-	if created {
-		if _, err := s.pubsub.UserChange(ctx, connect.NewRequest(&userv1.UserChangeEvent{
-			Current: s.toProtoUser(user),
-		})); err != nil {
-			log.With(zap.Error(err)).Info("user entity publish failed")
-		}
-
-		// User Created in state REGISTERED
-		if secret != "" {
-			token, err := protoutil.SecureValueEncode(s.kms, secret)
-			if err != nil {
-				log.With(zap.Error(err)).Error("unable to create registration token")
-				// FIXME -- the user is created, but they will not get a REGISTRATION token
-			} else {
-				payload := userv1.UserSecurityEvent{
-					User:  s.toProtoUser(user),
-					Token: token,
-				}
-
-				if user.Status == UserStatus_REGISTERED {
-					payload.Action = userv1.UserSecurity_USER_SECURITY_USER_REGISTER_TOKEN
-				} else if user.Status == UserStatus_INVITED {
-					payload.Action = userv1.UserSecurity_USER_SECURITY_USER_INVITE_TOKEN
-				} else {
-					log.With(zap.String("status", user.Status.String())).Error("unknown user status")
-				}
-
-				if _, err := s.pubsub.SecurityRegisterToken(ctx, connect.NewRequest(&payload)); err != nil {
-					log.With(zap.Error(err)).Error("user security publish failed")
-				}
-			}
-		} else {
-			// User created in state ACTIVE
-		}
-	} else if user.Status == UserStatus_REGISTERED && user.Status != pbStatusToStatus[params.Status] {
-		// Through an OAuth flow we're creating an ACTIVE user
-		orig := s.toProtoUser(user)
-
-		user.Status = pbStatusToStatus[params.Status]
-		if err := s.store.UpdateUser(ctx, user); err != nil {
-			log.With(zap.Error(err)).Error("unable to update user status")
-			return nil, bufcutil.InternalError(err)
-		}
-
-		// We're changing from REGISTERED to ACTIVE
-		if _, err := s.pubsub.UserChange(ctx, connect.NewRequest(&userv1.UserChangeEvent{
-			Original: orig,
-			Current:  s.toProtoUser(user),
-		})); err != nil {
-			log.With(zap.Error(err)).Info("user entity publish failed")
-		}
+	if _, err := s.pubsub.UserChange(ctx, connect.NewRequest(&userv1.UserChangeEvent{
+		Current: s.toProtoUser(user),
+	})); err != nil {
+		log.With(zap.Error(err)).Info("user entity publish failed")
 	}
 
-	if user.Status == UserStatus_ACTIVE {
-		// TODO - something with Invites
+	// User Created in state REGISTERED
+	if secret != "" {
+		token, err := protoutil.SecureValueEncode(s.kms, secret)
+		if err != nil {
+			log.With(zap.Error(err)).Error("unable to create registration token")
+			// FIXME -- the user is created, but they will not get a REGISTRATION token
+		} else {
+			payload := userv1.UserSecurityEvent{
+				User:  s.toProtoUser(user),
+				Token: token,
+			}
+
+			if user.Status == UserStatus_REGISTERED {
+				payload.Action = userv1.UserSecurity_USER_SECURITY_USER_REGISTER_TOKEN
+			} else if user.Status == UserStatus_INVITED {
+				payload.Action = userv1.UserSecurity_USER_SECURITY_USER_INVITE_TOKEN
+			} else {
+				log.With(zap.String("status", user.Status.String())).Error("unknown user status")
+			}
+
+			if _, err := s.pubsub.SecurityRegisterToken(ctx, connect.NewRequest(&payload)); err != nil {
+				log.With(zap.Error(err)).Error("user security publish failed")
+			}
+		}
 	}
 
 	return connect.NewResponse(&userv1.CreateResponse{User: s.toProtoUser(user)}), nil
@@ -307,23 +283,18 @@ func (s *UserServer) Update(ctx context.Context, request *connect.Request[userv1
 	if orig == nil {
 		return nil, bufcutil.NotFoundError("User not found")
 	}
-	// Some basic validation
-	if params.Password != nil || params.PasswordNew != nil {
+
+	// Validate potential new password
+	if params.PasswordNew != nil {
+		if errmsg := validatePassword(*params.PasswordNew); errmsg != "" {
+			return nil, bufcutil.InvalidArgumentError("passwordNew", "password too short")
+		}
+
 		auth, err := s.store.AuthGet(ctx, EMAIL_PROVIDER, strings.ToLower(orig.Email))
 		if err != nil {
 			return nil, bufcutil.InternalError(err)
 		}
-		if params.PasswordNew != nil && auth != nil {
-			// If you're setting a new password, you must provide the old
-			if params.Password == nil {
-				return nil, bufcutil.InvalidArgumentError("password", "password missing")
-			}
-			if errmsg := validatePassword(*params.PasswordNew); errmsg != "" {
-				return nil, bufcutil.InvalidArgumentError("password", "password too short")
-			}
-		}
-		// If you provided a password, we will check it...
-		if params.Password != nil && !passwordCompare(auth.Password, *params.Password) {
+		if auth != nil && (params.Password == nil || !passwordCompare(auth.Password, *params.Password)) {
 			return nil, bufcutil.InvalidArgumentError("password", "password mismatch")
 		}
 	}
@@ -347,9 +318,18 @@ func (s *UserServer) Update(ctx context.Context, request *connect.Request[userv1
 		}
 	}
 	if params.ClosedStatus != nil {
-		// TODO
+		updated.ClosedStatus = pbClosedStatusToStatus[*params.ClosedStatus]
 	}
-	if params.PasswordNew != nil && *params.Password != "" {
+	if params.AvatarUrl != nil {
+		updated.AvatarUrl = params.AvatarUrl
+	}
+
+	// Save updates
+	if err = s.store.UpdateUser(ctx, &updated); err != nil {
+		log.With(zap.Error(err)).Error("failed to update user")
+		return nil, bufcutil.InternalError(err)
+	}
+	if params.PasswordNew != nil {
 		pass, err := bcrypt.GenerateFromPassword([]byte(*params.PasswordNew), bcrypt.DefaultCost)
 		if err != nil {
 			return nil, err
@@ -361,14 +341,10 @@ func (s *UserServer) Update(ctx context.Context, request *connect.Request[userv1
 		}
 		// Hmm... This is a good case where they both shouldn't be updated at the same time
 		if err := s.store.AuthUpsert(ctx, EMAIL_PROVIDER, strings.ToLower(updated.Email), auth); err != nil {
+			log.With(zap.Error(err)).Error("failed to update password")
 			return nil, bufcutil.InternalError(err)
 		}
 	}
-	if params.AvatarUrl != nil {
-		updated.AvatarUrl = params.AvatarUrl
-	}
-
-	s.store.UpdateUser(ctx, &updated)
 
 	// If the email changed, so move the password to the new authentication
 	if updated.Email != orig.Email {
@@ -425,7 +401,7 @@ func (s *UserServer) ComparePassword(ctx context.Context, request *connect.Reque
 	}
 
 	if !passwordCompare(auth.Password, params.Password) {
-		return nil, bufcutil.InvalidArgumentError("password", "password mismatch")
+		return nil, connect.NewError(connect.CodePermissionDenied, nil)
 	}
 
 	return connect.NewResponse(&userv1.ComparePasswordResponse{
@@ -694,7 +670,7 @@ func (s *UserServer) ForgotSend(ctx context.Context, request *connect.Request[us
 	if params.Email == "" {
 		return nil, bufcutil.InvalidArgumentError("email", "must provide email")
 	}
-	user, err := s.store.GetByEmail(ctx, params.Email)
+	user, err := s.store.GetByEmail(ctx, strings.ToLower(params.Email))
 	if err != nil {
 		return nil, bufcutil.InternalError(err)
 	}

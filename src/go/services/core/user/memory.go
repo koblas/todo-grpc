@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+	"strings"
 
 	"github.com/rs/xid"
 )
@@ -45,7 +46,7 @@ func (store *memoryStore) GetById(ctx context.Context, userId string) (*User, er
 
 func (store *memoryStore) GetByEmail(ctx context.Context, email string) (*User, error) {
 	for _, u := range store.database {
-		if u.Email == email {
+		if strings.EqualFold(u.Email, email) {
 			return &u, nil
 		}
 	}

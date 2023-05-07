@@ -254,6 +254,179 @@ func (suite *UserSuite) TestForgotBasic() {
 	require.EqualValues(suite.T(), 1, len(mock.SecurityPasswordChangeMock.Calls()), "password change event")
 }
 
+func (suite *UserSuite) TestPassword() {
+	server, mock := suite.buildServer(suite.T())
+
+	ctx := context.TODO()
+	// ctx = logger.ToContext(ctx, logger.NewZap(logger.LevelDebug))
+
+	mock.UserChangeMock.Return(connect.NewResponse(&eventv1.UserEventbusUserChangeResponse{}), nil)
+	mock.SecurityRegisterTokenMock.Return(connect.NewResponse(&eventv1.UserEventbusSecurityRegisterTokenResponse{}), nil)
+	mock.SecurityForgotRequestMock.Set(func(ctx context.Context, pp1 *connect.Request[userv1.UserSecurityEvent]) (*connect.Response[eventv1.UserEventbusSecurityForgotRequestResponse], error) {
+		return nil, nil
+	})
+	mock.SecurityPasswordChangeMock.Return(connect.NewResponse(&eventv1.UserEventbusSecurityPasswordChangeResponse{}), nil)
+
+	password := "testPassword1234!"
+
+	request := userv1.CreateRequest{
+		Name:     faker.Name(),
+		Email:    faker.Email(),
+		Status:   userv1.UserStatus_USER_STATUS_REGISTERED,
+		Password: password,
+	}
+	user, err := server.Create(ctx, connect.NewRequest(&request))
+
+	require.NoError(suite.T(), err, "create: call failed")
+
+	u2, err := server.ComparePassword(ctx, connect.NewRequest(&userv1.ComparePasswordRequest{
+		Email:    request.Email,
+		Password: password,
+	}))
+
+	require.NoError(suite.T(), err, "compare: call failed")
+	require.NotNil(suite.T(), u2, "compare: bad response")
+	require.Equal(suite.T(), user.Msg.User.Id, u2.Msg.UserId, "compare: user match")
+
+	_, err = server.ComparePassword(ctx, connect.NewRequest(&userv1.ComparePasswordRequest{
+		Email:    request.Email,
+		Password: password + password,
+	}))
+
+	require.Error(suite.T(), err, "compareBad: call should not succeed")
+	require.Equal(suite.T(), connect.CodePermissionDenied, connect.CodeOf(err), "compareBad: failed")
+}
+
+func (suite *UserSuite) TestPasswordUpdate() {
+	server, mock := suite.buildServer(suite.T())
+
+	ctx := context.TODO()
+	// ctx = logger.ToContext(ctx, logger.NewZap(logger.LevelDebug))
+
+	mock.UserChangeMock.Return(connect.NewResponse(&eventv1.UserEventbusUserChangeResponse{}), nil)
+	mock.SecurityRegisterTokenMock.Return(connect.NewResponse(&eventv1.UserEventbusSecurityRegisterTokenResponse{}), nil)
+	mock.SecurityForgotRequestMock.Set(func(ctx context.Context, pp1 *connect.Request[userv1.UserSecurityEvent]) (*connect.Response[eventv1.UserEventbusSecurityForgotRequestResponse], error) {
+		return nil, nil
+	})
+	mock.SecurityPasswordChangeMock.Return(connect.NewResponse(&eventv1.UserEventbusSecurityPasswordChangeResponse{}), nil)
+
+	password := "testPassword1234!"
+	password2 := "testPassword1234!2"
+	passwordBad := ""
+
+	request := userv1.CreateRequest{
+		Name:   faker.Name(),
+		Email:  faker.Email(),
+		Status: userv1.UserStatus_USER_STATUS_REGISTERED,
+	}
+	user, err := server.Create(ctx, connect.NewRequest(&request))
+
+	require.NoError(suite.T(), err, "create: call failed")
+
+	// No original password, make sure it can be set
+	_, err = server.Update(ctx, connect.NewRequest(&userv1.UpdateRequest{
+		UserId:      user.Msg.User.Id,
+		PasswordNew: &password,
+	}))
+	require.NoError(suite.T(), err, "update: call failed")
+
+	_, err = server.ComparePassword(ctx, connect.NewRequest(&userv1.ComparePasswordRequest{
+		Email:    request.Email,
+		Password: password,
+	}))
+	require.NoError(suite.T(), err, "compare: call failed")
+
+	// Update - no password provided for verification
+	_, err = server.Update(ctx, connect.NewRequest(&userv1.UpdateRequest{
+		UserId:      user.Msg.User.Id,
+		PasswordNew: &password2,
+	}))
+	require.Error(suite.T(), err, "update: call should not succeed")
+
+	// Update - with invalid password
+	_, err = server.Update(ctx, connect.NewRequest(&userv1.UpdateRequest{
+		UserId:      user.Msg.User.Id,
+		Password:    &passwordBad,
+		PasswordNew: &password2,
+	}))
+	require.Error(suite.T(), err, "update: call should not succeed")
+
+	// Update - with incorrect password
+	_, err = server.Update(ctx, connect.NewRequest(&userv1.UpdateRequest{
+		UserId:      user.Msg.User.Id,
+		Password:    &password2,
+		PasswordNew: &password2,
+	}))
+	require.Error(suite.T(), err, "update: call failed")
+
+	// Update - with password
+	_, err = server.Update(ctx, connect.NewRequest(&userv1.UpdateRequest{
+		UserId:      user.Msg.User.Id,
+		Password:    &password,
+		PasswordNew: &password2,
+	}))
+	require.NoError(suite.T(), err, "update: call failed")
+}
+
+func (suite *UserSuite) TestEmailUpdate() {
+	server, mock := suite.buildServer(suite.T())
+
+	ctx := context.TODO()
+	// ctx = logger.ToContext(ctx, logger.NewZap(logger.LevelDebug))
+
+	mock.UserChangeMock.Return(connect.NewResponse(&eventv1.UserEventbusUserChangeResponse{}), nil)
+	mock.SecurityRegisterTokenMock.Return(connect.NewResponse(&eventv1.UserEventbusSecurityRegisterTokenResponse{}), nil)
+	mock.SecurityForgotRequestMock.Set(func(ctx context.Context, pp1 *connect.Request[userv1.UserSecurityEvent]) (*connect.Response[eventv1.UserEventbusSecurityForgotRequestResponse], error) {
+		return nil, nil
+	})
+	mock.SecurityPasswordChangeMock.Return(connect.NewResponse(&eventv1.UserEventbusSecurityPasswordChangeResponse{}), nil)
+
+	newEmail := faker.Email()
+
+	request := userv1.CreateRequest{
+		Name:     faker.Name(),
+		Email:    faker.Email(),
+		Password: faker.Password(),
+		Status:   userv1.UserStatus_USER_STATUS_REGISTERED,
+	}
+	user, err := server.Create(ctx, connect.NewRequest(&request))
+	require.NoError(suite.T(), err, "create: call failed")
+
+	_, err = server.Update(ctx, connect.NewRequest(&userv1.UpdateRequest{
+		UserId: user.Msg.User.Id,
+		Email:  &newEmail,
+	}))
+	require.NoError(suite.T(), err, "update: call failed")
+
+	// Check the email lookups
+	_, err = server.FindBy(ctx, connect.NewRequest(&userv1.FindByRequest{
+		FindBy: &userv1.FindBy{
+			Email: request.Email,
+		},
+	}))
+	require.Error(suite.T(), err, "findBy: call failed")
+	_, err = server.FindBy(ctx, connect.NewRequest(&userv1.FindByRequest{
+		FindBy: &userv1.FindBy{
+			Email: newEmail,
+		},
+	}))
+	require.NoError(suite.T(), err, "findBy: call failed")
+
+	// Check the authentication
+
+	_, err = server.ComparePassword(ctx, connect.NewRequest(&userv1.ComparePasswordRequest{
+		Email:    request.Email,
+		Password: request.Password,
+	}))
+	require.Error(suite.T(), err, "compare: should not succeed")
+
+	_, err = server.ComparePassword(ctx, connect.NewRequest(&userv1.ComparePasswordRequest{
+		Email:    newEmail,
+		Password: request.Password,
+	}))
+	require.NoError(suite.T(), err, "compare: call failed")
+}
+
 func (suite *OAuthSuite) TestNotFound() {
 	// This tests the calls that UpsertUser does
 
@@ -363,7 +536,7 @@ func (suite *OAuthSuite) TestFound() {
 				},
 			}
 			_, err = server.FindBy(ctx, connect.NewRequest(&findByRequest))
-			require.Error(suite.T(), err, "findBy: call failed")
+			require.Error(suite.T(), err, "findBy: should not succed")
 			require.EqualValues(suite.T(), connect.CodeNotFound, connect.CodeOf(err), "findBy: invalid error")
 
 			status := userv1.UserStatus_USER_STATUS_ACTIVE
