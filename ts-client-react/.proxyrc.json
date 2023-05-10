@@ -1,12 +1,12 @@
 {
   "/minio_": {
-    "target": "http://localhost:80"
+    "target": "http://localhost:8000"
   },
   "/api": {
-    "target": "http://localhost:80"
+    "target": "http://localhost:8000"
   },
   "/wsapi": {
-    "target": "http://localhost:80",
+    "target": "http://localhost:8000",
     "ws": true
   }
 }

@@ -32,7 +32,7 @@ export function useAuth() {
               rpcAuth.RegisterResponse,
               {
                 onCompleted(result) {
-                  setToken(result.token.accessToken);
+                  setToken(result.token.access_token);
                 },
               },
               handlers,
@@ -73,7 +73,7 @@ export function useAuth() {
               rpcAuth.AuthenticateResponse,
               {
                 onCompleted(result) {
-                  setToken(result.token.accessToken);
+                  setToken(result.token.access_token);
                 },
               },
               handlers,
@@ -127,7 +127,7 @@ export function useAuth() {
               rpcAuth.RecoverUpdateResponse,
               {
                 onCompleted(result) {
-                  setToken(result.token.accessToken);
+                  setToken(result.token.access_token);
                 },
               },
               handlers,
@@ -175,7 +175,7 @@ export function useAuth() {
               {
                 ...(handlers ?? {}),
                 onCompleted(result, vars) {
-                  setToken(result.token.accessToken);
+                  setToken(result.token.access_token);
                   handlers?.onCompleted?.(result, vars);
                 },
               },

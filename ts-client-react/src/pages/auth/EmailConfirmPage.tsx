@@ -14,7 +14,7 @@ export function AuthEmailConfirmPage() {
 
   useEffect(() => {
     emailConfirm(
-      { userId, token },
+      { user_id: userId, token },
       {
         onCompleted() {
           setVerified(true);

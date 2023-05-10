@@ -22,7 +22,7 @@
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^14.0.0",
     "@types/jest": "^29.1.0",
-    "@types/node": "^18.7.23",
+    "@types/node": "^20.1.2",
     "@types/react": "^18.0.12",
     "@types/react-dom": "^18.0.5",
     "@types/uuid": "^9.0.0",

@@ -22,7 +22,7 @@ export const UpdateUserRequest = z.object({
   email: z.optional(z.string()),
   name: z.optional(z.string()),
   password: z.optional(z.string()),
-  passwordNew: z.optional(z.string()),
+  password_new: z.optional(z.string()),
 });
 export const UpdateUserResponse = z.object({
   user: User,

@@ -39,7 +39,7 @@ export default function OAuthPage() {
     const timer = setTimeout(() => {
       if (!code) {
         oauthRedirect(
-          { provider, redirectUrl },
+          { provider, redirect_url: redirectUrl },
           {
             onCompleted({ url }) {
               setTimeout(() => {
@@ -57,7 +57,7 @@ export default function OAuthPage() {
       }
 
       oauthLogin(
-        { provider, code, redirectUrl, state },
+        { provider, code, redirect_url: redirectUrl, state },
         {
           onCompleted(data) {
             if (data.created) {

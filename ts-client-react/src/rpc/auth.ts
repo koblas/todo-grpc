@@ -2,10 +2,10 @@ import { z } from "zod";
 import { RpcOptions } from "./errors";
 
 export const Token = z.object({
-  accessToken: z.string(),
-  tokenType: z.string(),
-  expiresIn: z.number(),
-  refreshToken: z.optional(z.string()),
+  access_token: z.string(),
+  token_type: z.string(),
+  expires_in: z.number(),
+  refresh_token: z.optional(z.string()),
 });
 
 // register()
@@ -31,8 +31,8 @@ export type RegisterResponseT = z.infer<typeof RegisterResponse>;
 export const AuthenticateRequest = z.object({
   email: z.string(),
   password: z.string(),
-  tfaOtp: z.optional(z.string()),
-  tfaType: z.optional(z.string()),
+  tfa_otp: z.optional(z.string()),
+  tfa_type: z.optional(z.string()),
 });
 export const AuthenticateResponse = z.object({
   token: Token,
@@ -43,7 +43,7 @@ export type AuthenticateResponseT = z.infer<typeof AuthenticateResponse>;
 
 // verify_email()
 export const VerifyEmailRequest = z.object({
-  userId: z.string(),
+  user_id: z.string(),
   token: z.string(),
 });
 export const VerifyEmailResponse = z.object({});
@@ -62,7 +62,7 @@ export type RecoverSendResponseT = z.infer<typeof RecoverSendResponse>;
 
 // recover_verify()
 export const RecoverVerifyRequest = z.object({
-  userId: z.string(),
+  user_id: z.string(),
   token: z.string(),
 });
 export const RecoverVerifyResponse = z.object({});
@@ -71,7 +71,7 @@ export type RecoverVerifyRequestT = z.infer<typeof RecoverVerifyRequest>;
 export type RecoverVerifyResponseT = z.infer<typeof RecoverVerifyResponse>;
 // recover_update()
 export const RecoverUpdateRequest = z.object({
-  userId: z.string(),
+  user_id: z.string(),
   token: z.string(),
   password: z.string(),
 });
@@ -84,7 +84,7 @@ export type RecoverUpdateResponseT = z.infer<typeof RecoverUpdateResponse>;
 // oauth_login()
 export const OauthLoginRequest = z.object({
   provider: z.string(),
-  redirectUrl: z.string(),
+  redirect_url: z.string(),
   code: z.string(),
   state: z.optional(z.string()),
 });
@@ -99,7 +99,7 @@ export type OauthLoginResponseT = z.infer<typeof OauthLoginResponse>;
 // oauth_url()
 export const OauthUrlRequest = z.object({
   provider: z.string(),
-  redirectUrl: z.string(),
+  redirect_url: z.string(),
   state: z.optional(z.string()),
 });
 export const OauthUrlResponse = z.object({

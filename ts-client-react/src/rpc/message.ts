@@ -3,7 +3,7 @@ import { RpcOptions } from "./errors";
 
 export const MessageItem = z.object({
   id: z.string(),
-  roomId: z.string(),
+  room_id: z.string(),
   sender: z.string(),
   text: z.string(),
 });
@@ -17,7 +17,7 @@ export type RoomItemT = z.infer<typeof RoomItem>;
 
 // message create
 export const MsgCreateRequest = z.object({
-  roomId: z.string(),
+  room_id: z.string(),
   text: z.string(),
 });
 export const MsgCreateResponse = z.object({
@@ -28,8 +28,8 @@ export type MsgCreateResponseT = z.infer<typeof MsgCreateResponse>;
 
 // todo_delete
 export const DeleteRequest = z.object({
-  msgId: z.string(),
-  roomId: z.string(),
+  msg_id: z.string(),
+  room_id: z.string(),
 });
 export const DeleteResponse = z.object({});
 export type DeleteRequestT = z.infer<typeof DeleteRequest>;
@@ -37,7 +37,7 @@ export type DeleteResponseT = z.infer<typeof DeleteResponse>;
 
 // todo_add
 export const MsgListRequest = z.object({
-  roomId: z.string(),
+  room_id: z.string(),
 });
 export const MsgListResponse = z.object({
   messages: z.array(MessageItem),

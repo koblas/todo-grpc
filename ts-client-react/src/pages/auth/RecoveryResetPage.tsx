@@ -24,7 +24,7 @@ type FormFields = {
   password: string;
 };
 
-function Verify({ loading, success }: { loading: boolean; success: boolean }) {
+function Verify({ loading, success }: { loading: boolean; success: boolean }): JSX.Element | null {
   if (loading) {
     return <Spinner />;
   }
@@ -42,7 +42,7 @@ export function AuthRecoveryResetPage() {
     formState: { errors },
     setError,
   } = useForm<FormFields>();
-  const { userId, token } = useParams<{ userId: string; token: string }>();
+  const { user_id: userId, token } = useParams<{ user_id: string; token: string }>();
   const auth = useAuth();
   const { search } = useLocation();
   const navigate = useNavigate();
@@ -55,7 +55,7 @@ export function AuthRecoveryResetPage() {
 
   useEffect(() => {
     recoverVerify(
-      { userId, token },
+      { user_id: userId, token },
       {
         onCompleted() {
           setVerified(true);
@@ -72,7 +72,7 @@ export function AuthRecoveryResetPage() {
     assert(userId && token);
 
     recoverUpdate(
-      { userId, token, password },
+      { user_id: userId, token, password },
       {
         onCompleted() {
           setCompleted(true);

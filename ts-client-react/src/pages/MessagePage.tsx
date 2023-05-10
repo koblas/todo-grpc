@@ -36,7 +36,7 @@ function Chat() {
           onCompleted({ room }) {
             console.log("COMPLETED ", room.id, roomId);
             setRoomId(room.id);
-            listMessages({ roomId: room.id });
+            listMessages({ room_id: room.id });
           },
         },
       );
@@ -50,7 +50,7 @@ function Chat() {
         return;
       }
       addMessage({
-        roomId,
+        room_id: roomId,
         text: msg,
       });
 
@@ -69,7 +69,7 @@ function Chat() {
       <Flex w={["100%", "100%", "40%"]} h="90%" flexDir="column">
         <Header />
         <Divider />
-        <Messages messages={messages.filter((m) => m.roomId === roomId)} />
+        <Messages messages={messages.filter((m) => m.room_id === roomId)} />
         <Divider />
         <Footer inputMessage={inputMessage} setInputMessage={setInputMessage} handleSendMessage={handleSendMessage} />
       </Flex>
