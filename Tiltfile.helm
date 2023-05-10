@@ -2,7 +2,7 @@ load('ext://helm_remote', 'helm_remote')
 
 go_common = ['./pkg', './gen', './cmd/compose/shared_config', './go.sum', './go.mod', './tilt-scripts']
 
-def go_docker(name, path):
+def go_docker(name, path, labels=[]):
   docker_build('todo-grpc/' + name, './src/go', 
     #dockerfile='src/go/cmd/compose/'+path+'/Dockerfile.tilt',
     dockerfile='src/go/cmd/compose/'+path+'/Dockerfile',
@@ -50,26 +50,26 @@ helm_remote('ingress-nginx',
 
 k8s_yaml(helm('./charts/'))
 
-go_docker('publicapi-auth', 'publicapi/auth')
-go_docker('publicapi-file', 'publicapi/file')
-go_docker('publicapi-gpt', 'publicapi/gpt')
-go_docker('publicapi-message', 'publicapi/message')
-go_docker('publicapi-todo', 'publicapi/todo')
-go_docker('publicapi-user', 'publicapi/user')
-go_docker('publicapi-websocket', 'publicapi/websocket')
-go_docker('core-oauth-user', 'core/oauth_user')
-go_docker('core-message', 'core/message')
-go_docker('core-send-email', 'core/send_email')
-go_docker('core-todo', 'core/todo')
-go_docker('core-user', 'core/user')
-go_docker('websocket-broadcast', 'websocket/broadcast')
-go_docker('websocket-file', 'websocket/file')
-go_docker('websocket-message', 'websocket/message')
-go_docker('websocket-todo', 'websocket/todo')
-go_docker('websocket-user', 'websocket/user')
-go_docker('workers-user', 'workers/workers_user')
-go_docker('workers-file', 'workers/workers_file')
-go_docker('trigger-minio', 'trigger/minio')
+go_docker('publicapi-auth', 'publicapi/auth', labels=["publicapi"])
+go_docker('publicapi-file', 'publicapi/file', labels=["publicapi"])
+go_docker('publicapi-gpt', 'publicapi/gpt', labels=["publicapi"])
+go_docker('publicapi-message', 'publicapi/message', labels=["publicapi"])
+go_docker('publicapi-todo', 'publicapi/todo', labels=["publicapi"])
+go_docker('publicapi-user', 'publicapi/user', labels=["publicapi"])
+go_docker('publicapi-websocket', 'publicapi/websocket', labels=["publicapi"])
+go_docker('core-oauth-user', 'core/oauth_user', labels=["core"])
+go_docker('core-message', 'core/message', labels=["core"])
+go_docker('core-send-email', 'core/send_email', labels=["core"])
+go_docker('core-todo', 'core/todo', labels=["core"])
+go_docker('core-user', 'core/user', labels=["core"])
+go_docker('websocket-broadcast', 'websocket/broadcast', labels=["websocket"])
+go_docker('websocket-file', 'websocket/file', labels=["websocket"])
+go_docker('websocket-message', 'websocket/message', labels=["websocket"])
+go_docker('websocket-todo', 'websocket/todo', labels=["websocket"])
+go_docker('websocket-user', 'websocket/user', labels=["websocket"])
+go_docker('workers-user', 'workers/workers_user', labels=["events"])
+go_docker('workers-file', 'workers/workers_file', labels=["events"])
+go_docker('trigger-minio', 'trigger/minio', labels=["events"])
 
 #helm_remote('redis', 
 #    repo_name='bitnami', 
@@ -95,3 +95,8 @@ helm_remote('dynamodb',
 #    ],
 #)
 
+k8s_resource(
+    workload='ingress-nginx-controller',
+    port_forwards=['8000:80']
+
+)
