@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/bufbuild/connect-go"
 	userv1 "github.com/koblas/grpc-todo/gen/core/user/v1"
@@ -20,16 +21,36 @@ var teamStatusToPbStatus = map[TeamStatus]userv1.TeamStatus{
 	TeamStatus_INVITED: userv1.TeamStatus_TEAM_STATUS_INVITED,
 }
 
+func marshalMember(member *TeamMember, team *Team) *userv1.TeamMember {
+	if member == nil {
+		return &userv1.TeamMember{
+			TeamId:   team.TeamId,
+			TeamName: team.Name,
+			Role:     ADMIN_ROLE,
+			Status:   userv1.TeamStatus_TEAM_STATUS_ACTIVE,
+		}
+	}
+
+	return &userv1.TeamMember{
+		Id:       member.MemberId,
+		UserId:   member.UserId,
+		TeamId:   team.TeamId,
+		TeamName: team.Name,
+		Status:   teamStatusToPbStatus[member.Status],
+		Role:     member.Role,
+	}
+}
+
 func (s *UserServer) isTeamAdmin(ctx context.Context, teamId, userId string) error {
 	member, err := s.store.TeamGetMember(ctx, teamId, userId)
 	if member == nil {
-		return bufcutil.NotFoundError("user is not member of team")
+		return bufcutil.PermissionDeniedError("user is not member of team")
 	}
 	if err != nil {
 		return bufcutil.InternalError(err)
 	}
 	if member.Role != ADMIN_ROLE || member.Status != TeamStatus_ACTIVE {
-		return connect.NewError(connect.CodePermissionDenied, nil)
+		return bufcutil.FailedPreconditionError("user is not admin of team")
 	}
 
 	return nil
@@ -38,13 +59,13 @@ func (s *UserServer) isTeamAdmin(ctx context.Context, teamId, userId string) err
 func (s *UserServer) isTeamMember(ctx context.Context, teamId, userId string) error {
 	member, err := s.store.TeamGetMember(ctx, teamId, userId)
 	if member == nil {
-		return bufcutil.NotFoundError("user is not member of team")
+		return bufcutil.PermissionDeniedError("user is not member of team")
 	}
 	if err != nil {
 		return bufcutil.InternalError(err)
 	}
 	if member.Status != TeamStatus_ACTIVE {
-		return connect.NewError(connect.CodePermissionDenied, nil)
+		return bufcutil.FailedPreconditionError("user is not active member of team")
 	}
 
 	return nil
@@ -69,7 +90,7 @@ func (s *UserServer) TeamCreate(ctx context.Context, request *connect.Request[us
 	}
 
 	return connect.NewResponse(&userv1.TeamCreateResponse{
-		TeamId: team.TeamId,
+		Team: marshalMember(nil, team),
 	}), nil
 }
 
@@ -108,12 +129,12 @@ func (s *UserServer) TeamList(ctx context.Context, request *connect.Request[user
 		}
 
 		tlist = append(tlist, &userv1.TeamMember{
-			Id:     member.MemberId,
-			UserId: member.UserId,
-			TeamId: team.TeamId,
-			Name:   team.Name,
-			Status: teamStatusToPbStatus[member.Status],
-			Role:   member.Role,
+			Id:       member.MemberId,
+			UserId:   member.UserId,
+			TeamId:   team.TeamId,
+			TeamName: team.Name,
+			Status:   teamStatusToPbStatus[member.Status],
+			Role:     member.Role,
 		})
 	}
 
@@ -133,23 +154,27 @@ func (s *UserServer) TeamAddMembers(ctx context.Context, request *connect.Reques
 	}
 
 	tuser := []TeamMember{}
+	tnow := time.Now()
 	for _, item := range request.Msg.Members {
-		status := TeamStatus_ACTIVE
+		member := TeamMember{
+			TeamId: teamId,
+			UserId: item.UserId,
+			Role:   item.Role,
+		}
+
+		member.Status = TeamStatus_ACTIVE
 		switch item.Status {
 		case userv1.TeamStatus_TEAM_STATUS_INVITED:
-			status = TeamStatus_INVITED
+			member.Status = TeamStatus_INVITED
+			member.InvitedBy = &userId
+			member.InvitedOn = &tnow
 		case userv1.TeamStatus_TEAM_STATUS_ACTIVE:
-			status = TeamStatus_ACTIVE
+			member.Status = TeamStatus_ACTIVE
 		default:
 			return nil, bufcutil.InvalidArgumentError("status", "unknowns status provided")
 		}
 
-		tuser = append(tuser, TeamMember{
-			TeamId: teamId,
-			UserId: item.UserId,
-			Role:   item.Role,
-			Status: status,
-		})
+		tuser = append(tuser, member)
 	}
 
 	if err := s.store.TeamAddMembers(ctx, tuser...); err != nil {
@@ -224,17 +249,7 @@ func (s *UserServer) TeamListMembers(ctx context.Context, request *connect.Reque
 	mlist := []*userv1.TeamMember{}
 
 	for _, item := range members {
-		status := userv1.TeamStatus_TEAM_STATUS_ACTIVE
-		if item.Status == TeamStatus_INVITED {
-			status = userv1.TeamStatus_TEAM_STATUS_INVITED
-		}
-		mlist = append(mlist, &userv1.TeamMember{
-			UserId: item.UserId,
-			TeamId: item.TeamId,
-			Role:   item.Role,
-			Status: status,
-		})
-
+		mlist = append(mlist, marshalMember(&item, &Team{TeamId: teamId}))
 	}
 
 	return connect.NewResponse(&userv1.TeamListMembersResponse{Members: mlist}), nil

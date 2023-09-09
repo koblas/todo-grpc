@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { Text, Heading, Button, Flex, Box, useToast } from "@chakra-ui/react";
 import { useForm } from "react-hook-form";
-import { useUser } from "../../hooks/data/user";
+import { useUser, useUserMutations } from "../../hooks/data/user";
 
 // const INPUT_STYLE = {
 //   bg: "white",
@@ -17,9 +17,9 @@ type FormFields = {
 };
 
 export function NotificationSettings() {
-  const { mutations } = useUser();
+  const { useUpdateUser } = useUserMutations();
   const toast = useToast();
-  const [updateUser] = mutations.useUpdateUser();
+  const [updateUser] = useUpdateUser();
 
   const [isSubmitting, setSubmitting] = useState(false);
   const {

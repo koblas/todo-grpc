@@ -109,13 +109,12 @@ func (s *UserServer) FindBy(ctx context.Context, request *connect.Request[userv1
 		return nil, bufcutil.NotFoundError("no query provided")
 	}
 
-	if err != nil {
+	if err != nil || user == nil {
+		if err == ErrorUserNotFound || err == nil {
+			return nil, bufcutil.NotFoundError("user not found")
+		}
 		log.With(zap.Error(err)).Error("FindBy failed")
 		return nil, bufcutil.InternalError(err)
-	}
-
-	if user == nil {
-		return nil, bufcutil.NotFoundError("user not found")
 	}
 
 	log.With("ID", user.ID).Info("found")

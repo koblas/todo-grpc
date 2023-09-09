@@ -17,7 +17,7 @@ function AlwaysScrollToBottom() {
 }
 
 export function Messages({ messages }: { messages: Message[] }) {
-  const { user } = useUser();
+  const user = useUser();
 
   return (
     <Flex w="100%" h="80%" overflowY="scroll" flexDirection="column" p="3">

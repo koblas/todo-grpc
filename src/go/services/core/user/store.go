@@ -147,11 +147,13 @@ type Team struct {
 }
 
 type TeamMember struct {
-	MemberId string
-	UserId   string
-	TeamId   string
-	Status   TeamStatus
-	Role     string
+	MemberId  string
+	UserId    string
+	TeamId    string
+	Status    TeamStatus
+	Role      string
+	InvitedBy *string
+	InvitedOn *time.Time
 }
 
 // User operations

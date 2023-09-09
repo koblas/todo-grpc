@@ -11,13 +11,19 @@ import {
   BsList,
   BsChevronLeft,
 } from "react-icons/bs";
+import { ErrorBoundary } from "react-error-boundary";
 import { useNavigate, useLocation } from "react-router";
 import NavItem from "./NavItem";
 import { useUser } from "../hooks/data/user";
 import { useAuth } from "../hooks/auth";
+import { GearIcon } from "./icons";
+
+function UsernameMember() {
+  return <span>Member</span>;
+}
 
 function Username() {
-  const { user } = useUser();
+  const user = useUser();
 
   return <span>{user ? user.name : "Unknown"}</span>;
 }
@@ -26,20 +32,22 @@ function Username() {
 
 function SidebarBottomItems({ isExpanded }: { isExpanded: boolean }) {
   const { pathname } = useLocation();
-  const { user } = useUser();
+  const user = useUser();
   const navigate = useNavigate();
 
   return (
     <Flex flexDir="column" w="100%" alignItems={isExpanded ? "flex-start" : "center"}>
       <Divider display={isExpanded ? "flex" : "none"} />
       <NavItem expanded={isExpanded} avatar={user?.avatar_url ?? "avatar-1.jpg"}>
-        <React.Suspense fallback={<Spinner />}>
-          <Username />
-        </React.Suspense>
+        <ErrorBoundary FallbackComponent={UsernameMember}>
+          <React.Suspense fallback={<Spinner />}>
+            <Username />
+          </React.Suspense>
+        </ErrorBoundary>
       </NavItem>
       <NavItem
         expanded={isExpanded}
-        icon={BsGear}
+        icon={GearIcon}
         active={pathname.startsWith("/settings")}
         onClick={() => {
           navigate("/settings/");

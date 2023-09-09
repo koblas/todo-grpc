@@ -48,7 +48,11 @@ func main() {
 	mux.Handle(filev1connect.NewFileServiceHandler(
 		file.NewFileServer(opts...),
 		bufcutil.WithJSON(),
-		connect.WithInterceptors(interceptors.NewReqidInterceptor(), auth),
+		connect.WithInterceptors(
+			interceptors.NewReqidInterceptor(),
+			interceptors.NewDelayInterceptor(),
+			auth,
+		),
 	))
 	mux.Handle(grpchealth.NewHandler(
 		grpchealth.NewStaticChecker(filev1connect.FileServiceName),

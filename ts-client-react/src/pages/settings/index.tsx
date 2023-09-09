@@ -5,12 +5,11 @@ import React from "react";
 import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { As, Box, Flex, Heading, Icon, Spinner, Text } from "@chakra-ui/react";
 
-import { BsGear, BsBell, BsKey } from "react-icons/bs";
-
 import { ProfileSettings } from "./ProfileSettings";
 import { SecuritySettings } from "./SecuritySettings";
 import { NotificationSettings } from "./NotificationSettings";
 import { NotFoundPage } from "../NotFoundPage";
+import { BellIcon, GearIcon, KeyIcon } from "../../components/icons";
 
 function SettingItem({
   active,
@@ -63,7 +62,7 @@ export function SettingsPage() {
         </Box>
         <SettingItem
           active={pathname === "/settings/"}
-          icon={BsGear}
+          icon={GearIcon}
           title="Account"
           description="Some descriptive text"
           onClick={() => {
@@ -72,7 +71,7 @@ export function SettingsPage() {
         />
         <SettingItem
           active={pathname === "/settings/security"}
-          icon={BsKey}
+          icon={KeyIcon}
           title="Security"
           description="Some descriptive text"
           onClick={() => {
@@ -81,7 +80,7 @@ export function SettingsPage() {
         />
         <SettingItem
           active={pathname === "/settings/notifications"}
-          icon={BsBell}
+          icon={BellIcon}
           title="Notifications"
           description="Some descriptive text"
           onClick={() => {

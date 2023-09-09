@@ -51,3 +51,11 @@ func FailedPreconditionError(msg ...string) *connect.Error {
 
 	return connect.NewError(connect.CodeFailedPrecondition, errors.New(msg[0]))
 }
+
+func PermissionDeniedError(msg ...string) *connect.Error {
+	if len(msg) == 0 {
+		return connect.NewError(connect.CodeFailedPrecondition, nil)
+	}
+
+	return connect.NewError(connect.CodePermissionDenied, errors.New(msg[0]))
+}

@@ -50,9 +50,6 @@ func NewOauthUserServer(jwtSecret string, opts ...Option) *OauthUserServer {
 	svr := OauthUserServer{
 		kms:      key_manager.NewSecureClear(),
 		jwtMaker: maker,
-		// user:     user,
-		// pubsub:   producer,
-		// smanager: smanager,
 	}
 
 	for _, opt := range opts {

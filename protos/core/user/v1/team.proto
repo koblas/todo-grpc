@@ -1,6 +1,8 @@
 syntax = "proto3";
 package core.user.v1;
 
+import "google/protobuf/timestamp.proto";
+
 option go_package = "github.com/koblas/grpc-todo/protos";
 
 // import "google/protobuf/timestamp.proto";
@@ -21,12 +23,10 @@ message TeamMember {
   TeamStatus status = 4;
   string role = 5;
   // Name is present in some API responses
-  string name = 6;
-}
-
-message Team {
-  string id = 1;
-  string name = 2;
+  string team_name = 6;
+  // User_id of the person who invited this user (not present if you created)
+  optional string invited_by = 7;
+  optional google.protobuf.Timestamp invited_on = 8; 
 }
 
 // Begin API data structures
@@ -36,7 +36,7 @@ message TeamCreateRequest {
   string name = 2;
 }
 message TeamCreateResponse {
-  string team_id = 1;
+  TeamMember team = 1;
 }
 
 message TeamDeleteRequest {

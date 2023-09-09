@@ -51,7 +51,11 @@ func main() {
 	mux.Handle(todov1connect.NewTodoServiceHandler(
 		todo.NewTodoServer(opts...),
 		bufcutil.WithJSON(),
-		connect.WithInterceptors(interceptors.NewReqidInterceptor(), auth),
+		connect.WithInterceptors(
+			interceptors.NewReqidInterceptor(),
+			interceptors.NewDelayInterceptor(),
+			auth,
+		),
 	))
 	mux.Handle(grpchealth.NewHandler(
 		grpchealth.NewStaticChecker(todov1connect.TodoServiceName),

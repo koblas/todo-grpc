@@ -24,20 +24,28 @@ import {
   MenuItem,
   MenuList,
 } from "@chakra-ui/react";
-import { FiHome, FiTrendingUp, FiCompass, FiStar, FiSettings, FiMenu, FiBell, FiChevronDown } from "react-icons/fi";
-import { IconType } from "react-icons";
+import {
+  HomeIcon,
+  TrendingIcon,
+  CompassIcon,
+  StarIcon,
+  SettingsIcon,
+  BellIcon,
+  ChevronDownIcon,
+  MenuIcon,
+} from "./icons";
 
 interface LinkItemProps {
   name: string;
-  icon: IconType;
+  icon: typeof Icon;
   link?: string;
 }
 const LinkItems: Array<LinkItemProps> = [
-  { name: "Home", icon: FiHome },
-  { name: "Trending", icon: FiTrendingUp },
-  { name: "Explore", icon: FiCompass },
-  { name: "Favourites", icon: FiStar },
-  { name: "Settings", icon: FiSettings },
+  { name: "Home", icon: HomeIcon },
+  { name: "Trending", icon: TrendingIcon },
+  { name: "Explore", icon: CompassIcon },
+  { name: "Favourites", icon: StarIcon },
+  { name: "Settings", icon: SettingsIcon },
 ];
 
 interface SidebarProps extends BoxProps {
@@ -45,7 +53,7 @@ interface SidebarProps extends BoxProps {
 }
 
 interface NavItemProps extends FlexProps {
-  icon: IconType;
+  icon: typeof Icon;
   link?: string;
   children: ReactText;
 }
@@ -105,7 +113,7 @@ function MobileNav({ onOpen, ...rest }: MobileProps) {
         onClick={onOpen}
         variant="outline"
         aria-label="open menu"
-        icon={<FiMenu />}
+        icon={<MenuIcon />}
       />
 
       <Text display={{ base: "flex", md: "none" }} fontSize="2xl" fontFamily="monospace" fontWeight="bold">
@@ -113,7 +121,7 @@ function MobileNav({ onOpen, ...rest }: MobileProps) {
       </Text>
 
       <HStack spacing={{ base: "0", md: "6" }}>
-        <IconButton size="lg" variant="ghost" aria-label="open menu" icon={<FiBell />} />
+        <IconButton size="lg" variant="ghost" aria-label="open menu" icon={<BellIcon />} />
         <Flex alignItems="center">
           <Menu>
             <MenuButton py={2} transition="all 0.3s" _focus={{ boxShadow: "none" }}>
@@ -129,7 +137,7 @@ function MobileNav({ onOpen, ...rest }: MobileProps) {
                   </Text>
                 </VStack>
                 <Box display={{ base: "none", md: "flex" }}>
-                  <FiChevronDown />
+                  <ChevronDownIcon />
                 </Box>
               </HStack>
             </MenuButton>

@@ -1,0 +1,46 @@
+syntax = "proto3";
+package api.user.v1;
+
+option go_package = "github.com/koblas/grpc-todo/protos";
+
+message TeamMember {
+  string id = 1;
+  string team_name = 2;
+  string user_id = 3;
+  string role = 4;
+  string status = 5;
+}
+
+message TeamInviteRequest {
+  string team_id = 1;
+  optional string email = 2;
+  optional string user_id = 3;
+}
+message TeamInviteResponse {
+}
+
+message TeamCreateRequest {
+  string name = 1;
+}
+message TeamCreateResponse {
+  TeamMember team = 1;
+}
+
+message TeamDeleteRequest {
+  string team_id = 1;
+}
+message TeamDeleteResponse {
+}
+
+message TeamListRequest {
+}
+message TeamListResponse {
+  repeated TeamMember teams = 1;
+}
+
+service TeamService {
+  rpc team_create(TeamCreateRequest) returns (TeamCreateResponse);
+  rpc team_delete(TeamDeleteRequest) returns (TeamDeleteResponse);
+  rpc team_list(TeamListRequest) returns (TeamListResponse);
+  rpc team_invite(TeamInviteRequest) returns (TeamInviteResponse);
+}

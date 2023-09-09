@@ -34,3 +34,11 @@ export interface UserService {
   get_user(params: GetUserRequestT, options: RpcOptions<GetUserResponseT>): void;
   update_user(params: UpdateUserRequestT, options: RpcOptions<UpdateUserResponseT>): void;
 }
+
+export const UserEvent = z.object({
+  object_id: z.string(),
+  action: z.enum(["delete", "create", "update"]),
+  topic: z.literal("user"),
+  body: z.nullable(User),
+});
+export type UserEventT = z.infer<typeof UserEvent>;

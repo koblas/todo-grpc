@@ -51,7 +51,11 @@ func main() {
 	mux.Handle(apiv1connect.NewMessageServiceHandler(
 		message.NewMessageServer(opts...),
 		bufcutil.WithJSON(),
-		connect.WithInterceptors(interceptors.NewReqidInterceptor(), auth),
+		connect.WithInterceptors(
+			interceptors.NewReqidInterceptor(),
+			interceptors.NewDelayInterceptor(),
+			auth,
+		),
 	))
 	mux.Handle(grpchealth.NewHandler(
 		grpchealth.NewStaticChecker(apiv1connect.MessageServiceName),

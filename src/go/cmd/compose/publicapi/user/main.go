@@ -43,12 +43,32 @@ func main() {
 		user.WithGetUserId(authHelper),
 	}
 
+	svc := user.NewUserServer(opts...)
 	mux := http.NewServeMux()
-	mux.Handle(userv1connect.NewUserServiceHandler(
-		user.NewUserServer(opts...),
+
+	userPrefix, userSvc := userv1connect.NewUserServiceHandler(
+		svc,
 		bufcutil.WithJSON(),
-		connect.WithInterceptors(interceptors.NewReqidInterceptor(), auth),
-	))
+		connect.WithInterceptors(
+			interceptors.NewReqidInterceptor(),
+			interceptors.NewDelayInterceptor(),
+			auth,
+		),
+		connect.WithCompressMinBytes(1024),
+	)
+	teamPrefix, teamSvc := userv1connect.NewTeamServiceHandler(
+		svc,
+		bufcutil.WithJSON(),
+		connect.WithInterceptors(
+			interceptors.NewReqidInterceptor(),
+			interceptors.NewDelayInterceptor(),
+			auth,
+		),
+		connect.WithCompressMinBytes(1024),
+	)
+
+	mux.Handle(bufcutil.RewriteMux("/api/v1/user/", userPrefix, userSvc))
+	mux.Handle(bufcutil.RewriteMux("/api/v1/team/", teamPrefix, teamSvc))
 	mux.Handle(grpchealth.NewHandler(
 		grpchealth.NewStaticChecker(userv1connect.UserServiceName),
 		connect.WithCompressMinBytes(1024),

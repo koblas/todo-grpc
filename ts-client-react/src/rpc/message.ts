@@ -69,6 +69,7 @@ export interface MessageService {
 export const MessageEvent = z.object({
   object_id: z.string(),
   action: z.enum(["delete", "create", "update"]),
-  topic: z.literal("todo"),
-  body: MessageItem,
+  topic: z.literal("message"),
+  body: z.nullable(MessageItem),
 });
+export type MessageEventT = z.infer<typeof MessageEvent>;

@@ -3,8 +3,7 @@
 import React, { useState } from "react";
 import { Text, Heading, FormControl, FormLabel, Button, Flex, Box, useToast, FormErrorMessage } from "@chakra-ui/react";
 import { useForm } from "react-hook-form";
-import { useUser } from "../../hooks/data/user";
-import { FetchError } from "../../rpc/utils";
+import { useUser, useUserMutations } from "../../hooks/data/user";
 import { PasswordInput } from "../../components/PasswordInput";
 
 const INPUT_STYLE = {
@@ -19,9 +18,9 @@ type FormFields = {
 };
 
 export function SecuritySettings() {
-  const { mutations } = useUser();
+  const { useUpdateUser } = useUserMutations();
   const toast = useToast();
-  const [updateUser] = mutations.useUpdateUser();
+  const [updateUser] = useUpdateUser();
 
   const [isSubmitting, setSubmitting] = useState(false);
   const {

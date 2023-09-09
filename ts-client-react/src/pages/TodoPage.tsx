@@ -1,6 +1,8 @@
 import React from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
+import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import { ErrorBoundary, FallbackProps } from "react-error-boundary";
 import { Heading, Box, Text, CloseButton, Grid, Flex, Input, Button, Spinner } from "@chakra-ui/react";
 import { useTodos } from "../hooks/data/todo";
 import { TodoObjectT } from "../rpc/todo";
@@ -9,6 +11,17 @@ import { useAuth } from "../hooks/auth";
 type FormFields = {
   text: string;
 };
+
+function ErrorView({ error, resetErrorBoundary }: FallbackProps) {
+  return (
+    <Box>
+      <Text>{error.message}</Text>
+      <Button marginLeft="5" size="md" colorScheme="blue" variant="solid" onClick={resetErrorBoundary}>
+        Retry
+      </Button>
+    </Box>
+  );
+}
 
 function Item({ todo }: { todo: TodoObjectT }) {
   const { mutations } = useTodos();
@@ -24,18 +37,20 @@ function Item({ todo }: { todo: TodoObjectT }) {
   );
 }
 
-function List({ todos }: { todos: TodoObjectT[] }) {
+function TodoList() {
+  const { todos } = useTodos(true);
+
   return (
-    <Grid justifyItems="center">
+    <>
       {todos.map((todo) => (
         <Item key={todo.id} todo={todo} />
       ))}
-    </Grid>
+    </>
   );
 }
 
 export function TodoDetail() {
-  const { todos, mutations } = useTodos();
+  const { mutations } = useTodos();
   const { register, handleSubmit, setValue } = useForm<FormFields>();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
@@ -68,7 +83,17 @@ export function TodoDetail() {
         </form>
       </Box>
       <Box p="5" bgColor="white">
-        <List todos={todos ?? []} />
+        <Grid justifyItems="center">
+          <QueryErrorResetBoundary>
+            {({ reset }) => (
+              <ErrorBoundary onReset={reset} FallbackComponent={ErrorView}>
+                <React.Suspense fallback={<Spinner />}>
+                  <TodoList />
+                </React.Suspense>
+              </ErrorBoundary>
+            )}
+          </QueryErrorResetBoundary>
+        </Grid>
       </Box>
     </Box>
   );
@@ -77,9 +102,7 @@ export function TodoDetail() {
 export function TodoPage() {
   return (
     <Box w="100%" p="8" bgColor="gray.100">
-      <React.Suspense fallback={<Spinner />}>
-        <TodoDetail />
-      </React.Suspense>
+      <TodoDetail />
     </Box>
   );
 }

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo } from "react";
 import { ChakraProvider, CSSReset, Spinner, useToast } from "@chakra-ui/react";
 import { BrowserRouter } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ErrorBoundary, FallbackProps } from "react-error-boundary";
 import * as Sentry from "@sentry/react";
 
@@ -77,7 +77,7 @@ function ClearOnLogout({ queryClient }: { queryClient: QueryClient }) {
     }
   }, [token, queryClient]);
 
-  useTodoListener(queryClient);
+  useTodoListener();
   useUserListener(queryClient);
   useMessageListener(queryClient);
 

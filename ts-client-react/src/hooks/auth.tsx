@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from "react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { RpcMutation, RpcOptions } from "../rpc/errors";
 import * as rpcAuth from "../rpc/auth";

@@ -40,3 +40,11 @@ export interface TodoService {
   todo_delete(params: TodoListRequestT, options: RpcOptions<TodoListResponseT>): void;
   todo_list(params: TodoDeleteRequestT, options: RpcOptions<TodoDeleteResponseT>): void;
 }
+
+export const TodoEvent = z.object({
+  object_id: z.string(),
+  action: z.enum(["delete", "create"]),
+  topic: z.literal("todo"),
+  body: z.nullable(TodoObject),
+});
+export type TodoEventT = z.infer<typeof TodoEvent>;

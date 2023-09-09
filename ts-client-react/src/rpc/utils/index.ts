@@ -96,6 +96,7 @@ const fetchHandlers: FetchHandlers = {
 const BASE_HEADERS = new Headers({
   Accept: "application/json",
   "Content-Type": "application/json",
+  "X-sleep-delay": "1",
 });
 
 function buildHeaders(hdrs?: Record<string, string>) {

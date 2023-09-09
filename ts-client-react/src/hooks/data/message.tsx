@@ -1,74 +1,69 @@
-import { QueryClient, useMutation, useQueryClient } from "react-query";
+import { QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo } from "react";
-import { z } from "zod";
-import { create } from "zustand";
 import * as rpcMessage from "../../rpc/message";
 import { useAuth } from "../auth";
 import { newFetchClient } from "../../rpc/utils";
 import { useWebsocketUpdates } from "../../rpc/websocket";
-import { buildCallbacksTyped } from "../../rpc/utils/helper";
+import { buildCallbacksTyped, buildCallbacksTypedQuery } from "../../rpc/utils/helper";
 import { RpcMutation, RpcOptions } from "../../rpc/errors";
+import { sharedEventCrud } from "./shared";
+import { must } from "../../util/assert";
 
-const CACHE_KEY = "messages";
+const CACHE_KEY = ["messages"];
 
-const useMessageStore = create<{
-  messages: rpcMessage.MessageItemT[];
-  add(item: rpcMessage.MessageItemT): void;
-  update(item: rpcMessage.MessageItemT): void;
-  delete(id: rpcMessage.MessageItemT["id"]): void;
-}>((set) => ({
-  messages: [],
-  add: (item: rpcMessage.MessageItemT) =>
-    set((state) => {
-      if (state.messages.some(({ id }) => id === item.id)) {
-        return {};
-      }
+function handleEvent(queryClient: QueryClient, event: Omit<rpcMessage.MessageEventT, "topic">) {
+  const key = event.body?.room_id ? [...CACHE_KEY, event.body.room_id] : CACHE_KEY;
 
-      return { messages: [...state.messages, item] };
-    }),
-  update: (item: rpcMessage.MessageItemT) =>
-    set((state) => ({
-      messages: state.messages.map((v) => (v.id === item.id ? item : v)),
-    })),
-  delete: (id: rpcMessage.MessageItemT["id"]) =>
-    set((state) => ({
-      messages: state.messages.filter((v) => v.id !== id),
-    })),
-}));
+  queryClient.setQueriesData<rpcMessage.MsgListResponseT>(key, (old) => ({
+    messages: sharedEventCrud(old?.messages, event),
+  }));
+}
 
-export function useMessages() {
+export function useRoomsList() {
   const { token } = useAuth();
   const queryClient = useQueryClient();
-  const messageStore = useMessageStore();
+  const client = newFetchClient({ token });
+
+  const result = useQuery<rpcMessage.RoomListResponseT>(CACHE_KEY, () => client.POST("/v1/message/room_list", {}), {
+    staleTime: Infinity,
+    enabled: !!token,
+    suspense: true,
+    ...buildCallbacksTypedQuery(queryClient, rpcMessage.RoomListResponse, {}),
+  });
+
+  return must(result?.data?.rooms);
+}
+
+export function useMessageList(roomId: string) {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+  const client = newFetchClient({ token });
+
+  const result = useQuery<rpcMessage.MsgListResponseT>(
+    [...CACHE_KEY, roomId],
+    () =>
+      client.POST<rpcMessage.MsgListResponseT>("/v1/message/msg_list", {
+        room_id: roomId,
+      }),
+    {
+      staleTime: Infinity,
+      enabled: !!token,
+      suspense: true,
+      ...buildCallbacksTypedQuery(queryClient, rpcMessage.MsgListResponse, {}),
+    },
+  );
+
+  return must(result.data?.messages);
+}
+
+export function useMessageMutations() {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
 
   const mutations = useMemo(() => {
     const client = newFetchClient({ token });
 
     return {
-      useListRooms(): RpcMutation<rpcMessage.RoomListRequestT, rpcMessage.RoomListResponseT> {
-        const mutation = useMutation(
-          CACHE_KEY,
-          (data: rpcMessage.RoomListRequestT) =>
-            client.POST<rpcMessage.RoomListResponseT>("/v1/message/room_list", data),
-          {},
-        );
-
-        function action(data: rpcMessage.RoomListRequestT, handlers?: RpcOptions<rpcMessage.RoomListResponseT>) {
-          mutation.mutate(
-            data,
-            buildCallbacksTyped(queryClient, rpcMessage.RoomListResponse, {
-              ...handlers,
-              onCompleted(payload, variables) {
-                // TODO payload.messages.forEach((item) => messageStore.add(item));
-                handlers?.onCompleted?.(payload, variables);
-              },
-            }),
-          );
-        }
-
-        return [action, { loading: mutation.isLoading }];
-      },
-
       useRoomJoin(): RpcMutation<rpcMessage.RoomJoinRequestT, rpcMessage.RoomJoinResponseT> {
         const mutation = useMutation(
           CACHE_KEY,
@@ -78,39 +73,7 @@ export function useMessages() {
         );
 
         function action(data: rpcMessage.RoomJoinRequestT, handlers?: RpcOptions<rpcMessage.RoomJoinResponseT>) {
-          mutation.mutate(
-            data,
-            buildCallbacksTyped(queryClient, rpcMessage.RoomJoinResponse, {
-              ...handlers,
-              onCompleted(payload, variables) {
-                // TODO payload.messages.forEach((item) => messageStore.add(item));
-                handlers?.onCompleted?.(payload, variables);
-              },
-            }),
-          );
-        }
-
-        return [action, { loading: mutation.isLoading }];
-      },
-
-      useListMessages(): RpcMutation<rpcMessage.MsgListRequestT, rpcMessage.MsgListResponseT> {
-        const mutation = useMutation(
-          CACHE_KEY,
-          (data: rpcMessage.MsgListRequestT) => client.POST<rpcMessage.MsgListResponseT>("/v1/message/msg_list", data),
-          {},
-        );
-
-        function action(data: rpcMessage.MsgListRequestT, handlers?: RpcOptions<rpcMessage.MsgListResponseT>) {
-          mutation.mutate(
-            data,
-            buildCallbacksTyped(queryClient, rpcMessage.MsgListResponse, {
-              ...handlers,
-              onCompleted(payload, variables) {
-                payload.messages.forEach((item) => messageStore.add(item));
-                handlers?.onCompleted?.(payload, variables);
-              },
-            }),
-          );
+          mutation.mutate(data, buildCallbacksTyped(queryClient, rpcMessage.RoomJoinResponse, handlers));
         }
 
         return [action, { loading: mutation.isLoading }];
@@ -124,14 +87,17 @@ export function useMessages() {
           {},
         );
 
-        // function action(data: RecoverVerifyParams, handlers?: RpcOptions<z.infer<typeof AuthOkResponse>>) {
         function action(data: rpcMessage.MsgCreateRequestT, handlers?: RpcOptions<rpcMessage.MsgCreateResponseT>) {
           mutation.mutate(
             data,
             buildCallbacksTyped(queryClient, rpcMessage.MsgCreateResponse, {
               ...handlers,
               onCompleted(payload, variables) {
-                messageStore.add(payload.message);
+                handleEvent(queryClient, {
+                  action: "create",
+                  object_id: payload.message.id,
+                  body: payload.message,
+                });
                 handlers?.onCompleted?.(payload, variables);
               },
             }),
@@ -141,30 +107,21 @@ export function useMessages() {
         return [action, { loading: mutation.isLoading }];
       },
     };
-  }, [messageStore, queryClient, token]);
+  }, [token]);
 
-  return {
-    messages: messageStore.messages,
-    mutations,
-  };
+  return mutations;
 }
 
-export function useMessageListener(queryClient: QueryClient) {
+export function useMessageListener() {
   const { addListener } = useWebsocketUpdates();
-  const store = useMessageStore();
+  const queryClient = useQueryClient();
 
   useEffect(
     () =>
-      addListener("message", (event: z.infer<typeof rpcMessage.MessageEvent>) => {
-        if (event.action === "delete") {
-          store.delete(event.object_id);
-        } else if (event.action === "update") {
-          store.update(event.body);
-        } else if (event.action === "create" && event.body !== null) {
-          store.add(event.body);
-        } else {
-          console.log("UNKNOWN TODO EVENT", event);
-        }
+      addListener("message", (event: rpcMessage.MessageEventT) => {
+        const data = rpcMessage.MessageEvent.parse(event);
+
+        handleEvent(queryClient, data);
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [queryClient],

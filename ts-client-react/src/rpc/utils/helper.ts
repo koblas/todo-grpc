@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { MutateOptions, Query, QueryClient, QueryObserverOptions } from "react-query";
+import { MutateOptions, Query, QueryClient, QueryObserverOptions } from "@tanstack/react-query";
 import { RpcOptions } from "../errors";
 import { handleJsonError } from "./json_helpers";
 

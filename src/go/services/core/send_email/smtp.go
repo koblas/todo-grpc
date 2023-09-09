@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/koblas/grpc-todo/pkg/logger"
+	"go.uber.org/zap"
 	"gopkg.in/gomail.v2"
 )
 
@@ -42,7 +43,15 @@ func NewSmtpService(addr, user, pass string) Sender {
 }
 
 func (svc *smtpService) SendEmail(ctx context.Context, sender, to, subject, html string) (string, error) {
-	log := logger.FromContext(ctx).With("to", to)
+	log := logger.FromContext(ctx).With(
+		zap.String("to", to),
+	).With(
+		zap.Any("smtp", map[string]any{
+			"host": svc.host,
+			"port": svc.port,
+			"user": svc.username,
+		}),
+	)
 
 	m := gomail.NewMessage()
 	m.SetHeader("From", sender)
@@ -51,12 +60,12 @@ func (svc *smtpService) SendEmail(ctx context.Context, sender, to, subject, html
 	m.SetBody("text/html", html)
 
 	d := gomail.NewDialer(svc.host, svc.port, svc.username, svc.password)
-	log.With("stmpHost", svc.host, "smtpUser", svc.username).Info("Sending email")
+	log.Info("Sending email")
 
 	err := d.DialAndSend(m)
 
 	if err != nil {
-		log.With("error", err).Error("Failed to send message")
+		log.With(zap.Error(err)).Error("Failed to send message")
 	}
 
 	return "", err

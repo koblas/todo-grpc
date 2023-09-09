@@ -1,6 +1,6 @@
 import { InputGroup, Input, InputRightElement, IconButton, Icon, InputProps } from "@chakra-ui/react";
 import React, { useState } from "react";
-import { FiEyeOff, FiEye } from "react-icons/fi";
+import { EyeIcon, EyeOffIcon } from "./icons";
 
 export const PasswordInput = React.forwardRef<HTMLInputElement, InputProps>((props, ref) => {
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -18,7 +18,7 @@ export const PasswordInput = React.forwardRef<HTMLInputElement, InputProps>((pro
           h="1.75rem"
           size="sm"
           onClick={() => onPasswordVisible()}
-          icon={<Icon as={passwordVisible ? FiEyeOff : FiEye} />}
+          icon={<Icon as={passwordVisible ? EyeOffIcon : EyeIcon} />}
         />
       </InputRightElement>
     </InputGroup>

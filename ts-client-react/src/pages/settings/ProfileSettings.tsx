@@ -16,8 +16,7 @@ import {
   FormErrorMessage,
 } from "@chakra-ui/react";
 import { useForm } from "react-hook-form";
-import { useUser } from "../../hooks/data/user";
-import { FetchError } from "../../rpc/utils";
+import { useUser, useUserMutations } from "../../hooks/data/user";
 
 const INPUT_STYLE = {
   bg: "white",
@@ -34,9 +33,10 @@ type FormFields = {
 };
 
 export function ProfileSettings() {
-  const { user, mutations } = useUser();
+  const user = useUser();
+  const { useUpdateUser } = useUserMutations();
   const toast = useToast();
-  const [updateUser] = mutations.useUpdateUser();
+  const [updateUser] = useUpdateUser();
 
   const [isSubmitting, setSubmitting] = useState(false);
   const {
@@ -46,8 +46,8 @@ export function ProfileSettings() {
     formState: { errors },
   } = useForm<FormFields>({
     defaultValues: {
-      name: user?.name ?? "",
-      email: user?.email ?? "",
+      name: user.name ?? "",
+      email: user.email ?? "",
     },
   });
 

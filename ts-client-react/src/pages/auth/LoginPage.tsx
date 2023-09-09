@@ -15,8 +15,7 @@ import {
   Icon,
 } from "@chakra-ui/react";
 import { useForm } from "react-hook-form";
-import { FaGithub } from "react-icons/fa";
-import { FcGoogle } from "react-icons/fc";
+import { GithubIcon, GoogleIcon } from "../../components/icons";
 import { useAuth } from "../../hooks/auth";
 import AuthWrapper from "./AuthWrapper";
 import { PasswordInput } from "../../components/PasswordInput";
@@ -77,10 +76,10 @@ export default function AuthLoginPage() {
             <Text>Sign in to your account</Text>
             <Stack direction={{ base: "row" }}>
               <Button variant="outline" onClick={() => onOauthButton("google")} className="">
-                <Icon as={FcGoogle} size="8" mr="2" /> Sign in with Google
+                <GoogleIcon boxSize="4" mr="2" /> Sign in with Google
               </Button>
               <Button variant="outline" onClick={() => onOauthButton("github")} className="">
-                <Icon as={FaGithub} size="8" mr="2" /> Sign in with Github
+                <GithubIcon boxSize="4" mr="2" /> Sign in with Github
               </Button>
             </Stack>
             <FormControl id="email" isInvalid={!!errors.email}>

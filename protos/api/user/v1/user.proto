@@ -3,15 +3,6 @@ package api.user.v1;
 
 option go_package = "github.com/koblas/grpc-todo/protos";
 
-message GetUserRequest {}
-
-message UpdateUserRequest {
-  optional string email = 1;
-  optional string name = 2;
-  optional string password = 3;
-  optional string password_new = 4;
-}
-
 message User {
   string id = 1;
   string email = 2;
@@ -19,7 +10,15 @@ message User {
   optional string avatar_url = 4;
 }
 
+message GetUserRequest {}
 message GetUserResponse { User user = 1; }
+
+message UpdateUserRequest {
+  optional string email = 1;
+  optional string name = 2;
+  optional string password = 3;
+  optional string password_new = 4;
+}
 message UpdateUserResponse { User user = 1; }
 
 service UserService {
